@@ -1,0 +1,10 @@
+2022-04-28 13:54:19.363211 (MainThread): the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+2022-04-28 13:55:36.531495 (MainThread): the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+2022-04-28 13:57:13.607743 (MainThread): the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+2022-04-28 13:57:14.215412 (MainThread): write_gpickle is deprecated and will be removed in 3.0.Use ``pickle.dump(G, path, protocol)``
+2022-04-28 15:00:31.631714 (MainThread): the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+2022-04-28 15:00:31.809824 (MainThread): write_gpickle is deprecated and will be removed in 3.0.Use ``pickle.dump(G, path, protocol)``
+2022-04-28 15:01:25.773807 (MainThread): the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+2022-04-28 15:01:25.918696 (MainThread): write_gpickle is deprecated and will be removed in 3.0.Use ``pickle.dump(G, path, protocol)``
+2022-04-28 15:19:10.600310 (MainThread): the imp module is deprecated in favour of importlib; see the module's documentation for alternative uses
+2022-04-28 15:19:10.771069 (MainThread): write_gpickle is deprecated and will be removed in 3.0.Use ``pickle.dump(G, path, protocol)``
