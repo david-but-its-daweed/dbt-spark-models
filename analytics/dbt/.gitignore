@@ -1,0 +1,6 @@
+
+target/
+dbt_packages/
+logs/
+deploy/profiles_local/*
+deploy/**/*.user.yml
