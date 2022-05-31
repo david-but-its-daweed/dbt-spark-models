@@ -1,4 +1,5 @@
 {{ config(
+    schema='junk2',
     materialized='table',
     partition_by=['partition_date_msk'],
     file_format='parquet'

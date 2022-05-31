@@ -1,4 +1,5 @@
 {{ config(
+    schema='junk_aplotnikov',
     materialized='table',
     file_format='delta'
 ) }}

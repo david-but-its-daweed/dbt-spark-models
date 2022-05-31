@@ -1,4 +1,5 @@
 {{ config(
+    schema='junk2',
     materialized='view',
     meta = {
       'bigquery_load': 'true'
