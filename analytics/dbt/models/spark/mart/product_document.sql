@@ -1,6 +1,7 @@
 {{ config(
+    schema='mart',
     materialized='table',
-    file_format='delta',
+    file_format='parquet',
     meta = {
       'bigquery_load': 'true'
     }
@@ -9,7 +10,7 @@ with product_docs as (
     select
         _id as product_id,
         explode(docIds) as doc_id
-    from mongo.product_merchant_document_product_links_daily_snapshot
+    from {{ source('mongo', 'product_merchant_document_product_links_daily_snapshot') }} 
 ),
 documetns as (
     select
@@ -18,7 +19,7 @@ documetns as (
         millis_to_ts(updatedTimeMs) updated_time,
         status,
         type
-    from mongo.core_merchant_documents_daily_snapshot
+    from {{ source('mongo', 'core_merchant_documents_daily_snapshot') }}
 )
 
 select doc_id,
