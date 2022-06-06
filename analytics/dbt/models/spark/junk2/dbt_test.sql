@@ -1,5 +1,5 @@
 {{ config(
-    schema='junk_aplotnikov',
+    schema='junk2',
     materialized='incremental',
     file_format='delta'
 ) }}
