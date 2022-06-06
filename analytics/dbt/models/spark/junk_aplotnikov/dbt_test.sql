@@ -1,6 +1,11 @@
 {{ config(
     schema='junk_aplotnikov',
-    materialized='table',
+    materialized='incremental',
     file_format='delta'
 ) }}
-select 1 as x
+
+{% if not is_incremental() %}
+  select 1 as x
+{% else %}
+  select 2 as x
+{% endif %}
