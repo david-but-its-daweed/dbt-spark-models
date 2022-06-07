@@ -1,4 +1,6 @@
 #!/bin/sh
+set -e
+
 DBT_DIR=`pwd`
 ANALYTICS_PROJECT_DIR=$(builtin cd $DBT_DIR/..; pwd)
 PYTHON_DIR=$ANALYTICS_PROJECT_DIR/python
