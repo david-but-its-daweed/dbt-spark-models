@@ -18,7 +18,7 @@ USER_NAME=$(whoami)
 DEFAULT_START_DATE=$(days_ago 1)
 DEFAULT_END_DATE=$(days_ago 0)
 DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_DATE'}"
-DBT_SELECT="spark.junk_aplotnikov.dbt_test"
+DBT_SELECT="spark.junk2.dbt_test"
 TERMINATE_AFTER_SECS=0
 
 while [[ $# -gt 0 ]]; do
