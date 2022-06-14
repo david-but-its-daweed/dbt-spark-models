@@ -1,5 +1,6 @@
 #!/bin/sh
-set -e
+set -euo pipefail
+IFS=$'\n\t'
 
 DBT_DIR=`pwd`
 ANALYTICS_PROJECT_DIR=$(builtin cd $DBT_DIR/..; pwd)
