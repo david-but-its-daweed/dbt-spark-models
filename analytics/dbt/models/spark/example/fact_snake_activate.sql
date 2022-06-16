@@ -1,10 +1,13 @@
 {{ config(
     schema='example',
-    materialized='table',
+    materialized='incremental',
     partition_by=['partition_date_msk'],
     file_format='delta',
     meta = {
-      'team': 'general_analytics'
+      'team': 'general_analytics',
+      'bigquery_load': 'true',
+      'bigquery_partitioning_date_column': 'partition_date_msk',
+      'bigquery_fail_on_missing_partitions': 'false'
     }
 ) }}
 select
@@ -14,4 +17,9 @@ select
 from {{ source('mart', 'device_events') }}
 where
   `type` in ('snakeActivate')
+{% if is_incremental() %}
+  and partition_date >= date'{{ var("start_date_ymd") }}'
+  and partition_date < date'{{ var("end_date_ymd") }}'
+{% else %}
   and partition_date >= date'2022-06-01'
+{% endif %}
