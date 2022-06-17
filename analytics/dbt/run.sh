@@ -1,4 +1,9 @@
 #!/bin/sh
+set -euo pipefail
+IFS=$'\n\t'
+
+source infra/functions.sh
+
 DBT_DIR=`pwd`
 ANALYTICS_PROJECT_DIR=$(builtin cd $DBT_DIR/..; pwd)
 DBT_ETL_JOB_DIR=$ANALYTICS_PROJECT_DIR/joom/jobs/platform_team/thrift-server
@@ -18,7 +23,7 @@ USER_NAME=$(whoami)
 DEFAULT_START_DATE=$(days_ago 1)
 DEFAULT_END_DATE=$(days_ago 0)
 DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_DATE'}"
-DBT_SELECT="spark.junk_aplotnikov.dbt_test"
+DBT_SELECT="spark.junk2.dbt_test"
 TERMINATE_AFTER_SECS=0
 
 while [[ $# -gt 0 ]]; do
@@ -51,4 +56,9 @@ while [[ $# -gt 0 ]]; do
 done
 
 cd $DBT_ETL_JOB_DIR
-$ANALYTICS_PROJECT_DIR/gradlew start -Pargs="--user $USER_NAME --dbt-vars $DBT_VARS --dbt-select $DBT_SELECT --terminate-after-secs $TERMINATE_AFTER_SECS"
+PROFILES_YML=${DBT_DIR}/localenv/profiles/profiles.yml
+
+submit_job_save_ip \
+  $ANALYTICS_PROJECT_DIR'/gradlew start -Pargs="--user '$USER_NAME' --dbt-vars '$DBT_VARS' --dbt-select '$DBT_SELECT' --terminate-after-secs '$TERMINATE_AFTER_SECS'"' \
+  $PROFILES_YML
+
