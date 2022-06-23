@@ -34,4 +34,3 @@
 {% else %}
   and partition_date >= date'2022-05-01'
 {% endif %}
-
