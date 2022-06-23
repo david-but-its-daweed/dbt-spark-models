@@ -2,5 +2,5 @@
 target/
 dbt_packages/
 logs/
-deploy/profiles_local/*
+localenv/*
 deploy/**/*.user.yml
