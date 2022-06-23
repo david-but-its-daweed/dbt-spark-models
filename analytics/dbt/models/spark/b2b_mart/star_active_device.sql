@@ -27,7 +27,7 @@
         FIRST(payload.parsedUtm.utm_medium) OVER (PARTITION BY device_id, user.userId, DATE(event_ts_msk) ORDER BY CASE WHEN payload.parsedUtm.utm_medium IS NOT NULL THEN 1 ELSE 2 END, event_ts_msk)  AS utm_medium,
         FIRST(payload.parsedUtm.utm_term) OVER (PARTITION BY device_id, user.userId, DATE(event_ts_msk) ORDER BY CASE WHEN payload.parsedUtm.utm_term IS NOT NULL THEN 1 ELSE 2 END, event_ts_msk)  AS utm_term
     FROM {{ source('b2b_mart', 'device_events') }}
-    WHERE `type`` in ("sessionStart","externalLink","bounceCheck","popupRequestCreate")
+    WHERE `type` in ("sessionStart","externalLink","bounceCheck","popupRequestCreate")
 {% if is_incremental() %}
   and DATE(event_ts_msk) >= date'{{ var("start_date_ymd") }}'
   and DATE(event_ts_msk) < date'{{ var("end_date_ymd") }}'
