@@ -32,6 +32,11 @@ if [ "$PYTHON3_AVAILABLE" = false ] || [ "$JAVA11_AVAILABLE" = false ]; then
     exit 1
 fi
 
+cecho "YELLOW" "Installing DBT CLI tools..."
+pip3 install dbt-core==1.1.0 dbt-spark[PyHive]==1.1.0
+dbt --version
+cecho "GREEN" "DBT cli successfully installed! Now you can run 'dbt run' and other commands."
+
 CHANGE_PROFILES_YML=true
 
 DBT_DIR=`pwd`
