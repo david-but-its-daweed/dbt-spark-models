@@ -50,6 +50,9 @@ else
     cp infra/profiles.yml.template ${PROFILES_YML}
 fi
 
+# Create logs directory, because we use it for thrift server logs.
+mkdir -p ${DBT_DIR}/logs
+
 WHOAMI_CLEAN=$(whoami | sed 's/[^a-zA-Z0-9]//g')
 # TODO: Extract JUNK_DATABASE from profiles.yml if it already exists and CHANGE_PROFILES_YML = false
 JUNK_DATABASE="junk_${WHOAMI_CLEAN}"
