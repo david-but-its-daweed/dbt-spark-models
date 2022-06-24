@@ -1,5 +1,5 @@
 {{ config(
-    schema='example',
+    schema='b2b_mart',
     materialized='incremental',
     partition_by=['partition_date_msk'],
     file_format='delta',
