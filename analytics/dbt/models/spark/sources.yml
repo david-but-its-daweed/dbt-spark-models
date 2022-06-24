@@ -7,6 +7,13 @@ sources:
       - name: device_events
   - name: mongo
     tables:
+      - name: b2b_core_popup_requests_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
+  - name: default
+    tables:
+      - name: mongo_merchant
+  - name: b2b_mart
+    tables:
+      - name: device_events
       
