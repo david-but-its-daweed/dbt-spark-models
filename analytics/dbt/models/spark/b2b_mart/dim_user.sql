@@ -2,7 +2,7 @@
     schema='b2b_mart',
     materialized='view',
     meta = {
-      'team': 'general_analytics'
+      'team': 'general_analytics',
       'bigquery_load': 'true'
     }
 ) }}
