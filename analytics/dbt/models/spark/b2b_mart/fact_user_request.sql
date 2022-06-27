@@ -4,6 +4,7 @@
     file_format='parquet',
     meta = {
       'bigquery_load': 'true'
+      'bigquery_fail_on_missing_partitions': 'true'
     }
 ) }}
 SELECT _id AS request_id,

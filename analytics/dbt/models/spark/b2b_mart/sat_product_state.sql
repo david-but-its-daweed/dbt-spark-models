@@ -3,6 +3,8 @@
     materialized='view',
     meta = {
       'team': 'general_analytics'
+      'bigquery_load': 'true'
+      'bigquery_fail_on_missing_partitions': 'true'
     }
 ) }}
 SELECT product_id,
