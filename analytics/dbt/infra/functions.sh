@@ -121,6 +121,6 @@ function wait_specific_line_in_file {
       sleep 1
     fi
   done
-  eccho "RED" "\nTimed out waiting for pattern '$pattern' in $filename after $timeout seconds"
+  cecho "RED" "\nTimed out waiting for pattern '$pattern' in $filename after $timeout seconds"
   return 1
 }
