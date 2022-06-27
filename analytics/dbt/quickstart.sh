@@ -22,7 +22,7 @@ if type -p java >/dev/null 2>&1; then
         cecho "GREEN" "Java 11 or later is available."
         JAVA11_AVAILABLE=true
     else
-        cecho "RED" "Java is installed, but has an outdated version. Please, upgrade it manually or using https://sdkman.io"
+        cecho "RED" "Java is installed, but has an outdated version. Please, upgrade it to Java 11 manually or using https://sdkman.io"
     fi
 else
     cecho "RED" "Java is not installed. Please, install it manually or using https://sdkman.io"
