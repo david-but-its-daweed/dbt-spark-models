@@ -30,8 +30,8 @@ with category_price_range_ratings as
             {{ source('mart', 'star_order_2020') }}
             join {{ source('mart', 'category_levels') }} using(category_id)
         where
-            partition_date >= '{{ var("partition_date") }}' - interval 83 days
-            and partition_date <= '{{ var("partition_date") }}'
+            partition_date >= '{{ var("start_date_ymd") }}' - interval 83 days
+            and partition_date <= '{{ var("start_date_ymd") }}'
             and approval_time_utc is not null
             and (customer_refund_reason not in (1,13) or customer_refund_reason is null)
 
@@ -46,8 +46,8 @@ with category_price_range_ratings as
             {{ source('mart', 'star_order_2020') }}
             join {{ source('mart', 'category_levels') }} using(category_id)
         where
-            partition_date >= '{{ var("partition_date") }}'  - interval 364 days
-            and partition_date <= '{{ var("partition_date") }}'
+            partition_date >= '{{ var("start_date_ymd") }}'  - interval 364 days
+            and partition_date <= '{{ var("start_date_ymd") }}'
             and approval_time_utc is not null
             and (customer_refund_reason not in (1,13) or customer_refund_reason is null)
 
@@ -63,8 +63,8 @@ with category_price_range_ratings as
     from
         {{ source('mart', 'product_rating_counters') }}
     where
-        next_effective_ts > '{{ var("partition_date") }}'
-        and effective_ts <= '{{ var("partition_date") }}' ),
+        next_effective_ts > '{{ var("start_date_ymd") }}'
+        and effective_ts <= '{{ var("start_date_ymd") }}' ),
 
 
         product_category_price_range_rating as
@@ -87,13 +87,13 @@ with category_price_range_ratings as
                     category_id
 
                 from  {{ source('mart', 'dim_published_product_min') }}
-                where next_effective_ts > '{{ var("partition_date") }}'
-                and effective_ts <= '{{ var("partition_date") }}' )  using(product_id)
+                where next_effective_ts > '{{ var("start_date_ymd") }}'
+                and effective_ts <= '{{ var("start_date_ymd") }}' )  using(product_id)
             join product_price_ranges using(product_id)
             join {{ source('mart', 'category_levels') }} using(category_id))
 
 select
-    to_date('{{ var("partition_date") }}') as partition_date,
+    to_date('{{ var("start_date_ymd") }}') as partition_date,
     product_id,
     level_3_category_id,
     level_3_category_name,
