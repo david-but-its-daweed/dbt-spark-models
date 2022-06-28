@@ -15,13 +15,13 @@
 with category_price_range_ratings as
     (select
             --- we look at 3 levels categories except cases where it is kids clothing, then we look at 5
-            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116', level_5_category.id, level_4_category.id),level_3_category.id ,level_2_category.id, level_1_category.id) as level_3_category_id,
-            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116', level_5_category.name, level_4_category.name),level_3_category.name,level_2_category.name, level_1_category.name) as level_3_category_name,
+            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116',coalesce(level_5_category.id,level_4_category.id),level_3_category.id),level_2_category.id, level_1_category.id) as level_3_category_id,
+            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116',coalesce(level_5_category.name,level_4_category.name),level_3_category.name),level_2_category.name, level_1_category.name) as level_3_category_name,
 
 
             if(gmv_initial/product_quantity <= 5, '1) 0-5',
                 if(gmv_initial/product_quantity <= 10, '2) 5-10',
-                    if(gmv_initial/product_quantity <= 10, '3) 10-20', '4) 20+'))) as price_range,
+                    if(gmv_initial/product_quantity <= 20, '3) 10-20', '4) 20+'))) as price_range,
 
 
 
@@ -75,11 +75,11 @@ with category_price_range_ratings as
             product_id,
             product_rating,
             number_or_ratings,
-            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116', level_5_category.id, level_4_category.id),level_3_category.id ,level_2_category.id, level_1_category.id) as level_3_category_id,
-            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116', level_5_category.name, level_4_category.name),level_3_category.name,level_2_category.name, level_1_category.name) as level_3_category_name,
-            if(avg_price<= 5, '1) 0-5',
+            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116',coalesce(level_5_category.id,level_4_category.id),level_3_category.id),level_2_category.id, level_1_category.id) as level_3_category_id,
+            coalesce(if(level_2_category.id = '1475519040525567064-3-2-118-4293140116',coalesce(level_5_category.name,level_4_category.name),level_3_category.name),level_2_category.name, level_1_category.name) as level_3_category_name,
+            if(avg_price <= 5, '1) 0-5',
                 if(avg_price <= 10, '2) 5-10',
-                    if(avg_price <= 10, '3) 10-20', '4) 20+'))) as price_range
+                    if(avg_price <= 20, '3) 10-20', '4) 20+'))) as price_range
 
         from
             product_ratings
@@ -101,8 +101,8 @@ select
     level_3_category_name,
     price_range,
     product_rating,
-    if(product_rating - strata_rating > 0.25, 'good rating',
-        if(product_rating - strata_rating < -0.25, 'bad rating', 'normal rating')) as rating_segment,
+    if(product_rating - least(strata_rating, 4.6) > 0.2, 'good rating',
+        if(product_rating - least(strata_rating, 4.6) < -0.2, 'bad rating', 'normal rating')) as rating_segment,
     strata_rating,
     number_or_ratings as product_number_of_ratings
 
