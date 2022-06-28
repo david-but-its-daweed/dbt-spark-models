@@ -1,13 +1,14 @@
 {{ config(
     schema='mart',
     materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
-    file_format='delta',
+    file_format='parquet',
     meta = {
       'team': 'categories',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_upload_horizon_days': '2'
+      'bigquery_upload_horizon_days': '1'
     }
 ) }}
 
