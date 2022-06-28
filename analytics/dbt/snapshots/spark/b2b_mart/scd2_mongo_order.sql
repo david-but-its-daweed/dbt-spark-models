@@ -22,7 +22,7 @@ SELECT
         linehaulChannelID AS linehaul_channel_id,
         csmr.deviceId as device_id,
         csmr.Id as user_id,
-        state.reject_reason as reject_reason,
+        state.rejectReason as reject_reason,
         state.statusHistory.status[array_position(state.statusHistory.updatedTimeMs,array_max(state.statusHistory.updatedTimeMs))-1] as last_order_status
 FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
 {% endsnapshot %}
