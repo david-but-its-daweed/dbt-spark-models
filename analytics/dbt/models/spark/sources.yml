@@ -10,6 +10,7 @@ sources:
       - name: star_order_2020
       - name: category_levels
       - name: dim_published_product_min
+      - name: core_review_quiz_answers_scd2
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
