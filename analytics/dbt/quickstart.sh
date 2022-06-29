@@ -32,6 +32,11 @@ if [ "$PYTHON3_AVAILABLE" = false ] || [ "$JAVA11_AVAILABLE" = false ]; then
     exit 1
 fi
 
+cecho "YELLOW" "Installing DBT CLI tools..."
+pip3 install dbt-core==1.1.0 dbt-spark[PyHive]==1.1.0
+dbt --version
+cecho "GREEN" "DBT cli successfully installed! Now you can run 'dbt run' and other commands."
+
 CHANGE_PROFILES_YML=true
 
 DBT_DIR=`pwd`
@@ -49,6 +54,9 @@ else
     mkdir -p $(dirname "${PROFILES_YML}")
     cp infra/profiles.yml.template ${PROFILES_YML}
 fi
+
+# Create logs directory, because we use it for thrift server logs.
+mkdir -p ${DBT_DIR}/logs
 
 WHOAMI_CLEAN=$(whoami | sed 's/[^a-zA-Z0-9]//g')
 # TODO: Extract JUNK_DATABASE from profiles.yml if it already exists and CHANGE_PROFILES_YML = false
@@ -85,8 +93,15 @@ if [ "$JOOMDBT_HOME_RECREATE" = true ]; then
     mkdir -p ${SQLLINE_HOME}
 
     cecho "YELLOW" "Downloading sqlline and JDBC driver..."
-    wget https://repo1.maven.org/maven2/sqlline/sqlline/1.12.0/sqlline-1.12.0-jar-with-dependencies.jar -P ${SQLLINE_HOME}
-    wget https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/3.1.3/hive-jdbc-3.1.3-standalone.jar -P ${SQLLINE_HOME}
+    SQLLINE_VERSION="1.12.0"
+    SQLLINE_JAR="sqlline-${SQLLINE_VERSION}-jar-with-dependencies.jar"
+    SQLLINE_MAVEN_PATH="https://repo1.maven.org/maven2/sqlline/sqlline/${SQLLINE_VERSION}/${SQLLINE_JAR}"
+    curl ${SQLLINE_MAVEN_PATH} -o ${SQLLINE_HOME}/${SQLLINE_JAR}
+
+    HIVE_JDBC_VERSION="3.1.3"
+    HIVE_JDBC_JAR="hive-jdbc-${HIVE_JDBC_VERSION}-standalone.jar"
+    HIVE_JDBC_MAVEN_PATH="https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/${HIVE_JDBC_VERSION}/${HIVE_JDBC_JAR}"
+    curl ${HIVE_JDBC_MAVEN_PATH} -o ${SQLLINE_HOME}/${HIVE_JDBC_JAR}
 fi
 
 SHOULD_RUN_THRIFT_SERVER=false
