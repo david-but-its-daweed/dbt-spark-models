@@ -63,7 +63,7 @@ function sqlline_exec {
   cecho "NC" "Running command '$cmd' against $url" 
 
   sqlline_exec_result=$(java \
-    -cp '/Users/aplotnikov/.joomdbt/sqlline/*' sqlline.SqlLine -n "" -p "" \
+    -cp ${SQLLINE_HOME}'/*' sqlline.SqlLine -n "" -p "" \
     -d org.apache.hive.jdbc.HiveDriver \
     -u jdbc:hive2://$url \
     -e $cmd \
@@ -121,6 +121,6 @@ function wait_specific_line_in_file {
       sleep 1
     fi
   done
-  eccho "RED" "\nTimed out waiting for pattern '$pattern' in $filename after $timeout seconds"
+  cecho "RED" "\nTimed out waiting for pattern '$pattern' in $filename after $timeout seconds"
   return 1
 }
