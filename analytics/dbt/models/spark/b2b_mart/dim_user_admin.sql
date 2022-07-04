@@ -13,4 +13,5 @@ select _id as admin_id,
          when email like "%joom.com" then "employee"
          else "unknown" end as role,
     millis_to_ts_msk(ctms) AS created_ts_msk
-from mongo.b2b_core_admin_users_daily_snapshot
+from {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }}
+
