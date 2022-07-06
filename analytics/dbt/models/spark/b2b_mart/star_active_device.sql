@@ -41,6 +41,7 @@ WITH stg_devices as
 )
     SELECT DISTINCT partition_date_msk,
         device_id,
+        request_id,
         user_id,
 --       join_ts,
         event_ts_min_msk,
