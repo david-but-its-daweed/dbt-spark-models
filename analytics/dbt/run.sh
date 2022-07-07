@@ -1,10 +1,10 @@
-#!/bin/sh
+#!/bin/bash
 set -euo pipefail
 IFS=$'\n\t'
 
 source infra/functions.sh
 
-DBT_DIR=`pwd`
+DBT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
 ANALYTICS_PROJECT_DIR=$(builtin cd $DBT_DIR/..; pwd)
 DBT_ETL_JOB_DIR=$ANALYTICS_PROJECT_DIR/joom/jobs/platform_team/thrift-server
 

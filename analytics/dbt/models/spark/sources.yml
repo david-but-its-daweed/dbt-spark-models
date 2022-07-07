@@ -6,8 +6,20 @@ sources:
       - name: dim_device_min
       - name: device_events
       - name: dim_published_variant
+      - name: product_rating_counters
+      - name: star_order_2020
+      - name: category_levels
+      - name: dim_published_product_min
+      - name: core_review_quiz_answers_scd2
   - name: mongo
     tables:
+      - name: core_categories_daily_snapshot
+      - name: core_experiments_daily_snapshot
+      - name: core_stores_daily_snapshot
+      - name: events_ad_spent_internal_daily_snapshot
+      - name: events_ad_partners_daily_snapshot
+      - name: core_tracking_providers_daily_snapshot
+      - name: core_merchants_daily_snapshot
       - name: b2b_core_users_daily_snapshot
       - name: b2b_core_published_products_daily_snapshot
       - name: b2b_core_product_states_daily_snapshot
@@ -23,4 +35,6 @@ sources:
     tables:
       - name: device_events
       - name: operational_events
-      
+  - name: logistics_mart
+    tables:
+      - name: fact_order
