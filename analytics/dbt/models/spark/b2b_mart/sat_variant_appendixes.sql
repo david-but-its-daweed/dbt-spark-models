@@ -26,6 +26,6 @@ SELECT variant_id,
        price_max_qnty,
        article,
        trademark,
-       effective_ts_msk,
-       next_effective_ts_msk
+       dbt_valid_from as effective_ts_msk,
+       dbt_valid_to as next_effective_ts_msk
 from {{ ref('scd2_mongo_variant_appendixes') }} t
