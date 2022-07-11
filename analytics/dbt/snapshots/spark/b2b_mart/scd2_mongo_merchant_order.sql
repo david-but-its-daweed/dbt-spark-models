@@ -41,7 +41,7 @@ SELECT concat(_id,product_id) as id,
         product_type,
         product_vat_rate,
 --        typ as package_type,
-        millis_to_ts_msk(utms)  AS updated_ts_msk ,
+        millis_to_ts_msk(utms)  AS update_ts_msk ,
         merchant.paymentMethodType AS payment_method_type,
         merchant.paymentMethod._id AS payment_method_id
 FROM  {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}  AS m
