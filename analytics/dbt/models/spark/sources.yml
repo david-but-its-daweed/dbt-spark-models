@@ -24,6 +24,7 @@ sources:
       - name: b2b_core_admin_users_daily_snapshot
       - name: b2b_core_variant_appendixes_daily_snapshot
       - name: b2b_core_published_products_daily_snapshot
+      - name: b2b_core_published_variants_daily_snapshot
       - name: b2b_core_product_states_daily_snapshot
       - name: b2b_core_product_appendixes_daily_snapshot
       - name: b2b_core_orders_v2_daily_snapshot
