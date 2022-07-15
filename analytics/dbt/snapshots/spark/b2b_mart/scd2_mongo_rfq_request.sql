@@ -1,0 +1,27 @@
+{% snapshot scd2_mongo_rfq_request %}
+
+{{
+    config(
+      target_schema='b2b_mart',
+      unique_key='order_rfq_id',
+
+      strategy='timestamp',
+      updated_at='update_ts_msk',
+      file_format='delta'
+    )
+}}
+SELECT _id AS order_rfq_id,
+    millis_to_ts_msk(ctms) AS created_ts_msk,
+    descr AS description,
+    name,
+    oid AS order_id,
+    plnk AS link,
+    price.amount AS price,
+    price.ccy AS ccy,
+    qty AS qty,
+    status,
+    millis_to_ts_msk(stms) sent_ts_msk,
+    variants,
+    millis_to_ts_msk(utms) AS update_ts_msk
+FROM {{ source('mongo', 'b2b_core_rfq_request_daily_snapshot') }}
+{% endsnapshot %}
