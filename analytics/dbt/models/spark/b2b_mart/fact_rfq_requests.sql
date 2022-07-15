@@ -7,7 +7,7 @@
 
     }
 ) }}
-SELECT order_rfq_id,
+SELECT rfq_request_id,
        created_ts_msk,
        description,
        name,

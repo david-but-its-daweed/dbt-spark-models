@@ -3,14 +3,14 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='order_rfq_id',
+      unique_key='rfq_request_id',
 
       strategy='timestamp',
       updated_at='update_ts_msk',
       file_format='delta'
     )
 }}
-SELECT _id AS order_rfq_id,
+SELECT _id AS rfq_request_id,
     millis_to_ts_msk(ctms) AS created_ts_msk,
     descr AS description,
     name,
