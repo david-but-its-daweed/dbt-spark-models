@@ -51,7 +51,7 @@ with orders_with_feedback as
         left join
             (select order_id,
                 user_delivered_time_utc
-            from logistics_mart.fact_order) using(order_id)
+            from {{ source('logistics_mart', 'fact_order') }}) using(order_id)
 
         where
             (tracking_delivered_time_utc is not null

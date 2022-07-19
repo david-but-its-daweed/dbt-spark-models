@@ -14,7 +14,7 @@ SELECT
   pref_country,
   reject_reason,
   validation_status,
-  staff AS is_joompro_employee,
+  owner_id as owner_id,
   dbt_valid_from as effective_ts_msk,
   dbt_valid_to as next_effective_ts_msk
 from {{ ref('scd2_mongo_user') }} t

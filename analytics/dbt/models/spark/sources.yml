@@ -21,11 +21,17 @@ sources:
       - name: core_tracking_providers_daily_snapshot
       - name: core_merchants_daily_snapshot
       - name: b2b_core_users_daily_snapshot
+      - name: b2b_core_admin_users_daily_snapshot
+      - name: b2b_core_variant_appendixes_daily_snapshot
       - name: b2b_core_published_products_daily_snapshot
+      - name: b2b_core_published_variants_daily_snapshot
       - name: b2b_core_product_states_daily_snapshot
       - name: b2b_core_product_appendixes_daily_snapshot
       - name: b2b_core_orders_v2_daily_snapshot
+      - name: b2b_core_merchant_orders_v2_daily_snapshot
       - name: b2b_core_popup_requests_daily_snapshot
+      - name: b2b_core_rfq_request_daily_snapshot
+      - name: b2b_core_rfq_response_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
   - name: default
@@ -35,3 +41,6 @@ sources:
     tables:
       - name: device_events
       - name: operational_events
+  - name: logistics_mart
+    tables:
+      - name: fact_order
