@@ -17,6 +17,6 @@ select
   origin,
   millis_to_ts_msk(created_time) as create_ts_msk,
   millis_to_ts_msk(updated_time) as update_ts_msk
-from {{ source('default', 'mongo_merchant') }}
+from {{ source('mongo', 'merchant') }}
 
 {% endsnapshot %}
