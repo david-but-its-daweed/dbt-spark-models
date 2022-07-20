@@ -23,6 +23,6 @@ SELECT store_id,
            WHEN sp.status = 2 THEN 'Average'
            WHEN sp.status = 3 THEN 'Poor'
            WHEN sp.status = 4 THEN 'Critical' END              as status
-FROM {{ source('mongo', 'store') }} ms
+FROM {{ ref('store') }} ms
          LEFT OUTER JOIN store_performance sp ON ms.store_id = sp.id
 WHERE coalesce(sp.rn, 1) = 1
