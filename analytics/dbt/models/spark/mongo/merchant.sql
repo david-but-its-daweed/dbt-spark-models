@@ -6,6 +6,6 @@ select _id as merchant_id,
        createdTimeMs as created_time,
        updatedTimeMs as updated_time,
        name,
-       origin,
+       cast(origin as INTEGER) as origin,
        enabled
 from {{ source('mongo', 'core_merchants_daily_snapshot') }}
