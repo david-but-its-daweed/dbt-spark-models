@@ -3,8 +3,8 @@
     materialized='view',
 ) }}
 select _id as                  experiment_id,
-       updatedTimeMs           asupdated_time,
-       createdTimeMs           ascreated_time,
+       updatedTimeMs        as updated_time,
+       createdTimeMs        as created_time,
        type,
        enabled,
        startTimeMs          as start_time,
