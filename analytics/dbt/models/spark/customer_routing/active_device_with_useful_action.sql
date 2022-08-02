@@ -46,7 +46,7 @@ WHERE
         AND partition_date >= date'{{ var("start_date_ymd") }}'
         AND partition_date < date'{{ var("end_date_ymd") }}'
     {% else %}
-        AND partition_date >= date'2022-06-01'
+        AND partition_date >= date'2020-01-01'
     {% endif %}
 GROUP BY 1, 2
 ORDER BY 2 ASC
