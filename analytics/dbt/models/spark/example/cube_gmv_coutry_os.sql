@@ -19,7 +19,7 @@ SELECT
     t,
     country,
     platform,
-    COUNT(device_id) AS metric_value
+    COUNT(device_id) AS y
 FROM active_devices
 WHERE
     country IS NOT NULL
