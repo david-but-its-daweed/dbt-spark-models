@@ -1,6 +1,6 @@
 {{ config(
     schema='example',
-    materialized='view',
+    materialized='delta',
     meta = {
       'predictor_enabled': 'true'
     }
@@ -22,7 +22,7 @@ SELECT
     COUNT(device_id) AS y
 FROM active_devices
 WHERE
-    country IS NOT NULL
-    AND platform IS NOT NULL
+    country IN ('RU', 'DE', 'FR', 'GB', 'IT', 'ES', 'CH', 'SE', 'IL', 'UA', 'MD', 'BY')
+    AND platform in ('android', 'ios')
 GROUP BY
     t, country, platform
