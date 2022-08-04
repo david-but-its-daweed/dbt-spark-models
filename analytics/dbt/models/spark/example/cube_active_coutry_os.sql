@@ -3,7 +3,8 @@
     materialized='table',
     file_format='delta',
     meta = {
-      'predictor_enabled': 'true'
+      'predictor_enabled': 'true',
+      'anomalies_channel': '#aplotnikov-notifications',
     }
 ) }}
 WITH active_devices AS (
