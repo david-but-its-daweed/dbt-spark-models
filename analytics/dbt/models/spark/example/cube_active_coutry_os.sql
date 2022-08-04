@@ -1,6 +1,7 @@
 {{ config(
     schema='example',
-    materialized='delta',
+    materialized='table',
+    file_format='delta',
     meta = {
       'predictor_enabled': 'true'
     }
