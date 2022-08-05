@@ -12,7 +12,7 @@
 ) }}
 SELECT
     device_id AS device_id,
-    date(event_ts_msk) AS partition_date_msk,
+    partition_date AS partition_date_msk,
     count(
         if(type IN ('productOpen', 'productToCart',
             'productLike', 'productPurchase', 'orderParcelOpen',
@@ -43,10 +43,10 @@ WHERE
         'ordersOpen',
         'notificationCenterOpen', 'notificationPreview')
     {% if is_incremental() %}
-        AND date(event_ts_msk) >= date'{{ var("start_date_ymd") }}'
-        AND date(event_ts_msk) < date'{{ var("end_date_ymd") }}'
+        AND partition_date >= date'{{ var("start_date_ymd") }}'
+        AND partition_date < date'{{ var("end_date_ymd") }}'
     {% else %}
-        AND date(event_ts_msk) >= date'2022-06-01'
+        AND partition_date >= date'2020-01-01'
     {% endif %}
 GROUP BY 1, 2
 ORDER BY 2 ASC
