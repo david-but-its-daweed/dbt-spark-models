@@ -13,7 +13,7 @@ SELECT
     date_msk AS t,
     UPPER(country) AS country,
     LOWER(os_type) AS platform
-FROM mart.star_active_device
+FROM {{ source('mart', 'star_active_device') }}
 WHERE
     ephemeral = FALSE
 )
