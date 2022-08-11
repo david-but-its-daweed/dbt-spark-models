@@ -5,6 +5,7 @@
     meta = {
       'predictor_enabled': 'true',
       'anomalies_channel': '#aplotnikov-notifications',
+      'anomalies_metric_name': 'Active Devices',
     }
 ) }}
 WITH active_devices AS (
