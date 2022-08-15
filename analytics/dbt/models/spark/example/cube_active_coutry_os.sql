@@ -3,7 +3,9 @@
     materialized='table',
     file_format='delta',
     meta = {
-      'predictor_enabled': 'true'
+      'predictor_enabled': 'true',
+      'anomalies_channel': '#aplotnikov-notifications',
+      'anomalies_metric_name': 'Active Devices',
     }
 ) }}
 WITH active_devices AS (
@@ -12,7 +14,7 @@ SELECT
     date_msk AS t,
     UPPER(country) AS country,
     LOWER(os_type) AS platform
-FROM mart.star_active_device
+FROM {{ source('mart', 'star_active_device') }}
 WHERE
     ephemeral = FALSE
 )
