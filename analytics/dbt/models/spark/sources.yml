@@ -8,6 +8,7 @@ sources:
       - name: dim_published_variant
       - name: product_rating_counters
       - name: star_order_2020
+      - name: star_active_device
       - name: category_levels
       - name: dim_published_product_min
       - name: core_review_quiz_answers_scd2
