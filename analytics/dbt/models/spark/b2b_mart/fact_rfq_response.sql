@@ -9,7 +9,7 @@
 ) }}
 SELECT order_rfq_response_id,
        comment,
-       created_ts_msk,
+       TIMESTAMP(created_ts_msk) AS created_ts_msk,
        description,
        merchant_id,
        product_id,
@@ -17,6 +17,6 @@ SELECT order_rfq_response_id,
        rfq_request_id,
        sent,
        status,
-       dbt_valid_from as effective_ts_msk,
-       dbt_valid_to as next_effective_ts_msk
+       TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
+       TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 from {{ ref('scd2_mongo_rfq_response') }} t
