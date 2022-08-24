@@ -41,7 +41,7 @@ WITH stg_devices as
 
 SELECT DISTINCT partition_date_msk,
        device_id,
-       join_ts,
+       TIMESTAMP(join_ts) AS join_ts_msk,
        ip_country,
        os_type,
        link,

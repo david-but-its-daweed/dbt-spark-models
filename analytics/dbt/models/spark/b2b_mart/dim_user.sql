@@ -9,12 +9,12 @@
 SELECT
   user_id,
   anon AS is_anonymous,
-  created_ts_msk,
-  update_ts_msk,
+  TIMESTAMP(created_ts_msk) AS created_ts_msk,
+  TIMESTAMP(update_ts_msk) AS update_ts_msk,
   pref_country,
   reject_reason,
   validation_status,
-  owner_id as owner_id,
-  dbt_valid_from as effective_ts_msk,
-  dbt_valid_to as next_effective_ts_msk
-from {{ ref('scd2_mongo_user') }} t
+  owner_id AS owner_id,
+  TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
+  TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
+FROM {{ ref('scd2_mongo_user') }} t

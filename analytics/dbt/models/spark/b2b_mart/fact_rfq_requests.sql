@@ -8,7 +8,7 @@
     }
 ) }}
 SELECT rfq_request_id,
-       created_ts_msk,
+       TIMESTAMP(created_ts_msk) AS created_ts_msk,
        description,
        name,
        order_id,
@@ -17,8 +17,8 @@ SELECT rfq_request_id,
        ccy,
        qty,
        status,
-       sent_ts_msk,
+       TIMESTAMP(sent_ts_msk) AS sent_ts_msk,
        variants,
-       dbt_valid_from as effective_ts_msk,
-       dbt_valid_to as next_effective_ts_msk
-from {{ ref('scd2_mongo_rfq_request') }} t
+       TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
+       TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
+FROM {{ ref('scd2_mongo_rfq_request') }} t
