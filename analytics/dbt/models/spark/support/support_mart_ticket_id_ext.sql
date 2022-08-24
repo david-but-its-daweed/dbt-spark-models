@@ -1,3 +1,16 @@
+{{ config(
+     schema='support',
+     materialized='incremental',
+     partition_by=['partition_date'],
+     file_format='delta',
+     meta = {
+       'team': 'analytics',
+       'bigquery_load': 'true',
+       'bigquery_partitioning_date_column': 'partition_date',
+     }
+ ) }}
+
+
 WITH users_with_first_order AS
                               (
                                SELECT user_id,
@@ -45,7 +58,7 @@ FROM (
       t.payload.entryType AS entry_type
   FROM mart.babylone_events AS t
   WHERE NOT t.payload.isAnnouncement
-            AND t.`type` = 'ticketEntryAddJoom'    
+            AND t.`type` = 'ticketEntryAddJoom'
 
 )),
     
@@ -60,6 +73,7 @@ first_entries AS (
     FROM ticket_entry_add
     WHERE entry_type != 'privateNote'
       AND author_id != '000000000000050001000001'
+      
 
 ), 
 
@@ -97,6 +111,7 @@ ttfr_author_type AS (
                          ON t.payload.stateQueueId = a._id
                     WHERE t.`type` = 'ticketChangeJoom'
                           AND t.payload.stateQueueId IS NOT NULL
+                          
                    ),
                    
     all_queues AS (
