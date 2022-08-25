@@ -7,7 +7,7 @@
        'team': 'analytics',
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
-       'bigquery_partitioning_date_column': 'partition_date',
+       'bigquery_partitioning_date_column': 'partition_date'
      }
  ) }}
 
@@ -262,16 +262,26 @@ ttfr_author_type AS (
         resolution AS (
                        SELECT t.payload.ticketId AS ticket_id,
                               MIN(t.event_ts_msk) AS resolution_ticket_ts_msk
-                       FROM {{ source('mart', 'babylone_events') }}s AS t
+                       FROM {{ source('mart', 'babylone_events') }} AS t
                        WHERE t.payload.stateOwner IN ('Resolved', 'Rejected')
                              AND t.`type` = 'ticketChangeJoom'
-                       GROUP BY 1)
+                       GROUP BY 1),
+                       
+        button_place AS (
+                      SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
+                              FIRST_VALUE(t.payload.buttonPlace) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS button_place
+                      FROM {{ source('mart', 'babylone_events') }} AS t
+                      WHERE t.`type` = 'ticketEntryAddJoom'
+                            AND t.payload.authorType = 'customer'
+                            AND t.payload.buttonPlace IS NOT NULL
+                     )
                 
 SELECT t.partition_date AS partition_date,
        t.ts_created AS creation_ticket_ts_msk,
        t.ticket_id AS ticket_id,
        t.user_id AS user_id,
        t.country AS country,
+       n.button_place AS button_place,
        --device_id ждёт https://joom.myjetbrains.com/youtrack/issue/SUPPORT-2861
        t.os AS os, --но вообще бы дёргать нормальную ось (тут проблемы с INTERNAL, присваиваемым ко всем скрытым тикетам)
        CASE WHEN a.first_order_created_time_msk IS NULL THEN 'no' ELSE 'yes' END AS has_success_payments,
@@ -303,3 +313,4 @@ LEFT JOIN all_agents AS i ON i.ticket_id = t.ticket_id
 LEFT JOIN responses AS k ON k.ticket_id = t.ticket_id
 LEFT JOIN csat AS l ON l.ticket_id = t.ticket_id
 LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
+LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
