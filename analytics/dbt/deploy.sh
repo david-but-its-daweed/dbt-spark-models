@@ -1,6 +1,10 @@
 #!/bin/sh
 set -euo pipefail
 IFS=$'\n\t'
+source infra/functions.sh
+
+# We use `git archive` command internally, which takes only committed changes
+cecho "YELLOW" "WARNING: Ensure that you have committed all the changes required for deploy"
 
 DBT_DIR=`pwd`
 ANALYTICS_PROJECT_DIR=$(builtin cd $DBT_DIR/..; pwd)
