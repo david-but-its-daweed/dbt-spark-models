@@ -16,7 +16,7 @@ WITH users_with_first_order AS
                               (
                                SELECT user_id,
                                       MIN(created_time_utc) AS first_order_created_time_msk
-                               FROM {{ source('mart', 'fact_order_2020') }})
+                               FROM {{ source('mart', 'fact_order_2020') }}
                                GROUP BY 1
                               ),
                               
@@ -30,7 +30,7 @@ WITH users_with_first_order AS
     t.payload.lang AS language,
     t.payload.country AS country,
     t.payload.messageSource AS os
-  FROM {{ source('mart', 'babylone_events') }}) AS t
+  FROM {{ source('mart', 'babylone_events') }} AS t
   WHERE t.`type` = 'ticketCreateJoom'
 
 ),
@@ -57,7 +57,7 @@ FROM (
       t.payload.authorType AS author_type,
       t.payload.entryId AS entry_id,
       t.payload.entryType AS entry_type
-  FROM {{ source('mart', 'babylone_events') }}) AS t
+  FROM {{ source('mart', 'babylone_events') }} AS t
   WHERE NOT t.payload.isAnnouncement
             AND t.`type` = 'ticketEntryAddJoom'
 
@@ -107,7 +107,7 @@ ttfr_author_type AS (
     first_queue AS (
                     SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
                            FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue
-                    FROM {{ source('mart', 'babylone_events') }}) AS t
+                    FROM {{ source('mart', 'babylone_events') }} AS t
                     JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
                          ON t.payload.stateQueueId = a._id
                     WHERE t.`type` = 'ticketChangeJoom'
@@ -119,7 +119,7 @@ ttfr_author_type AS (
                     WITH t AS (
                                SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
                                       a.name AS queue
-                               FROM {{ source('mart', 'babylone_events') }}) AS t
+                               FROM {{ source('mart', 'babylone_events') }} AS t
                                JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
                                     ON t.payload.stateQueueId = a._id
                                WHERE t.`type` = 'ticketChangeJoom'
@@ -135,7 +135,7 @@ ttfr_author_type AS (
                  WITH t AS (
                             SELECT t.payload.ticketId AS ticket_id,
                                    EXPLODE(t.payload.tagIds) AS tag
-                            FROM {{ source('mart', 'babylone_events') }}) AS t
+                            FROM {{ source('mart', 'babylone_events') }} AS t
                             WHERE t.payload.tagIds IS NOT NULL
                                   AND t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
                             ),
