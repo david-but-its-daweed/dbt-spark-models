@@ -4,7 +4,7 @@
     file_format='delta',
     meta = {
       'predictor_enabled': 'true',
-      'anomalies_channel': '#aplotnikov-notifications',
+      'anomalies_channel': '#simple-detector',
       'anomalies_metric_name': 'GMV Initial',
     }
 ) }}
