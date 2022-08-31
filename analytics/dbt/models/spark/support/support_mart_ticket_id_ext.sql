@@ -6,7 +6,8 @@
      meta = {
        'team': 'analytics',
        'bigquery_load': 'true',
-       'bigquery_partitioning_date_column': 'partition_date',
+       'bigquery_overwrite': 'true',
+       'bigquery_partitioning_date_column': 'partition_date'
      }
  ) }}
 
@@ -15,7 +16,7 @@ WITH users_with_first_order AS
                               (
                                SELECT user_id,
                                       MIN(created_time_utc) AS first_order_created_time_msk
-                               FROM mart.fact_order_2020
+                               FROM {{ source('mart', 'fact_order_2020') }}
                                GROUP BY 1
                               ),
                               
@@ -29,7 +30,7 @@ WITH users_with_first_order AS
     t.payload.lang AS language,
     t.payload.country AS country,
     t.payload.messageSource AS os
-  FROM mart.babylone_events AS t
+  FROM {{ source('mart', 'babylone_events') }} AS t
   WHERE t.`type` = 'ticketCreateJoom'
 
 ),
@@ -56,7 +57,7 @@ FROM (
       t.payload.authorType AS author_type,
       t.payload.entryId AS entry_id,
       t.payload.entryType AS entry_type
-  FROM mart.babylone_events AS t
+  FROM {{ source('mart', 'babylone_events') }} AS t
   WHERE NOT t.payload.isAnnouncement
             AND t.`type` = 'ticketEntryAddJoom'
 
@@ -106,7 +107,7 @@ ttfr_author_type AS (
     first_queue AS (
                     SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
                            FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue
-                    FROM mart.babylone_events AS t
+                    FROM {{ source('mart', 'babylone_events') }} AS t
                     JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
                          ON t.payload.stateQueueId = a._id
                     WHERE t.`type` = 'ticketChangeJoom'
@@ -118,7 +119,7 @@ ttfr_author_type AS (
                     WITH t AS (
                                SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
                                       a.name AS queue
-                               FROM mart.babylone_events AS t
+                               FROM {{ source('mart', 'babylone_events') }} AS t
                                JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
                                     ON t.payload.stateQueueId = a._id
                                WHERE t.`type` = 'ticketChangeJoom'
@@ -134,7 +135,7 @@ ttfr_author_type AS (
                  WITH t AS (
                             SELECT t.payload.ticketId AS ticket_id,
                                    EXPLODE(t.payload.tagIds) AS tag
-                            FROM mart.babylone_events AS t
+                            FROM {{ source('mart', 'babylone_events') }} AS t
                             WHERE t.payload.tagIds IS NOT NULL
                                   AND t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
                             ),
@@ -156,7 +157,7 @@ ttfr_author_type AS (
                  WITH t AS (
                             SELECT t.payload.ticketId AS ticket_id,
                                    EXPLODE(t.payload.parcelIds) AS parcelId
-                            FROM mart.babylone_events AS t
+                            FROM {{ source('mart', 'babylone_events') }} AS t
                             WHERE t.payload.tagIds IS NOT NULL
                                   AND t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
                             )
@@ -170,7 +171,7 @@ ttfr_author_type AS (
                  WITH t AS (
                             SELECT t.payload.ticketId AS ticket_id,
                                    EXPLODE(t.payload.orderIds) AS orderId
-                            FROM mart.babylone_events AS t
+                            FROM {{ source('mart', 'babylone_events') }} AS t
                             WHERE t.payload.tagIds IS NOT NULL
                                   AND t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
                             )
@@ -184,7 +185,7 @@ ttfr_author_type AS (
                    WITH t AS (
                               SELECT DISTINCT t.payload.ticketId AS ticket_id,
                                      t.payload.authorId AS author_id
-                              FROM  mart.babylone_events AS t
+                              FROM  {{ source('mart', 'babylone_events') }} AS t
                               WHERE t.payload.authorType = 'agent'
                                     AND t.`type` = 'ticketEntryAdd'
                              )
@@ -203,8 +204,8 @@ ttfr_author_type AS (
                                           t.event_ts_msk AS event_ts_msk,
                                           CASE WHEN t.payload.authorType != 'customer' THEN 'support' ELSE 'customer' END AS author_type,
                                           ROW_NUMBER() OVER (PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk) AS num
-                                   FROM mart.babylone_events AS t
-                                   JOIN mart.babylone_events AS a ON a.payload.ticketId = t.payload.ticketId
+                                   FROM {{ source('mart', 'babylone_events') }} AS t
+                                   JOIN {{ source('mart', 'babylone_events') }} AS a ON a.payload.ticketId = t.payload.ticketId
                                                                      AND a.`type` = 'ticketCreateJoom'
                                    WHERE t.payload.entryType = 'message'
                                          AND t.`type` = 'ticketEntryAddJoom'
@@ -251,7 +252,7 @@ ttfr_author_type AS (
         csat AS (
                  SELECT t.payload.ticketId AS ticket_id,
                         FIRST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
-                 FROM mart.babylone_events AS t
+                 FROM {{ source('mart', 'babylone_events') }} AS t
                  WHERE t.`type` = 'babyloneWidgetAction'
                        AND t.payload.widgetType = 'did_we_help'
                        AND t.payload.selectedOptionsIds[0] IS NOT NULL
@@ -261,16 +262,26 @@ ttfr_author_type AS (
         resolution AS (
                        SELECT t.payload.ticketId AS ticket_id,
                               MIN(t.event_ts_msk) AS resolution_ticket_ts_msk
-                       FROM mart.babylone_events AS t
+                       FROM {{ source('mart', 'babylone_events') }} AS t
                        WHERE t.payload.stateOwner IN ('Resolved', 'Rejected')
                              AND t.`type` = 'ticketChangeJoom'
-                       GROUP BY 1)
+                       GROUP BY 1),
+                       
+        button_place AS (
+                      SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
+                              FIRST_VALUE(t.payload.buttonPlace) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS button_place
+                      FROM {{ source('mart', 'babylone_events') }} AS t
+                      WHERE t.`type` = 'ticketEntryAddJoom'
+                            AND t.payload.authorType = 'customer'
+                            AND t.payload.buttonPlace IS NOT NULL
+                     )
                 
 SELECT t.partition_date AS partition_date,
        t.ts_created AS creation_ticket_ts_msk,
        t.ticket_id AS ticket_id,
        t.user_id AS user_id,
        t.country AS country,
+       n.button_place AS button_place,
        --device_id ждёт https://joom.myjetbrains.com/youtrack/issue/SUPPORT-2861
        t.os AS os, --но вообще бы дёргать нормальную ось (тут проблемы с INTERNAL, присваиваемым ко всем скрытым тикетам)
        CASE WHEN a.first_order_created_time_msk IS NULL THEN 'no' ELSE 'yes' END AS has_success_payments,
@@ -302,3 +313,4 @@ LEFT JOIN all_agents AS i ON i.ticket_id = t.ticket_id
 LEFT JOIN responses AS k ON k.ticket_id = t.ticket_id
 LEFT JOIN csat AS l ON l.ticket_id = t.ticket_id
 LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
+LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id

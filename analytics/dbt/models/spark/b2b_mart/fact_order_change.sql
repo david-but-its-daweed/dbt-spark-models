@@ -12,7 +12,7 @@
 ) }}
 
 SELECT event_id,
-        TIMESTAMP(partition_date_msk) AS partition_date_msk,
+        partition_date_msk AS partition_date_msk,
         TIMESTAMP(event_ts_msk) AS event_ts_msk,
         order_id,
         client_currency,

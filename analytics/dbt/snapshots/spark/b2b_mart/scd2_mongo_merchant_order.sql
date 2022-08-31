@@ -24,7 +24,7 @@ WITH products AS
         )
 )
 
-SELECT concat(_id,product_id) as id,
+SELECT concat_ws('-', _id, COALESCE(product_id,0), utms) as id,
         _id AS merchant_order_id ,
         millis_to_ts_msk(ctms)  AS created_ts_msk ,
         currency ,
