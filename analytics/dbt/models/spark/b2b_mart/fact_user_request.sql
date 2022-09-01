@@ -17,7 +17,7 @@ WITH popuprequest_event
         AND partition_date >= "2022-05-19"
 )
 SELECT _id AS request_id,
-       millis_to_ts_msk(ctms)  AS created_ts_msk,
+       TIMESTAMP(millis_to_ts_msk(ctms))  AS created_ts_msk,
        uid AS user_id,
        reason AS type,
        desc AS condition,
