@@ -7,7 +7,7 @@
     }
 ) }}
 SELECT variant_id,
-       created_ts_msk,
+       TIMESTAMP(created_ts_msk) AS created_ts_msk,
        enabled,
        gtin,
        hs_code,
@@ -16,9 +16,9 @@ SELECT variant_id,
        orig_main_image_url,
        product_id,
        public,
-       published_ts_msk,
+       TIMESTAMP(published_ts_msk) AS published_ts_msk,
        shipping_weight,
        sku,
-       dbt_valid_from as effective_ts_msk,
-       dbt_valid_to as next_effective_ts_msk
-from {{ ref('scd2_mongo_published_variant') }}
+       TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
+       TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
+FROM {{ ref('scd2_mongo_published_variant') }}

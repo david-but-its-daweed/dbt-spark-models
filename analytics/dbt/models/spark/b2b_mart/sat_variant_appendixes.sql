@@ -26,6 +26,6 @@ SELECT variant_id,
        price_max_qnty,
        article,
        trademark,
-       dbt_valid_from as effective_ts_msk,
-       dbt_valid_to as next_effective_ts_msk
-from {{ ref('scd2_mongo_variant_appendixes') }} t
+       TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
+       TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
+FROM {{ ref('scd2_mongo_variant_appendixes') }} t

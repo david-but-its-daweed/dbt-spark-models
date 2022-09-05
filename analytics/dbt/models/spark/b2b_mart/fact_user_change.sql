@@ -13,21 +13,21 @@
 
 SELECT event_id,
     partition_date AS partition_date_msk,
-    event_ts_msk AS event_ts_msk,
+    TIMESTAMP(event_ts_msk) AS event_ts_msk,
     payload.reason AS change_type,
-    payload.roleSet.roles.`owner`.actualisationTime.time AS owner_ts_utc,
+    TIMESTAMP(from_unixtime(payload.roleSet.roles.`owner`.actualisationTime.time / 1000, 'yyyy-MM-dd hh:mm:ss')) AS owner_ts_utc,
     payload.roleSet.roles.`owner`.moderatorId AS owner_moderator_id,
-    payload.roleSet.roles.`bizDev`.actualisationTime.time AS biz_dev_ts_utc,
+    TIMESTAMP(from_unixtime(payload.roleSet.roles.`bizDev`.actualisationTime.time / 1000, 'yyyy-MM-dd hh:mm:ss')) AS biz_dev_ts_utc,
     payload.roleSet.roles.`bizDev`.moderatorId as biz_dev_moderator_id,
     payload.userId AS user_id,
     payload.validationRejectReason AS reject_reason,
     payload.validationStatus AS validation_status
-from  {{ source('b2b_mart', 'operational_events') }}
-where `type` ='customerUpdated'
+FROM  {{ source('b2b_mart', 'operational_events') }}
+WHERE `type` ='customerUpdated'
 {% if is_incremental() %}
-  and partition_date >= date'{{ var("start_date_ymd") }}'
-  and partition_date < date'{{ var("end_date_ymd") }}'
+  AND partition_date >= date'{{ var("start_date_ymd") }}'
+  AND partition_date < date'{{ var("end_date_ymd") }}'
 {% else %}
-  and partition_date   >= date'2022-05-19'
+  AND partition_date   >= date'2022-05-19'
 {% endif %}
 
