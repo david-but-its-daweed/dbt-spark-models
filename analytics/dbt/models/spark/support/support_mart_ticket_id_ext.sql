@@ -1,6 +1,6 @@
 {{ config(
      schema='support',
-     materialized='incremental',
+     materialized='table',
      partition_by=['partition_date'],
      file_format='delta',
      meta = {
