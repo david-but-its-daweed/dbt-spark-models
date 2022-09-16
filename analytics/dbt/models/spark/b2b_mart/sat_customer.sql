@@ -10,16 +10,16 @@
 SELECT customer_id,
        company_name,
        year_of_establishment,
-       CASE WHEN estimated_purchase_volume = 10 THEN "PurchaseVolume_1_150"
-            WHEN estimated_purchase_volume = 20 THEN "PurchaseVolume_150_300"
-            WHEN estimated_purchase_volume = 30 THEN "PurchaseVolume_300_500"
-            WHEN estimated_purchase_volume = 40 THEN "PurchaseVolume_500_700"
-            WHEN estimated_purchase_volume = 50 THEN "PurchaseVolume_700_1000"
-            WHEN estimated_purchase_volume = 60 THEN "PurchaseVolume_1000_1500"
-            WHEN estimated_purchase_volume = 70 THEN "PurchaseVolume_1500_5000"
-            WHEN estimated_purchase_volume = 80 THEN "PurchaseVolume_5000_15000"
-            WHEN estimated_purchase_volume = 90 THEN "PurchaseVolume_15000"
-       END AS estimated_purchase_volume,
+       CASE WHEN purchaseVolumePerMonth = 10 THEN "PurchaseVolume_1_150"
+       CASE WHEN purchaseVolumePerMonth = 20 THEN "PurchaseVolume_150_300"
+       CASE WHEN purchaseVolumePerMonth = 30 THEN "PurchaseVolume_300_500"
+       CASE WHEN purchaseVolumePerMonth = 40 THEN "PurchaseVolume_500_700"
+       CASE WHEN purchaseVolumePerMonth = 50 THEN "PurchaseVolume_700_1000"
+       CASE WHEN purchaseVolumePerMonth = 60 THEN "PurchaseVolume_1000_1500"
+       CASE WHEN purchaseVolumePerMonth = 70 THEN "PurchaseVolume_1500_5000"
+       CASE WHEN purchaseVolumePerMonth = 80 THEN "PurchaseVolume_5000_15000"
+       CASE WHEN purchaseVolumePerMonth = 90 THEN "PurchaseVolume_15000"
+       END AS purchase_volume_per_month,
        legal_entity,
        monthly_turnover_from,
        monthly_turnover_to,
