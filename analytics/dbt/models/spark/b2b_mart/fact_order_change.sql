@@ -74,7 +74,11 @@ SELECT event_id,
         SUM(IF(col.type = 'agentFee', col.stagedPrices.`confirmed`, 0)) AS agent_fee_confirmed_price,
         SUM(IF(col.type = 'certification', col.stagedPrices.`confirmed`, 0)) AS certification_confirmed_price,
         SUM(IF(col.type = 'vat', col.stagedPrices.`confirmed`, 0)) AS vat_confirmed_price,
-        SUM(IF(col.type = 'generalCargo',col.stagedPrices.`confirmed`, 0)) AS general_cargo_confirmed_price
+        SUM(IF(col.type = 'generalCargo',col.stagedPrices.`confirmed`, 0)) AS general_cargo_confirmed_price,
+        MAX(client_converted_gmv) AS client_converted_gmv,
+        MAX(final_gmv) AS final_gmv,
+        MAX(final_gross_profit) AS final_gross_profit,
+        MAX(initial_gross_profit) AS initial_gross_profit
 FROM (
 SELECT  event_id,
         partition_date AS partition_date_msk,
@@ -92,7 +96,11 @@ SELECT  event_id,
         payload.roleSet.roles.`bizDev`.moderatorId as biz_dev_moderator_id,
         payload.roleSet.roles.`bizDev`.roleType as biz_dev_role_type,
         payload.status AS status,
-        payload.subStatus AS sub_status
+        payload.subStatus AS sub_status,
+        payload.gmv.clientConvertedGMV AS client_converted_gmv,
+        payload.gmv.finalGMV AS final_gmv,
+        payload.gmv.finalGrossProfit AS final_gross_profit,
+        payload.gmv.initialGrossProfit AS initial_gross_profit
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE `type`  ='orderChangedByAdmin'
     {% if is_incremental() %}
@@ -118,7 +126,11 @@ SELECT  event_id,
         payload.roleSet.roles.`bizDev`.moderatorId as biz_dev_moderator_id,
         payload.roleSet.roles.`bizDev`.roleType as biz_dev_role_type,
         payload.status AS status,
-        payload.subStatus AS sub_status
+        payload.subStatus AS sub_status,
+        payload.gmv.clientConvertedGMV AS client_converted_gmv,
+        payload.gmv.finalGMV AS final_gmv,
+        payload.gmv.finalGrossProfit AS final_gross_profit,
+        payload.gmv.initialGrossProfit AS initial_gross_profit
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE `type`  ='orderChangedByAdmin'
     {% if is_incremental() %}
