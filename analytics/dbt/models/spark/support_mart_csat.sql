@@ -33,7 +33,7 @@ WITH csat_trigger AS
                         FROM {{ source('support', 'support_mart_ticket_id_ext') }} AS t
                         WHERE t.partition_date >  '2022-07-26'
                               AND t.is_closed = 'yes'
-                              ),
+                              )
 
                       
 SELECT t.partition_date,
