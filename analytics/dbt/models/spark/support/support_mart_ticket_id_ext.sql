@@ -258,6 +258,13 @@ ttfr_author_type AS (
                        AND t.payload.selectedOptionsIds[0] IS NOT NULL
                 ),
                 
+        csat_was_triggered AS (
+                               SELECT t.payload.ticketId AS ticket_id
+                               FROM {{ source('mart', 'babylone_events') }} AS t
+                               WHERE t.`type` = 'babyloneWidgetAction'
+                                     AND t.payload.widgetType = 'did_we_help'
+                                     AND t.payload.selectedOptionsIds[0] IS NULL
+                              ),       
                 
         resolution AS (
                        SELECT t.payload.ticketId AS ticket_id,
@@ -298,6 +305,7 @@ SELECT t.partition_date AS partition_date,
        i.agentIds,
        COALESCE(k.responses_to_support, 0) AS responses_to_support,
        COALESCE(k.responses_to_customer, 0) AS responses_to_customer,
+       CASE WHEN o.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
        l.csat AS csat
 FROM ticket_create_events AS t
 LEFT JOIN users_with_first_order AS a ON a.user_id = t.user_id
@@ -314,3 +322,4 @@ LEFT JOIN responses AS k ON k.ticket_id = t.ticket_id
 LEFT JOIN csat AS l ON l.ticket_id = t.ticket_id
 LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
+LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
