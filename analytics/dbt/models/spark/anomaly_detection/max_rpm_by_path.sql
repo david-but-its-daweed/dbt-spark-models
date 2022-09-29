@@ -4,6 +4,7 @@
     file_format='delta',
     meta = {
       'predictor_enabled': 'true',
+      'predictor_model': 'prophet_generic',
       'predictor_dimensions': 'request_root_path',
       'predictor_value_column': 'max_requests_count',
       'predictor_frequency': '10min',
