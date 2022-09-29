@@ -4,7 +4,7 @@
     file_format='delta',
     meta = {
       'predictor_enabled': 'true',
-      'predictor_dimensions': 'prefix',
+      'predictor_dimensions': 'request_root_path',
       'predictor_value_column': 'max_requests_count',
       'predictor_frequency': '10min',
       'predictor_last_train_point': '{{ next_ds }}',
@@ -13,12 +13,12 @@
     }
 ) }}
 SELECT
-    prefix,
+    request_root_path,
     to_timestamp(from_unixtime(int(unix_timestamp(window) / 600) * 600)) t,
     max(requests_count) max_requests_count
 FROM (
     SELECT
-        request_path_prefix as prefix,
+        request_root_path,
         from_unixtime(int(unix_timestamp(published_at) / 60) * 60) window,
         ip,
         count(1) as requests_count
