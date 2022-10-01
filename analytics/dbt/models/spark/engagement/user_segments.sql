@@ -11,12 +11,11 @@
 WITH activity AS (
     SELECT
         t2.real_user_id,
-        date_trunc(t1.date_msk, WEEK(MONDAY)) AS week_msk,
-        any_value(t1.os_type) AS os_type,
-        min(date_trunc(date(t2.real_user_join_ts_msk),
-            WEEK(MONDAY))) AS week_join_msk,
-        any_value(t1.user_id) AS user_id,
-        upper(any_value(t1.country)) AS country,
+        date(date_trunc('WEEK', t1.date_msk)) as week_msk,
+        first(t1.os_type) AS os_type,
+        min(date(date_trunc('WEEK', t2.real_user_join_ts_msk))) AS week_join_msk,
+        first(t1.user_id) AS user_id,
+        upper(first(t1.country)) AS country,
         count(*) AS num_evs
     FROM (
         SELECT
@@ -46,8 +45,8 @@ activity2 AS (
         week_join_msk,
         user_id,
         num_evs,
-        round(date_diff(week_msk, week_join_msk, DAY) / 28) AS cohort_month,
-        round(date_diff(week_msk, week_join_msk, DAY) / 7) AS cohort_week
+        round(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
+        round(datediff(week_msk, week_join_msk) / 7) AS cohort_week
     FROM
         activity
 ),
@@ -56,16 +55,14 @@ purchases AS (
     SELECT
         real_user_id,
         os_type,
-        round(date_diff(week_msk, week_join_msk, DAY) / 28) AS cohort_month,
+        round(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
         sum(num_orders) AS num_orders
     FROM (
         SELECT
             real_user_id,
             os_type,
-            date_trunc(date(real_user_join_ts_msk),
-                WEEK(MONDAY)) AS week_join_msk,
-            date_trunc(date(created_time_utc + INTERVAL 3 HOUR),
-                WEEK(MONDAY)) AS week_msk,
+            date(date_trunc('WEEK', real_user_join_ts_msk)) AS week_join_msk,
+            date(date_trunc('WEEK', created_time_utc + INTERVAL 3 HOUR)) AS week_msk,
             count(*) AS num_orders
         FROM
             {{ source('mart', 'star_order_2020') }}
@@ -88,7 +85,7 @@ activity_purch AS (
         t1.cohort_month,
         t1.cohort_week,
         if(t2.num_orders >= 1, 1, 0) AS num_orders,
-        if(date_diff(t1.week_msk, t1.week_join_msk, DAY) > 364,
+        if(datediff(t1.week_msk, t1.week_join_msk) > 364,
             true, false) AS user1yearold_flg
     FROM
         activity2 AS t1
@@ -99,13 +96,11 @@ activity_purch AS (
 ),
 
 util1 AS (
-    SELECT *
-    FROM unnest(['year', 'quarter', 'half-year']) AS time_unit
+    SELECT explode(array('year', 'quarter', 'half-year')) AS time_unit
 ),
 
 util2 AS (
-    SELECT *
-    FROM unnest([-1, 1]) AS segment
+    SELECT explode(array(-1, 1)) AS segment
 ),
 
 utility_table AS (
