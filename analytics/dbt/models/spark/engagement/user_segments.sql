@@ -260,6 +260,7 @@ segs_finall AS (
         t1.real_user_id,
         t1.week_msk,
         t1.os_type,
+        t1.country,
         t1.week_join_msk,
         t1.user_id,
         t1.cohort_month,
