@@ -3,7 +3,8 @@
     materialized='table',
     file_format='delta',
     meta = {
-      'team': 'clan'
+      'team': 'clan',
+      'bigquery_load': 'true'
     }
 ) }}
 
