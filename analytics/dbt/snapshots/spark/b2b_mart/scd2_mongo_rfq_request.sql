@@ -30,7 +30,7 @@ select distinct id, name as category_name
 from
 (
 select id, name, row_number() over(partition by id order by load_ts desc) as rn 
-    from {{ source('default', 'sat_category_info') }}
+    from {{ source('wpc.hiveDefaultDatabase', 'sat_category_info') }}
 )
 where rn = 1) cat on rfq.categories[1] = cat.id
 
