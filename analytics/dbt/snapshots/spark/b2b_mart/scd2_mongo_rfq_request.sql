@@ -23,15 +23,13 @@ SELECT _id AS rfq_request_id,
     millis_to_ts_msk(stms) sent_ts_msk,
     variants,
     millis_to_ts_msk(utms) AS update_ts_msk,
+    rfq.categories[1] as category_id,
     category_name
 FROM {{ source('mongo', 'b2b_core_rfq_request_daily_snapshot') }} rfq
-left join (
-select distinct id, name as category_name
-from
+left join 
 (
-select id, name, row_number() over(partition by id order by load_ts desc) as rn 
-    from {{ source('default', 'sat_category_info') }}
-)
-where rn = 1) cat on rfq.categories[1] = cat.id
+select category_id, name as category_name
+    from {{ source('mart', 'category_levels') }}
+) cat on rfq.categories[1] = cat.category_id
 
 {% endsnapshot %}
