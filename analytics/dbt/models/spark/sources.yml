@@ -42,6 +42,7 @@ sources:
   - name: default
     tables:
       - name: sat_store_performance
+      - name: sat_category_info
   - name: b2b_mart
     tables:
       - name: device_events
