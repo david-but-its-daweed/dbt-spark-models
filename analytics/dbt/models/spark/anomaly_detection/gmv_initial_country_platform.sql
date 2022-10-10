@@ -4,6 +4,7 @@
     file_format='delta',
     meta = {
       'predictor_enabled': 'true',
+      'predictor_model': 'prophet_generic',
       'anomalies_channel': '#simple-detector',
       'anomalies_metric_name': 'GMV Initial',
     }
