@@ -249,13 +249,20 @@ ttfr_author_type AS (
                   
                   ,
                  
-        csat AS (
+        csat_prebase AS (
                  SELECT t.payload.ticketId AS ticket_id,
-                        FIRST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
+                        LAST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
                  FROM {{ source('mart', 'babylone_events') }} AS t
                  WHERE t.`type` = 'babyloneWidgetAction'
                        AND t.payload.widgetType = 'did_we_help'
                        AND t.payload.selectedOptionsIds[0] IS NOT NULL
+                ),
+                
+        csat AS (
+                 SELECT t.ticket_id AS ticket_id,
+                        MIN(t.csat) AS csat
+                 FROM csat_prebase AS t
+                 GROUP BY 1
                 ),
                 
         csat_was_triggered AS (
