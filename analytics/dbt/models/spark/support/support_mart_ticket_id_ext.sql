@@ -112,7 +112,16 @@ ttfr_author_type AS (
                          ON t.payload.stateQueueId = a._id
                     WHERE t.`type` = 'ticketChangeJoom'
                           AND t.payload.stateQueueId IS NOT NULL
-                          
+                   ),
+                   
+    current_queue AS (
+                    SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
+                           LAST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS current_queue
+                    FROM {{ source('mart', 'babylone_events') }} AS t
+                    JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
+                         ON t.payload.stateQueueId = a._id
+                    WHERE t.`type` = 'ticketChangeJoom'
+                          AND t.payload.stateQueueId IS NOT NULL 
                    ),
                    
     all_queues AS (
@@ -305,6 +314,7 @@ SELECT t.partition_date AS partition_date,
        m.ttfr_author_type AS ttfr_author_type,
        CASE WHEN b.resolution_ticket_ts_msk IS NULL THEN 'no' ELSE 'yes' END AS is_closed,
        d.first_queue,
+       p.current_queue,
        f.queues,
        e.tags,
        g.parcelIds,
@@ -330,3 +340,4 @@ LEFT JOIN csat AS l ON l.ticket_id = t.ticket_id
 LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
 LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
+LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
