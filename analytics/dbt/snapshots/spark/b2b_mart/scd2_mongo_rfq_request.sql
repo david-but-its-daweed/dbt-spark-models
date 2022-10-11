@@ -22,6 +22,14 @@ SELECT _id AS rfq_request_id,
     status,
     millis_to_ts_msk(stms) sent_ts_msk,
     variants,
-    millis_to_ts_msk(utms) AS update_ts_msk
-FROM {{ source('mongo', 'b2b_core_rfq_request_daily_snapshot') }}
+    millis_to_ts_msk(utms) AS update_ts_msk,
+    rfq.categories[1] as category_id,
+    category_name
+FROM {{ source('mongo', 'b2b_core_rfq_request_daily_snapshot') }} rfq
+left join 
+(
+select category_id, name as category_name
+    from {{ source('mart', 'category_levels') }}
+) cat on rfq.categories[1] = cat.category_id
+
 {% endsnapshot %}
