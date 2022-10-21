@@ -103,7 +103,7 @@ select
     user_id, 
     vs.status as validation_status, 
     rr.reason as reject_reason
-    from {{ source('b2b_mart', 'dim_user') }} du
+    from {{ ref('dim_user') }} du
     left join validation_status vs on du.validation_status = vs.id
     left join reject_reasons rr on du.reject_reason = rr.id
     where next_effective_ts_msk is null
@@ -197,7 +197,7 @@ orders as (
         order_id, 
         friendly_id,
         request_id
-        from {{ source('b2b_mart', 'fact_order') }}
+        from {{ ref('fact_order') }}
         where next_effective_ts_msk is null) o
     left join 
     (   
@@ -212,7 +212,7 @@ orders as (
             status,
             sub_status,
             row_number() over (partition by order_id order by event_ts_msk desc) as rn
-            from {{ source('b2b_mart', 'fact_order_change') }}
+            from {{ ref('fact_order_change') }}
         )
         where rn = 1
     ) s on o.order_id = s.order_id
