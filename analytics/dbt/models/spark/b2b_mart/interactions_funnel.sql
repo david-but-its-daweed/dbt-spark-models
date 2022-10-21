@@ -16,7 +16,7 @@ with user_interaction as
     interaction_id, 
     user_id, 
     interaction_create_date, 
-    date(interaction_create_date) as partition_date,
+    date(interaction_create_date) as partition_date_msk,
     date(interaction_create_date) - WEEKDAY( date(interaction_create_date)) AS created_week,
     case when row_number() over(partition by user_id order by interaction_create_date) = 1 then 1 else 0 end as first_interaction
     from (
@@ -260,7 +260,7 @@ order_interaction as (
 select 
     in.interaction_id,
     interaction_create_date,
-    partition_date,
+    partition_date_msk,
     created_week,
     in.user_id,
     validation_status, 
