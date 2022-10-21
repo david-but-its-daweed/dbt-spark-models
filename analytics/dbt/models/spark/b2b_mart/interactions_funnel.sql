@@ -20,7 +20,9 @@ with user_interaction as
     case when row_number() over(partition by user_id order by interaction_create_date) = 1 then 1 else 0 end as first_interaction,
     utm_campaign,
     utm_source,
-    utm_medium
+    utm_medium,
+    source, 
+    type
     from (
         select 
             _id as interaction_id, 
@@ -28,7 +30,9 @@ with user_interaction as
             min(from_unixtime(ctms/1000 + 10800)) as interaction_create_date,
             max(map_from_entries(utmLabels)["utm_campaign"]) as utm_campaign,
             max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
-            max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium
+            max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
+            source, 
+            type
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
         group by _id, uid
     )
@@ -269,6 +273,8 @@ select
     utm_campaign,
     utm_source,
     utm_medium,
+    source, 
+    type,
     in.user_id,
     validation_status, 
     reject_reason,
