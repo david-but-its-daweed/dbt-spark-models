@@ -31,8 +31,8 @@ with user_interaction as
             max(map_from_entries(utmLabels)["utm_campaign"]) as utm_campaign,
             max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
             max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
-            source, 
-            type
+            max(source) as source, 
+            max(type) as type
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
         group by _id, uid
     )
