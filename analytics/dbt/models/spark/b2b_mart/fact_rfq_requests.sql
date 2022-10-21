@@ -20,5 +20,7 @@ SELECT rfq_request_id,
        TIMESTAMP(sent_ts_msk) AS sent_ts_msk,
        variants,
        TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
-       TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
+       TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk,
+       category_id, 
+       category_name
 FROM {{ ref('scd2_mongo_rfq_request') }} t

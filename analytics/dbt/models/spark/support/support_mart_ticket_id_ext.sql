@@ -112,7 +112,16 @@ ttfr_author_type AS (
                          ON t.payload.stateQueueId = a._id
                     WHERE t.`type` = 'ticketChangeJoom'
                           AND t.payload.stateQueueId IS NOT NULL
-                          
+                   ),
+                   
+    current_queue AS (
+                    SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
+                           LAST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS current_queue
+                    FROM {{ source('mart', 'babylone_events') }} AS t
+                    JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
+                         ON t.payload.stateQueueId = a._id
+                    WHERE t.`type` = 'ticketChangeJoom'
+                          AND t.payload.stateQueueId IS NOT NULL 
                    ),
                    
     all_queues AS (
@@ -249,13 +258,20 @@ ttfr_author_type AS (
                   
                   ,
                  
-        csat AS (
+        csat_prebase AS (
                  SELECT t.payload.ticketId AS ticket_id,
-                        FIRST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
+                        LAST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
                  FROM {{ source('mart', 'babylone_events') }} AS t
                  WHERE t.`type` = 'babyloneWidgetAction'
                        AND t.payload.widgetType = 'did_we_help'
                        AND t.payload.selectedOptionsIds[0] IS NOT NULL
+                ),
+                
+        csat AS (
+                 SELECT t.ticket_id AS ticket_id,
+                        MIN(t.csat) AS csat
+                 FROM csat_prebase AS t
+                 GROUP BY 1
                 ),
                 
         csat_was_triggered AS (
@@ -298,6 +314,7 @@ SELECT t.partition_date AS partition_date,
        m.ttfr_author_type AS ttfr_author_type,
        CASE WHEN b.resolution_ticket_ts_msk IS NULL THEN 'no' ELSE 'yes' END AS is_closed,
        d.first_queue,
+       p.current_queue,
        f.queues,
        e.tags,
        g.parcelIds,
@@ -323,3 +340,4 @@ LEFT JOIN csat AS l ON l.ticket_id = t.ticket_id
 LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
 LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
+LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
