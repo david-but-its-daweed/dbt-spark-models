@@ -12,17 +12,23 @@
 
 with user_interaction as 
 (select 
-    interaction_id, 
+     interaction_id, 
     user_id, 
     interaction_create_date, 
     date(interaction_create_date) as partition_date_msk,
     date(interaction_create_date) - WEEKDAY( date(interaction_create_date)) AS created_week,
-    case when row_number() over(partition by user_id order by interaction_create_date) = 1 then 1 else 0 end as first_interaction
+    case when row_number() over(partition by user_id order by interaction_create_date) = 1 then 1 else 0 end as first_interaction,
+    utm_campaign,
+    utm_source,
+    utm_medium
     from (
         select 
             _id as interaction_id, 
             uid as user_id, 
-            min(from_unixtime(ctms/1000 + 10800)) as interaction_create_date
+            min(from_unixtime(ctms/1000 + 10800)) as interaction_create_date,
+            max(map_from_entries(utmLabels)["utm_campaign"]) as utm_campaign,
+            max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
+            max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
         group by _id, uid
     )
@@ -258,9 +264,11 @@ order_interaction as (
 
 select 
     in.interaction_id,
-    interaction_create_date,
     partition_date_msk,
     created_week,
+    utm_campaign,
+    utm_source,
+    utm_medium,
     in.user_id,
     validation_status, 
     reject_reason,
