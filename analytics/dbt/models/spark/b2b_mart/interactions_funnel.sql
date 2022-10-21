@@ -10,7 +10,6 @@
     }
 ) }}
 
-%spark.sql
 with user_interaction as 
 (select 
     interaction_id, 
