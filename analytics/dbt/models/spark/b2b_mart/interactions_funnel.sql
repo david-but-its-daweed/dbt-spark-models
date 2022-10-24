@@ -1,10 +1,8 @@
 {{ config(
     schema='b2b_mart',
-    materialized='incremental',
-    partition_by=['partition_date_msk'],
-    file_format='delta',
+    materialized='table',
+    file_format='parquet',
     meta = {
-      'team': 'general_analytics',
       'bigquery_load': 'true'
     }
 ) }}
@@ -265,7 +263,7 @@ order_interaction as (
     where rn = 1
 )
 
-select 
+select distinct
     in.interaction_id,
     partition_date_msk,
     created_week,
