@@ -5,8 +5,7 @@
     file_format='delta',
     meta = {
       'team': 'general_analytics',
-      'bigquery_load': 'true',
-      'bigquery_partitioning_date_column': 'partition_date_msk'
+      'bigquery_load': 'true'
     }
 ) }}
 
