@@ -5,8 +5,8 @@
     meta = {
       'team': 'ads',
       'bigquery_load': 'true',
-      'bigquery_table_name': 'ads.web_analytics_cohorts_v4'
-      'bigquery_partitioning_date_column': 'partition_date'
+      'bigquery_table_name': 'ads.web_analytics_cohorts_v4',
+      'bigquery_partitioning_date_column': 'partition_date',
     }
 ) }}
 select *
