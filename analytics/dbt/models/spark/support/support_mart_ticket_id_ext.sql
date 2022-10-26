@@ -275,7 +275,7 @@ ttfr_author_type AS (
                 ),
                 
         csat_was_triggered AS (
-                               SELECT t.payload.ticketId AS ticket_id
+                               SELECT DISTINCT t.payload.ticketId AS ticket_id
                                FROM {{ source('mart', 'babylone_events') }} AS t
                                WHERE t.`type` = 'babyloneWidgetAction'
                                      AND t.payload.widgetType = 'did_we_help'
