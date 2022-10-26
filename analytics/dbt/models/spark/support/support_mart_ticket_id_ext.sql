@@ -103,16 +103,6 @@ ttfr_author_type AS (
                            AND author_id != '000000000000050001000001'
                            AND author_type != 'customer'
                     ),
-            
-    first_queue AS (
-                    SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
-                           FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue
-                    FROM {{ source('mart', 'babylone_events') }} AS t
-                    JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
-                         ON t.payload.stateQueueId = a._id
-                    WHERE t.`type` = 'ticketChangeJoom'
-                          AND t.payload.stateQueueId IS NOT NULL
-                   ),
                    
     current_queue AS (
                     SELECT DISTINCT(t.payload.ticketId) AS ticket_id,
@@ -313,9 +303,10 @@ SELECT t.partition_date AS partition_date,
        c.ttfr,
        m.ttfr_author_type AS ttfr_author_type,
        CASE WHEN b.resolution_ticket_ts_msk IS NULL THEN 'no' ELSE 'yes' END AS is_closed,
-       d.first_queue,
-       p.current_queue,
+       CASE WHEN p.current_queue == 'Limbo' THEN f.queues[1] ELSE p.current_queue END AS current_queue,
        f.queues,
+       f.queues[0] AS first_queue,
+       CASE WHEN f.queues[0] == 'Limbo' THEN f.queues[1] ELSE f.queues[0] END AS first_queue_not_limbo,
        e.tags,
        g.parcelIds,
        h.orderIds,
@@ -329,7 +320,6 @@ LEFT JOIN users_with_first_order AS a ON a.user_id = t.user_id
                                          AND t.ts_created >= a.first_order_created_time_msk
 LEFT JOIN resolution AS b ON b.ticket_id = t.ticket_id
 LEFT JOIN ttfr AS c ON c.ticket_id = t.ticket_id
-LEFT JOIN first_queue AS d ON d.ticket_id = t.ticket_id
 LEFT JOIN all_tags AS e ON e.ticket_id = t.ticket_id
 LEFT JOIN all_queues AS f ON f.ticket_id = t.ticket_id
 LEFT JOIN all_parcels AS g ON g.ticket_id = t.ticket_id
