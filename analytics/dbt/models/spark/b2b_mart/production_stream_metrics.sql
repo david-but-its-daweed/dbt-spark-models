@@ -120,7 +120,8 @@ select
     man_days,
         
     case when claimed is not null then 'claimed'
-        when cancelled is not null and cancelled > manufacturing then 'cancelled' else 'ok' end as claim
+        when cancelled is not null and cancelled > manufacturing then 'cancelled' 
+        when closed is not null then 'ok' end as claim
 from merchant_orders 
 left join order_statuses on merchant_orders.order_id = order_statuses.order_id
 where signing_and_payment is not null
