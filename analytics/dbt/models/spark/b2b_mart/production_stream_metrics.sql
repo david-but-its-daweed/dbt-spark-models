@@ -124,4 +124,3 @@ select
         when closed is not null then 'ok' end as claim
 from merchant_orders 
 left join order_statuses on merchant_orders.order_id = order_statuses.order_id
-where signing_and_payment is not null
