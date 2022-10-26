@@ -100,7 +100,9 @@ select
     merchant_id, 
     longest_order, 
     one_merchant_order, 
-    date(coalesce(manufacturing_and_qc_in_progress, manufacturing)) as manufacturing,
+    date(signing_and_payment) as signing_and_payment,
+    date(manufacturing) as manufacturing,
+    date(no_operations_started) as no_operations_started,
     date(advance_payment_requested) as advance_payment_requested,
     date(advance_payment_in_progress) as advance_payment_in_progress,
     date(advance_payment_acquired) as advance_payment_acquired,
@@ -113,24 +115,9 @@ select
     date(complete_payment_acquired) as complete_payment_acquired,
     date(merchant_acquired_payment) as merchant_acquired_payment,
     case when advance_payment_requested is not null then 'advance' else 'complete' end as payment_type,
-    datediff(advance_payment_in_progress, advance_payment_requested) as client_advance_payment,
-    datediff(advance_payment_acquired, advance_payment_in_progress) as advance_payment_sent_to_merchant,
-    datediff(manufacturing_and_qc_in_progress, advance_payment_acquired) as advance_payment_recieft_by_merchant,
-    datediff(manufacturing_and_qc_in_progress, advance_payment_in_progress) as merchant_advance_payment,
     
-    datediff(remaining_payment_in_progress, remaining_payment_requested) as client_remaining_payment,
-    datediff(remaining_payment_acquired, advance_payment_in_progress) as remaining_payment_sent_to_merchant,
-    datediff(merchant_acquired_payment, remaining_payment_acquired) as remaining_payment_recieft_by_merchant,
-    datediff(merchant_acquired_payment, remaining_payment_in_progress) as merchant_remaining_payment,
-    
-    datediff(complete_payment_in_progress, complete_payment_requested) as client_complete_payment,
-    datediff(complete_payment_acquired, complete_payment_in_progress) as complete_payment_sent_to_merchant,
-    datediff(merchant_acquired_payment, complete_payment_acquired) as complete_payment_recieft_by_merchant,
-    datediff(merchant_acquired_payment, complete_payment_in_progress) as merchant_complete_payment,
-    
-    coalesce(datediff(manufacturing_and_qc_in_progress, remaining_payment_requested), 
-        datediff(manufacturing_and_qc_in_progress, complete_payment_requested),
-        datediff(shipping, manufacturing)) - man_days as manufacturing_late,
+    coalesce(shipping, closed) as manufacturing_ended,
+    man_days,
         
     case when claimed is not null then 'claimed'
         when cancelled is not null and cancelled > manufacturing then 'cancelled' else 'ok' end as claim
