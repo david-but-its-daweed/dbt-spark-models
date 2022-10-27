@@ -23,7 +23,7 @@ FROM (
         from_unixtime(int(unix_timestamp(published_at) / 60) * 60) window,
         ip,
         count(1) as requests_count
-    FROM {{ source('threat', 'bot_slo_marketplace') }}
+    FROM threat.bot_slo_marketplace
     WHERE partition_date >= date('{{ var("start_date_ymd") }}') - INTERVAL 14 days AND NOT is_bot
     GROUP BY 1,2,3
 )
