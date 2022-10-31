@@ -79,7 +79,7 @@ where day >= current_date() - 120
 select 
     am.merchant_id,
     am.activation_time, 
-    case when am.activation_time is not null and am.activation_time > day and am.merchant_type = 'internal'
+    case when am.activation_time is not null and am.activation_time > day and am.merchant_type = 'internal' then 'internal activated' 
      when am.merchant_type = 'internal' then 'internal not activated' 
      else am.merchant_types end as activated_account,
     am.merchant_type, 
@@ -91,6 +91,9 @@ from all_merchants am
 left join merchant_orders mo on am.merchant_id = mo.merchant_id and mo.created_ts_msk >= day -30 and mo.created_ts_msk <= day
 group by  am.merchant_id,
     am.activation_time, 
+    case when am.activation_time is not null and am.activation_time > day and am.merchant_type = 'internal' then 'internal activated' 
+     when am.merchant_type = 'internal' then 'internal not activated' 
+     else am.merchant_types end,
     am.merchant_type, 
     am.company_name,
     am.day,
