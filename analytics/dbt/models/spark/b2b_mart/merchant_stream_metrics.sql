@@ -79,7 +79,7 @@ where day >= current_date() - 120
 select 
     am.merchant_id,
     am.activation_time, 
-    case when am.activation_time is not null and am.activation_time > day and am.merchant_type = 'internal' then 'internal activated' 
+    case when am.activation_time is not null and am.activation_time <= day and am.merchant_type = 'internal' then 'internal activated' 
      when am.merchant_type = 'internal' then 'internal not activated' 
      else am.merchant_types end as activated_account,
     am.merchant_type, 
