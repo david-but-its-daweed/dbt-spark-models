@@ -263,8 +263,9 @@ order_interaction as (
     where rn = 1
 )
 
-select distinct
-    in.interaction_id,
+
+select 
+    interaction_id,
     partition_date_msk,
     created_week,
     utm_campaign,
@@ -272,7 +273,7 @@ select distinct
     utm_medium,
     source, 
     type,
-    in.user_id,
+    user_id,
     validation_status, 
     reject_reason,
     first_interaction,
@@ -281,17 +282,41 @@ select distinct
     friendly_id,
     status,
     sub_status,
-    case when status = 'cancelled' then 'cancelled'
-        when status = 'claim' then 'claim'
-        when status = 'closed' then 'closed'
-        when status = 'shipping' then 'shipping'
-        when status = 'manufacturing' then 'manufacturing'
-        when status = 'selling' and sub_status = 'signingAndPayment' then 'signing'
-        when status = 'selling' and sub_status = 'finalPricing' then 'final Pricing'
-        when status = 'selling' and sub_status = 'negotiation' then 'negotiation'
-        when status = 'selling' and sub_status = 'priceEstimation' then 'price Estimation'
-        when validation_status in ('validated', 'rejected') then validation_status 
-        else 'Not validated' end as funnel_field
-from user_interaction in 
-left join users u on in.user_id = u.user_id
-left join order_interaction oi on oi.interaction_id = in.interaction_id
+    funnel_field,
+    order_successful,
+    row_number() over(partition by user_id, order_successful order by interaction_create_date) as order_number
+    from
+    (select distinct
+        in.interaction_id,
+        partition_date_msk,
+        created_week,
+        utm_campaign,
+        utm_source,
+        utm_medium,
+        source, 
+        type,
+        in.user_id,
+        validation_status, 
+        reject_reason,
+        first_interaction,
+        request_id,
+        order_id,
+        friendly_id,
+        status,
+        sub_status,
+        case when status = 'cancelled' then 'cancelled'
+            when status = 'claim' then 'claim'
+            when status = 'closed' then 'closed'
+            when status = 'shipping' then 'shipping'
+            when status = 'manufacturing' then 'manufacturing'
+            when status = 'selling' and sub_status = 'signingAndPayment' then 'signing'
+            when status = 'selling' and sub_status = 'finalPricing' then 'final Pricing'
+            when status = 'selling' and sub_status = 'negotiation' then 'negotiation'
+            when status = 'selling' and sub_status = 'priceEstimation' then 'price Estimation'
+            when validation_status in ('validated', 'rejected') then validation_status 
+            else 'Not validated' end as funnel_field,
+        case when status in ('cancelled', 'claim', 'closed', 'shipping', 'manufacturing') then 1 else 0 end as order_successful
+    from user_interaction in 
+    left join users u on in.user_id = u.user_id
+    left join order_interaction oi on oi.interaction_id = in.interaction_id
+    )
