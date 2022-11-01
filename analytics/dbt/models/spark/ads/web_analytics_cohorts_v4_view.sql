@@ -1,7 +1,6 @@
 {{ config(
     schema='ads',
     materialized='view',
-    partition_by=['partition_date'],
     meta = {
       'team': 'ads',
       'bigquery_load': 'true',
