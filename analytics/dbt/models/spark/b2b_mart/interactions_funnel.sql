@@ -284,7 +284,7 @@ select
     sub_status,
     funnel_field,
     order_successful,
-    row_number() over(partition by user_id, order_successful order by interaction_create_date) as order_number
+    row_number() over(partition by user_id, order_successful order by partition_date_msk) as order_number
     from
     (select distinct
         in.interaction_id,
