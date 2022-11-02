@@ -366,4 +366,5 @@ select
     left join users u on in.user_id = u.user_id
     left join order_interaction oi on oi.interaction_id = in.interaction_id
     left join gmv on in.interaction_id = gmv.interaction_id
+    where in.user_id != '000000000000000000000000'
     )
