@@ -43,6 +43,7 @@ sources:
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: b2b_core_interactions_daily_snapshot
+      - name: product_fast_delivery_info_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -50,12 +51,11 @@ sources:
     tables:
       - name: device_events
       - name: operational_events
+      - name: dim_merchant
   - name: logistics_mart
     tables:
       - name: fact_order
   - name: support
     tables:
       - name: support_mart_ticket_id_ext
-  - name: threat
-    tables:
-      - name: bot_slo_marketplace
+
