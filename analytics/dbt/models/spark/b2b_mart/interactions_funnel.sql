@@ -302,6 +302,7 @@ select
     utm_medium,
     source, 
     type,
+    campaign,
     user_id,
     validation_status, 
     reject_reason,
