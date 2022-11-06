@@ -12,7 +12,7 @@
       'predictor_last_train_point': '{{ next_ds }}',
       'predictor_num_forecast_points': '0',
       'predictor_prophet_seasonality_mode': 'multiplicative',
-      'anomalies_channel', '#anomalies-automatic'
+      'anomalies_channel': '#anomalies-automatic'
     }
 ) }}
 SELECT
