@@ -19,7 +19,8 @@ with user_interaction as
     utm_source,
     utm_medium,
     source, 
-    type
+    type,
+    campaign
     from (
         select 
             _id as interaction_id, 
@@ -29,7 +30,8 @@ with user_interaction as
             max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
             max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
             max(source) as source, 
-            max(type) as type
+            max(type) as type,
+            max(campaign) as campaign
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
         group by _id, uid
     )
@@ -261,10 +263,38 @@ order_interaction as (
     )
     )
     where rn = 1
+),
+
+gmv as
+(
+SELECT interaction_id, final_gmv, client_converted_gmv
+FROM
+(
+    SELECT  
+        event_ts_msk,
+        interaction_id,
+        payload.gmv.clientConvertedGMV AS client_converted_gmv,
+        payload.gmv.finalGMV AS final_gmv,
+        payload.gmv.finalGrossProfit AS final_gross_profit,
+        payload.gmv.initialGrossProfit AS initial_gross_profit,
+        row_number() over(partition by interaction_id order by event_ts_msk desc) as rn
+    FROM {{ source('b2b_mart', 'operational_events') }} oe
+    right join
+    (select distinct
+            _id as interaction_id, 
+            request_id,
+            order_id
+        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} i
+        left join orders o on i.popupRequestId = o.request_id
+    ) in on oe.payload.orderId = in.order_id
+    WHERE `type`  ='orderChangedByAdmin'
+    )
+where rn = 1
 )
 
-select distinct
-    in.interaction_id,
+
+select 
+    interaction_id,
     partition_date_msk,
     created_week,
     utm_campaign,
@@ -272,7 +302,8 @@ select distinct
     utm_medium,
     source, 
     type,
-    in.user_id,
+    campaign,
+    user_id,
     validation_status, 
     reject_reason,
     first_interaction,
@@ -281,17 +312,60 @@ select distinct
     friendly_id,
     status,
     sub_status,
-    case when status = 'cancelled' then 'cancelled'
-        when status = 'claim' then 'claim'
-        when status = 'closed' then 'closed'
-        when status = 'shipping' then 'shipping'
-        when status = 'manufacturing' then 'manufacturing'
-        when status = 'selling' and sub_status = 'signingAndPayment' then 'signing'
-        when status = 'selling' and sub_status = 'finalPricing' then 'final Pricing'
-        when status = 'selling' and sub_status = 'negotiation' then 'negotiation'
-        when status = 'selling' and sub_status = 'priceEstimation' then 'price Estimation'
-        when validation_status in ('validated', 'rejected') then validation_status 
-        else 'Not validated' end as funnel_field
-from user_interaction in 
-left join users u on in.user_id = u.user_id
-left join order_interaction oi on oi.interaction_id = in.interaction_id
+    final_gmv, client_converted_gmv,
+    funnel_field,
+    int_funnel_field,
+    cast(int_funnel_field as string)||"_"||funnel_field as sorted_funnel_field,
+    order_successful,
+    row_number() over(partition by user_id, order_successful order by partition_date_msk) as order_number
+    from
+    (select distinct
+        in.interaction_id,
+        partition_date_msk,
+        created_week,
+        utm_campaign,
+        utm_source,
+        utm_medium,
+        source, 
+        type,
+        campaign,
+        in.user_id,
+        validation_status, 
+        reject_reason,
+        first_interaction,
+        request_id,
+        order_id,
+        friendly_id,
+        status,
+        sub_status,
+        final_gmv, client_converted_gmv,
+        case when status = 'cancelled' then 'cancelled'
+            when status = 'claim' then 'claim'
+            when status = 'closed' then 'closed'
+            when status = 'shipping' then 'shipping'
+            when status = 'manufacturing' then 'manufacturing'
+            when status = 'selling' and sub_status = 'signingAndPayment' then 'signing'
+            when status = 'selling' and sub_status = 'finalPricing' then 'final Pricing'
+            when status = 'selling' and sub_status = 'negotiation' then 'negotiation'
+            when status = 'selling' and sub_status = 'priceEstimation' then 'price Estimation'
+            when validation_status in ('validated', 'rejected') then validation_status 
+            else 'Not validated' end as funnel_field,
+        case when status = 'cancelled' then 11
+            when status = 'claim' then 10
+            when status = 'closed' then 9
+            when status = 'shipping' then 8
+            when status = 'manufacturing' then 7
+            when status = 'selling' and sub_status = 'signingAndPayment' then 6
+            when status = 'selling' and sub_status = 'finalPricing' then 5
+            when status = 'selling' and sub_status = 'negotiation' then 4
+            when status = 'selling' and sub_status = 'priceEstimation' then 3
+            when validation_status = 'validated' then 2
+            when validation_status = 'rejected' then 1 
+            else 0 end as int_funnel_field,
+        case when status in ('claim', 'closed', 'shipping', 'manufacturing') then 1 else 0 end as order_successful
+    from user_interaction in 
+    left join users u on in.user_id = u.user_id
+    left join order_interaction oi on oi.interaction_id = in.interaction_id
+    left join gmv on in.interaction_id = gmv.interaction_id
+    where in.user_id != '000000000000000000000000'
+    )
