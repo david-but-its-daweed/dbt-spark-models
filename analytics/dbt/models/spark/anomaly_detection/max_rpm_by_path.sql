@@ -14,7 +14,9 @@
       'predictor_prophet_seasonality_mode': 'multiplicative',
       'anomalies_channel': '#anomalies-automatic',
       'anomalies_significance_score': 'num_deviations',
-      'anomalies_group_by_time_column': 'd'
+      'anomalies_group_by_time_column': 'd',
+      'anomalies_plot_start_time': '{{ ds | plus_days(-2) }}',
+      'anomalies_max_count', '10',
     }
 ) }}
 SELECT
