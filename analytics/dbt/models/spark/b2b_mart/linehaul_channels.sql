@@ -8,7 +8,7 @@
 ) }}
 
 select "629898f122c4056c920f47da" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AeroMtl" as crowdin_key
 	, "ATC_TANAIS_TANAIS" as name
 	, 5 as min_days
@@ -16,7 +16,7 @@ select "629898f122c4056c920f47da" as id
 	, "Aero" as channel_type
 union all
 select "629898f122c4056c920f47db" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AeroMtl" as crowdin_key
 	, "ATC_HECNY_R_HECNY_R" as name
 	, 5 as min_days
@@ -24,7 +24,7 @@ select "629898f122c4056c920f47db" as id
 	, "Aero" as channel_type
 union all
 select "629898f122c4056c920f47dc" as id
-	, 1 as order
+	, 1 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "HECNY_R_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -32,7 +32,7 @@ select "629898f122c4056c920f47dc" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47de" as id
-	, 1 as order
+	, 1 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "AKFA_TANAIS_TANAIS" as name
 	, 28 as min_days
@@ -40,7 +40,7 @@ select "629898f122c4056c920f47de" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47df" as id
-	, 1 as order
+	, 1 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "AKFA_HECNY_R_HECNY_R" as name
 	, 28 as min_days
@@ -48,7 +48,7 @@ select "629898f122c4056c920f47df" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ea" as id
-	, 2 as order
+	, 2 as order_channel
 	, "TrainMtl" as crowdin_key
 	, "YMTRANS_TANAIS_TANAIS" as name
 	, 25 as min_days
@@ -56,7 +56,7 @@ select "629898f122c4056c920f47ea" as id
 	, "Rail" as channel_type
 union all
 select "629898f122c4056c920f47eb" as id
-	, 2 as order
+	, 2 as order_channel
 	, "TrainMtl" as crowdin_key
 	, "YMTRANS_HECNY_R_HECNY_R" as name
 	, 25 as min_days
@@ -64,7 +64,7 @@ select "629898f122c4056c920f47eb" as id
 	, "Rail" as channel_type
 union all
 select "629898f122c4056c920f47ec" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "CEL_TANAIS_TANAIS" as name
 	, 20 as min_days
@@ -72,7 +72,7 @@ select "629898f122c4056c920f47ec" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ed" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "CEL_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -80,7 +80,7 @@ select "629898f122c4056c920f47ed" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ee" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "KIM_TANAIS_TANAIS" as name
 	, 20 as min_days
@@ -88,7 +88,7 @@ select "629898f122c4056c920f47ee" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ef" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "KIM_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -96,7 +96,7 @@ select "629898f122c4056c920f47ef" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47fa" as id
-	, 2 as order
+	, 2 as order_channel
 	, "Sea" as crowdin_key
 	, "PARUS_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -104,7 +104,7 @@ select "629898f122c4056c920f47fa" as id
 	, "Sea" as channel_type
 union all
 select "629898f122c4056c920f47fb" as id
-	, 2 as order
+	, 2 as order_channel
 	, "Sea" as crowdin_key
 	, "PARUS_TANAIS_TANAIS" as name
 	, 20 as min_days
@@ -112,7 +112,7 @@ select "629898f122c4056c920f47fb" as id
 	, "Sea" as channel_type
 union all
 select "629898f122c4056c920f47da" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AeroMtl" as crowdin_key
 	, "ATC_TANAIS_TANAIS" as name
 	, 5 as min_days
@@ -120,7 +120,7 @@ select "629898f122c4056c920f47da" as id
 	, "Aero" as channel_type
 union all
 select "629898f122c4056c920f47db" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AeroMtl" as crowdin_key
 	, "ATC_HECNY_R_HECNY_R" as name
 	, 5 as min_days
@@ -128,7 +128,7 @@ select "629898f122c4056c920f47db" as id
 	, "Aero" as channel_type
 union all
 select "629898f122c4056c920f47dc" as id
-	, 1 as order
+	, 1 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "HECNY_R_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -136,7 +136,7 @@ select "629898f122c4056c920f47dc" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47de" as id
-	, 1 as order
+	, 1 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "AKFA_TANAIS_TANAIS" as name
 	, 28 as min_days
@@ -144,7 +144,7 @@ select "629898f122c4056c920f47de" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47df" as id
-	, 1 as order
+	, 1 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "AKFA_HECNY_R_HECNY_R" as name
 	, 28 as min_days
@@ -152,7 +152,7 @@ select "629898f122c4056c920f47df" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ea" as id
-	, 2 as order
+	, 2 as order_channel
 	, "TrainMtl" as crowdin_key
 	, "YMTRANS_TANAIS_TANAIS" as name
 	, 25 as min_days
@@ -160,7 +160,7 @@ select "629898f122c4056c920f47ea" as id
 	, "Rail" as channel_type
 union all
 select "629898f122c4056c920f47eb" as id
-	, 2 as order
+	, 2 as order_channel
 	, "TrainMtl" as crowdin_key
 	, "YMTRANS_HECNY_R_HECNY_R" as name
 	, 25 as min_days
@@ -168,7 +168,7 @@ select "629898f122c4056c920f47eb" as id
 	, "Rail" as channel_type
 union all
 select "629898f122c4056c920f47ec" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "CEL_TANAIS_TANAIS" as name
 	, 20 as min_days
@@ -176,7 +176,7 @@ select "629898f122c4056c920f47ec" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ed" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "CEL_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -184,7 +184,7 @@ select "629898f122c4056c920f47ed" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ee" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "KIM_TANAIS_TANAIS" as name
 	, 20 as min_days
@@ -192,7 +192,7 @@ select "629898f122c4056c920f47ee" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47ef" as id
-	, 2 as order
+	, 2 as order_channel
 	, "AutoMtl" as crowdin_key
 	, "KIM_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -200,7 +200,7 @@ select "629898f122c4056c920f47ef" as id
 	, "Auto" as channel_type
 union all
 select "629898f122c4056c920f47fa" as id
-	, 2 as order
+	, 2 as order_channel
 	, "Sea" as crowdin_key
 	, "PARUS_HECNY_R_HECNY_R" as name
 	, 20 as min_days
@@ -208,7 +208,7 @@ select "629898f122c4056c920f47fa" as id
 	, "Sea" as channel_type
 union all
 select "629898f122c4056c920f47fb" as id
-	, 2 as order
+	, 2 as order_channel
 	, "Sea" as crowdin_key
 	, "PARUS_TANAIS_TANAIS" as name
 	, 20 as min_days
