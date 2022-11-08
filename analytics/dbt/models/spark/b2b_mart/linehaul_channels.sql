@@ -111,7 +111,7 @@ select "629898f122c4056c920f47fb" as id
 	, 24 as max_days
 	, "Sea" as channel_type
 union all
-select ""629898f122c4056c920f47da"" as id
+select "629898f122c4056c920f47da" as id
 	, 2 as order
 	, "AeroMtl" as crowdin_key
 	, "ATC_TANAIS_TANAIS" as name
@@ -119,7 +119,7 @@ select ""629898f122c4056c920f47da"" as id
 	, 8 as max_days
 	, "Aero" as channel_type
 union all
-select ""629898f122c4056c920f47db"" as id
+select "629898f122c4056c920f47db" as id
 	, 2 as order
 	, "AeroMtl" as crowdin_key
 	, "ATC_HECNY_R_HECNY_R" as name
@@ -127,7 +127,7 @@ select ""629898f122c4056c920f47db"" as id
 	, 8 as max_days
 	, "Aero" as channel_type
 union all
-select ""629898f122c4056c920f47dc"" as id
+select "629898f122c4056c920f47dc" as id
 	, 1 as order
 	, "AutoMtl" as crowdin_key
 	, "HECNY_R_HECNY_R_HECNY_R" as name
@@ -135,7 +135,7 @@ select ""629898f122c4056c920f47dc"" as id
 	, 24 as max_days
 	, "Auto" as channel_type
 union all
-select ""629898f122c4056c920f47de"" as id
+select "629898f122c4056c920f47de" as id
 	, 1 as order
 	, "AutoMtl" as crowdin_key
 	, "AKFA_TANAIS_TANAIS" as name
@@ -143,7 +143,7 @@ select ""629898f122c4056c920f47de"" as id
 	, 32 as max_days
 	, "Auto" as channel_type
 union all
-select ""629898f122c4056c920f47df"" as id
+select "629898f122c4056c920f47df" as id
 	, 1 as order
 	, "AutoMtl" as crowdin_key
 	, "AKFA_HECNY_R_HECNY_R" as name
@@ -151,7 +151,7 @@ select ""629898f122c4056c920f47df"" as id
 	, 32 as max_days
 	, "Auto" as channel_type
 union all
-select ""629898f122c4056c920f47ea"" as id
+select "629898f122c4056c920f47ea" as id
 	, 2 as order
 	, "TrainMtl" as crowdin_key
 	, "YMTRANS_TANAIS_TANAIS" as name
@@ -159,7 +159,7 @@ select ""629898f122c4056c920f47ea"" as id
 	, 30 as max_days
 	, "Rail" as channel_type
 union all
-select ""629898f122c4056c920f47eb"" as id
+select "629898f122c4056c920f47eb" as id
 	, 2 as order
 	, "TrainMtl" as crowdin_key
 	, "YMTRANS_HECNY_R_HECNY_R" as name
@@ -167,7 +167,7 @@ select ""629898f122c4056c920f47eb"" as id
 	, 30 as max_days
 	, "Rail" as channel_type
 union all
-select ""629898f122c4056c920f47ec"" as id
+select "629898f122c4056c920f47ec" as id
 	, 2 as order
 	, "AutoMtl" as crowdin_key
 	, "CEL_TANAIS_TANAIS" as name
@@ -175,7 +175,7 @@ select ""629898f122c4056c920f47ec"" as id
 	, 24 as max_days
 	, "Auto" as channel_type
 union all
-select ""629898f122c4056c920f47ed"" as id
+select "629898f122c4056c920f47ed" as id
 	, 2 as order
 	, "AutoMtl" as crowdin_key
 	, "CEL_HECNY_R_HECNY_R" as name
@@ -183,7 +183,7 @@ select ""629898f122c4056c920f47ed"" as id
 	, 24 as max_days
 	, "Auto" as channel_type
 union all
-select ""629898f122c4056c920f47ee"" as id
+select "629898f122c4056c920f47ee" as id
 	, 2 as order
 	, "AutoMtl" as crowdin_key
 	, "KIM_TANAIS_TANAIS" as name
@@ -191,7 +191,7 @@ select ""629898f122c4056c920f47ee"" as id
 	, 24 as max_days
 	, "Auto" as channel_type
 union all
-select ""629898f122c4056c920f47ef"" as id
+select "629898f122c4056c920f47ef" as id
 	, 2 as order
 	, "AutoMtl" as crowdin_key
 	, "KIM_HECNY_R_HECNY_R" as name
@@ -199,7 +199,7 @@ select ""629898f122c4056c920f47ef"" as id
 	, 24 as max_days
 	, "Auto" as channel_type
 union all
-select ""629898f122c4056c920f47fa"" as id
+select "629898f122c4056c920f47fa" as id
 	, 2 as order
 	, "Sea" as crowdin_key
 	, "PARUS_HECNY_R_HECNY_R" as name
@@ -207,7 +207,7 @@ select ""629898f122c4056c920f47fa"" as id
 	, 24 as max_days
 	, "Sea" as channel_type
 union all
-select ""629898f122c4056c920f47fb"" as id
+select "629898f122c4056c920f47fb" as id
 	, 2 as order
 	, "Sea" as crowdin_key
 	, "PARUS_TANAIS_TANAIS" as name
