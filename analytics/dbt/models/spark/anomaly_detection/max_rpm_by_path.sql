@@ -13,6 +13,8 @@
       'predictor_num_forecast_points': '0',
       'predictor_prophet_seasonality_mode': 'multiplicative',
       'anomalies_channel': '#anomalies-automatic',
+      'anomalies_start_time': '{{ ds | plus_days(-3) }}',
+      'anomalies_end_time': '{{ ds | plus_days(-2) }}',
       'anomalies_significance_score': 'num_deviations',
       'anomalies_group_by_time_column': 'd',
       'anomalies_plot_start_time': '{{ ds | plus_days(-5) }}',
