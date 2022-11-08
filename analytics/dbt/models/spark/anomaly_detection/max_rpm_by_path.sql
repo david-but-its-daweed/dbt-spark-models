@@ -9,13 +9,13 @@
       'predictor_dimensions': 'request_root_path',
       'predictor_value_column': 'max_requests_count',
       'predictor_frequency': '10min',
-      'predictor_last_train_point': '{{ next_ds }}',
+      'predictor_last_train_point': '{{ ds | plus_days(-3) }}',
       'predictor_num_forecast_points': '0',
       'predictor_prophet_seasonality_mode': 'multiplicative',
       'anomalies_channel': '#anomalies-automatic',
       'anomalies_significance_score': 'num_deviations',
       'anomalies_group_by_time_column': 'd',
-      'anomalies_plot_start_time': '{{ ds | plus_days(-2) }}',
+      'anomalies_plot_start_time': '{{ ds | plus_days(-5) }}',
       'anomalies_max_count': '10',
     }
 ) }}
