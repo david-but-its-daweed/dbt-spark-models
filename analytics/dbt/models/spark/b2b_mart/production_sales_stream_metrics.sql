@@ -88,7 +88,6 @@ orders_hist AS (
         MAX(IF(sub_status = 'signingAndPayment', DATE_DIFF(lead_status_ts, first_substatus_event_msk, day), null)) AS days_in_selling_signing_and_payment
     FROM stg2
     WHERE flg = TRUE
-        AND status = 'selling'
     GROUP BY 1, 2, 3, 4
 )
 
