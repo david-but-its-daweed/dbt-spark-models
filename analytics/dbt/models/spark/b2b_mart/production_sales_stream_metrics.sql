@@ -12,7 +12,7 @@ WITH requests AS (
     SELECT
         request_id,
         MAX(is_joompro_employee) OVER (PARTITION BY user_id) AS is_joompro_employee
-    FROM {{ source('b2b_mart', 'fact_user_request') }}
+    FROM {{ ref('fact_user_request') }}
 ),
 
 
@@ -20,7 +20,7 @@ admin AS (
     SELECT
         admin_id,
         email
-    FROM {{ source('b2b_mart', 'dim_user_admin') }}
+    FROM {{ ref('dim_user_admin') }}
 ),
 
 stg1 AS (
@@ -40,7 +40,7 @@ stg1 AS (
         LAG(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_status_ts,
         LAG(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_status,
         LAG(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_sub_status
-    FROM {{ source('b2b_mart', 'fact_order_change') }} AS o
+    FROM {{ ref('fact_order_change') }} AS o
     LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
 ),
 
