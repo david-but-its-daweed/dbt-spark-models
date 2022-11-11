@@ -81,11 +81,11 @@ orders_hist AS (
             WHEN MAX(IF(status = 'cancelled', first_substatus_event_msk, null)) <= MAX(IF(status = 'manufacturing', first_substatus_event_msk, null))
             THEN 0 end as cancelled_in_selling,
         MAX(IF(status = 'cancelled', sub_status, null)) AS cancelled_reason,
-        MAX(IF(sub_status = 'new', DATE_DIFF(lead_status_ts, first_substatus_event_msk, day), null)) AS days_in_selling_new,
-        MAX(IF(sub_status = 'priceEstimation', DATE_DIFF(lead_status_ts, first_substatus_event_msk, day), null)) AS days_in_selling_price_estimation,
-        MAX(IF(sub_status = 'negotiation', DATE_DIFF(lead_status_ts, first_substatus_event_msk, day), null)) AS days_in_selling_negotiation,
-        MAX(IF(sub_status = 'finalPricing', DATE_DIFF(lead_status_ts, first_substatus_event_msk, day), null)) AS days_in_selling_final_pricing,
-        MAX(IF(sub_status = 'signingAndPayment', DATE_DIFF(lead_status_ts, first_substatus_event_msk, day), null)) AS days_in_selling_signing_and_payment
+        MAX(IF(sub_status = 'new', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_new,
+        MAX(IF(sub_status = 'priceEstimation', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_price_estimation,
+        MAX(IF(sub_status = 'negotiation', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_negotiation,
+        MAX(IF(sub_status = 'finalPricing', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_final_pricing,
+        MAX(IF(sub_status = 'signingAndPayment', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_signing_and_payment
     FROM stg2
     WHERE flg = TRUE
     GROUP BY 1, 2, 3, 4
