@@ -1,4 +1,4 @@
-{% snapshot card_bins_snapshot %}
+{% snapshot card_bins_version %}
 
 {{
     config(
