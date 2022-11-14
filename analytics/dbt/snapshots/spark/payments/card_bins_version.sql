@@ -18,6 +18,7 @@ select
   card_brand,
   card_country,
   card_level,
+  card_type,
   
   source_bank,
   source_brand,
