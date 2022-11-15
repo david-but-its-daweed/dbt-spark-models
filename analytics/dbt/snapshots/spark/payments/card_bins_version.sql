@@ -25,8 +25,7 @@ select
   source_country,
   source_type,
   
-  updated_ts,
-  created_ts
+  updated_ts
   
 from {{ source('payments', 'card_bins_snapshot')}}
 
