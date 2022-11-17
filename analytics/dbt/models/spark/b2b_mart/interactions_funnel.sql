@@ -125,7 +125,7 @@ statuses as (
         'selling' as status, 2 as priority
     union all 
     select 
-        'cancelled' as status, 1 as priority
+        'cancelled' as status, 7 as priority
     union all 
     select 
         'manufacturing' as status, 3 as priority
