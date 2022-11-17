@@ -88,7 +88,7 @@ order_statuses as
         MIN(case when status = "manufacturing" then o.event_ts_msk end) as manufacturing,
         MIN(case when status = "cancelled" then o.event_ts_msk end) as cancelled,
         MIN(case when status = "shipping" then o.event_ts_msk end) as shipping,
-        MIN(case when status = "claimed" then o.event_ts_msk end) as claimed,
+        MIN(case when status = "claim" then o.event_ts_msk end) as claimed,
         MIN(case when status = "closed" then o.event_ts_msk end) as closed
     FROM {{ ref('fact_order_change') }} o
     group by order_id
