@@ -108,5 +108,5 @@ SELECT DISTINCT
 from 
 user_interaction AS ui
 LEFT JOIN order_interaction AS oi ON ui.interaction_id = oi.interaction_id
-LEFT JOIN status_history AS sh
+LEFT JOIN status_history AS sh ON sh.order_id = oi.order_id
 where ui.user_id != '000000000000000000000000'
