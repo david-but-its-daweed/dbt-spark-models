@@ -85,7 +85,7 @@ status_history AS (
     WHERE status != lead_status OR sub_status != lead_sub_status OR lead_status IS NULL
 )
 
-SELECT 
+SELECT DISTINCT
     ui.user_id, 
     ui.interaction_id, 
     oi.request_id,
@@ -109,3 +109,4 @@ from
 user_interaction AS ui
 LEFT JOIN order_interaction AS oi ON ui.interaction_id = oi.interaction_id
 LEFT JOIN status_history AS sh
+where ui.user_id != '000000000000000000000000'
