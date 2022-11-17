@@ -348,19 +348,21 @@ select
             when status = 'selling' and sub_status = 'finalPricing' then 'final Pricing'
             when status = 'selling' and sub_status = 'negotiation' then 'negotiation'
             when status = 'selling' and sub_status = 'priceEstimation' then 'price Estimation'
+            when status = 'selling' and sub_status = 'new' then 'new in selling'
             when validation_status in ('validated', 'rejected') then validation_status 
             else 'Not validated' end as funnel_field,
-        case when status = 'cancelled' then 11
-            when status = 'claim' then 10
-            when status = 'closed' then 9
-            when status = 'shipping' then 8
-            when status = 'manufacturing' then 7
-            when status = 'selling' and sub_status = 'signingAndPayment' then 6
-            when status = 'selling' and sub_status = 'finalPricing' then 5
-            when status = 'selling' and sub_status = 'negotiation' then 4
-            when status = 'selling' and sub_status = 'priceEstimation' then 3
+        case when status = 'cancelled' then 12
+            when status = 'claim' then 11
+            when status = 'closed' then 10
+            when status = 'shipping' then 9
+            when status = 'manufacturing' then 8
+            when status = 'selling' and sub_status = 'signingAndPayment' then 7
+            when status = 'selling' and sub_status = 'finalPricing' then 6
+            when status = 'selling' and sub_status = 'negotiation' then 5
+            when status = 'selling' and sub_status = 'priceEstimation' then 4
+            when status = 'selling' and sub_status = 'new' then 3
             when validation_status = 'validated' then 2
-            when validation_status = 'rejected' then 1 
+            when validation_status = 'rejected' then 1
             else 0 end as int_funnel_field,
         case when status in ('claim', 'closed', 'shipping', 'manufacturing') then 1 else 0 end as order_successful
     from user_interaction in 
