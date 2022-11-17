@@ -86,7 +86,7 @@ status_history AS (
 )
 
 SELECT 
-    ui,user_id, 
+    ui.user_id, 
     ui.interaction_id, 
     oi.request_id,
     oi.order_id,
