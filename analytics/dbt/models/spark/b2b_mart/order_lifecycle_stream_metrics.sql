@@ -45,7 +45,7 @@ shipping as (
     days_in_shipping,
     days_in_delivered,
     days_in_manufacturing
-    from {{ source('b2b_mart', 'sla_shipping_day') }}
+    from {{ ref('sla_shipping_day') }}
 )
 
 select 
