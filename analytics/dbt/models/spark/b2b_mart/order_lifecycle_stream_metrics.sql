@@ -32,6 +32,7 @@ orders as (
   select 
   order_id, 
   delivery_time_days,
+  linehaul_channel_id,
   created_ts_msk
   from {{ ref('fact_order') }}
 ),
@@ -63,7 +64,6 @@ stg2 AS (
         status,
         sub_status,
         event_ts_msk,
-        owner_moderator_email,
         current_status,
         current_sub_status,
         certified,
@@ -86,7 +86,6 @@ stg2 AS (
 orders_hist AS (
     SELECT
         order_id,
-        owner_moderator_email,
         current_status,
         current_sub_status,
         MAX(certified) AS certified,
@@ -99,13 +98,24 @@ orders_hist AS (
         MAX(IF(status = 'shipping' AND sub_status = 'delivered', first_substatus_event_msk, NULL)) AS delivered
     FROM stg2
     WHERE flg = TRUE AND status IN ('manufacturing', 'shipping')
-    GROUP BY 1, 2, 3, 4
+    GROUP BY order_id,
+        current_status,
+        current_sub_status
+),
+
+linehaul AS (
+    SELECT DISTINCT
+        id,
+        name,
+        min_days,
+        max_days,
+        channel_type
+    FROM {{ ref('linehaul_channels') }}
 ),
 
 shipping as (
   select 
   order_id, 
-    linehaul_channel_type,
     manufacturing,
     shipping,
     days_in_shipping,
@@ -133,13 +143,16 @@ select
   last_status,
   delivery_time_days,
   created_ts_msk,
-  linehaul_channel_type,
-    manufacturing,
-    shipping,
-    days_in_shipping,
-    days_in_delivered,
-    days_in_manufacturing
+  l.name as linehaul_name,
+  l.channel_type as linehaul_channel_type,
+  o.linehaul_channel_id,
+  manufacturing,
+  shipping,
+  days_in_shipping,
+  days_in_delivered,
+  days_in_manufacturing
 from events AS e
 left join orders o on e.order_id = o.order_id
 left join shipping s on s.order_id = e.order_id
+left join linehaul l on o.linehaul_channel_id = l.id
 where last_status_value = 1
