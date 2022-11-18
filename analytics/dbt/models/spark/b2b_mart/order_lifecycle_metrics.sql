@@ -91,7 +91,7 @@ orders_hist AS (
         MAX(certified) AS certified,
         MAX(IF(status = 'manufacturing', DATEDIFF(DATE(lead_status_ts), DATE(first_status_event_msk)), NULL)) AS days_in_manufacturing,
         MAX(IF(status = 'shipping', DATEDIFF(DATE(lead_status_ts), DATE(first_status_event_msk)), NULL)) AS days_in_shipping,
-        MAX(IF(sub_status = 'delivered', DATEDIFF(DATE(lead_status_ts), DATE(first_status_event_msk)), NULL)) AS days_in_delivered,
+        MAX(IF(sub_status = 'delivered', DATEDIFF(DATE(lead_sub_status_ts), DATE(first_substatus_event_msk)), NULL)) AS days_in_delivered,
         MAX(IF(status = 'manufacturing', first_status_event_msk, NULL)) AS manufacturing,
         MAX(IF(status = 'shipping', first_status_event_msk, NULL)) AS shipping,
         MAX(IF(status = 'shipping' AND sub_status = 'delivered', first_substatus_event_msk, NULL)) AS delivered
@@ -147,6 +147,7 @@ select
   o.linehaul_channel_id,
   manufacturing,
   shipping,
+  delivered,
   days_in_shipping,
   days_in_delivered,
   days_in_manufacturing
