@@ -89,10 +89,9 @@ orders_hist AS (
         current_status,
         current_sub_status,
         MAX(certified) AS certified,
-        MAX(IF(status = 'manufacturing', DATE_DIFF(lead_status_ts, first_status_event_msk, DAY), NULL)) AS days_in_manufacturing,
-        MAX(IF(status = 'shipping', DATE_DIFF(DATE(lead_status_ts), DATE(first_status_event_msk), DAY), NULL)) AS days_in_shipping,
-        MAX(IF(sub_status = 'delivered', DATE_DIFF(lead_sub_status_ts,
-            first_substatus_event_msk, DAY), NULL)) AS days_in_delivered,
+        MAX(IF(status = 'manufacturing', DATEDIFF(DATE(lead_status_ts), DATE(first_status_event_msk)), NULL)) AS days_in_manufacturing,
+        MAX(IF(status = 'shipping', DATEDIFF(DATE(lead_status_ts), DATE(first_status_event_msk)), NULL)) AS days_in_shipping,
+        MAX(IF(sub_status = 'delivered', DATEDIFF(DATE(lead_status_ts), DATE(first_status_event_msk)), NULL)) AS days_in_delivered,
         MAX(IF(status = 'manufacturing', first_status_event_msk, NULL)) AS manufacturing,
         MAX(IF(status = 'shipping', first_status_event_msk, NULL)) AS shipping,
         MAX(IF(status = 'shipping' AND sub_status = 'delivered', first_substatus_event_msk, NULL)) AS delivered
