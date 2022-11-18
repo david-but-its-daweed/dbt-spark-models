@@ -52,7 +52,6 @@ sources:
       - name: device_events
       - name: operational_events
       - name: dim_merchant
-      - name: sla_shipping_day
   - name: logistics_mart
     tables:
       - name: fact_order
