@@ -117,6 +117,7 @@ shipping as (
   order_id, 
     manufacturing,
     shipping,
+    delivered,
     days_in_shipping,
     days_in_delivered,
     days_in_manufacturing
