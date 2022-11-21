@@ -70,7 +70,7 @@ stg2 AS (
         IF(lead_sub_status != sub_status OR lead_status != status OR lead_status IS NULL, TRUE, FALSE) AS flg,
         COALESCE(lead_sub_status_ts, CURRENT_TIMESTAMP()) AS lead_sub_status_ts,
         COALESCE(
-            FIRST_VALUE(CASE WHEN lead_status != status THEN lead_sub_status_ts END)
+            MIN(CASE WHEN lead_status != status THEN lead_sub_status_ts END)
             OVER (PARTITION BY order_id, status ORDER BY lead_status != status, lead_sub_status_ts),
             CURRENT_TIMESTAMP()) AS lead_status_ts,
         FIRST_VALUE(event_ts_msk) OVER (PARTITION BY order_id, status, sub_status
