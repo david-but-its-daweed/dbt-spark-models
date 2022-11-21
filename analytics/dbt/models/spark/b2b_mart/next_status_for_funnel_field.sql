@@ -65,7 +65,7 @@ admin AS (
 ),
 
 status_history AS (
-    SELECT DISTINCT order_id, status, sub_status, lead_status, lead_sub_status, current_status, current_sub_status, owner_moderator_email
+    SELECT DISTINCT order_id, event_ts_msk, status, sub_status, lead_status, lead_sub_status, current_status, current_sub_status, owner_moderator_email
     FROM
     (
     SELECT
@@ -104,7 +104,7 @@ SELECT DISTINCT
     ui.source, 
     ui.type,
     ui.campaign,
-    ui.partition_date_msk
+    date(sh.event_ts_msk) as partition_date_msk
 from 
 user_interaction AS ui
 LEFT JOIN order_interaction AS oi ON ui.interaction_id = oi.interaction_id
