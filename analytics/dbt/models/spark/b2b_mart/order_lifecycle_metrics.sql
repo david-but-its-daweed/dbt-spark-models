@@ -124,7 +124,7 @@ shipping as (
     from orders_hist
 )
 
-select 
+select distinct
   e.order_id, 
   partition_date_msk,
   status, 
