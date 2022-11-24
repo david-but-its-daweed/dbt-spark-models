@@ -331,3 +331,4 @@ LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
 LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
 LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
+
