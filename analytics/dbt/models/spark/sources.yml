@@ -3,10 +3,12 @@ version: 2
 sources:
   - name: ads
     tables:
+      - name: ads_install
       - name: web_analytics_cohorts_v4
   - name: mart
     tables:
       - name: dim_device_min
+      - name: dim_region
       - name: device_events
       - name: dim_published_variant
       - name: product_rating_counters
@@ -61,4 +63,8 @@ sources:
   - name: payments
     tables:
       - name: card_bins_snapshot
+      - name: checkout_data
+  - name: recom
+    tables:
+      - name: context_device_counters_v5
 
