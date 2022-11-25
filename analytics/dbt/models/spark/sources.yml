@@ -5,6 +5,8 @@ sources:
     tables:
       - name: ads_install
       - name: web_analytics_cohorts_v4
+      - name: referral_payout_stats
+      - name: referral_reference_stats
   - name: mart
     tables:
       - name: dim_device_min
