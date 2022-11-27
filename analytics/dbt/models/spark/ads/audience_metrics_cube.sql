@@ -284,7 +284,7 @@ SELECT
     is_new,
     os_type,
     region,
-    country,
+    cube.country,
     source_extended,
     orders_total_category,
     gmv_total_category,
