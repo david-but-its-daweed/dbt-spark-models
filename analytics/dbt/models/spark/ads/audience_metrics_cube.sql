@@ -31,7 +31,7 @@ WITH regions AS (
     join_date >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
     AND join_date < DATE('{{ VAR("end_date_ymd") }}')
       {% else %}
-    date >= DATE('2019-12-25')
+    join_date >= DATE('2019-12-25')
       {% endif %}
 
 ), activity AS (
