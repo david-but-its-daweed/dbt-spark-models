@@ -26,12 +26,12 @@ WITH regions AS (
     source,
     partner_id
   FROM {{ source('ads', 'ads_install') }}
-  WHERE a = 42
+  WHERE
       {% if is_incremental() %}
-    AND join_date >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
+    join_date >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
     AND join_date < DATE('{{ VAR("end_date_ymd") }}')
       {% else %}
-    AND date >= DATE('2019-12-25')
+    date >= DATE('2019-12-25')
       {% endif %}
 
 ), activity AS (
@@ -40,12 +40,12 @@ WITH regions AS (
     device_id,
     date_msk AS partition_date
   FROM {{ source('mart', 'star_active_device') }}
-  WHERE a = 42
+  WHERE
       {% if is_incremental() %}
-    AND date_msk >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND date_msk < DATE('{{ VAR("end_date_ymd") }}
+    date_msk >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
+    AND date_msk < DATE('{{ VAR("end_date_ymd") }}')
       {% else %}
-    AND date_msk >= DATE('2019-12-25')
+    date_msk >= DATE('2019-12-25')
       {% endif %}
 
 ), dimentions AS (
@@ -64,12 +64,12 @@ WITH regions AS (
     END AS source_extended
   FROM {{ source('mart', 'star_active_device') }} AS star_active_device
     JOIN installs ON star_active_device.device_id = installs.device_id
-  WHERE a = 42
+  WHERE
       {% if is_incremental() %}
-    AND star_active_device.date_msk >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
+    star_active_device.date_msk >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
     AND star_active_device.date_msk < DATE('{{ VAR("end_date_ymd") }}')
       {% else %}
-    AND star_active_device.date_msk >= DATE('2019-12-25')
+    star_active_device.date_msk >= DATE('2019-12-25')
       {% endif %}
       
 ), orders AS (
@@ -122,12 +122,12 @@ WITH regions AS (
     MAX(is_pmt_start) AS is_pmt_start,
     MAX(is_pmt_success) AS is_pmt_success
   FROM {{ source('payments', 'checkout_data') }}
-  WHERE a = 42
+  WHERE
       {% if is_incremental() %}
-    AND date >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
+    date >= DATE('{{ VAR("start_date_ymd") }}') - INTERVAL 120 DAY
     AND date < DATE('{{ VAR("end_date_ymd") }}')
       {% else %}
-    AND date >= DATE('2019-12-25')
+    date >= DATE('2019-12-25')
       {% endif %}
   GROUP BY 1, 2
 
