@@ -1,5 +1,4 @@
 #!/bin/sh
-set -eu pipefail
 
 DBT_DIR=`pwd`
 # Produce target/manifest.json
