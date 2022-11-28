@@ -16,8 +16,9 @@ cd $DBT_DIR
 dbt compile --profiles-dir deploy/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}"}'
 WRONG_FILES=`find ./models/ -type f | grep -v .sql | grep -v yml | grep -v gitkeep`
 WRONG_FILES_COUNT=`find ./models/ -type f | grep -v .sql | grep -v yml | grep -v gitkeep | wc -l`
-echo "Found $WRONG_FILES_COUNT"
 if [ $WRONG_FILES_COUNT -ne 0 ]; then
-        echo "Found $WRONG_FILES_COUNT files with wrong filename: \n$WRONG_FILES"
+        echo "Found $WRONG_FILES_COUNT files with wrong filename:"
+        echo "$WRONG_FILES"
+        echo "Did you forget .sql?"
         exit 1
 fi
