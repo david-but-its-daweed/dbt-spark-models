@@ -287,26 +287,7 @@ ttfr_author_type AS (
                       WHERE t.`type` = 'ticketEntryAddJoom'
                             AND t.payload.authorType = 'customer'
                             AND t.payload.buttonPlace IS NOT NULL
-                     ),
-                     
-       hidden_tickets AS (
-    SELECT
-        DISTINCT t.payload.ticketId AS ticket_id
-    FROM
-        mart.babylone_events AS t
-    WHERE t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
-          AND t.payload.isHidden = TRUE
-    ),
-    closed_by_agent AS
-    (
-    SELECT
-        DISTINCT t.payload.ticketId AS ticket_id
-    FROM
-        mart.babylone_events AS t
-    WHERE t.`type` = 'ticketChangeJoom'
-          AND t.payload.changedByType = 'agent'
-          AND t.payload.stateOwner IN ('Resolved', 'Rejected')
-    )
+                     )
                 
 SELECT t.partition_date AS partition_date,
        t.ts_created AS creation_ticket_ts_msk,
@@ -334,8 +315,6 @@ SELECT t.partition_date AS partition_date,
        COALESCE(k.responses_to_customer, 0) AS responses_to_customer,
        CASE WHEN o.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
        l.csat AS csat
-       CASE WHEN q.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS is_hidden,
-       CASE WHEN r.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS closed_by_agent
 FROM ticket_create_events AS t
 LEFT JOIN users_with_first_order AS a ON a.user_id = t.user_id
                                          AND t.ts_created >= a.first_order_created_time_msk
@@ -352,6 +331,4 @@ LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
 LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
 LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
-LEFT JOIN hidden_tickets AS q ON q.ticket_id = t.ticket_id
-LEFT JOIN closed_by_agent AS r ON r.ticket_id = t.ticket_id
 
