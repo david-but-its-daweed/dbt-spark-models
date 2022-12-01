@@ -37,9 +37,9 @@ orders AS
         DATE(MIN(p.event_ts_msk) OVER (PARTITION BY p.order_id, status, sub_status)) AS manufactured_date,
         DATE(MIN(p.event_ts_msk) OVER (PARTITION BY u.user_id, status, sub_status)) AS first_order_date,
         p.order_id,
-        MAX(total_confirmed_price) OVER (PARTITION BY order_id, status, sub_status) AS total_confirmed_price,
-        MAX(final_gross_profit) OVER (PARTITION BY order_id, status, sub_status) AS final_gross_profit,
-        MAX(initial_gross_profit) OVER (PARTITION BY order_id, status, sub_status) AS initial_gross_profit
+        MAX(total_confirmed_price) OVER (PARTITION BY p.order_id, status, sub_status) AS total_confirmed_price,
+        MAX(final_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status) AS final_gross_profit,
+        MAX(initial_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status) AS initial_gross_profit,
         status, sub_status
     FROM {{ ref('fact_order_change') }} AS p
     INNER JOIN not_jp_users AS u ON p.order_id = u.order_id
