@@ -48,7 +48,7 @@ stg1 AS (
         FIRST_VALUE(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_status,
         FIRST_VALUE(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_sub_status,
         MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, o.status, o.sub_status ) AS min_sub_status_ts,
-        MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, o.status, o.sub_status ) AS min_status_ts,
+        MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, o.status) AS min_status_ts,
         LEAD(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status_ts,
         LEAD(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_status,
         LEAD(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status,
@@ -70,7 +70,7 @@ stg2 AS (
         IF(lead_sub_status != sub_status OR lead_status != status OR lead_status IS NULL, TRUE, FALSE) AS flg,
         COALESCE(lead_sub_status_ts, CURRENT_TIMESTAMP()) AS lead_sub_status_ts,
         COALESCE(
-            FIRST_VALUE(CASE WHEN lead_status != status THEN lead_sub_status_ts END)
+            MIN(CASE WHEN lead_status != status THEN lead_sub_status_ts END)
             OVER (PARTITION BY order_id, status ORDER BY lead_status != status, lead_sub_status_ts),
             CURRENT_TIMESTAMP()) AS lead_status_ts,
         FIRST_VALUE(event_ts_msk) OVER (PARTITION BY order_id, status, sub_status
