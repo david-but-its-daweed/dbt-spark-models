@@ -14,6 +14,18 @@ WITH not_jp_users AS (
   WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
 ),
 
+order_v2_mongo AS
+(
+    SELECT fo.order_id AS order_id,
+        DATE(fo.min_manufactured_ts_msk) AS manufactured_date
+    FROM b2b_mart.fact_order AS fo
+    INNER JOIN not_jp_users AS u ON fo.user_id = u.user_id
+    WHERE fo.last_order_status < 60
+        AND fo.last_order_status >= 10
+        AND fo.next_effective_ts_msk IS NULL
+        AND fo.min_manufactured_ts_msk IS NOT NULL
+),
+
 orders AS
 (       SELECT 
       manufactured_date AS t,
@@ -42,7 +54,7 @@ orders AS
         MAX(initial_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status) AS initial_gross_profit,
         status, sub_status
     FROM {{ ref('fact_order_change') }} AS p
-    INNER JOIN not_jp_users AS u ON p.order_id = u.order_id
+    INNER JOIN order_v2_mongo AS u ON p.order_id = u.order_id
     WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547')
 )
 )
