@@ -18,7 +18,7 @@ order_v2_mongo AS
 (
     SELECT fo.order_id AS order_id,
         DATE(fo.min_manufactured_ts_msk) AS manufactured_date
-    FROM b2b_mart.fact_order AS fo
+    FROM {{ ref('fact_order') }} AS fo
     INNER JOIN not_jp_users AS u ON fo.user_id = u.user_id
     WHERE fo.last_order_status < 60
         AND fo.last_order_status >= 10
