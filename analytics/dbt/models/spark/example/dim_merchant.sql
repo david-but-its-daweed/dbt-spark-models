@@ -5,6 +5,7 @@
       'team': 'platform'
     }
 ) }}
+
 select
   merchant_id,
   name,
