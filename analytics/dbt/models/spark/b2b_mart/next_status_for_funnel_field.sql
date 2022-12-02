@@ -64,6 +64,30 @@ admin AS (
     FROM {{ ref('dim_user_admin') }}
 ),
 
+orders AS
+(
+    SELECT
+        o.order_id,
+        o.status,
+        o.sub_status,
+        o.event_ts_msk,
+        FIRST_VALUE(ao.email) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS owner_moderator_email
+    FROM {{ ref('fact_order_change') }} AS o
+    LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
+    UNION ALL 
+    SELECT
+        order_id,
+        'validation' AS status,
+        validation_status AS sub_status,
+        event_ts_msk,
+        FIRST_VALUE(ao.email) OVER (PARTITION BY fo.order_id ORDER BY o.event_ts_msk DESC) AS owner_moderator_email
+    FROM {{ ref('fact_user_change') }} AS o
+    LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
+    INNER JOIN (
+        select distinct user_id, order_id from {{ ref('fact_order')}} WHERE next_effective_ts_msk IS NULL
+    ) AS fo ON fo.user_id = o.user_id
+),
+
 status_history AS (
     SELECT DISTINCT order_id, event_ts_msk, status, sub_status, lead_status, lead_sub_status, current_status, current_sub_status, owner_moderator_email
     FROM
@@ -79,8 +103,7 @@ status_history AS (
         LEAD(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status_ts,
         LEAD(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_status,
         LEAD(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status
-    FROM {{ ref('fact_order_change') }} AS o
-    LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
+    FROM orders
     )
     WHERE status != lead_status OR sub_status != lead_sub_status OR lead_status IS NULL
 )
