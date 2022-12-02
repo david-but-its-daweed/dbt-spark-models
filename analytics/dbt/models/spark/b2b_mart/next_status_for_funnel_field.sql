@@ -38,7 +38,7 @@ with user_interaction as
 )
 ,
 
-orders as (
+fact_orders as (
     select distinct 
         order_id, 
         friendly_id,
@@ -54,7 +54,7 @@ order_interaction as
             order_id,
             friendly_id
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} i
-        left join orders o on i.popupRequestId = o.request_id
+        left join fact_orders o on i.popupRequestId = o.request_id
     ),
     
 admin AS (
