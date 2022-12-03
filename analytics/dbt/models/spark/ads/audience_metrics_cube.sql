@@ -7,7 +7,8 @@
       'team': 'ads',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_fail_on_missing_partitions': 'false'
+      'bigquery_fail_on_missing_partitions': 'false',
+      'bigquery_upload_horizon_days': '120',
     }
 ) }}
 
