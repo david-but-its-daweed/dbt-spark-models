@@ -79,6 +79,6 @@ SELECT  t,
 FROM (
     SELECT * from orders
 )
-WHERE gmv_initial > 0
+WHERE (gmv_initial > 0 or initial_gross_profit > 0 or final_gross_profit > 0)
 GROUP BY 1, 2, 3, 4, 5, 6
 ORDER BY 1
