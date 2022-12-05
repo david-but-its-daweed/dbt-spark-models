@@ -35,7 +35,8 @@ orders AS
         SUM(total_confirmed_price)  AS gmv_initial,
         SUM(initial_gross_profit)  AS initial_gross_profit,
         SUM(final_gross_profit)  AS final_gross_profit,
-        status, sub_status
+        status, sub_status,
+        current_status, current_sub_status
         FROM
 ( SELECT DISTINCT manufactured_date,
         first_order_date,
@@ -43,16 +44,19 @@ orders AS
         total_confirmed_price,
         initial_gross_profit,
         final_gross_profit,
-        status, sub_status
+        status, sub_status,
+        current_status, current_sub_status
         FROM
 (
     SELECT  
         DATE(MIN(p.event_ts_msk) OVER (PARTITION BY p.order_id, status, sub_status)) AS manufactured_date,
         DATE(MIN(p.event_ts_msk) OVER (PARTITION BY u.user_id, status, sub_status)) AS first_order_date,
         p.order_id,
-        FIRST_VALUE(total_confirmed_price) OVER (PARTITION BY p.order_id, status, sub_status) AS total_confirmed_price,
-        FIRST_VALUE(final_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status) AS final_gross_profit,
-        FIRST_VALUE(initial_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status) AS initial_gross_profit,
+        FIRST_VALUE(total_confirmed_price) OVER (PARTITION BY p.order_id, status, sub_status ORDER BY p.event_ts_msk DESC) AS total_confirmed_price,
+        FIRST_VALUE(final_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status ORDER BY p.event_ts_msk DESC) AS final_gross_profit,
+        FIRST_VALUE(initial_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status ORDER BY p.event_ts_msk DESC) AS initial_gross_profit,
+        FIRST_VALUE(status) OVER (PARTITION BY p.order_id ORDER BY p.event_ts_msk DESC) AS current_status,
+        FIRST_VALUE(sub_status) OVER (PARTITION BY p.order_id ORDER BY p.event_ts_msk DESC) AS current_sub_status,
         status, sub_status
     FROM {{ ref('fact_order_change') }} AS p
     INNER JOIN order_v2_mongo AS u ON p.order_id = u.order_id
@@ -61,12 +65,13 @@ orders AS
 )
 GROUP BY manufactured_date,
         CASE WHEN manufactured_date = first_order_date THEN 'first order' ELSE 'repeated order' END,
-        status, sub_status
+        status, sub_status, current_status, current_sub_status
 )
 
 SELECT  t,
         repeated_order,
         status, sub_status,
+        current_status, current_sub_status,
         SUM(orders) AS orders,
         SUM(gmv_initial)  AS gmv_initial,
         SUM(initial_gross_profit)  AS initial_gross_profit,
@@ -75,5 +80,5 @@ FROM (
     SELECT * from orders
 )
 WHERE gmv_initial > 0
-GROUP BY 1, 2, 3, 4
+GROUP BY 1, 2, 3, 4, 5, 6
 ORDER BY 1
