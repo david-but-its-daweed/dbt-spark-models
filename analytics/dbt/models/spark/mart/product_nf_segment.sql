@@ -26,7 +26,7 @@ with orders_with_feedback as
 
             if(refund_reason = 'quality' and datediff(refund_time_utc,created_time_utc) <= 80,1,0) as if_quality_refund,
             if((review_stars in (1,2) or sizeFitId in (1,3)) and datediff(review_time_utc,created_time_utc) <= 80,1,0) as bad_rating,
-            coalesce(tracking_delivered_time_utc,user_delivered_time_utc) as delivered_time,
+            coalesce(tracking_delivered_time_utc, delivered_time_utc) as delivered_time,
             gmv_initial,
             product_quantity,
 
@@ -48,14 +48,10 @@ with orders_with_feedback as
             and reviews.next_effective_ts > partition_date + interval 80 days
             and partition_date + interval 80 days >= reviews.effective_ts
 
-        left join
-            (select order_id,
-                user_delivered_time_utc
-            from {{ source('logistics_mart', 'fact_order') }}) using(order_id)
 
         where
             (tracking_delivered_time_utc is not null
-            or user_delivered_time_utc is not null)
+            or delivered_time_utc is not null)
             and not_delivered_time_utc is null
             and (refund_reason = 'quality' or refund_reason is null)
         order by created_time_utc),
