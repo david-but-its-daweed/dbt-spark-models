@@ -1,6 +1,7 @@
 {{ config(
     schema='ads',
     materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
     file_format='delta',
     meta = {
@@ -29,7 +30,7 @@ WITH regions AS (
   FROM {{ source('ads', 'ads_install') }}
   WHERE
       {% if is_incremental() %}
-    join_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    join_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
     AND join_date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     join_date >= DATE('2019-12-25')
@@ -43,7 +44,7 @@ WITH regions AS (
   FROM {{ source('mart', 'star_active_device') }}
   WHERE
       {% if is_incremental() %}
-    date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
     AND date_msk < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     date_msk >= DATE('2019-12-25')
@@ -67,7 +68,7 @@ WITH regions AS (
     JOIN installs ON star_active_device.device_id = installs.device_id
   WHERE
       {% if is_incremental() %}
-    star_active_device.date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    star_active_device.date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
     AND star_active_device.date_msk < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     star_active_device.date_msk >= DATE('2019-12-25')
@@ -103,7 +104,7 @@ WITH regions AS (
   FROM {{ source('recom', 'context_device_counters_v5') }}
   WHERE type = "productOpen"
       {% if is_incremental() %}
-    AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
     AND partition_date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     AND partition_date >= DATE('2019-12-25')
@@ -125,7 +126,7 @@ WITH regions AS (
   FROM {{ source('payments', 'checkout_data') }}
   WHERE
       {% if is_incremental() %}
-    date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
     AND date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     date >= DATE('2019-12-25')
