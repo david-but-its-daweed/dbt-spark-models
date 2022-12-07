@@ -3,7 +3,7 @@
     materialized='incremental',
     incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
-    file_format='delta',
+    file_format='parquet',
     meta = {
       'team': 'ads',
       'bigquery_load': 'true',
