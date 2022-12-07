@@ -38,7 +38,7 @@ with user_interaction as
 )
 ,
 
-orders as (
+fact_orders as (
     select distinct 
         order_id, 
         friendly_id,
@@ -54,7 +54,7 @@ order_interaction as
             order_id,
             friendly_id
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} i
-        left join orders o on i.popupRequestId = o.request_id
+        left join fact_orders o on i.popupRequestId = o.request_id
     ),
     
 admin AS (
@@ -62,6 +62,30 @@ admin AS (
         admin_id,
         email
     FROM {{ ref('dim_user_admin') }}
+),
+
+orders AS
+(
+    SELECT
+        o.order_id,
+        o.status,
+        o.sub_status,
+        o.event_ts_msk,
+        FIRST_VALUE(ao.email) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS owner_moderator_email
+    FROM {{ ref('fact_order_change') }} AS o
+    LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
+    UNION ALL 
+    SELECT
+        order_id,
+        'validation' AS status,
+        validation_status AS sub_status,
+        event_ts_msk,
+        FIRST_VALUE(ao.email) OVER (PARTITION BY fo.order_id ORDER BY o.event_ts_msk DESC) AS owner_moderator_email
+    FROM {{ ref('fact_user_change') }} AS o
+    LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
+    INNER JOIN (
+        select distinct user_id, order_id from {{ ref('fact_order')}} WHERE next_effective_ts_msk IS NULL
+    ) AS fo ON fo.user_id = o.user_id
 ),
 
 status_history AS (
@@ -73,17 +97,17 @@ status_history AS (
         o.status,
         o.sub_status,
         o.event_ts_msk,
-        FIRST_VALUE(ao.email) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS owner_moderator_email,
+        FIRST_VALUE(o.owner_moderator_email) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS owner_moderator_email,
         FIRST_VALUE(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_status,
         FIRST_VALUE(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_sub_status,
         LEAD(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status_ts,
         LEAD(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_status,
         LEAD(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status
-    FROM {{ ref('fact_order_change') }} AS o
-    LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
+    FROM orders AS o
     )
     WHERE status != lead_status OR sub_status != lead_sub_status OR lead_status IS NULL
 )
+
 
 SELECT DISTINCT
     ui.user_id, 

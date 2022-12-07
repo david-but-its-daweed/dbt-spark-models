@@ -13,7 +13,8 @@
 
 select
   _id,
-  features
+  features,
+  updatedTime
 FROM {{ source('mongo', 'logistics_customer_features_daily_snapshot') }}
 
 {% endsnapshot %}

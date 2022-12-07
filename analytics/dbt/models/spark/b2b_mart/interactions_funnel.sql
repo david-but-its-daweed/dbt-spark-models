@@ -7,7 +7,15 @@
     }
 ) }}
 
-with user_interaction as 
+with 
+not_jp_users AS (
+  SELECT DISTINCT u.user_id
+  FROM {{ ref('fact_user_request') }} f
+  LEFT JOIN {{ ref('fact_order') }} u ON f.user_id = u.user_id
+  WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
+),
+
+user_interaction as 
 (select 
      interaction_id, 
     user_id, 
@@ -32,7 +40,8 @@ with user_interaction as
             max(source) as source, 
             max(type) as type,
             max(campaign) as campaign
-        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
+        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} m
+        inner join not_jp_users n on n.user_id = m.uid
         group by _id, uid
     )
 )
