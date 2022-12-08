@@ -129,7 +129,7 @@ select
     vs.status as validation_status, 
     rr.reason as reject_reason,
     date(created_ts_msk) as created_date,
-    validated_date
+    case when vs.status = 'validated' then validated_date end as validated_date
     from {{ ref('dim_user') }} du
     left join validation_status vs on du.validation_status = vs.id
     left join reject_reasons rr on du.reject_reason = rr.id
