@@ -373,7 +373,7 @@ select
         MIN(IF(oi.status = 'selling', min_date, NULL)) AS min_status_selling_ts_msk,
         MIN(IF(oi.status = 'manufacturing', min_date, NULL)) AS min_status_manufacturing_ts_msk,
         MIN(IF(oi.status = 'shipping', min_date, NULL)) AS min_status_shipping_ts_msk,
-        MIN(IF(oi.status = 'cancelled', min_date, NULL)) AS min_status_cancelled_ts_msk,
+        MIN(IF(oi.status = 'cancelled' and oi.current_status = 'cancelled', min_date, NULL)) AS min_status_cancelled_ts_msk,
         MIN(IF(oi.status = 'closed', min_date, NULL)) AS min_status_closed_ts_msk,
         MIN(IF(oi.status = 'claim', min_date, NULL)) AS min_status_claim_ts_msk,
         MIN(IF(oi.sub_status = 'priceEstimation', min_date, NULL)) AS min_price_estimation_ts_msk,
