@@ -309,7 +309,44 @@ sub_statuses as (
         'selling' as status, 'delivered' as sub_status, 10 as priority
 )
 
-
+select
+interaction_id,
+    partition_date_msk,
+    created_week,
+    utm_campaign,
+    utm_source,
+    utm_medium,
+    source, 
+    type,
+    campaign,
+    user_id,
+    validation_status, 
+    reject_reason,
+    first_interaction,
+    request_id,
+        order_id,
+        friendly_id,
+        current_status,
+        current_substatus,
+        final_gmv, client_converted_gmv,
+        created_date,
+        validated_date,
+        min_status_new_ts_msk,
+        min_status_selling_ts_msk,
+        min_status_manufacturing_ts_msk,
+        min_status_shipping_ts_msk,
+        min_status_cancelled_ts_msk,
+        min_status_closed_ts_msk,
+        min_status_claim_ts_msk,
+        min_price_estimation_ts_msk,
+        min_negotiation_ts_msk,
+        min_final_pricing_ts_msk,
+        min_signing_and_payment_ts_msk,
+        rn,
+        interaction_min_time,
+        rank(interaction_id) over (partition by user_id, interaction_min_time is not null order by interaction_min_time) as sucessfull_interaction_number
+        from
+(
 select 
     interaction_id,
     partition_date_msk,
@@ -344,9 +381,7 @@ select
         min_final_pricing_ts_msk,
         min_signing_and_payment_ts_msk,
         row_number() over (partition by interaction_id order by status_priority desc, substatus_priority desc, order_id) as rn,
-        case when 
-            rank() over (partition by user_id, min_status_manufacturing_ts_msk is not null order by min_status_manufacturing_ts_msk) = 1
-            then True else False end as first_interaction
+        min(min_status_manufacturing_ts_msk) over (partition by user_id, interaction_id) as interaction_min_time
     from
     (select 
         in.interaction_id,
@@ -414,3 +449,4 @@ select
         created_date,
         validated_date
     )
+)
