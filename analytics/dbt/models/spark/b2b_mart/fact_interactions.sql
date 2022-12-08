@@ -343,7 +343,10 @@ select
         min_negotiation_ts_msk,
         min_final_pricing_ts_msk,
         min_signing_and_payment_ts_msk,
-        row_number() over (partition by interaction_id order by status_priority desc, substatus_priority desc, order_id) as rn
+        row_number() over (partition by interaction_id order by status_priority desc, substatus_priority desc, order_id) as rn,
+        case when 
+            rank() over (partition by user_id, min_status_manufacturing_ts_msk is not null order by min_status_manufacturing_ts_msk) = 1
+            then True else False end as first_interaction
     from
     (select 
         in.interaction_id,
