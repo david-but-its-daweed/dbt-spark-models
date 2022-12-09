@@ -430,7 +430,7 @@ select
         reject_reason,
         first_interaction,
         request_id,
-        order_id,
+        oi.order_id,
         friendly_id,
         current_status,
         current_substatus,
