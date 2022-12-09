@@ -106,6 +106,80 @@ status_history AS (
     FROM orders AS o
     )
     WHERE status != lead_status OR sub_status != lead_sub_status OR lead_status IS NULL
+),
+
+
+statuses as (
+    select 
+        'new' as status, '0' as priority
+    union all 
+    select 
+        'selling' as status, '2' as priority
+    union all 
+    select 
+        'cancelled' as status, '1' as priority
+    union all 
+    select 
+        'manufacturing' as status, '3' as priority
+    union all 
+    select 
+        'shipping' as status, '4' as priority
+    union all 
+    select 
+        'claim' as status, '5' as priority
+    union all 
+    select 
+        'closed' as status, '6' as priority
+),
+
+sub_statuses as (
+    select
+        'selling' as status, 'new' as sub_status, '00' as priority
+    union all 
+     select
+        'selling' as status, 'priceEstimation' as sub_status, '01' as priority
+    union all 
+     select
+        'selling' as status, 'negotiation' as sub_status, '02' as priority
+    union all 
+     select
+        'selling' as status, 'finalPricing' as sub_status, '03' as priority
+    union all 
+     select
+        'selling' as status, 'signingAndPayment' as sub_status, '04' as priority
+    union all 
+     select
+        'shipping' as status, 'new' as sub_status, '00' as priority
+    union all 
+     select
+        'selling' as status, 'pickupRequestSentToLogisticians' as sub_status, '01' as priority
+    union all 
+     select
+        'selling' as status, 'pickedUpByLogisticians' as sub_status, '02' as priority
+    union all
+    select
+        'selling' as status, 'arrivedAtLogisticsWarehouse' as sub_status, '03' as priority
+    union all
+    select
+        'selling' as status, 'departedFromLogisticsWarehouse' as sub_status, '04' as priority
+    union all
+    select
+        'selling' as status, 'arrivedAtStateBorder' as sub_status, '05' as priority
+    union all
+    select
+        'selling' as status, 'departedFromStateBorder' as sub_status, '06' as priority
+    union all
+    select
+        'selling' as status, 'arrivedAtCustoms' as sub_status, '07' as priority
+    union all
+    select
+        'selling' as status, 'customsDeclarationFiled' as sub_status, '08' as priority
+    union all
+    select
+        'selling' as status, 'customsDeclarationReleased' as sub_status, '09' as priority
+    union all
+    select
+        'selling' as status, 'delivered' as sub_status, '10' as priority
 )
 
 
@@ -128,9 +202,14 @@ SELECT DISTINCT
     ui.source, 
     ui.type,
     ui.campaign,
-    date(sh.event_ts_msk) as partition_date_msk
+    date(sh.event_ts_msk) as partition_date_msk,
+    CONCAT(CASE WHEN s.priority is null then '7' else s.priority end, CONCAT('/', sh.status)) AS ordered_status,
+    CONCAT(CASE WHEN ss.priority is null then '11' else ss.priority end, CONCAT('/', sh.sub_status)) AS ordered_sub_status,
+    CONCAT(CONCAT(s.priority, CASE WHEN ss.priority is null then '11' else ss.priority end), CONCAT('/', CONCAT(sh.status,CONCAT('/', sh.sub_status)))) AS ordered_staus_sub_status
 from 
 user_interaction AS ui
 LEFT JOIN order_interaction AS oi ON ui.interaction_id = oi.interaction_id
 LEFT JOIN status_history AS sh ON sh.order_id = oi.order_id
+LEFT JOIN statuses s ON sh.status = s.status
+LEFT JOIN sub_statuses ss ON sh.status = ss.status AND sh.sub_status = ss.sub_status
 where ui.user_id != '000000000000000000000000'
