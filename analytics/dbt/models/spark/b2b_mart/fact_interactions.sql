@@ -216,13 +216,14 @@ FROM
 (
     SELECT  
         event_ts_msk,
-        oe.payload.orderId as order_id,
+        payload.orderId as order_id,
         payload.gmv.clientConvertedGMV AS client_converted_gmv,
         payload.gmv.finalGMV AS final_gmv,
         payload.gmv.finalGrossProfit AS final_gross_profit,
         payload.gmv.initialGrossProfit AS initial_gross_profit,
-        row_number() over(partition by order_id order by event_ts_msk desc) as rn
+        row_number() over(partition by payload.orderId order by event_ts_msk desc) as rn
     FROM {{ source('b2b_mart', 'operational_events') }} oe
+   )
 where rn = 1
 ),
 
