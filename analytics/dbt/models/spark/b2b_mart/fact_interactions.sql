@@ -211,28 +211,18 @@ order_interaction as (
 
 gmv as
 (
-SELECT interaction_id, final_gmv, client_converted_gmv
+SELECT order_id, final_gmv, client_converted_gmv
 FROM
 (
     SELECT  
         event_ts_msk,
-        interaction_id,
+        oe.payload.orderId as order_id,
         payload.gmv.clientConvertedGMV AS client_converted_gmv,
         payload.gmv.finalGMV AS final_gmv,
         payload.gmv.finalGrossProfit AS final_gross_profit,
         payload.gmv.initialGrossProfit AS initial_gross_profit,
-        row_number() over(partition by interaction_id order by event_ts_msk desc) as rn
+        row_number() over(partition by order_id order by event_ts_msk desc) as rn
     FROM {{ source('b2b_mart', 'operational_events') }} oe
-    right join
-    (select distinct
-            _id as interaction_id, 
-            request_id,
-            order_id
-        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} i
-        left join orders o on i.popupRequestId = o.request_id
-    ) in on oe.payload.orderId = in.order_id
-    WHERE `type`  ='orderChangedByAdmin'
-    )
 where rn = 1
 ),
 
@@ -398,7 +388,7 @@ select
         reject_reason,
         first_interaction,
         request_id,
-        order_id,
+        oi.order_id,
         friendly_id,
         current_status,
         current_substatus,
@@ -421,7 +411,7 @@ select
     from user_interaction in 
     left join users u on in.user_id = u.user_id
     left join order_interaction oi on oi.interaction_id = in.interaction_id
-    left join gmv on in.interaction_id = gmv.interaction_id
+    left join gmv on oi.order_id = gmv.order_id
     left join statuses s on current_status = s.status
     left join sub_statuses ss on current_status = ss.status and current_substatus = ss.sub_status
     where in.user_id != '000000000000000000000000'
