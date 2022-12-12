@@ -9,7 +9,7 @@
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
       'bigquery_fail_on_missing_partitions': 'false',
-      'bigquery_upload_horizon_days': '140',
+      'bigquery_upload_horizon_days': '120',
     }
 ) }}
 
@@ -23,7 +23,7 @@ WITH installs AS (
   FROM {{ source('ads', 'ads_install') }}
   WHERE
       {% if is_incremental() %}
-    join_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
+    join_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
     AND join_date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     join_date >= DATE('2019-12-25')
@@ -37,7 +37,7 @@ WITH installs AS (
   FROM {{ source('mart', 'star_active_device') }}
   WHERE
       {% if is_incremental() %}
-    date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
+    date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
     AND date_msk < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     date_msk >= DATE('2019-12-25')
@@ -61,7 +61,7 @@ WITH installs AS (
     JOIN installs ON star_active_device.device_id = installs.device_id
   WHERE
       {% if is_incremental() %}
-    star_active_device.date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
+    star_active_device.date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
     AND star_active_device.date_msk < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     star_active_device.date_msk >= DATE('2019-12-25')
@@ -97,7 +97,7 @@ WITH installs AS (
   FROM {{ source('recom', 'context_device_counters_v5') }}
   WHERE type = "productOpen"
       {% if is_incremental() %}
-    AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
+    AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
     AND partition_date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     AND partition_date >= DATE('2019-12-25')
@@ -119,7 +119,7 @@ WITH installs AS (
   FROM {{ source('payments', 'checkout_data') }}
   WHERE
       {% if is_incremental() %}
-    date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 140 DAY
+    date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
     AND date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
     date >= DATE('2019-12-25')
@@ -186,7 +186,7 @@ WITH installs AS (
     AND activity.partition_date > dimentions.partition_date
     AND activity.partition_date <= DATE_ADD(dimentions.partition_date, 120)
   LEFT JOIN ads.device_advertising_costs AS ads_costs ON dimentions.device_id = ads_costs.device_id
-  GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24  
+  GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25
   ORDER BY 1
 
 ), dataset_orders AS (
@@ -234,7 +234,7 @@ WITH installs AS (
         AND orders.order_date > dataset.partition_date
         AND orders.order_date <= DATE_ADD(dataset.partition_date, 30)
     WHERE partition_date IS NOT NULL
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33
 
 )
 
@@ -247,7 +247,7 @@ SELECT
     orders_total_category,
     gmv_total_category,
     COUNT(*) AS dau,
-    
+    SUM(cpi) AS spend,
     SUM(user_age) AS user_age,
     SUM(is_product_open) AS open_users,
     SUM(is_product_to_cart) AS to_cart_users,
@@ -275,5 +275,3 @@ SELECT
     SUM(profit_30d) AS profit_30d
 FROM dataset_orders
 GROUP BY partition_date, is_new, os_type, country, source_extended, orders_total_category, gmv_total_category
-
-
