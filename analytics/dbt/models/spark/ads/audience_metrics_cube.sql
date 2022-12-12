@@ -13,14 +13,7 @@
     }
 ) }}
 
-WITH regions AS (
-
-  SELECT
-    EXPLODE(country_codes) AS country,
-    region
-  FROM {{ source('mart', 'dim_region') }}
-
-), installs AS (
+WITH installs AS (
 
   SELECT 
     join_date,
@@ -143,6 +136,7 @@ WITH regions AS (
       os_type,
       country,
       source_extended,
+      cpi,
       orders_total,
       COALESCE(orders_num, 0) AS orders_num,
       CASE
@@ -191,6 +185,7 @@ WITH regions AS (
   LEFT JOIN activity ON dimentions.device_id = activity.device_id
     AND activity.partition_date > dimentions.partition_date
     AND activity.partition_date <= DATE_ADD(dimentions.partition_date, 120)
+  LEFT JOIN ads.device_advertising_costs AS ads_costs ON dimentions.device_id = ads_costs.device_id
   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24  
   ORDER BY 1
 
@@ -204,6 +199,7 @@ WITH regions AS (
         os_type,
         country,
         source_extended,
+        cpi,
         orders_total,
         dataset.orders_num AS orders_num,
         orders_total_category,
@@ -240,82 +236,44 @@ WITH regions AS (
     WHERE partition_date IS NOT NULL
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
 
-), cube AS (
-
-    SELECT  
-        partition_date,
-        is_new,
-        os_type,
-        country,
-        source_extended,
-        orders_total_category,
-        gmv_total_category,
-        COUNT(*) AS dau,
-        SUM(user_age) AS user_age,
-        SUM(is_product_open) AS open_users,
-        SUM(is_product_to_cart) AS to_cart_users,
-        SUM(is_checkout_start) AS checkout_start_users,
-        SUM(is_address_save) AS address_save_users,
-        SUM(is_checkout_delivery_select) AS checkout_delivery_users,
-        SUM(is_checkout_pmt_method_select) AS checkout_pmt_users,
-        SUM(is_pmt_start) AS pmt_start_users,
-        SUM(is_pmt_success) AS pmt_success_users,
-        SUM(is_product_purchase) AS purchase_users,  
-        SUM(is_returned_1d) AS retention_1d_users,
-        SUM(is_returned_7d) AS retention_7d_users,
-        SUM(is_returned_1w) AS retention_1w_users,
-        SUM(is_returned_1m) AS retention_1m_users,
-        SUM(is_returned_3m) AS retention_3m_users,
-        SUM(is_bounced_5d) AS bounce_5d_users,
-        SUM(is_bounced_30d) AS bounce_30d_users,
-        SUM(is_bounced_90d) AS bounce_90d_users,
-        SUM(orders_num) AS orders,
-        SUM(gmv) AS gmv,
-        SUM(profit) AS profit,
-        SUM(gmv_7d) AS gmv_7d,
-        SUM(gmv_30d) AS gmv_30d,
-        SUM(profit_7d) AS profit_7d,
-        SUM(profit_30d) AS profit_30d
-    FROM dataset_orders
-    GROUP BY partition_date, is_new, os_type, country, source_extended, orders_total_category, gmv_total_category WITH CUBE
-
 )
 
-SELECT         
+SELECT  
     partition_date,
     is_new,
     os_type,
-    region,
-    cube.country,
+    country,
     source_extended,
     orders_total_category,
     gmv_total_category,
-    dau,
-    user_age,
-    open_users,
-    to_cart_users,
-    checkout_start_users,
-    address_save_users,
-    checkout_delivery_users,
-    checkout_pmt_users,
-    pmt_start_users,
-    pmt_success_users,
-    purchase_users,  
-    retention_1d_users,
-    retention_7d_users,
-    retention_1w_users,
-    retention_1m_users,
-    retention_3m_users,
-    bounce_5d_users,
-    bounce_30d_users,
-    bounce_90d_users,
-    orders,
-    gmv,
-    profit,
-    gmv_7d,
-    gmv_30d,
-    profit_7d,
-    profit_30d
-FROM cube
-JOIN regions ON UPPER(regions.country) = UPPER(cube.country)
-WHERE partition_date IS NOT NULL
+    COUNT(*) AS dau,
+    
+    SUM(user_age) AS user_age,
+    SUM(is_product_open) AS open_users,
+    SUM(is_product_to_cart) AS to_cart_users,
+    SUM(is_checkout_start) AS checkout_start_users,
+    SUM(is_address_save) AS address_save_users,
+    SUM(is_checkout_delivery_select) AS checkout_delivery_users,
+    SUM(is_checkout_pmt_method_select) AS checkout_pmt_users,
+    SUM(is_pmt_start) AS pmt_start_users,
+    SUM(is_pmt_success) AS pmt_success_users,
+    SUM(is_product_purchase) AS purchase_users,  
+    SUM(is_returned_1d) AS retention_1d_users,
+    SUM(is_returned_7d) AS retention_7d_users,
+    SUM(is_returned_1w) AS retention_1w_users,
+    SUM(is_returned_1m) AS retention_1m_users,
+    SUM(is_returned_3m) AS retention_3m_users,
+    SUM(is_bounced_5d) AS bounce_5d_users,
+    SUM(is_bounced_30d) AS bounce_30d_users,
+    SUM(is_bounced_90d) AS bounce_90d_users,
+    SUM(orders_num) AS orders,
+    SUM(gmv) AS gmv,
+    SUM(profit) AS profit,
+    SUM(gmv_7d) AS gmv_7d,
+    SUM(gmv_30d) AS gmv_30d,
+    SUM(profit_7d) AS profit_7d,
+    SUM(profit_30d) AS profit_30d
+FROM dataset_orders
+GROUP BY partition_date, is_new, os_type, country, source_extended, orders_total_category, gmv_total_category
+
+
