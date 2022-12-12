@@ -29,6 +29,12 @@ WITH installs AS (
     join_date >= DATE('2019-12-25')
       {% endif %}
 
+), ads_costs AS (
+    
+    SELECT device_id,
+      cpi
+    FROM ads.device_advertising_costs
+
 ), activity AS (
 
   SELECT DISTINCT
@@ -185,7 +191,7 @@ WITH installs AS (
   LEFT JOIN activity ON dimentions.device_id = activity.device_id
     AND activity.partition_date > dimentions.partition_date
     AND activity.partition_date <= DATE_ADD(dimentions.partition_date, 120)
-  LEFT JOIN ads.device_advertising_costs AS ads_costs ON dimentions.device_id = ads_costs.device_id
+  LEFT JOIN ads_costs ON dimentions.device_id = ads_costs.device_id
   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25
   ORDER BY 1
 
