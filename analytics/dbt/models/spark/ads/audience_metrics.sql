@@ -19,14 +19,16 @@ WITH installs AS (
     join_date,
     device_id,
     source,
-    partner_id
+    partner_id,
+    os_type,
+    country
   FROM {{ source('ads', 'ads_install') }}
 
 ), ads_costs AS (
     
     SELECT device_id,
       cpi
-    FROM ads.device_advertising_costs
+    FROM {{ source('ads', 'device_advertising_costs') }}
 
 ), activity AS (
 
@@ -45,25 +47,25 @@ WITH installs AS (
 ), dimentions AS (
 
   SELECT
-    star_active_device.date_msk AS partition_date,
-    star_active_device.device_id,
-    IF(star_active_device.date_msk = join_date, 1, 0) AS is_new,
-    DATEDIFF(star_active_device.date_msk, join_date) / 30.42 AS user_age,
-    COALESCE(star_active_device.os_type, "unknown") AS os_type,
-    COALESCE(star_active_device.country, "unknown") AS country,
+    activity.partition_date AS partition_date,
+    activity.device_id,
+    IF(activity.partition_date = join_date, 1, 0) AS is_new,
+    DATEDIFF(activity.partition_date, join_date) / 30.42 AS user_age,
+    COALESCE(installs.os_type, "unknown") AS os_type,
+    COALESCE(installs.country, "unknown") AS country,
     join_date,
     CASE
         WHEN source = "other" THEN COALESCE(installs.partner_id, 'unknown')
         ELSE source
-    END AS source_extended
-  FROM {{ source('mart', 'star_active_device') }} AS star_active_device
-    JOIN installs ON star_active_device.device_id = installs.device_id
+    END AS source
+  FROM activity
+    JOIN installs ON activity.device_id = installs.device_id
   WHERE
       {% if is_incremental() %}
-    star_active_device.date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND star_active_device.date_msk < DATE('{{ var("end_date_ymd") }}')
+    activity.partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    AND activity.partition_date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
-    star_active_device.date_msk >= DATE('2019-12-25')
+    activity.partition_date >= DATE('2019-12-25')
       {% endif %}
       
 ), orders AS (
@@ -134,7 +136,7 @@ WITH installs AS (
       is_new,
       os_type,
       country,
-      source_extended,
+      source,
       cpi,
       orders_total,
       COALESCE(orders_num, 0) AS orders_num,
@@ -197,7 +199,7 @@ WITH installs AS (
         is_new,
         os_type,
         country,
-        source_extended,
+        source,
         cpi,
         orders_total,
         dataset.orders_num AS orders_num,
@@ -242,7 +244,7 @@ SELECT
     is_new,
     os_type,
     country,
-    source_extended,
+    source,
     orders_total_category,
     gmv_total_category,
     COUNT(*) AS dau,
