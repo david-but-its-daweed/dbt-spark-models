@@ -7,7 +7,24 @@
     }
 ) }}
 
-with user_interaction as 
+with 
+not_jp_users AS (
+  SELECT DISTINCT u.user_id
+  FROM {{ ref('fact_user_request') }} f
+  LEFT JOIN {{ ref('fact_order') }} u ON f.user_id = u.user_id
+  WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
+),
+
+source as (
+select 
+    first_value(source) over (partition by uid order by ctms) as source,
+    first_value(type) over (partition by uid order by ctms) as type,
+    first_value(campaign) over (partition by uid order by ctms) as campaign,
+    uid as user_id
+    from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
+),
+
+user_interaction as 
 (select 
      interaction_id, 
     user_id, 
@@ -29,10 +46,12 @@ with user_interaction as
             max(map_from_entries(utmLabels)["utm_campaign"]) as utm_campaign,
             max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
             max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
-            max(source) as source, 
-            max(type) as type,
-            max(campaign) as campaign
-        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
+            max(s.source) as source, 
+            max(s.type) as type,
+            max(s.campaign) as campaign
+        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} m
+        inner join not_jp_users n on n.user_id = m.uid
+        left join source as s on m.uid = s.user_id
         group by _id, uid
     )
 )
