@@ -54,6 +54,8 @@ stg2 AS (
         current_status,
         current_sub_status,
         final_gmv,
+        lead_status,
+        lead_sub_status,
         COALESCE(lead_status_ts, CURRENT_TIMESTAMP()) AS lead_status_ts,
         IF(lead_sub_status != sub_status OR lead_status != status OR lead_status IS NULL,
             COALESCE(lead_status_ts, TIMESTAMP(CURRENT_TIMESTAMP())), NULL) IS NOT NULL AS flg,
@@ -82,10 +84,20 @@ orders_hist AS (
             THEN 0 end as cancelled_in_selling,
         MAX(IF(status = 'cancelled', sub_status, null)) AS cancelled_reason,
         MAX(IF(sub_status = 'new', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_new,
+        MAX(CASE WHEN sub_status = 'new' AND lead_sub_status = 'priceEstimation' THEN 1 
+            WHEN sub_status = 'new' AND lead_status = 'cancelled' THEN 2 ELSE 0 END) AS new_valid,
         MAX(IF(sub_status = 'priceEstimation', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_price_estimation,
+        MAX(CASE WHEN sub_status = 'priceEstimation' AND lead_sub_status = 'negotiation' THEN 1 
+            WHEN sub_status = 'priceEstimation' AND lead_status = 'cancelled' THEN 2 ELSE 0 END) AS price_estimation_valid,
         MAX(IF(sub_status = 'negotiation', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_negotiation,
+        MAX(CASE WHEN sub_status = 'negotiation' AND lead_sub_status = 'finalPricing' THEN 1 
+            WHEN sub_status = 'negotiation' AND lead_status = 'cancelled' THEN 2 ELSE 0 END) AS negotiation_valid,
         MAX(IF(sub_status = 'finalPricing', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_final_pricing,
-        MAX(IF(sub_status = 'signingAndPayment', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_signing_and_payment
+        MAX(CASE WHEN sub_status = 'finalPricing' AND lead_sub_status = 'signingAndPayment' THEN 1 
+            WHEN sub_status = 'finalPricing' AND lead_status = 'cancelled' THEN 2 ELSE 0 END) AS final_pricing_valid,
+        MAX(IF(sub_status = 'signingAndPayment', DATEDIFF(lead_status_ts,first_substatus_event_msk), null)) AS days_in_selling_signing_and_payment,
+        MAX(CASE WHEN sub_status = 'signingAndPayment' AND lead_status = 'manufacturing' THEN 1 
+            WHEN sub_status = 'signingAndPayment' AND lead_status = 'cancelled' THEN 2 ELSE 0 END) AS signing_and_payment_valid
     FROM stg2
     WHERE flg = TRUE
     GROUP BY 1, 2, 3, 4
@@ -105,6 +117,21 @@ SELECT
     oh.days_in_selling_price_estimation,
     oh.days_in_selling_negotiation,
     oh.days_in_selling_final_pricing,
-    oh.days_in_selling_signing_and_payment
+    oh.days_in_selling_signing_and_payment,
+    CASE WHEN oh.new_valid = 1 THEN 'valid'
+        WHEN oh.new_valid = 2 THEN 'cancelled'
+        ELSE 'not valid' END AS new,
+    CASE WHEN oh.price_estimation_valid = 1 THEN 'valid'
+        WHEN oh.price_estimation_valid = 2 THEN 'cancelled'
+        ELSE 'not valid' END AS price_estimation,
+    CASE WHEN oh.negotiation_valid = 1 THEN 'valid'
+        WHEN oh.negotiation_valid = 2 THEN 'cancelled'
+        ELSE 'not valid' END AS negotiation,
+    CASE WHEN oh.final_pricing_valid = 1 THEN 'valid'
+        WHEN oh.final_pricing_valid = 2 THEN 'cancelled'
+        ELSE 'not valid' END AS final_pricing,
+    CASE WHEN oh.signing_and_payment_valid = 1 THEN 'valid'
+        WHEN oh.signing_and_payment_valid = 2 THEN 'cancelled'
+        ELSE 'not valid' END AS signing_and_payment
 FROM orders_hist AS oh
 WHERE oh.selling_day is not null

@@ -105,7 +105,7 @@ status_history AS (
         LEAD(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status
     FROM orders AS o
     )
-    WHERE status != lead_status OR sub_status != lead_sub_status OR lead_status IS NULL
+    WHERE status != lead_status OR sub_status != lead_sub_status OR (status = current_status AND sub_status = current_sub_status)
 ),
 
 
