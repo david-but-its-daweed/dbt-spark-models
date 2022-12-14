@@ -54,7 +54,7 @@ select
     min(case when payment_status = "completePaymentAcquired" then day end) as complete_payment_acquired,
     min(case when payment_status = "merchantAcquiredPayment" then day end) as merchant_acquired_payment
 from 
-(select distinct _id, orderId, merchantId, manDays, daysAfterQC, day, s.status
+(select distinct _id, orderId, merchantId, manDays, daysAfterQC, day, s.status as payment_status
 from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }} o
 left join statuses s on o._id = s.id
 )
