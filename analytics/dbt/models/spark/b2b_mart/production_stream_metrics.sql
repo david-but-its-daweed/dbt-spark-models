@@ -7,30 +7,15 @@
     }
 ) }}
 
-with payments as (
-  select 10 as id, "noOperationsStarted" as status
-  union all 
-  select 20 as id, "advancePaymentRequested" as status
-  union all
-  select 25 as id, "advancePaymentInProgress" as status
-  union all
-  select 27 as id, "advancePaymentAcquired" as status
-  union all
-  select 30 as id, "manufacturingAndQcInProgress" as status
-  union all
-  select 40 as id, "remainingPaymentRequested" as status
-  union all
-  select 45 as id, "remainingPaymentInProgress" as status
-  union all
-  select 50 as id, "remainingPaymentAcquired" as status
-  union all
-  select 60 as id, "completePaymentRequested" as status
-  union all
-  select 65 as id, "completePaymentInProgress" as status
-  union all
-  select 70 as id, "completePaymentAcquired" as status
-  union all
-  select 80 as id, "merchantAcquiredPayment" as status
+with statuses as (
+  select payload.id as id,
+    payload.status,
+    min(TIMESTAMP(millis_to_ts_msk(payload.updatedTime))) as day
+    from {{ source('b2b_mart', 'operational_events') }}
+    WHERE `type`  ='merchantOrderChanged'
+    group by payload.id,
+        payload.status
+    
 ),
 
 merchant_orders as 
@@ -56,25 +41,24 @@ select
     orderId as order_id,
     merchantId as merchant_id, 
     max(manDays) as man_days,
-    min(case when payment_status = 10 then day end) as no_operations_started,
-    min(case when payment_status = 20 then day end) as advance_payment_requested,
-    min(case when payment_status = 25 then day end) as advance_payment_in_progress,
-    min(case when payment_status = 27 then day end) as advance_payment_acquired,
-    min(case when payment_status = 30 then day end) as manufacturing_and_qc_in_progress,
-    min(case when payment_status = 40 then day end) as remaining_payment_requested,
-    min(case when payment_status = 45 then day end) as remaining_payment_in_progress,
-    min(case when payment_status = 50 then day end) as remaining_payment_acquired,
-    min(case when payment_status = 60 then day end) as complete_payment_requested,
-    min(case when payment_status = 65 then day end) as complete_payment_in_progress,
-    min(case when payment_status = 70 then day end) as complete_payment_acquired,
-    min(case when payment_status = 80 then day end) as merchant_acquired_payment
+    min(case when payment_status = "noOperationsStarted" then day end) as no_operations_started,
+    min(case when payment_status = "advancePaymentRequested" then day end) as advance_payment_requested,
+    min(case when payment_status = "advancePaymentInProgress" then day end) as advance_payment_in_progress,
+    min(case when payment_status = "advancePaymentAcquired" then day end) as advance_payment_acquired,
+    min(case when payment_status = "manufacturingAndQcInProgress" then day end) as manufacturing_and_qc_in_progress,
+    min(case when payment_status = "remainingPaymentRequested" then day end) as remaining_payment_requested,
+    min(case when payment_status = "remainingPaymentInProgress" then day end) as remaining_payment_in_progress,
+    min(case when payment_status = "remainingPaymentAcquired" then day end) as remaining_payment_acquired,
+    min(case when payment_status = "completePaymentRequested" then day end) as complete_payment_requested,
+    min(case when payment_status = "completePaymentInProgress" then day end) as complete_payment_in_progress,
+    min(case when payment_status = "completePaymentAcquired" then day end) as complete_payment_acquired,
+    min(case when payment_status = "merchantAcquiredPayment" then day end) as merchant_acquired_payment
 from 
-(select _id, orderId, merchantId, manDays, daysAfterQC, day, status, payment_status
+(select _id, orderId, merchantId, manDays, daysAfterQC, day, status as payment_status
 from
-(select _id, orderId, merchantId, manDays, daysAfterQC, from_unixtime(status.utms/1000 + 10800) as day,  status.paymentStatus as payment_status
+(select _id, orderId, merchantId, manDays, daysAfterQC, day, s.status
 from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }} o
-lateral view explode(payment.paymentStatusHistory) as status) o
-left join payments p on o.payment_status = p.id
+left join statuses s on o._id = s.id
 )
 group by _id, orderId, merchantId
 )
