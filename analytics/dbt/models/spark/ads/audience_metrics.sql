@@ -8,8 +8,7 @@
       'team': 'ads',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_fail_on_missing_partitions': 'false',
-      'bigquery_upload_horizon_days': '120',
+      'bigquery_fail_on_missing_partitions': 'false'
     }
 ) }}
 
@@ -19,14 +18,16 @@ WITH installs AS (
     join_date,
     device_id,
     source,
-    partner_id
+    partner_id,
+    os_type,
+    country
   FROM {{ source('ads', 'ads_install') }}
 
 ), ads_costs AS (
     
     SELECT device_id,
       cpi
-    FROM ads.device_advertising_costs
+    FROM {{ source('ads', 'device_advertising_costs') }}
 
 ), activity AS (
 
@@ -34,37 +35,25 @@ WITH installs AS (
     device_id,
     date_msk AS partition_date
   FROM {{ source('mart', 'star_active_device') }}
-  WHERE
-      {% if is_incremental() %}
-    date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND date_msk < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
-    date_msk >= DATE('2019-12-25')
-      {% endif %}
+  WHERE date_msk >= DATE('2019-12-25')
 
 ), dimentions AS (
 
   SELECT
-    star_active_device.date_msk AS partition_date,
-    star_active_device.device_id,
-    IF(star_active_device.date_msk = join_date, 1, 0) AS is_new,
-    DATEDIFF(star_active_device.date_msk, join_date) / 30.42 AS user_age,
-    COALESCE(star_active_device.os_type, "unknown") AS os_type,
-    COALESCE(star_active_device.country, "unknown") AS country,
+    activity.partition_date AS partition_date,
+    activity.device_id,
+    IF(activity.partition_date = join_date, 1, 0) AS is_new,
+    DATEDIFF(activity.partition_date, join_date) / 30.42 AS user_age,
+    COALESCE(installs.os_type, "unknown") AS os_type,
+    COALESCE(installs.country, "unknown") AS country,
     join_date,
     CASE
         WHEN source = "other" THEN COALESCE(installs.partner_id, 'unknown')
         ELSE source
-    END AS source_extended
-  FROM {{ source('mart', 'star_active_device') }} AS star_active_device
-    JOIN installs ON star_active_device.device_id = installs.device_id
-  WHERE
-      {% if is_incremental() %}
-    star_active_device.date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND star_active_device.date_msk < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
-    star_active_device.date_msk >= DATE('2019-12-25')
-      {% endif %}
+    END AS source
+  FROM activity
+    JOIN installs ON activity.device_id = installs.device_id
+  WHERE activity.partition_date >= DATE('2019-12-25')
       
 ), orders AS (
   
@@ -95,13 +84,7 @@ WITH installs AS (
     1 AS is_product_open
   FROM {{ source('recom', 'context_device_counters_v5') }}
   WHERE type = "productOpen"
-      {% if is_incremental() %}
-    AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND partition_date < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
     AND partition_date >= DATE('2019-12-25')
-      {% endif %}
-  
 
 ), payments_events AS (
 
@@ -116,13 +99,7 @@ WITH installs AS (
     MAX(is_pmt_start) AS is_pmt_start,
     MAX(is_pmt_success) AS is_pmt_success
   FROM {{ source('payments', 'checkout_data') }}
-  WHERE
-      {% if is_incremental() %}
-    date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND date < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
-    date >= DATE('2019-12-25')
-      {% endif %}
+  WHERE date >= DATE('2019-12-25')
   GROUP BY 1, 2
 
 ), dataset AS (
@@ -134,7 +111,7 @@ WITH installs AS (
       is_new,
       os_type,
       country,
-      source_extended,
+      source,
       cpi,
       orders_total,
       COALESCE(orders_num, 0) AS orders_num,
@@ -197,7 +174,7 @@ WITH installs AS (
         is_new,
         os_type,
         country,
-        source_extended,
+        source,
         cpi,
         orders_total,
         dataset.orders_num AS orders_num,
@@ -242,7 +219,7 @@ SELECT
     is_new,
     os_type,
     country,
-    source_extended,
+    source,
     orders_total_category,
     gmv_total_category,
     COUNT(*) AS dau,
