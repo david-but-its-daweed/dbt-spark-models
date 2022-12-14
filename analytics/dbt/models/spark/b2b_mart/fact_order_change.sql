@@ -156,5 +156,6 @@ GROUP BY event_id,
         biz_dev_role_type,
         status,
         sub_status
+        
 
 
