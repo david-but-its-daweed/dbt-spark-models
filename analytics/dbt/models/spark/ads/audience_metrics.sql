@@ -8,8 +8,7 @@
       'team': 'ads',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_fail_on_missing_partitions': 'false',
-      'bigquery_upload_horizon_days': '120',
+      'bigquery_fail_on_missing_partitions': 'false'
     }
 ) }}
 
@@ -36,13 +35,7 @@ WITH installs AS (
     device_id,
     date_msk AS partition_date
   FROM {{ source('mart', 'star_active_device') }}
-  WHERE
-      {% if is_incremental() %}
-    date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND date_msk < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
-    date_msk >= DATE('2019-12-25')
-      {% endif %}
+  WHERE date_msk >= DATE('2019-12-25')
 
 ), dimentions AS (
 
@@ -60,13 +53,7 @@ WITH installs AS (
     END AS source
   FROM activity
     JOIN installs ON activity.device_id = installs.device_id
-  WHERE
-      {% if is_incremental() %}
-    activity.partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND activity.partition_date < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
-    activity.partition_date >= DATE('2019-12-25')
-      {% endif %}
+  WHERE activity.partition_date >= DATE('2019-12-25')
       
 ), orders AS (
   
@@ -97,13 +84,7 @@ WITH installs AS (
     1 AS is_product_open
   FROM {{ source('recom', 'context_device_counters_v5') }}
   WHERE type = "productOpen"
-      {% if is_incremental() %}
-    AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND partition_date < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
     AND partition_date >= DATE('2019-12-25')
-      {% endif %}
-  
 
 ), payments_events AS (
 
@@ -118,13 +99,7 @@ WITH installs AS (
     MAX(is_pmt_start) AS is_pmt_start,
     MAX(is_pmt_success) AS is_pmt_success
   FROM {{ source('payments', 'checkout_data') }}
-  WHERE
-      {% if is_incremental() %}
-    date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND date < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
-    date >= DATE('2019-12-25')
-      {% endif %}
+  WHERE date >= DATE('2019-12-25')
   GROUP BY 1, 2
 
 ), dataset AS (
