@@ -28,8 +28,8 @@ users as (
     
 user_admin as (
     select distinct user_id, owner_id from
-    {{ ref('dim_user where') }}
-    next_effective_ts_msk is null
+    {{ ref('dim_user') }}
+    where next_effective_ts_msk is null
 ),
 
 user_order as (
