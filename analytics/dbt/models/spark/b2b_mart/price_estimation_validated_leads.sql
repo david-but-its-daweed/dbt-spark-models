@@ -1,3 +1,13 @@
+{{ config(
+    schema='b2b_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'bigquery_load': 'true'
+    }
+) }}
+
+
 with 
 not_jp_users AS (
   SELECT DISTINCT u.user_id
