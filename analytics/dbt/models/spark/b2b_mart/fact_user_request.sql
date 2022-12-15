@@ -28,7 +28,8 @@ SELECT _id AS request_id,
        map_from_entries(payload).`utm_campaign` AS utm_campaign,
        lower(tags[0])  AS tags,
        source,
-       case when is_stuff is null then false else is_stuff end AS is_joompro_employee
+       case when uid = '625441434c41263737ad2ca4' then true 
+       when is_stuff is null then false else is_stuff end AS is_joompro_employee
 FROM {{ source('mongo', 'b2b_core_popup_requests_daily_snapshot') }} AS l
 LEFT JOIN popuprequest_event AS p ON p.request_id=l._id
 WHERE date(from_unixtime(floor(ctms / 1000), 'yyyy-MM-dd hh:mm:ss')) >= "2022-05-19"
