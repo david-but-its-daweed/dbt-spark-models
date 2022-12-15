@@ -250,4 +250,4 @@ SELECT
     SUM(profit_7d) AS profit_7d,
     SUM(profit_30d) AS profit_30d
 FROM dataset_orders
-GROUP BY partition_date, is_new, os_type, country, source_extended, orders_total_category, gmv_total_category
+GROUP BY partition_date, is_new, os_type, country, source, orders_total_category, gmv_total_category
