@@ -50,6 +50,8 @@ sources:
       - name: b2b_core_interactions_daily_snapshot
       - name: product_fast_delivery_info_daily_snapshot
       - name: logistics_customer_features_daily_snapshot
+      - name: b2b_core_form_with_status_daily_snapshot
+      - name: b2b_core_order_products_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
