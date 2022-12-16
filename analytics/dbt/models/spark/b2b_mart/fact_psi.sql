@@ -1,0 +1,179 @@
+{{ config(
+    schema='b2b_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'bigquery_load': 'true'
+    }
+) }}
+
+
+with products as
+(select 
+    id as product_id, 
+    merchOrdId as merchant_order_id, 
+    psiStatusID as psi_status_id, 
+    status,
+    type 
+    from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
+),
+
+statuses as (
+    select "waiting" as status, 10 as s_id
+    union all 
+    select "running" as status, 20 as s_id
+    union all 
+    select "ready" as status, 30 as s_id
+    union all 
+    select "fail" as status, 40 as s_id
+    union all 
+    select "success" as status, 50 as s_id
+),
+
+psi as (
+    select status, statusId as status_id, ctms, _id, ctxId as merchant_order_id, scndCtxId as product_id
+    from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} f
+    left join statuses s on f.statusId = s.s_id
+    where type = 10
+),
+
+merchant as (
+    select 
+        _id as merchant_order_id, 
+        orderId as order_id,
+        merchantId as merchant_id, 
+        manDays as man_days
+from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
+),
+
+not_jp_users AS (
+    SELECT DISTINCT order_id
+    FROM {{ ref('fact_user_request') }} f
+    left join 
+        (select distinct order_id, user_id from {{ ref('fact_order') }}) o on f.user_id = o.user_id
+    WHERE is_joompro_employee != TRUE OR is_joompro_employee IS NULL
+),
+
+table1 as (
+select * from (
+select product_id, 
+    merchant_order_id, 
+    psi_status_id,
+    product_status,
+    type,
+    status,
+    status_id,
+     time,
+    min(case when status_id = 10 then time end) over (partition by product_id, merchant_order_id) as psi_waiting_time,
+    min(case when status_id = 20 then time end) over (partition by product_id, merchant_order_id) as psi_start_time,
+    min(case when status_id = 50 then time end) over (partition by product_id, merchant_order_id) as psi_end_time,
+    max(case when current_status = 1 then status_id end) over (partition by product_id, merchant_order_id) as current_status,
+    lag(status_id) over (partition by product_id, merchant_order_id order by time) as lag_status
+from
+(
+select distinct
+    p.product_id, 
+    p.merchant_order_id, 
+    case when psi_status_id = _id then 1 else 0 end as current_status, 
+    psi_status_id,
+    p.status as product_status,
+    type,
+    psi.status,
+    psi.status_id,
+    ctms as time
+from merchant m 
+--inner join not_jp_users n on m.order_id = n.order_id
+left join products p on m.merchant_order_id = p.merchant_order_id
+left join psi on p.product_id = psi.product_id and p.merchant_order_id = psi.merchant_order_id
+where psi_status_id is not null and psi.status_id > 0)
+)
+where (lag_status != status_id or lag_status is null) and status_id != 50),
+
+
+status_10 as (
+select 
+    coalesce(lead(time) over (partition by product_id, merchant_order_id order by time), unix_timestamp(current_date())*1000) as lead_time,
+    row_number() over (partition by product_id, merchant_order_id order by time) as psi_number,
+    time,
+    product_id, 
+    merchant_order_id,
+    status
+from
+(select product_id, 
+    merchant_order_id,
+    'waiting' as status,
+    time
+from table1 where status_id = 10
+union all 
+select 
+    product_id, 
+    merchant_order_id,
+    'fixing' as status,
+    time
+    from table1 where status_id = 40
+)
+)
+
+
+select distinct product_id, 
+    merchant_order_id, 
+    psi_status_id,
+    product_status,
+    type,
+    status,
+    current_status,
+    date(from_unixtime(psi_start_time/1000)) as psi_start,
+    int((psi_end_time/1000 - psi_start_time/1000 )/10800) as time_psi,
+    date(from_unixtime(psi_waiting_time/1000)) as psi_waiting,
+    date(from_unixtime(psi_end_time/1000)) as psi_end_time,
+    date(from_unixtime(waiting_time/1000)) as waiting_time,
+    date(from_unixtime(running_time/1000)) as running_time,
+    date(from_unixtime(ready_time/1000)) as ready_time,
+    int((ready_time/1000 - running_time/1000)/10800) as time_checking,
+    date(from_unixtime(failed_time/1000)) as failed_time,
+    int((psi_waiting_time/1000 - running_time/1000)/10800) as fixing_time,
+    psis,
+    psi_number
+from
+(
+select 
+    product_id, 
+    merchant_order_id, 
+    psi_status_id,
+    product_status,
+    type,
+    status,
+    status_id,
+    time,
+    current_status,
+    psi_start_time,
+    psi_waiting_time,
+    psi_end_time,
+    min(case when status_id in (10, 40) then time end) over (partition by merchant_order_id, product_id, psi_number) as waiting_time,
+    min(case when status_id = 20 then time end) over (partition by merchant_order_id, product_id, psi_number) as running_time,
+    min(case when status_id = 30 then time end) over (partition by merchant_order_id, product_id, psi_number) as ready_time,
+    min(case when status_id = 40 and status_10_time < time then time end) over (partition by merchant_order_id, product_id, psi_number) as failed_time,
+    max(psi_number) over (partition by merchant_order_id, product_id) as psis,
+    psi_number
+    from
+(
+select 
+    t.product_id, 
+    t.merchant_order_id, 
+    psi_status_id,
+    product_status,
+    type,
+    s.status,
+    status_id,
+    t.time,
+    current_status,
+    psi_start_time,
+    psi_waiting_time,
+    psi_end_time,
+    s.time as status_10_time,
+    psi_number
+from table1 t
+left join status_10 s on s.merchant_order_id = t.merchant_order_id and s.product_id = t.product_id
+where s.time <= t.time and s.lead_time >= t.time
+)
+)
