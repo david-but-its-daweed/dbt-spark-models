@@ -51,7 +51,7 @@ orders as (
     (select user_id, 
         first_value(status) over (partition by user_id order by event_ts_msk desc) as current_status,
         first_value(sub_status) over (partition by user_id order by event_ts_msk desc) as current_sub_status,
-        date(min(case when sub_status = "priceEstimation" then event_ts_msk end) over (partition by user_id)) as min_price_estimation_time,
+        date(min(case when sub_status = "priceEstimation" or (status = 'selling' and sub_status != 'new') then event_ts_msk end) over (partition by user_id)) as min_price_estimation_time,
         first_value(status) over (partition by user_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_status,
         first_value(sub_status) over (partition by user_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_sub_status
     from {{ ref('fact_order_change') }} o left join user_order u on o.order_id = u.order_id
@@ -71,4 +71,4 @@ last_sub_status
 from users u 
 left join orders o on u.user_id = o.user_id
 left join admin a on u.user_id = a.user_id
-where min_validation_time <= min_price_estimation_time
+where min_validation_time <= min_price_estimation_time or min_price_estimation_time is null
