@@ -48,18 +48,19 @@ admin AS (
 
 orders as (
     select distinct * from
-    (select user_id, 
-        first_value(status) over (partition by user_id order by event_ts_msk desc) as current_status,
-        first_value(sub_status) over (partition by user_id order by event_ts_msk desc) as current_sub_status,
-        date(min(case when sub_status = "priceEstimation" or (status = 'selling' and sub_status != 'new') then event_ts_msk end) over (partition by user_id)) as min_price_estimation_time,
-        first_value(status) over (partition by user_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_status,
-        first_value(sub_status) over (partition by user_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_sub_status
+    (select user_id, order_id,
+        first_value(status) over (partition by user_id, order_id order by event_ts_msk desc) as current_status,
+        first_value(sub_status) over (partition by user_id, order_id order by event_ts_msk desc) as current_sub_status,
+        date(min(case when sub_status = "priceEstimation" or (status = 'selling' and sub_status != 'new') then event_ts_msk end) over (partition by user_id, order_id)) as min_price_estimation_time,
+        first_value(status) over (partition by user_id, order_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_status,
+        first_value(sub_status) over (partition by user_id, order_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_sub_status
     from {{ ref('fact_order_change') }} o left join user_order u on o.order_id = u.order_id
     )
     )
     
 select distinct 
 u.user_id, 
+o.order_id,
 validation_status,
 min_validation_time,
 owner_email,
