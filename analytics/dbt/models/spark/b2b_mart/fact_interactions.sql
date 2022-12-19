@@ -15,6 +15,15 @@ not_jp_users AS (
   WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
 ),
 
+source as (
+select 
+    first_value(source) over (partition by uid order by ctms) as source,
+    first_value(type) over (partition by uid order by ctms) as type,
+    first_value(campaign) over (partition by uid order by ctms) as campaign,
+    uid as user_id
+    from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
+),
+
 user_interaction as 
 (select 
      interaction_id, 
@@ -37,11 +46,12 @@ user_interaction as
             max(map_from_entries(utmLabels)["utm_campaign"]) as utm_campaign,
             max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
             max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
-            max(source) as source, 
-            max(type) as type,
-            max(campaign) as campaign
+            max(s.source) as source, 
+            max(s.type) as type,
+            max(s.campaign) as campaign
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} m
         inner join not_jp_users n on n.user_id = m.uid
+        left join source s on s.user_id = m.uid
         group by _id, uid
     )
 )
@@ -129,7 +139,7 @@ select
     vs.status as validation_status, 
     rr.reason as reject_reason,
     date(created_ts_msk) as created_date,
-    validated_date
+    case when vs.status = 'validated' then validated_date end as validated_date
     from {{ ref('dim_user') }} du
     left join validation_status vs on du.validation_status = vs.id
     left join reject_reasons rr on du.reject_reason = rr.id
@@ -211,28 +221,19 @@ order_interaction as (
 
 gmv as
 (
-SELECT interaction_id, final_gmv, client_converted_gmv
+SELECT order_id, final_gmv, client_converted_gmv
 FROM
 (
     SELECT  
         event_ts_msk,
-        interaction_id,
+        payload.orderId as order_id,
         payload.gmv.clientConvertedGMV AS client_converted_gmv,
         payload.gmv.finalGMV AS final_gmv,
         payload.gmv.finalGrossProfit AS final_gross_profit,
         payload.gmv.initialGrossProfit AS initial_gross_profit,
-        row_number() over(partition by interaction_id order by event_ts_msk desc) as rn
+        row_number() over(partition by payload.orderId order by event_ts_msk desc) as rn
     FROM {{ source('b2b_mart', 'operational_events') }} oe
-    right join
-    (select distinct
-            _id as interaction_id, 
-            request_id,
-            order_id
-        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} i
-        left join orders o on i.popupRequestId = o.request_id
-    ) in on oe.payload.orderId = in.order_id
-    WHERE `type`  ='orderChangedByAdmin'
-    )
+   )
 where rn = 1
 ),
 
@@ -309,7 +310,44 @@ sub_statuses as (
         'selling' as status, 'delivered' as sub_status, 10 as priority
 )
 
-
+select
+interaction_id,
+    partition_date_msk,
+    created_week,
+    utm_campaign,
+    utm_source,
+    utm_medium,
+    source, 
+    type,
+    campaign,
+    user_id,
+    validation_status, 
+    reject_reason,
+    first_interaction,
+    request_id,
+        order_id,
+        friendly_id,
+        current_status,
+        current_substatus,
+        final_gmv, client_converted_gmv,
+        created_date,
+        validated_date,
+        min_status_new_ts_msk,
+        min_status_selling_ts_msk,
+        min_status_manufacturing_ts_msk,
+        min_status_shipping_ts_msk,
+        min_status_cancelled_ts_msk,
+        min_status_closed_ts_msk,
+        min_status_claim_ts_msk,
+        min_price_estimation_ts_msk,
+        min_negotiation_ts_msk,
+        min_final_pricing_ts_msk,
+        min_signing_and_payment_ts_msk,
+        rn,
+        interaction_min_time,
+        rank(interaction_id) over (partition by user_id, interaction_min_time is not null order by interaction_min_time) as sucessfull_interaction_number
+        from
+(
 select 
     interaction_id,
     partition_date_msk,
@@ -343,7 +381,8 @@ select
         min_negotiation_ts_msk,
         min_final_pricing_ts_msk,
         min_signing_and_payment_ts_msk,
-        row_number() over (partition by interaction_id order by status_priority desc, substatus_priority desc, order_id) as rn
+        row_number() over (partition by interaction_id order by status_priority desc, substatus_priority desc, order_id) as rn,
+        min(min_status_manufacturing_ts_msk) over (partition by user_id, interaction_id) as interaction_min_time
     from
     (select 
         in.interaction_id,
@@ -360,7 +399,7 @@ select
         reject_reason,
         first_interaction,
         request_id,
-        order_id,
+        oi.order_id,
         friendly_id,
         current_status,
         current_substatus,
@@ -373,7 +412,7 @@ select
         MIN(IF(oi.status = 'selling', min_date, NULL)) AS min_status_selling_ts_msk,
         MIN(IF(oi.status = 'manufacturing', min_date, NULL)) AS min_status_manufacturing_ts_msk,
         MIN(IF(oi.status = 'shipping', min_date, NULL)) AS min_status_shipping_ts_msk,
-        MIN(IF(oi.status = 'cancelled', min_date, NULL)) AS min_status_cancelled_ts_msk,
+        MIN(IF(oi.status = 'cancelled' and oi.current_status = 'cancelled', min_date, NULL)) AS min_status_cancelled_ts_msk,
         MIN(IF(oi.status = 'closed', min_date, NULL)) AS min_status_closed_ts_msk,
         MIN(IF(oi.status = 'claim', min_date, NULL)) AS min_status_claim_ts_msk,
         MIN(IF(oi.sub_status = 'priceEstimation', min_date, NULL)) AS min_price_estimation_ts_msk,
@@ -383,7 +422,7 @@ select
     from user_interaction in 
     left join users u on in.user_id = u.user_id
     left join order_interaction oi on oi.interaction_id = in.interaction_id
-    left join gmv on in.interaction_id = gmv.interaction_id
+    left join gmv on oi.order_id = gmv.order_id
     left join statuses s on current_status = s.status
     left join sub_statuses ss on current_status = ss.status and current_substatus = ss.sub_status
     where in.user_id != '000000000000000000000000'
@@ -401,7 +440,7 @@ select
         reject_reason,
         first_interaction,
         request_id,
-        order_id,
+        oi.order_id,
         friendly_id,
         current_status,
         current_substatus,
@@ -411,3 +450,4 @@ select
         created_date,
         validated_date
     )
+)
