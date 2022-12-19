@@ -17,6 +17,7 @@ with not_jp_users AS (
 order_v2_mongo AS
 (
     SELECT fo.order_id AS order_id,
+        fo.user_id,
         DATE(fo.min_manufactured_ts_msk) AS manufactured_date,
         MIN(DATE(fo.min_manufactured_ts_msk)) OVER (PARTITION BY fo.user_id) AS min_manufactured_date
     FROM {{ ref('fact_order') }} AS fo
@@ -62,6 +63,7 @@ after_second_qrt_new_order AS
         source, 
         type,
         campaign,
+        user_id,
         CASE WHEN
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
@@ -82,9 +84,12 @@ after_second_qrt_new_order AS
       CASE WHEN
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
-        END
+      END,
+      user_id
 )
 
-SELECT *
+SELECT *, CASE WHEN SUM(gmv_initial) OVER (PARTITION BY user_id) > 100000 THEN 'big client'
+            WHEN SUM(gmv_initial) OVER (PARTITION BY user_id) > 30000 THEN 'medium client' 
+            ELSE 'small client' END as client
     FROM  after_second_qrt_new_order
 WHERE gmv_initial > 0
