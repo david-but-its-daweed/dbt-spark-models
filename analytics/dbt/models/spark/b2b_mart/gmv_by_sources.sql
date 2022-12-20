@@ -98,14 +98,11 @@ users as (
             ELSE 'small client' END as client
     from
     (select distinct order_id, user_id, gmv_initial, manufactured_date, 1 as for_join from after_second_qrt_new_order) a
-    left join  (SELECT
-        day,
+    left join (SELECT
+        sequence(DATE('2022-06-01'),
+        CURRENT_DATE() - 1) as day,
         1 AS for_join
-    FROM UNNEST(sequence(
-        DATE('2022-06-01'),
-        CURRENT_DATE() - 1
-        )) AS day
-                ) as d on a.for_join = d.for_join
+        ) as d on a.for_join = d.for_join
 )
 
 SELECT a.*, client, CASE WHEN SUM(CASE WHEN manufactured_date > DATE_ADD(current_date(), INTERVAL -6 MONTH)
