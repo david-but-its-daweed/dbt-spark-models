@@ -39,14 +39,17 @@ admin AS (
 
 
 order_owner AS (
-    SELECT
+    select distinct 
+    order_id, owner_moderator_email, owner_role
+    from
+    (SELECT
         o.order_id,
-        MAX(ao.email) AS owner_moderator_email,
-        s.role AS owner_role
+        FIRST_VALUE(ao.email) OVER (partition by o.order_id order by event_ts_msk desc) AS owner_moderator_email,
+        FIRST_VALUE(s.role) OVER (partition by o.order_id order by event_ts_msk desc) AS owner_role
     FROM {{ ref('fact_order_change') }} AS o
     LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
     LEFT JOIN {{ ref('support_roles') }} AS s ON ao.email = s.email
-    GROUP BY o.order_id
+    )
 ),
 
 rfq_requests AS (
@@ -132,8 +135,8 @@ rfq as (
 order_products as (
     select distinct
         order_id, id as product_id
-        FROM b2b_core_order_products_daily_snapshot o
-    JOIN (select _id, orderId as order_id from mongo.b2b_core_merchant_orders_v2_daily_snapshot) m ON m._id = o.merchOrderId
+        FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} as o
+    JOIN (select _id, orderId as order_id from mongo.b2b_core_merchant_orders_v2_daily_snapshot) m ON m._id = o.merchOrdId
 ),
 
 orders_statuses as (
