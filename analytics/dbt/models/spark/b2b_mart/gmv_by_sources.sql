@@ -108,7 +108,13 @@ users as (
                 ) as d on a.for_join = d.for_join
 )
 
-SELECT a.*, client
+SELECT a.*, client, CASE WHEN SUM(CASE WHEN manufactured_date > DATE_ADD(current_date(), INTERVAL -6 MONTH)
+                AND manufactured_date <= current_date()
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id) > 100000 THEN 'big client'
+             WHEN SUM(CASE WHEN manufactured_date > DATE_ADD(current_date(), INTERVAL -6 MONTH)
+                AND manufactured_date <= current_date()
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id) > 30000 THEN 'medium client' 
+             ELSE 'small client' END as current_client
     FROM after_second_qrt_new_order as a
     left join users on a.user_id = users.user_id and a.manufactured_date = users.day
 WHERE gmv_initial > 0
