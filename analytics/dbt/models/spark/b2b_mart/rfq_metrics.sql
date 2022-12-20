@@ -41,9 +41,11 @@ admin AS (
 order_owner AS (
     SELECT
         o.order_id,
-        MAX(ao.email) AS owner_moderator_email
+        MAX(ao.email) AS owner_moderator_email,
+        s.role AS owner_role
     FROM {{ ref('fact_order_change') }} AS o
     LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
+    LEFT JOIN {{ ref('support_roles') }} AS s ON ao.email = s.email
     GROUP BY o.order_id
 ),
 
@@ -67,7 +69,8 @@ response AS (
         created_ts_msk AS response_created_ts_msk,
         status AS response_status,
         reject_reason,
-        merchant_id
+        merchant_id,
+        product_id
     FROM {{ ref('fact_rfq_response') }}
     WHERE next_effective_ts_msk IS NULL
 ),
@@ -82,7 +85,8 @@ rfq_1 as (SELECT
     rp.order_rfq_response_id,
     rp.response_status,
     rp.reject_reason,
-    rp.merchant_id
+    rp.merchant_id,
+    product_id
 FROM rfq_requests AS rq
 LEFT JOIN response AS rp ON rq.rfq_request_id = rp.rfq_request_id
 ),
@@ -96,7 +100,8 @@ rfq as (
         rfq_request_id,
         order_rfq_response_id,
         response_status,
-        reject_reason
+        reject_reason,
+        0 as converted
     from rfq_1
     union all 
         SELECT 
@@ -107,7 +112,8 @@ rfq as (
         rfq_request_id,
         order_rfq_response_id,
         response_status,
-        reject_reason
+        reject_reason,
+        0 as converted
     from rfq_1
     union all 
         SELECT 
@@ -118,8 +124,16 @@ rfq as (
         rfq_request_id,
         order_rfq_response_id,
         response_status,
-        reject_reason
+        reject_reason,
+        0 as converted
     from rfq_1
+),
+
+order_products as (
+    select distinct
+        order_id, id as product_id
+        FROM b2b_core_order_products_daily_snapshot o
+    JOIN (select _id, orderId as order_id from mongo.b2b_core_merchant_orders_v2_daily_snapshot) m ON m._id = o.merchOrderId
 ),
 
 orders_statuses as (
@@ -131,9 +145,11 @@ orders_statuses as (
         rfq_request_id,
         order_rfq_response_id,
         response_status,
-        reject_reason
+        reject_reason,
+        max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted
       FROM b2b_mart.fact_order_change o
       left join rfq_1 on o.order_id = rfq_1.order_id
+      left join order_products op on o.order_id = op.order_id
 ),
 
 
@@ -149,7 +165,9 @@ stg1 AS (
         rfq_request_id,
         order_rfq_response_id,
         response_status,
-        reject_reason
+        reject_reason,
+        converted,
+        owner_role
     FROM (select * from orders_statuses union all select * from rfq) AS o
     LEFT JOIN order_owner AS ao ON o.order_id = ao.order_id
 ),
@@ -165,6 +183,8 @@ orders_hist AS (
         order_rfq_response_id,
         response_status,
         reject_reason,
+        owner_role,
+        max(converted) as converted,
         MAX(IF(status = 'selling' AND sub_status = 'new', event_ts_msk, '')) AS new_ts_msk,
         MAX(IF(status = 'selling' AND sub_status = 'priceEstimation', event_ts_msk, '')) AS price_estimation_ts_msk,
         MAX(IF(status = 'selling' AND sub_status = 'negotiation', event_ts_msk, '')) AS negotiation_ts_msk,
@@ -184,7 +204,8 @@ orders_hist AS (
         rfq_request_id,
         order_rfq_response_id,
         response_status,
-        reject_reason
+        reject_reason,
+        owner_role
 )
 
 
@@ -206,6 +227,8 @@ SELECT order_id,
     rfq_response_ts_msk,
     manufacturing_ts_msk,
     cancelled_ts_msk,
+    owner_role,
+    converted,
     unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss") as a,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
@@ -243,7 +266,9 @@ FROM
     rfq_sent_ts_msk,
     rfq_response_ts_msk,
     manufacturing_ts_msk,
-    cancelled_ts_msk
+    cancelled_ts_msk,
+    owner_role,
+    converted
 from orders_hist
 WHERE COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
 AND COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
