@@ -86,10 +86,29 @@ after_second_qrt_new_order AS
             ELSE 'repeated order'
       END,
       user_id
+),
+
+users as (
+    select a.user_id, day, CASE WHEN SUM(CASE WHEN manufactured_date > DATE_ADD(day, INTERVAL -6 MONTH)
+                AND manufactured_date <= day
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id) > 100000 THEN 'big client'
+            WHEN SUM(CASE WHEN manufactured_date > DATE_ADD(day, INTERVAL -6 MONTH)
+                AND manufactured_date <= day
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id) > 30000 THEN 'medium client' 
+            ELSE 'small client' END as client
+    from
+    (select distinct order_id, user_id, gmv_initial, manufactured_date, 1 as for_join from after_second_qrt_new_order) a
+    left join  (SELECT
+        day,
+        1 AS for_join
+    FROM UNNEST(sequence(
+        DATE('2022-06-01'),
+        CURRENT_DATE() - 1
+        )) AS day
+                ) as d on a.for_join = d.for_join
 )
 
-SELECT *, CASE WHEN SUM(gmv_initial) OVER (PARTITION BY user_id) > 100000 THEN 'big client'
-            WHEN SUM(gmv_initial) OVER (PARTITION BY user_id) > 30000 THEN 'medium client' 
-            ELSE 'small client' END as client
-    FROM  after_second_qrt_new_order
+SELECT a.*, client
+    FROM after_second_qrt_new_order as a
+    left join users on a.user_id = users.user_id and a.manufactured_date = users.day
 WHERE gmv_initial > 0
