@@ -131,7 +131,7 @@ select distinct product_id,
     date(from_unixtime(ready_time/1000)) as ready_time,
     int((ready_time/1000 - running_time/1000)/86400) as time_checking,
     date(from_unixtime(failed_time/1000)) as failed_time,
-    int((running_time/1000 - psi_waiting_time/1000)/86400) as fixing_time,
+    case when status = 'fixing' then int((running_time/1000 - psi_waiting_time/1000)/86400) end as fixing_time,
     psis,
     psi_number
 from
