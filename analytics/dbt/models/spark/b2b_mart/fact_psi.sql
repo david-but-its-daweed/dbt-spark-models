@@ -42,15 +42,16 @@ merchant as (
         _id as merchant_order_id, 
         orderId as order_id,
         merchantId as merchant_id, 
-        manDays as man_days
+        manDays as man_days,
+        friendlyId as merchant_order_friendly_id
 from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
 ),
 
 not_jp_users AS (
-    SELECT DISTINCT order_id
+    SELECT DISTINCT order_id, friendly_id
     FROM {{ ref('fact_user_request') }} f
     left join 
-        (select distinct order_id, user_id from {{ ref('fact_order') }}) o on f.user_id = o.user_id
+        (select distinct order_id, friendly_id, user_id from {{ ref('fact_order') }}) o on f.user_id = o.user_id
     WHERE is_joompro_employee != TRUE OR is_joompro_employee IS NULL
 ),
 
@@ -66,6 +67,8 @@ select product_id,
     time,
     order_id,
     merchant_id, 
+    merchant_order_friendly_id,
+    friendly_id,
     man_days,
     min(case when status_id = 10 then time end) over (partition by product_id, merchant_order_id) as psi_waiting_time,
     min(case when status_id = 20 then time end) over (partition by product_id, merchant_order_id) as psi_start_time,
@@ -77,6 +80,7 @@ from
 select distinct
     p.product_id, 
     p.merchant_order_id, 
+    p.merchant_order_friendly_id,
     case when psi_status_id = _id then 1 else 0 end as current_status, 
     psi_status_id,
     p.status as product_status,
@@ -86,6 +90,7 @@ select distinct
     ctms as time,
     m.order_id,
     m.merchant_id, 
+    n.friendly_id,
     m.man_days
 from merchant m 
 inner join not_jp_users n on m.order_id = n.order_id
@@ -142,6 +147,8 @@ select distinct product_id,
     psi_number,
     order_id,
     merchant_id, 
+    merchant_order_friendly_id,
+    friendly_id,
     man_days
 from
 (
@@ -166,6 +173,8 @@ select
     psi_number,
     order_id,
     merchant_id, 
+    merchant_order_friendly_id,
+    friendly_id,
     man_days
     from
 (
@@ -186,6 +195,8 @@ select
     psi_number,
     order_id,
     merchant_id, 
+    merchant_order_friendly_id,
+    friendly_id,
     man_days
 from table1 t
 left join status_10 s on s.merchant_order_id = t.merchant_order_id and s.product_id = t.product_id
