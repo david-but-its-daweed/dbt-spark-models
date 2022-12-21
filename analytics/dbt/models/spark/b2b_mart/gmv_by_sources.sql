@@ -93,10 +93,10 @@ users as (
     from 
     (select a.user_id, day, CASE WHEN SUM(CASE WHEN t > add_months(day, -6)
                 AND t <= day
-                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id) > 100000 THEN 'big client'
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id, day) > 100000 THEN 'big client'
             WHEN SUM(CASE WHEN t > add_months(day, -6)
                 AND t <= day
-                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id) > 30000 THEN 'medium client' 
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id, day) > 30000 THEN 'medium client' 
             ELSE 'small client' END as client
     from
     (select distinct order_id, user_id, gmv_initial, t, 1 as for_join from after_second_qrt_new_order) a
