@@ -82,7 +82,7 @@ select distinct
     psi.status_id,
     ctms as time
 from merchant m 
---inner join not_jp_users n on m.order_id = n.order_id
+inner join not_jp_users n on m.order_id = n.order_id
 left join products p on m.merchant_order_id = p.merchant_order_id
 left join psi on p.product_id = psi.product_id and p.merchant_order_id = psi.merchant_order_id
 where psi_status_id is not null and psi.status_id > 0)
