@@ -63,7 +63,10 @@ select product_id,
     type,
     status,
     status_id,
-     time,
+    time,
+    order_id,
+    merchant_id, 
+    man_days,
     min(case when status_id = 10 then time end) over (partition by product_id, merchant_order_id) as psi_waiting_time,
     min(case when status_id = 20 then time end) over (partition by product_id, merchant_order_id) as psi_start_time,
     min(case when status_id = 50 then time end) over (partition by product_id, merchant_order_id) as psi_end_time,
@@ -80,7 +83,10 @@ select distinct
     type,
     psi.status,
     psi.status_id,
-    ctms as time
+    ctms as time,
+    m.order_id,
+    m.merchant_id, 
+    m.man_days
 from merchant m 
 inner join not_jp_users n on m.order_id = n.order_id
 left join products p on m.merchant_order_id = p.merchant_order_id
@@ -133,7 +139,10 @@ select distinct product_id,
     date(from_unixtime(failed_time/1000)) as failed_time,
     case when status = 'fixing' then int((running_time/1000 - psi_waiting_time/1000)/86400) end as fixing_time,
     psis,
-    psi_number
+    psi_number,
+    order_id,
+    merchant_id, 
+    man_days
 from
 (
 select 
@@ -154,7 +163,10 @@ select
     min(case when status_id = 30 then time end) over (partition by merchant_order_id, product_id, psi_number) as ready_time,
     min(case when status_id = 40 and status_10_time < time then time end) over (partition by merchant_order_id, product_id, psi_number) as failed_time,
     max(psi_number) over (partition by merchant_order_id, product_id) as psis,
-    psi_number
+    psi_number,
+    order_id,
+    merchant_id, 
+    man_days
     from
 (
 select 
@@ -171,7 +183,10 @@ select
     psi_waiting_time,
     psi_end_time,
     s.time as status_10_time,
-    psi_number
+    psi_number,
+    order_id,
+    merchant_id, 
+    man_days
 from table1 t
 left join status_10 s on s.merchant_order_id = t.merchant_order_id and s.product_id = t.product_id
 where s.time <= t.time and s.lead_time >= t.time
