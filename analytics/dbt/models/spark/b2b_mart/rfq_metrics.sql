@@ -104,7 +104,8 @@ rfq as (
         order_rfq_response_id,
         response_status,
         reject_reason,
-        0 as converted
+        0 as converted,
+        0 as rfq_converted
     from rfq_1
     union all 
         SELECT 
@@ -116,7 +117,8 @@ rfq as (
         order_rfq_response_id,
         response_status,
         reject_reason,
-        0 as converted
+        0 as converted,
+        0 as rfq_converted
     from rfq_1
     union all 
         SELECT 
@@ -128,7 +130,8 @@ rfq as (
         order_rfq_response_id,
         response_status,
         reject_reason,
-        0 as converted
+        0 as converted,
+        0 as rfq_converted
     from rfq_1
 ),
 
@@ -149,7 +152,8 @@ orders_statuses as (
         order_rfq_response_id,
         response_status,
         reject_reason,
-        max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted
+        max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted,
+        max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id, rfq_request_id) AS rfq_converted
       FROM b2b_mart.fact_order_change o
       left join rfq_1 on o.order_id = rfq_1.order_id
       left join order_products op on o.order_id = op.order_id
@@ -170,7 +174,8 @@ stg1 AS (
         response_status,
         reject_reason,
         converted,
-        owner_role
+        owner_role,
+        rfq_converted
     FROM (select * from orders_statuses union all select * from rfq) AS o
     LEFT JOIN order_owner AS ao ON o.order_id = ao.order_id
 ),
@@ -188,6 +193,7 @@ orders_hist AS (
         reject_reason,
         owner_role,
         max(converted) as converted,
+        max(rfq_converted) as rfq_converted,
         MAX(IF(status = 'selling' AND sub_status = 'new', event_ts_msk, '')) AS new_ts_msk,
         MAX(IF(status = 'selling' AND sub_status = 'priceEstimation', event_ts_msk, '')) AS price_estimation_ts_msk,
         MAX(IF(status = 'selling' AND sub_status = 'negotiation', event_ts_msk, '')) AS negotiation_ts_msk,
@@ -232,6 +238,7 @@ SELECT order_id,
     cancelled_ts_msk,
     owner_role,
     converted,
+    rfq_converted,
     unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss") as a,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
@@ -271,7 +278,8 @@ FROM
     manufacturing_ts_msk,
     cancelled_ts_msk,
     owner_role,
-    converted
+    converted,
+    rfq_converted
 from orders_hist
 WHERE COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
 AND COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
