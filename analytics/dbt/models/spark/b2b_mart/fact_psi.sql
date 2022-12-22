@@ -80,7 +80,7 @@ from
 select distinct
     p.product_id, 
     p.merchant_order_id, 
-    p.merchant_order_friendly_id,
+    m.merchant_order_friendly_id,
     case when psi_status_id = _id then 1 else 0 end as current_status, 
     psi_status_id,
     p.status as product_status,
