@@ -98,3 +98,9 @@ UNION ALL
 SELECT
 "leutsky@joom.com" AS email,
 "Dev" AS role
+UNION ALL
+"a.nesterov@joompro-support.com" AS email,
+"CallCenter" AS role
+UNION ALL
+"Ivan.dergachev@joompro-support.com" AS email,
+"CallCenter" AS role

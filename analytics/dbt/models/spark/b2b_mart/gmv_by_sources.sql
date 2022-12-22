@@ -86,10 +86,34 @@ after_second_qrt_new_order AS
             ELSE 'repeated order'
       END,
       user_id
+),
+
+users as (
+    select distinct user_id, day, client
+    from 
+    (select a.user_id, day, CASE WHEN SUM(CASE WHEN t > add_months(day, -6)
+                AND t <= day
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id, day) > 100000 THEN 'big client'
+            WHEN SUM(CASE WHEN t > add_months(day, -6)
+                AND t <= day
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id, day) > 30000 THEN 'medium client' 
+            ELSE 'small client' END as client
+    from
+    (select distinct order_id, user_id, gmv_initial, t, 1 as for_join from after_second_qrt_new_order) a
+    left join  (SELECT
+        explode(sequence(to_date('2022-06-01'), to_date(CURRENT_DATE()), interval 1 day)) as day,
+        1 AS for_join
+        ) as d on a.for_join = d.for_join
+     )
 )
 
-SELECT *, CASE WHEN SUM(gmv_initial) OVER (PARTITION BY user_id) > 100000 THEN 'big client'
-            WHEN SUM(gmv_initial) OVER (PARTITION BY user_id) > 30000 THEN 'medium client' 
-            ELSE 'small client' END as client
-    FROM  after_second_qrt_new_order
+SELECT a.*, client, CASE WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
+                AND t <= current_date()
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY a.user_id) > 100000 THEN 'big client'
+             WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
+                AND t <= current_date()
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY a.user_id) > 30000 THEN 'medium client' 
+             ELSE 'small client' END as current_client
+    FROM after_second_qrt_new_order as a
+    left join users on a.user_id = users.user_id and a.t = users.day
 WHERE gmv_initial > 0
