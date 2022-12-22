@@ -149,7 +149,8 @@ select distinct product_id,
     merchant_id, 
     merchant_order_friendly_id,
     friendly_id,
-    man_days
+    man_days,
+    current_date() as today
 from
 (
 select 
