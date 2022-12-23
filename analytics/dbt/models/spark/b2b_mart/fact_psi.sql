@@ -31,7 +31,7 @@ statuses as (
 ),
 
 psi as (
-    select status, statusId as status_id, ctms, _id, ctxId as merchant_order_id, scndCtxId as product_id
+    select status, statusId as status_id, stms, _id, ctxId as merchant_order_id, scndCtxId as product_id
     from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} f
     left join statuses s on f.statusId = s.s_id
     where type = 10
@@ -87,7 +87,7 @@ select distinct
     type,
     psi.status,
     psi.status_id,
-    ctms as time,
+    stms as time,
     m.order_id,
     m.merchant_id, 
     n.friendly_id,
