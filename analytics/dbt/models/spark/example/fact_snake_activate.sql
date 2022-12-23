@@ -21,5 +21,5 @@ where
   and partition_date >= date'{{ var("start_date_ymd") }}'
   and partition_date < date'{{ var("end_date_ymd") }}'
 {% else %}
-  and partition_date >= date'2022-06-01'
+  and partition_date >= date'2022-12-01'
 {% endif %}
