@@ -99,7 +99,7 @@ left join products p on m.merchant_order_id = p.merchant_order_id
 left join psi on p.product_id = psi.product_id and p.merchant_order_id = psi.merchant_order_id
 where psi_status_id is not null and psi.status_id > 0)
 )
-where (lag_status != status_id or lag_status is null) and status_id != 50),
+where (lag_status != status_id or lag_status is null) and status_id != 50 and psi_start_time is not null),
 
 
 status_10 as (
@@ -115,7 +115,7 @@ from
     product_id, 
     merchant_order_id,
     'waiting' as status,
-    least(psi_start_time, psi_waiting_time) as time
+    psi_start_time as time
 from table1 where status_id = 10
 union all 
 select distinct
