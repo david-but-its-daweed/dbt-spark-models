@@ -111,13 +111,14 @@ select
     merchant_order_id,
     status
 from
-(select product_id, 
+(select distinct
+    product_id, 
     merchant_order_id,
     'waiting' as status,
-    time
+    least(psi_start_time, psi_waiting_time) as time
 from table1 where status_id = 10
 union all 
-select 
+select distinct
     product_id, 
     merchant_order_id,
     'fixing' as status,
