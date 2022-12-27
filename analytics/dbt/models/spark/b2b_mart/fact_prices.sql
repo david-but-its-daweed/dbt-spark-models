@@ -246,5 +246,5 @@ select distinct
         final_gross_profit
 from prices p
 join all_orders o on o.order_id = p.order_id
-left join users u on o.user_id = o.user_id
+left join users u on u.user_id = o.user_id
 left join gmv g on g.order_id = o.order_id
