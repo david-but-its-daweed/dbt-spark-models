@@ -241,9 +241,9 @@ select distinct
         cny_company_rate,
         cny_markup_rate,
         cny_rate_with_markup,
-        total_confirmed_price,
-        final_gross_profit,
-        initial_gross_profit
+        gmv_initial,
+        initial_gross_profit,
+        final_gross_profit
 from prices p
 join all_orders o on o.order_id = p.order_id
 left join users u on o.user_id = o.user_id
