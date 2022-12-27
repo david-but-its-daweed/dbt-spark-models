@@ -29,7 +29,8 @@ currencies as
 select order_id, currencies.rates as rates, currencies.companyRates as company_rates, 1 as for_join
 from
 (
-select orderId as order_id, currencies, row_number() over (partition by orderId order by updatedTime) as rn
+select orderId as order_id, currencies, row_number() over (
+    partition by orderId order by currencies.rates is not null desc, currencies.companyRates is not null desc, updatedTime) as rn
 from
 (select payload.* from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
@@ -37,7 +38,7 @@ and payload.updatedTime is not null and payload.status = 'manufacturing'
 order by updatedTime desc
 )
 )
-where rn = 1 and currencies.rates is not null
+where rn = 1
 ),
 
 order_rates as(
