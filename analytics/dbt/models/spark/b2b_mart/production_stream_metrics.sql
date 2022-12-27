@@ -38,8 +38,10 @@ added_orders as (
     min(case when payment_status = "merchantAcquiredPayment" then day end) as merchant_acquired_payment
     from {{ ref('added_data') }} a
     left join 
-    {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }} m on m.friendlyId = a.friendly_id
-    left join statuses s on m._id = s.id
+    (select distinct _id, friendlyId, orderId, merchantId, manDays, daysAfterQC, day, s.status as payment_status
+    from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }} o
+    left join statuses s on o._id = s.id
+    ) m on m.friendlyId = a.friendly_id
 group by friendly_id, orderId, merchantId
 ),
 
