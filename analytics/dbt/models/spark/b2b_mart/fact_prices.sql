@@ -208,6 +208,7 @@ select p.order_id,
 select distinct
         o.order_id, 
         o.friendly_id,
+        o.user_id,
         date,
         owner_email,
         ddp_final_price_rub,
