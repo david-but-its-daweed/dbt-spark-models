@@ -126,7 +126,7 @@ all_orders AS (
   SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id
   FROM {{ ref('fact_user_request') }} f
   LEFT JOIN {{ ref('fact_order') }} u ON f.user_id = u.user_id
-  WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL and u.next_effective_ts_msk is null
+  WHERE (is_joompro_employee != TRUE or is_joompro_employee IS NULL) and u.next_effective_ts_msk is null
 ),
 
 admins as (
@@ -205,7 +205,7 @@ select p.order_id,
         group by p.order_id
 )
 
-select 
+select distinct
         o.order_id, 
         o.friendly_id,
         date,
