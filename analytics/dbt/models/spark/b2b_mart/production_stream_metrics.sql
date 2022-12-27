@@ -74,6 +74,14 @@ order_statuses as
         MIN(case when status = "closed" then o.event_ts_msk end) as closed
     FROM {{ ref('fact_order_change') }} o
     group by order_id
+),
+
+orders as 
+    (
+        select distinct
+        order_id, last_order_status as status
+    FROM {{ ref('fact_order') }} o
+        where next_effective_ts_msk is null
 )
 
 select 
@@ -103,6 +111,7 @@ select
         
     case when claimed is not null then 'claimed'
         when cancelled is not null and cancelled > manufacturing then 'cancelled' 
-        when closed is not null then 'ok' end as claim
+        when closed is not null then 'ok' else orders.status end as claim
 from merchant_orders 
 left join order_statuses on merchant_orders.order_id = order_statuses.order_id
+left join orders on order_statuses.order_id = orders.order_id
