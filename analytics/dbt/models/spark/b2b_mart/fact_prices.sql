@@ -7,7 +7,6 @@
     }
 ) }}
 
-
 with currencies_list_v1 as 
 (
 select 'USD' as from, 1 as for_join
@@ -127,6 +126,7 @@ all_orders AS (
   FROM {{ ref('fact_user_request') }} f
   LEFT JOIN {{ ref('fact_order') }} u ON f.user_id = u.user_id
   WHERE (is_joompro_employee != TRUE or is_joompro_employee IS NULL) and u.next_effective_ts_msk is null
+  and u.min_manufactured_ts_msk is not null
 ),
 
 admins as (
@@ -136,22 +136,12 @@ admins as (
 ),
 
 users as (
-    select distinct user_id, owner_id, email as owner_email 
-    from {{ ref('dim_user') }} u
+    select distinct user_id, owner_id, email as owner_email from
+    {{ ref('dim_user') }} u
     left join admins a 
     on u.owner_id = a.admin_id 
     where next_effective_ts_msk is null
 ),
-
-gmv as 
-(
-    SELECT DISTINCT 
-        order_id,
-        gmv_initial,
-        initial_gross_profit,
-        final_gross_profit,
-    FROM {{ ref('gmv_by_sources') }}
-)
 
 prices as (
 select p.order_id, 
@@ -203,14 +193,23 @@ select p.order_id,
         ) r on p.order_id = r.order_id
         where fee_rub is not null
         group by p.order_id
+),
+
+
+gmv as 
+(
+    SELECT DISTINCT 
+        order_id,
+        gmv_initial,
+        initial_gross_profit,
+        final_gross_profit
+    FROM {{ ref('gmv_by_sources') }}
 )
 
 select distinct
         o.order_id, 
         o.friendly_id,
         o.user_id,
-        date,
-        owner_email,
         ddp_final_price_rub,
         dap_final_price_rub,
         ewx_final_price_rub,
@@ -242,10 +241,12 @@ select distinct
         cny_company_rate,
         cny_markup_rate,
         cny_rate_with_markup,
+        owner_email,
+        date,
         gmv_initial,
         initial_gross_profit,
         final_gross_profit
 from prices p
 join all_orders o on o.order_id = p.order_id
-left join users u on u.user_id = o.user_id
+join users u on u.user_id = o.user_id
 left join gmv g on g.order_id = o.order_id
