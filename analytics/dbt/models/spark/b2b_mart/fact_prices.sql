@@ -104,21 +104,19 @@ where rn = 1 and col is not null
 ),
 
 all_prices as 
-(select order_id, type, tag, sum(fee_rub) as fee_rub
+(select order_id, type, tag, stage, sum(fee_rub) as fee_rub
 from
 (
 select p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub
 from
 (
 select distinct * from typed_prices 
-where stage = 'final'
 union all 
 select distinct * from other_prices
-where stage = 'final'
 ) p
 left join order_rates r on p.order_id = r.order_id and p.currency = r.from and r.to = 'RUB'
 )
-group by order_id, type, tag
+group by order_id, type, tag, stage
 ),
 
 all_orders AS (
@@ -143,7 +141,7 @@ users as (
     where next_effective_ts_msk is null
 ),
 
-prices as (
+prices_final as (
 select p.order_id, 
         round(SUM(fee_rub), 2) AS ddp_final_price_rub,
         round(SUM(IF(tag in ('dap', 'exw', 'ewx'), fee_rub, 0)), 2) AS dap_final_price_rub,
@@ -191,10 +189,91 @@ select p.order_id,
         from order_rates
         group by order_id
         ) r on p.order_id = r.order_id
-        where fee_rub is not null
+        where fee_rub is not null and stage = 'final'
         group by p.order_id
 ),
 
+prices_forecast as (
+select p.order_id, 
+        round(SUM(fee_rub), 2) AS ddp_forecast_price_rub,
+        round(SUM(IF(tag in ('dap', 'exw', 'ewx'), fee_rub, 0)), 2) AS dap_forecast_price_rub,
+        round(SUM(IF(tag = 'ewx', fee_rub, 0)), 2) AS ewx_forecast_price_rub,
+        round(SUM(IF(tag = 'exw', fee_rub, 0)), 2) AS exw_forecast_price_rub,
+        round(SUM(IF(type = 'firstmileBeforeQC', fee_rub, 0)), 2) AS firstmile_before_qc_forecast_price_rub,
+        round(SUM(IF(type = 'warehousingOp', fee_rub, 0)), 2) AS warehousing_op_forecast_price_rub,
+        round(SUM(IF(type = 'firstmileAfterQC', fee_rub, 0)), 2) AS firstmile_after_qc_forecast_price_rub,
+        round(SUM(IF(type = 'utilityFee', fee_rub, 0)), 2) AS utility_fee_forecast_price_rub,
+        round(SUM(IF(type = 'customsFee', fee_rub, 0)), 2) AS customs_fee_forecast_price_rub,
+        round(SUM(IF(type = 'loadingUnloading', fee_rub, 0)), 2) AS loading_unloading_forecast_price_rub,
+        round(SUM(IF(type = 'labeling', fee_rub, 0)), 2) AS labeling_forecast_price_rub,
+        round(SUM(IF(type = 'commission', fee_rub, 0)), 2) AS commission_forecast_price_rub,
+        round(SUM(IF(type = 'merchantFee', fee_rub, 0)), 2) AS merchant_fee_forecast_price_rub,
+        round(SUM(IF(type = 'warehousing', fee_rub, 0)), 2) AS warehousing_forecast_price_rub,
+        round(SUM(IF(type = 'customsDuty', fee_rub, 0)), 2) AS customs_duty_forecast_price_rub,
+        round(SUM(IF(type = 'brokerFee', fee_rub, 0)), 2) AS broker_fee_forecast_price_rub,
+        round(SUM(IF(type = 'linehaul', fee_rub, 0)), 2) AS linehaul_forecast_price_rub,
+        round(SUM(IF(type = 'lastMile', fee_rub, 0)), 2) AS last_mile_forecast_price_rub,
+        round(SUM(IF(type = 'qc', fee_rub,  0)), 2) AS qc_forecast_price_rub,
+        round(SUM(IF(type = 'agentFee', fee_rub, 0)), 2) AS agent_fee_forecast_price_rub,
+        round(SUM(IF(type = 'certification', fee_rub, 0)), 2) AS certification_forecast_price_rub,
+        round(SUM(IF(type = 'vat', fee_rub, 0)), 2) AS vat_forecast_price_rub,
+        round(SUM(IF(type = 'generalCargo', fee_rub, 0)), 2) AS general_cargo_forecast_price_rub,
+        max(usd_rate) as usd_rate,
+        max(usd_company_rate) as usd_company_rate,
+        max(usd_markup_rate) as usd_markup_rate,
+        max(usd_rate_with_markup) as usd_rate_with_markup,
+        max(cny_rate) as cny_rate,
+        max(cny_company_rate) as cny_company_rate,
+        max(cny_markup_rate) as cny_markup_rate,
+        max(cny_rate_with_markup) as cny_rate_with_markup
+        from all_prices p
+        left join 
+        (
+        select order_id, 
+        max(case when from = 'USD' and to = 'RUB' then rate end) as usd_rate,
+        max(case when from = 'USD' and to = 'RUB' then company_rate end) as usd_company_rate,
+        max(case when from = 'USD' and to = 'RUB' then markup_rate end) as usd_markup_rate,
+        max(case when from = 'USD' and to = 'RUB' then rate*(1+markup_rate) end) as usd_rate_with_markup,
+        max(case when from = 'CNY' and to = 'RUB' then rate end) as cny_rate,
+        max(case when from = 'CNY' and to = 'RUB' then company_rate end) as cny_company_rate,
+        max(case when from = 'CNY' and to = 'RUB' then markup_rate end) as cny_markup_rate,
+        max(case when from = 'CNY' and to = 'RUB' then rate*(1+markup_rate) end) as cny_rate_with_markup
+        from order_rates
+        group by order_id
+        ) r on p.order_id = r.order_id
+        where fee_rub is not null and stage = 'forecast'
+        group by p.order_id
+),
+
+prices as (
+    select distinct
+        pf.*, ddp_forecast_price_rub,
+        dap_forecast_price_rub,
+        ewx_forecast_price_rub,
+        exw_forecast_price_rub,
+        firstmile_before_qc_forecast_price_rub,
+        warehousing_op_forecast_price_rub,
+        firstmile_after_qc_forecast_price_rub,
+        utility_fee_forecast_price_rub,
+        customs_fee_forecast_price_rub,
+        loading_unloading_forecast_price_rub,
+        labeling_forecast_price_rub,
+        commission_forecast_price_rub,
+        merchant_fee_forecast_price_rub,
+        warehousing_forecast_price_rub,
+        customs_duty_forecast_price_rub,
+        broker_fee_forecast_price_rub,
+        linehaul_forecast_price_rub,
+        last_mile_forecast_price_rub,
+        qc_forecast_price_rub,
+        agent_fee_forecast_price_rub,
+        certification_forecast_price_rub,
+        vat_forecast_price_rub,
+        general_cargo_forecast_price_rub
+    from prices_final pf
+    left join prices_forecast p on pf.order_id = p.order_id
+
+),
 
 gmv as 
 (
@@ -233,6 +312,29 @@ select distinct
         certification_final_price_rub,
         vat_final_price_rub,
         general_cargo_final_price_rub,
+        ddp_forecast_price_rub,
+        dap_forecast_price_rub,
+        ewx_forecast_price_rub,
+        exw_forecast_price_rub,
+        firstmile_before_qc_forecast_price_rub,
+        warehousing_op_forecast_price_rub,
+        firstmile_after_qc_forecast_price_rub,
+        utility_fee_forecast_price_rub,
+        customs_fee_forecast_price_rub,
+        loading_unloading_forecast_price_rub,
+        labeling_forecast_price_rub,
+        commission_forecast_price_rub,
+        merchant_fee_forecast_price_rub,
+        warehousing_forecast_price_rub,
+        customs_duty_forecast_price_rub,
+        broker_fee_forecast_price_rub,
+        linehaul_forecast_price_rub,
+        last_mile_forecast_price_rub,
+        qc_forecast_price_rub,
+        agent_fee_forecast_price_rub,
+        certification_forecast_price_rub,
+        vat_forecast_price_rub,
+        general_cargo_forecast_price_rub,
         usd_rate,
         usd_company_rate,
         usd_markup_rate,
