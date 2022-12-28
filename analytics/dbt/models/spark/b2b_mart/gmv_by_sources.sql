@@ -32,7 +32,7 @@ order_v2_mongo AS
 (
     SELECT DISTINCT 
         order_id,
-        FIRST(client_converted_gmv) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS total_confirmed_price,
+        FIRST(total_confirmed_price) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS total_confirmed_price,
         FIRST(final_gross_profit) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS final_gross_profit,
         FIRST(initial_gross_profit) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS initial_gross_profit
     FROM {{ ref('fact_order_change') }}
