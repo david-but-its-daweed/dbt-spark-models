@@ -103,7 +103,12 @@ SELECT  event_id,
         payload.gmv.initialGrossProfit AS initial_gross_profit
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE `type`  ='orderChangedByAdmin'
-      and partition_date   >= date'2022-05-19'
+      {% if is_incremental() %}
+       and partition_date >= date'{{ var("start_date_ymd") }}'
+       and partition_date < date'{{ var("end_date_ymd") }}'
+     {% else %}
+       and partition_date   >= date'2022-05-19'
+     {% endif %}
     UNION ALL
     SELECT  event_id,
         partition_date  AS partition_date_msk,
@@ -128,7 +133,12 @@ SELECT  event_id,
         payload.gmv.initialGrossProfit AS initial_gross_profit
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE `type`  ='orderChangedByAdmin'
-      and partition_date   >= date'2022-05-19'
+      {% if is_incremental() %}
+       and partition_date >= date'{{ var("start_date_ymd") }}'
+       and partition_date < date'{{ var("end_date_ymd") }}'
+     {% else %}
+       and partition_date   >= date'2022-05-19'
+     {% endif %}
 )
 GROUP BY event_id,
         partition_date_msk,
