@@ -17,6 +17,7 @@ with not_jp_users AS (
 order_v2_mongo AS
 (
     SELECT fo.order_id AS order_id,
+        fo.user_id,
         DATE(fo.min_manufactured_ts_msk) AS manufactured_date,
         MIN(DATE(fo.min_manufactured_ts_msk)) OVER (PARTITION BY fo.user_id) AS min_manufactured_date
     FROM {{ ref('fact_order') }} AS fo
@@ -31,7 +32,7 @@ order_v2_mongo AS
 (
     SELECT DISTINCT 
         order_id,
-        FIRST(total_confirmed_price) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS total_confirmed_price,
+        FIRST(client_converted_gmv) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS total_confirmed_price,
         FIRST(final_gross_profit) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS final_gross_profit,
         FIRST(initial_gross_profit) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS initial_gross_profit
     FROM {{ ref('fact_order_change') }}
@@ -62,6 +63,7 @@ after_second_qrt_new_order AS
         source, 
         type,
         campaign,
+        user_id,
         CASE WHEN
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
@@ -82,9 +84,36 @@ after_second_qrt_new_order AS
       CASE WHEN
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
-        END
+      END,
+      user_id
+),
+
+users as (
+    select distinct user_id, day, client
+    from 
+    (select a.user_id, day, CASE WHEN SUM(CASE WHEN t > add_months(day, -6)
+                AND t <= day
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id, day) > 100000 THEN 'big client'
+            WHEN SUM(CASE WHEN t > add_months(day, -6)
+                AND t <= day
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY user_id, day) > 30000 THEN 'medium client' 
+            ELSE 'small client' END as client
+    from
+    (select distinct order_id, user_id, gmv_initial, t, 1 as for_join from after_second_qrt_new_order) a
+    left join  (SELECT
+        explode(sequence(to_date('2022-06-01'), to_date(CURRENT_DATE()), interval 1 day)) as day,
+        1 AS for_join
+        ) as d on a.for_join = d.for_join
+     )
 )
 
-SELECT *
-    FROM  after_second_qrt_new_order
+SELECT a.*, client, CASE WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
+                AND t <= current_date()
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY a.user_id) > 100000 THEN 'big client'
+             WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
+                AND t <= current_date()
+                THEN gmv_initial ELSE 0 END) OVER (PARTITION BY a.user_id) > 30000 THEN 'medium client' 
+             ELSE 'small client' END as current_client
+    FROM after_second_qrt_new_order as a
+    left join users on a.user_id = users.user_id and a.t = users.day
 WHERE gmv_initial > 0

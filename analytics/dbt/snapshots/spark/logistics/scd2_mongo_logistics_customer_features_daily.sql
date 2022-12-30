@@ -14,6 +14,7 @@
 select
   _id,
   features,
+  createdTime,
   updatedTime
 FROM {{ source('mongo', 'logistics_customer_features_daily_snapshot') }}
 

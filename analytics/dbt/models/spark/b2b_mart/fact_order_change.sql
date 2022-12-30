@@ -27,7 +27,7 @@ SELECT event_id,
         biz_dev_role_type,
         status,
         sub_status,
-        SUM(col.stagedPrices.`final`) AS total_final_price,
+        SUM(case when col.tag = 'grant' then -col.stagedPrices.`final` else col.stagedPrices.`final` end) AS total_final_price,
         SUM(IF(col.tag = 'ddp', col.stagedPrices.`final`, 0)) AS ddp_final_price,
         SUM(IF(col.tag = 'dap', col.stagedPrices.`final`, 0)) AS dap_final_price,
         SUM(IF(col.tag = 'ewx', col.stagedPrices.`final`, 0)) AS ewx_final_price,
@@ -51,7 +51,7 @@ SELECT event_id,
         SUM(IF(col.type = 'certification', col.stagedPrices.`final`,  0)) AS certification_final_price,
         SUM(IF(col.type = 'vat', col.stagedPrices.`final`,  0)) AS vat_final_price,
         SUM(IF(col.type = 'generalCargo',col.stagedPrices.`final`,  0)) AS general_cargo_final_price,
-        SUM(col.stagedPrices.`confirmed`) AS total_confirmed_price,
+        SUM(case when col.tag = 'grant' then -col.stagedPrices.`confirmed` else col.stagedPrices.`confirmed` end) AS total_confirmed_price,
         SUM(IF(col.tag = 'ddp',  col.stagedPrices.`confirmed`, 0)) AS ddp_confirmed_price,
         SUM(IF(col.tag = 'dap', col.stagedPrices.`confirmed`, 0)) AS dap_confirmed_price,
         SUM(IF(col.tag = 'ewx',  col.stagedPrices.`confirmed`, 0)) AS ewx_confirmed_price,
@@ -103,12 +103,12 @@ SELECT  event_id,
         payload.gmv.initialGrossProfit AS initial_gross_profit
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE `type`  ='orderChangedByAdmin'
-    {% if is_incremental() %}
-      and partition_date >= date'{{ var("start_date_ymd") }}'
-      and partition_date < date'{{ var("end_date_ymd") }}'
-    {% else %}
-      and partition_date   >= date'2022-05-19'
-    {% endif %}
+      {% if is_incremental() %}
+       and partition_date >= date'{{ var("start_date_ymd") }}'
+       and partition_date < date'{{ var("end_date_ymd") }}'
+     {% else %}
+       and partition_date   >= date'2022-05-19'
+     {% endif %}
     UNION ALL
     SELECT  event_id,
         partition_date  AS partition_date_msk,
@@ -133,12 +133,12 @@ SELECT  event_id,
         payload.gmv.initialGrossProfit AS initial_gross_profit
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE `type`  ='orderChangedByAdmin'
-    {% if is_incremental() %}
-      and partition_date >= date'{{ var("start_date_ymd") }}'
-      and partition_date < date'{{ var("end_date_ymd") }}'
-    {% else %}
-      and partition_date   >= date'2022-05-19'
-    {% endif %}
+      {% if is_incremental() %}
+       and partition_date >= date'{{ var("start_date_ymd") }}'
+       and partition_date < date'{{ var("end_date_ymd") }}'
+     {% else %}
+       and partition_date   >= date'2022-05-19'
+     {% endif %}
 )
 GROUP BY event_id,
         partition_date_msk,
