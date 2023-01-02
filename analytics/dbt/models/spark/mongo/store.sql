@@ -2,7 +2,7 @@
     schema='mongo',
     materialized='view',
     meta = {
-        priority_weight = 1000
+        priority_weight: 1000
     }
 ) }}
 select _id as                                                         store_id,
