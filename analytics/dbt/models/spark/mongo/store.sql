@@ -1,6 +1,9 @@
 {{ config(
     schema='mongo',
     materialized='view',
+    meta = {
+        priority_weight = 1000
+    }
 ) }}
 select _id as                                                         store_id,
        createdTimeMs                                               as created_time,

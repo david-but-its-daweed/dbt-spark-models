@@ -1,6 +1,9 @@
 {{ config(
     schema='mart',
     materialized='view',
+     meta = {
+        priority_weight = 1000
+    }
 ) }}
 WITH store_performance AS (SELECT *, row_number() over (partition by id order by effective_ts desc) as rn
                            FROM {{ source('default', 'sat_store_performance') }})
