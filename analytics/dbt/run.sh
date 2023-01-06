@@ -1,12 +1,9 @@
 #!/bin/bash
 set -euo pipefail
-IFS=$'\n\t'
 
 source infra/functions.sh
 
 DBT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]:-$0}"; )" &> /dev/null && pwd 2> /dev/null; )";
-ANALYTICS_PROJECT_DIR=$(builtin cd $DBT_DIR/..; pwd)
-DBT_ETL_JOB_DIR=$ANALYTICS_PROJECT_DIR/joom/jobs/platform_team/thrift-server
 
 # Interoperable btw Linux and OSX version of `date -d "<param> day ago" '+%Y-%m-%d'`
 function days_ago {
@@ -23,42 +20,43 @@ USER_NAME=$(whoami)
 DEFAULT_START_DATE=$(days_ago 1)
 DEFAULT_END_DATE=$(days_ago 0)
 DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_DATE'}"
-DBT_SELECT="spark.junk2.dbt_test"
-TERMINATE_AFTER_SECS=0
 
-while [[ $# -gt 0 ]]; do
-  case $1 in
-    --user)
-      USER_NAME="$2"
-      shift # past argument
-      shift # past value
-      ;;
-    --vars)
-      DBT_VARS="$2"
-      shift # past argument
-      shift # past value
-      ;;
-    --select)
-      DBT_SELECT="$2"
-      shift # past argument
-      shift # past value
-      ;;
-    --terminate-after-secs)
-      TERMINATE_AFTER_SECS="$2"
-      shift # past argument
-      shift # past value
-      ;;
-    -*|--*)
-      echo "Unknown option $1"
-      exit 1
-      ;;
-  esac
-done
+if command -v python3 >/dev/null 2>&1; then
+    PYTHON3_AVAILABLE=true
+else
+    cecho "RED" "Oops, Python 3 is not available. Please install or activate it."
+    exit 1
+fi
 
-cd $DBT_ETL_JOB_DIR
-PROFILES_YML=${DBT_DIR}/localenv/profiles/profiles.yml
+if command dbt --version >/dev/null 2>&1; then
+    PYTHON3_AVAILABLE=true
+else
+    cecho "YELLOW" "DBT is missing. Installing..."
+    pip3 install dbt-core==1.3.0 dbt-spark[PyHive]==1.3.0
+fi
 
-submit_job_save_ip \
-  $ANALYTICS_PROJECT_DIR'/gradlew start -Pargs="--user '$USER_NAME' --dbt-vars '$DBT_VARS' --dbt-select '$DBT_SELECT' --terminate-after-secs '$TERMINATE_AFTER_SECS'"' \
-  $PROFILES_YML
 
+PROFILES_DIR=${DBT_DIR}/localenv/profiles
+PROFILES_YML=${PROFILES_DIR}/profiles.yml
+
+if test -f "$PROFILES_YML"; then
+  CHANGE_PROFILES_YML=false
+else
+    CHANGE_PROFILES_YML=true
+    mkdir -p $(dirname "${PROFILES_YML}")
+    cp infra/profiles.yml.template ${PROFILES_YML}
+fi
+
+# Create logs directory, because we use it for thrift server logs.
+mkdir -p ${DBT_DIR}/logs
+WHOAMI_CLEAN=$(whoami | sed 's/[^a-zA-Z0-9]//g')
+JUNK_DATABASE_DEFAULT="junk_${WHOAMI_CLEAN}"
+if [ "$CHANGE_PROFILES_YML" = true ]; then
+    read -p "Specify your personal junk database name [${JUNK_DATABASE_DEFAULT}]: " JUNK_DATABASE
+    JUNK_DATABASE=${JUNK_DATABASE:-$JUNK_DATABASE_DEFAULT}
+
+    file_replace_first "^(\s*)(schema\s*:\s*[a-zA-Z0-9_]*\s*$)" "\1schema: ${JUNK_DATABASE}" ${PROFILES_YML}
+    cecho "GREEN" "Successfully updated 'schema' option in ${PROFILES_YML} into '${JUNK_DATABASE}'"
+fi
+
+dbt run --profiles-dir $PROFILES_DIR --vars $DBT_VARS $@
