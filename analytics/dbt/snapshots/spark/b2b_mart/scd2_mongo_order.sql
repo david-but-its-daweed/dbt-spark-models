@@ -40,6 +40,9 @@ SELECT _id AS                              order_id,
        element_at(state.statusHistory.status,
                   cast((array_position(state.statusHistory.updatedTimeMs,
                                        array_max(state.statusHistory.updatedTimeMs))) as INTEGER)) as last_order_status,
+       element_at(state.statusHistory.subStatus,
+                  cast((array_position(state.statusHistory.updatedTimeMs,
+                                       array_max(state.statusHistory.updatedTimeMs))) as INTEGER)) as last_order_sub_status,
         min_manufactured_ts_msk
 FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }} as s
 LEFT JOIN manufactiring AS m ON s._id = order_id
