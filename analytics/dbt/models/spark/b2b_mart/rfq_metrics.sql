@@ -1,12 +1,11 @@
 {{ config(
     schema='b2b_mart',
-    materialized='table',
-    file_format='parquet',
+    materialized='view',
     meta = {
+      'team': 'general_analytics',
       'bigquery_load': 'true'
     }
 ) }}
-
 
 WITH requests AS (
     SELECT
