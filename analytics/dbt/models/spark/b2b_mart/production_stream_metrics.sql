@@ -108,7 +108,7 @@ order_statuses as
 orders as 
     (
         select distinct
-        order_id, last_order_status as status
+        order_id, last_order_status as status, last_order_sub_status as sub_status
     FROM {{ ref('fact_order') }} o
         where next_effective_ts_msk is null
 )
@@ -134,13 +134,15 @@ select
     date(complete_payment_acquired) as complete_payment_acquired,
     date(merchant_acquired_payment) as merchant_acquired_payment,
     case when advance_payment_requested is not null then 'advance' else 'complete' end as payment_type,
+    orders.status,
+    orders.sub_status,
     
     coalesce(shipping, closed) as manufacturing_ended,
     man_days,
         
     case when claimed is not null then 'claimed'
         when cancelled is not null and cancelled > manufacturing then 'cancelled' 
-        when closed is not null then 'ok' else orders.status end as claim
+        when closed is not null then 'ok' else orders.status||' '||orders.sub_status end as claim
 from merchant_orders 
 left join order_statuses on merchant_orders.order_id = order_statuses.order_id
 left join orders on order_statuses.order_id = orders.order_id
