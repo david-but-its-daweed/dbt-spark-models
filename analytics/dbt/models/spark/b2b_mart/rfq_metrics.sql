@@ -162,8 +162,8 @@ orders_statuses as (
 products as (
     select 
     op.order_id, 
-    count(distinct product_id) as total_products,
-    count(distinct case when rfq_1.product_id = op.product_id then product_id end) as rfq_products
+    count(distinct op.product_id) as total_products,
+    count(distinct case when rfq_1.product_id = op.product_id then op.product_id end) as rfq_products
     from order_products op
     left join rfq_1 on op.order_id = rfq_1.order_id
     group by op.order_id
