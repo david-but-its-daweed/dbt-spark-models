@@ -144,6 +144,9 @@ order_products as (
 
 orders_statuses as (
     select 
+        distinct * 
+    from
+    (select 
         o.order_id,
         o.status,
         COALESCE(o.sub_status, o.status) as sub_status,
@@ -152,20 +155,21 @@ orders_statuses as (
         order_rfq_response_id,
         response_status,
         reject_reason,
-        max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted,
-        max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id, rfq_request_id) AS rfq_converted
+        max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted,
+        max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id, rfq_request_id) AS rfq_converted
       FROM {{ ref('fact_order_change') }} o
       left join rfq_1 on o.order_id = rfq_1.order_id
-      left join order_products op on o.order_id = op.order_id
+      left join order_products op on o.order_id = op.order_id and op.product_id = rfq_1.product_id
+     )
 ),
 
 products as (
     select 
     op.order_id, 
     count(distinct op.product_id) as total_products,
-    count(distinct case when rfq_1.product_id = op.product_id then op.product_id end) as rfq_products
+    count(distinct rfq_1.product_id) as rfq_products
     from order_products op
-    left join rfq_1 on op.order_id = rfq_1.order_id
+    left join rfq_1 on op.order_id = rfq_1.order_id and op.product_id = rfq_1.product_id
     group by op.order_id
 ),
 
