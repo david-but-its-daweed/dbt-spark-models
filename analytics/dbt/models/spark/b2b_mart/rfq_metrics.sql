@@ -139,7 +139,7 @@ order_products as (
     select distinct
         order_id, id as product_id
         FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} as o
-    JOIN (select _id, orderId as order_id from mongo.b2b_core_merchant_orders_v2_daily_snapshot) m ON m._id = o.merchOrdId
+    JOIN (select _id, orderId as order_id from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}) m ON m._id = o.merchOrdId
 ),
 
 orders_statuses as (
@@ -154,7 +154,7 @@ orders_statuses as (
         reject_reason,
         max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted,
         max(case when rfq_1.product_id = op.product_id then 1 else 0 end) OVER (PARTITION BY o.order_id, rfq_request_id) AS rfq_converted
-      FROM b2b_mart.fact_order_change o
+      FROM {{ ref('fact_order_change') }} o
       left join rfq_1 on o.order_id = rfq_1.order_id
       left join order_products op on o.order_id = op.order_id
 ),
