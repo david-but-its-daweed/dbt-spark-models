@@ -142,7 +142,8 @@ select
         
     case when claimed is not null then 'claimed'
         when cancelled is not null and cancelled > manufacturing then 'cancelled' 
-        when closed is not null then 'ok' else orders.status||' '||orders.sub_status end as claim
+        when orders.sub_status = 3100 then 'delivered'
+        when orders.status = 50 then 'closed' end as claim
 from merchant_orders 
 left join order_statuses on merchant_orders.order_id = order_statuses.order_id
 left join orders on order_statuses.order_id = orders.order_id
