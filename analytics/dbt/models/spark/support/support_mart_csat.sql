@@ -30,7 +30,7 @@ WITH csat_trigger AS
                                t.language,
                                t.csat,
                                EXPLODE(t.tags) AS tag
-                        FROM {{ source('support', 'support_mart_ticket_id_ext') }} AS t
+                        FROM {{ ref('support_mart_ticket_id_ext') }} AS t
                         WHERE t.partition_date >  '2022-07-26'
                               AND t.is_closed = 'yes'
                               )
