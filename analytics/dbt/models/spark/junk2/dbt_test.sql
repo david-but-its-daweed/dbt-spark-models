@@ -2,6 +2,9 @@
     schema='junk2',
     materialized='incremental',
     file_format='delta'
+    meta = {
+      'alerts_channel': '@gburg'
+    }
 ) }}
 
 {% if not is_incremental() %}
