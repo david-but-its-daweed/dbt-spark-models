@@ -2,9 +2,6 @@
     schema='junk2',
     materialized='incremental',
     file_format='delta',
-    meta = {
-      'alerts_channel': '#analytics-diagnostics'
-    }
 ) }}
 
 {% if not is_incremental() %}
