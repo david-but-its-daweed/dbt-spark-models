@@ -182,7 +182,7 @@ products_1 as (
     (
         select op.order_id, 
             op.product_id,
-            raw_number() over (partition by fo.user_id, op.product_id order by created_ts_msk) as rn
+            row_number() over (partition by fo.user_id, op.product_id order by created_ts_msk) as rn
         from order_products op
     left join (select distinct order_id, user_id, created_ts_msk from {{ ref('fact_order') }} ) fo on op.order_id = fo.order_id
     ) op
