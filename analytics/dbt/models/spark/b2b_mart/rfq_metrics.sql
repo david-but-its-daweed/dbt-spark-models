@@ -173,6 +173,24 @@ products as (
     group by op.order_id
 ),
 
+products_1 as (
+    select 
+    op.order_id, 
+    count(distinct op.product_id) as total_products_1,
+    count(distinct rfq_1.product_id) as rfq_products_1
+    from
+    (
+        select op.order_id, 
+            op.product_id,
+            raw_number() over (partition by fo.user_id, op.product_id order by created_ts_msk) as rn
+        from order_products op
+    left join (select distinct order_id, user_id, created_ts_msk from {{ ref('fact_order') }} ) fo on op.order_id = fo.order_id
+    ) op
+    left join rfq_1 on op.order_id = rfq_1.order_id and op.product_id = rfq_1.product_id
+    where rn = 1
+    group by op.order_id
+),
+
 stg1 AS (
     SELECT
         o.order_id,
@@ -190,10 +208,13 @@ stg1 AS (
         owner_role,
         rfq_converted,
         total_products,
-        rfq_products
+        rfq_products,
+        total_products_1,
+        rfq_products_1
     FROM (select * from orders_statuses union all select * from rfq) AS o
     LEFT JOIN order_owner AS ao ON o.order_id = ao.order_id
     LEFT JOIN  products as p on p.order_id = o.order_id
+    LEFT JOIN  products_1 as p1 on p1.order_id = o.order_id
 ),
 
 
@@ -212,6 +233,8 @@ orders_hist AS (
         max(rfq_converted) as rfq_converted,
         max(total_products) as total_products,
         max(rfq_products) as rfq_products,
+        max(total_products_1) as total_products_1,
+        max(rfq_products_1) as rfq_products_1,
         MAX(IF(status = 'selling' AND sub_status = 'new', event_ts_msk, '')) AS new_ts_msk,
         MAX(IF(status = 'selling' AND sub_status = 'priceEstimation', event_ts_msk, '')) AS price_estimation_ts_msk,
         MAX(IF(status = 'selling' AND sub_status = 'negotiation', event_ts_msk, '')) AS negotiation_ts_msk,
@@ -259,6 +282,8 @@ SELECT order_id,
     rfq_converted,
     total_products,
     rfq_products,
+    total_products_1,
+    rfq_products_1,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
     ROW_NUMBER() OVER (PARTITION BY order_id ORDER by order_rfq_response_id) as order_rn,
@@ -300,7 +325,9 @@ FROM
     converted,
     rfq_converted,
     total_products,
-    rfq_products
+    rfq_products,
+    total_products_1,
+    rfq_products_1
 from orders_hist
 WHERE COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
 AND COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
