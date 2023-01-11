@@ -3,7 +3,7 @@
     materialized='incremental',
     file_format='delta',
     meta = {
-      'alerts_channel': '@gburg'
+      'alerts_channel': '#analytics-diagnostics'
     }
 ) }}
 
