@@ -1,7 +1,7 @@
 default:
   outputs:
     prod:
-      host: localhost
+      host: thrift-service-prod.joom.ai
       method: thrift
       port: 10000
       schema: placeholder

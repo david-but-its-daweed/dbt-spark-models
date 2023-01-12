@@ -12,14 +12,14 @@ not_jp_users AS (
   SELECT DISTINCT u.user_id
   FROM {{ ref('fact_user_request') }} f
   LEFT JOIN {{ ref('fact_order') }} u ON f.user_id = u.user_id
-  WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
+  WHERE is_joompro_employee = TRUE
 ),
 
 source as (
 select 
-    first_value(source) over (partition by uid order by ctms) as source,
-    first_value(type) over (partition by uid order by ctms) as type,
-    first_value(campaign) over (partition by uid order by ctms) as campaign,
+    first_value(source) over (partition by uid order by source is not null desc, ctms) as source,
+    first_value(type) over (partition by uid order by source is not null desc, ctms) as type,
+    first_value(campaign) over (partition by uid order by source is not null desc, ctms) as campaign,
     uid as user_id
     from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
 ),
@@ -50,8 +50,9 @@ user_interaction as
             max(s.type) as type,
             max(s.campaign) as campaign
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} m
-        inner join not_jp_users n on n.user_id = m.uid
+        left join not_jp_users n on n.user_id = m.uid
         left join source s on s.user_id = m.uid
+        where n.user_id is null
         group by _id, uid
     )
 )
