@@ -16,12 +16,15 @@ not_jp_users AS (
 ),
 
 source as (
-select 
-    first_value(source) over (partition by uid order by source is not null desc, ctms) as source,
-    first_value(type) over (partition by uid order by source is not null desc, ctms) as type,
-    first_value(campaign) over (partition by uid order by source is not null desc, ctms) as campaign,
+select distinct source, type, campaign, user_id
+    from
+(select 
+    first_value(source) over (partition by uid order by (source is not null and source != '') desc, ctms) as source,
+    first_value(type) over (partition by uid order by (source is not null and source != '') desc, ctms) as type,
+    first_value(campaign) over (partition by uid order by (source is not null and source != '') desc, ctms) as campaign,
     uid as user_id
     from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
+ )
 ),
 
 user_interaction as 
