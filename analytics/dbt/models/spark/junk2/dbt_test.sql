@@ -7,5 +7,5 @@
 {% if not is_incremental() %}
   select 1 as x from unknown_table
 {% else %}
-  select 2 as x
+  select 2 as x from unknown_table
 {% endif %}
