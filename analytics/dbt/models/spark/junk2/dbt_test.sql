@@ -5,7 +5,7 @@
 ) }}
 
 {% if not is_incremental() %}
-  select 1 as x from unknown_table
+  select 1 as x
 {% else %}
-  select 2 as x from unknown_table
+  select 2 as x
 {% endif %}
