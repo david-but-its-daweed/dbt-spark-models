@@ -18,7 +18,7 @@ SELECT
 FROM {{ source('mart', 'device_events') }}
 WHERE
     `type` IN (
-        'orderParcelOpen', 'supportChatOpen')
+        'orderParcelOpen', 'supportChatOpen', 'pushEnabled', 'pushPermissionOpen')
         
 {% if is_incremental() %}
     AND partition_date >= date'{{ var("start_date_ymd") }}'
