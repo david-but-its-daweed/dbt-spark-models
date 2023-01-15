@@ -19,9 +19,20 @@ WITH installs AS (
     device_id,
     source,
     partner_id,
-    os_type,
+    CASE 
+      WHEN os_type = "fullweb" THEN "desktop"
+      WHEN os_type = "trampolineweb" THEN "mob_web"
+      ELSE os_type
+    END AS platform,
     country
   FROM {{ source('ads', 'ads_install') }}
+  WHERE
+      {% if is_incremental() %}
+    join_date >= DATE(‘{{ VAR(“start_date_ymd”) }}‘) - INTERVAL 120 DAY
+    AND join_date < DATE(’{{ VAR(“end_date_ymd”) }}
+      {% else %}
+    join_date >= DATE(‘2019-12-25’)
+      {% endif %}
 
 ), ads_costs AS (
     
@@ -35,7 +46,13 @@ WITH installs AS (
     device_id,
     date_msk AS partition_date
   FROM {{ source('mart', 'star_active_device') }}
-  WHERE date_msk >= DATE('2019-12-25')
+  WHERE
+      {% if is_incremental() %}
+    date_msk >= DATE(‘{{ VAR(“start_date_ymd”) }}‘) - INTERVAL 240 DAY
+    AND date_msk < DATE(’{{ VAR(“end_date_ymd”) }}
+      {% else %}
+    date_msk >= DATE(‘2019-12-25’) - INTERVAL 240 DAY
+      {% endif %}
 
 ), dimentions AS (
 
@@ -43,8 +60,9 @@ WITH installs AS (
     activity.partition_date AS partition_date,
     activity.device_id,
     IF(activity.partition_date = join_date, 1, 0) AS is_new,
-    DATEDIFF(activity.partition_date, join_date) / 30.42 AS user_age,
-    COALESCE(installs.os_type, "unknown") AS os_type,
+--    DATE_DIFF(activity.partition_date, join_date) / 30.42 AS user_age,
+    DATE_DIFF(activity.partition_date, join_date, DAY) / 30.42 AS user_age,
+    COALESCE(installs.platform, "unknown") AS platform,
     COALESCE(installs.country, "unknown") AS country,
     join_date,
     CASE
@@ -53,13 +71,13 @@ WITH installs AS (
     END AS source
   FROM activity
     JOIN installs ON activity.device_id = installs.device_id
-  WHERE activity.partition_date >= DATE('2019-12-25')
       
 ), orders AS (
   
   SELECT
     device_id,
-    DATE(created_time_utc + INTERVAL 3 HOURS) AS order_date,
+--    DATE(created_time_utc + INTERVAL 3 HOURS) AS order_date,
+    DATE(DATE_ADD(created_time_utc, INTERVAL 3 HOUR)) AS order_date,
     COUNT(DISTINCT order_group_id) AS orders_num,
     SUM(gmv_initial) AS gmv,
     SUM(order_gross_profit_final_estimated) AS profit
@@ -84,7 +102,12 @@ WITH installs AS (
     1 AS is_product_open
   FROM {{ source('recom', 'context_device_counters_v5') }}
   WHERE type = "productOpen"
-    AND partition_date >= DATE('2019-12-25')
+      {% if is_incremental() %}
+    AND partition_date >= DATE(‘{{ VAR(“start_date_ymd”) }}‘) - INTERVAL 120 DAY
+    AND partition_date < DATE(’{{ VAR(“end_date_ymd”) }}
+      {% else %}
+    AND partition_date >= DATE(‘2019-12-25’)
+      {% endif %}
 
 ), payments_events AS (
 
@@ -99,7 +122,13 @@ WITH installs AS (
     MAX(is_pmt_start) AS is_pmt_start,
     MAX(is_pmt_success) AS is_pmt_success
   FROM {{ source('payments', 'checkout_data') }}
-  WHERE date >= DATE('2019-12-25')
+  WHERE
+      {% if is_incremental() %}
+    date >= DATE(‘{{ VAR(“start_date_ymd”) }}‘) - INTERVAL 120 DAY
+    AND date < DATE(’{{ VAR(“end_date_ymd”) }}
+      {% else %}
+    date >= DATE(‘2019-12-25’)
+      {% endif %}
   GROUP BY 1, 2
 
 ), dataset AS (
@@ -109,7 +138,7 @@ WITH installs AS (
       dimentions.device_id,
       user_age,
       is_new,
-      os_type,
+      platform,
       country,
       source,
       cpi,
@@ -122,15 +151,15 @@ WITH installs AS (
         WHEN orders_total BETWEEN 6 AND 10 THEN "4. 6-10"
         WHEN orders_total BETWEEN 11 AND 100 THEN "5. 11-100"
         ELSE "6. >100"
-      END AS orders_total_category,
+      END AS orders_total_segment,
       gmv_total,
       COALESCE(gmv, 0) AS gmv,
       CASE
-        WHEN gmv_total IS NULL THEN "1. 0"
+        WHEN gmv_total IS NULL THEN "1. 0$$"
         WHEN gmv_total <= 10 THEN "2. 0-10$$"
         WHEN gmv_total <= 100 THEN "3. 10-100$$"
         ELSE "4. >100$$"
-      END AS gmv_total_category,
+      END AS gmv_total_segment,
       profit_total,
       COALESCE(profit, 0) AS profit,
       COALESCE(is_product_open, 0) AS is_product_open,
@@ -142,14 +171,13 @@ WITH installs AS (
       COALESCE(is_pmt_start, 0) AS is_pmt_start,
       COALESCE(is_pmt_success, 0) AS is_pmt_success,
       IF(gmv IS NOT NULL, 1, 0) AS is_product_purchase,
-      MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 1), 1, 0)) AS is_returned_1d,
-      MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 7), 1, 0)) AS is_returned_7d,
-      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, 7) AND DATE_ADD(dimentions.partition_date, 13), 1, 0)) AS is_returned_1w,
-      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, 30) AND DATE_ADD(dimentions.partition_date, 59), 1, 0)) AS is_returned_1m,
-      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, 90) AND DATE_ADD(dimentions.partition_date, 119), 1, 0)) AS is_returned_3m,
-      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 5), 1, 0)) = 1, 0, 1) AS is_bounced_5d,
-      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 30), 1, 0)) = 1, 0, 1) AS is_bounced_30d,
-      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 90), 1, 0)) = 1, 0, 1) AS is_bounced_90d
+      MAX(IF(activity.partition_date = DATE_ADD(dimentions.partition_date, INTERVAL 1 DAY), 1, 0)) AS is_returned_1d,
+      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 7 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 13 DAY), 1, 0)) AS is_returned_1w,
+      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 30 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 59 DAY), 1, 0)) AS is_returned_1m,
+      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 90 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 119 DAY), 1, 0)) AS is_returned_3m,
+      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 5 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_5d,
+      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 30 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_30d,
+      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 90 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_90d
   FROM dimentions
   LEFT JOIN orders ON dimentions.device_id = orders.device_id
     AND orders.order_date = dimentions.partition_date
@@ -160,7 +188,8 @@ WITH installs AS (
     AND dimentions.partition_date = payments_events.event_date
   LEFT JOIN activity ON dimentions.device_id = activity.device_id
     AND activity.partition_date > dimentions.partition_date
-    AND activity.partition_date <= DATE_ADD(dimentions.partition_date, 120)
+--    AND activity.partition_date <= DATE_ADD(dimentions.partition_date, 120)
+    AND activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 120 DAY)    
   LEFT JOIN ads_costs ON dimentions.device_id = ads_costs.device_id
   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25
   ORDER BY 1
@@ -172,16 +201,16 @@ WITH installs AS (
         dataset.device_id AS device_id,
         user_age,
         is_new,
-        os_type,
+        platform,
         country,
         source,
         cpi,
         orders_total,
         dataset.orders_num AS orders_num,
-        orders_total_category,
+        orders_total_segment,
         gmv_total,
         dataset.gmv AS gmv,
-        gmv_total_category,
+        gmv_total_segment,
         profit_total,
         dataset.profit AS profit,
         is_product_open,
@@ -194,34 +223,34 @@ WITH installs AS (
         is_pmt_success,
         is_product_purchase,
         is_returned_1d,
-        is_returned_7d,
         is_returned_1w,
         is_returned_1m,
         is_returned_3m,
         is_bounced_5d,
         is_bounced_30d,
         is_bounced_90d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 7), orders.gmv, 0)) as gmv_7d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 30), orders.gmv, 0)) as gmv_30d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 7), orders.profit, 0)) as profit_7d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 30), orders.profit, 0)) as profit_30d    
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 7 DAY), orders.gmv, 0)) as gmv_7d,
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY), orders.gmv, 0)) as gmv_30d,
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 7 DAY), orders.profit, 0)) as profit_7d,
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY), orders.profit, 0)) as profit_30d    
     FROM dataset
     LEFT JOIN orders ON dataset.device_id = orders.device_id
         AND orders.order_date > dataset.partition_date
-        AND orders.order_date <= DATE_ADD(dataset.partition_date, 30)
+--        AND orders.order_date <= DATE_ADD(dataset.partition_date, 30)
+        AND orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY)
     WHERE partition_date IS NOT NULL
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
 
 )
 
 SELECT  
     partition_date,
     is_new,
-    os_type,
+    platform,
     country,
     source,
-    orders_total_category,
-    gmv_total_category,
+    orders_total_segment,
+    gmv_total_segment,
     COUNT(*) AS dau,
     SUM(cpi) AS spend,
     SUM(user_age) AS user_age,
@@ -234,14 +263,13 @@ SELECT
     SUM(is_pmt_start) AS pmt_start_users,
     SUM(is_pmt_success) AS pmt_success_users,
     SUM(is_product_purchase) AS purchase_users,  
-    SUM(is_returned_1d) AS retention_1d_users,
-    SUM(is_returned_7d) AS retention_7d_users,
-    SUM(is_returned_1w) AS retention_1w_users,
-    SUM(is_returned_1m) AS retention_1m_users,
-    SUM(is_returned_3m) AS retention_3m_users,
-    SUM(is_bounced_5d) AS bounce_5d_users,
-    SUM(is_bounced_30d) AS bounce_30d_users,
-    SUM(is_bounced_90d) AS bounce_90d_users,
+    IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 1 DAY), 0, SUM(is_returned_1d)) AS retention_1d_users,
+    IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 13 DAY), 0, SUM(is_returned_1w)) AS retention_1w_users,
+    IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 59 DAY), 0, SUM(is_returned_1m)) AS retention_1m_users,
+    IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 119 DAY), 0, SUM(is_returned_3m)) AS retention_3m_users,
+    IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 5 DAY), 0, SUM(is_bounced_5d)) AS bounce_5d_users,
+    IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 30 DAY), 0, SUM(is_bounced_30d)) AS bounce_30d_users,
+    IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 90 DAY), 0, SUM(is_bounced_90d)) AS bounce_90d_users,
     SUM(orders_num) AS orders,
     SUM(gmv) AS gmv,
     SUM(profit) AS profit,
@@ -250,4 +278,4 @@ SELECT
     SUM(profit_7d) AS profit_7d,
     SUM(profit_30d) AS profit_30d
 FROM dataset_orders
-GROUP BY partition_date, is_new, os_type, country, source, orders_total_category, gmv_total_category
+GROUP BY 1, 2, 3, 4, 5, 6, 7
