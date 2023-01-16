@@ -107,6 +107,7 @@ rfq as (
         response_status,
         reject_reason,
         documents_attached,
+        merchant_id,
         0 as converted,
         0 as rfq_converted
     from rfq_1
@@ -121,6 +122,7 @@ rfq as (
         response_status,
         reject_reason,
         documents_attached,
+        merchant_id,
         0 as converted,
         0 as rfq_converted
     from rfq_1
@@ -135,6 +137,7 @@ rfq as (
         response_status,
         reject_reason,
         documents_attached,
+        merchant_id,
         0 as converted,
         0 as rfq_converted
     from rfq_1
@@ -161,6 +164,7 @@ orders_statuses as (
         response_status,
         reject_reason,
         documents_attached,
+        merchant_id,
         max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted,
         max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id, rfq_request_id) AS rfq_converted
       FROM {{ ref('fact_order_change') }} o
@@ -201,6 +205,7 @@ stg1 AS (
     SELECT
         o.order_id,
         o.status,
+        o.merchant_id,
         COALESCE(o.sub_status, o.status) as sub_status,
         o.event_ts_msk,
         owner_moderator_email,
@@ -236,6 +241,7 @@ orders_hist AS (
         response_status,
         reject_reason,
         owner_role,
+        merchant_id,
         max(documents_attached) as documents_attached,
         max(converted) as converted,
         max(rfq_converted) as rfq_converted,
@@ -263,11 +269,13 @@ orders_hist AS (
         order_rfq_response_id,
         response_status,
         reject_reason,
-        owner_role
+        owner_role,
+        merchant_id
 )
 
 
-SELECT order_id,
+SELECT DISTINCT
+    order_id,
     owner_moderator_email,
     current_status,
     current_sub_status,
@@ -293,6 +301,7 @@ SELECT order_id,
     total_products_1,
     rfq_products_1,
     documents_attached,
+    merchant_id,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
     ROW_NUMBER() OVER (PARTITION BY order_id ORDER by order_rfq_response_id) as order_rn,
@@ -337,7 +346,8 @@ FROM
     rfq_products,
     total_products_1,
     rfq_products_1,
-    documents_attached
+    documents_attached,
+    merchant_id
 from orders_hist
 WHERE COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
 AND COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
