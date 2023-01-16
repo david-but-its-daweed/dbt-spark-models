@@ -29,10 +29,10 @@ WITH installs AS (
   FROM {{ source('ads', 'ads_install') }}
   WHERE
       {% if is_incremental() %}
-    join_date >= DATE(‘{{ var("start_date_ymd") }}‘) - INTERVAL 120 DAY
-    AND join_date < DATE(’{{ var("end_date_ymd") }}
+    join_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    AND join_date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
-    join_date >= DATE(‘2019-12-25’)
+    join_date >= DATE('2019-12-25')
       {% endif %}
 
 ), ads_costs AS (
@@ -49,10 +49,10 @@ WITH installs AS (
   FROM {{ source('mart', 'star_active_device') }}
   WHERE
       {% if is_incremental() %}
-    date_msk >= DATE(‘{{ var("start_date_ymd") }}‘) - INTERVAL 240 DAY
-    AND date_msk < DATE(’{{ var("end_date_ymd") }}
+    date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 240 DAY
+    AND date_msk < DATE('{{ var("end_date_ymd") }}')
       {% else %}
-    date_msk >= DATE(‘2019-12-25’) - INTERVAL 240 DAY
+    date_msk >= DATE('2019-12-25') - INTERVAL 240 DAY
       {% endif %}
 
 ), dimentions AS (
@@ -104,10 +104,10 @@ WITH installs AS (
   FROM {{ source('recom', 'context_device_counters_v5') }}
   WHERE type = "productOpen"
       {% if is_incremental() %}
-    AND partition_date >= DATE(‘{{ var("start_date_ymd") }}‘) - INTERVAL 120 DAY
-    AND partition_date < DATE(’{{ var("end_date_ymd") }}
+    AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    AND partition_date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
-    AND partition_date >= DATE(‘2019-12-25’)
+    AND partition_date >= DATE('2019-12-25')
       {% endif %}
 
 ), payments_events AS (
@@ -125,10 +125,10 @@ WITH installs AS (
   FROM {{ source('payments', 'checkout_data') }}
   WHERE
       {% if is_incremental() %}
-    date >= DATE(‘{{ var("start_date_ymd") }}‘) - INTERVAL 120 DAY
-    AND date < DATE(’{{ var("end_date_ymd") }}
+    date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+    AND date < DATE('{{ var("end_date_ymd") }}')
       {% else %}
-    date >= DATE(‘2019-12-25’)
+    date >= DATE('2019-12-25')
       {% endif %}
   GROUP BY 1, 2
 
