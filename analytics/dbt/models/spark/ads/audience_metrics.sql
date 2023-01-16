@@ -24,7 +24,7 @@ WITH installs AS (
       WHEN os_type = "fullweb" THEN "desktop"
       WHEN os_type = "trampolineweb" THEN "mob_web"
       ELSE os_type
-    END AS platform,
+    END AS os_type,
     country
   FROM {{ source('ads', 'ads_install') }}
   WHERE
@@ -63,7 +63,7 @@ WITH installs AS (
     IF(activity.partition_date = join_date, 1, 0) AS is_new,
     DATEDIFF(activity.partition_date, join_date) / 30.42 AS user_age,
 --    DATE_DIFF(activity.partition_date, join_date, DAY) / 30.42 AS user_age,
-    COALESCE(installs.platform, "unknown") AS platform,
+    COALESCE(installs.os_type, "unknown") AS os_type,
     COALESCE(installs.country, "unknown") AS country,
     join_date,
     CASE
@@ -139,7 +139,7 @@ WITH installs AS (
       dimentions.device_id,
       user_age,
       is_new,
-      platform,
+      os_type,
       country,
       source,
       cpi,
@@ -209,7 +209,7 @@ WITH installs AS (
         dataset.device_id AS device_id,
         user_age,
         is_new,
-        platform,
+        os_type,
         country,
         source,
         cpi,
@@ -258,7 +258,7 @@ WITH installs AS (
 SELECT  
     partition_date,
     is_new,
-    platform,
+    os_type,
     country,
     source,
     orders_total_segment,
