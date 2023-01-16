@@ -8,3 +8,13 @@ default:
       threads: 1
       type: spark
   target: prod
+spark:
+  outputs:
+    prod:
+      host: thrift-service-prod.joom.ai
+      method: thrift
+      port: 10000
+      schema: placeholder
+      threads: 1
+      type: spark
+  target: prod
