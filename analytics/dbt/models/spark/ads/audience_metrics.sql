@@ -61,8 +61,8 @@ WITH installs AS (
     activity.partition_date AS partition_date,
     activity.device_id,
     IF(activity.partition_date = join_date, 1, 0) AS is_new,
---    DATE_DIFF(activity.partition_date, join_date) / 30.42 AS user_age,
-    DATE_DIFF(activity.partition_date, join_date, DAY) / 30.42 AS user_age,
+    DATEDIFF(activity.partition_date, join_date) / 30.42 AS user_age,
+--    DATE_DIFF(activity.partition_date, join_date, DAY) / 30.42 AS user_age,
     COALESCE(installs.platform, "unknown") AS platform,
     COALESCE(installs.country, "unknown") AS country,
     join_date,
@@ -77,8 +77,8 @@ WITH installs AS (
   
   SELECT
     device_id,
---    DATE(created_time_utc + INTERVAL 3 HOURS) AS order_date,
-    DATE(DATE_ADD(created_time_utc, INTERVAL 3 HOUR)) AS order_date,
+    DATE(created_time_utc + INTERVAL 3 HOURS) AS order_date,
+--    DATE(DATE_ADD(created_time_utc, INTERVAL 3 HOUR)) AS order_date,
     COUNT(DISTINCT order_group_id) AS orders_num,
     SUM(gmv_initial) AS gmv,
     SUM(order_gross_profit_final_estimated) AS profit
@@ -172,13 +172,20 @@ WITH installs AS (
       COALESCE(is_pmt_start, 0) AS is_pmt_start,
       COALESCE(is_pmt_success, 0) AS is_pmt_success,
       IF(gmv IS NOT NULL, 1, 0) AS is_product_purchase,
-      MAX(IF(activity.partition_date = DATE_ADD(dimentions.partition_date, INTERVAL 1 DAY), 1, 0)) AS is_returned_1d,
-      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 7 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 13 DAY), 1, 0)) AS is_returned_1w,
-      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 30 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 59 DAY), 1, 0)) AS is_returned_1m,
-      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 90 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 119 DAY), 1, 0)) AS is_returned_3m,
-      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 5 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_5d,
-      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 30 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_30d,
-      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 90 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_90d
+--      MAX(IF(activity.partition_date = DATE_ADD(dimentions.partition_date, INTERVAL 1 DAY), 1, 0)) AS is_returned_1d,
+--      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 7 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 13 DAY), 1, 0)) AS is_returned_1w,
+--      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 30 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 59 DAY), 1, 0)) AS is_returned_1m,
+--      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, INTERVAL 90 DAY) AND DATE_ADD(dimentions.partition_date, INTERVAL 119 DAY), 1, 0)) AS is_returned_3m,
+--      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 5 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_5d,
+--      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 30 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_30d,
+--      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 90 DAY), 1, 0)) = 1, 0, 1) AS is_bounced_90d
+      MAX(IF(activity.partition_date = DATE_ADD(dimentions.partition_date, 1), 1, 0)) AS is_returned_1d,
+      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, 7) AND DATE_ADD(dimentions.partition_date, INTERVAL 13 DAY), 1, 0)) AS is_returned_1w,
+      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, 30) AND DATE_ADD(dimentions.partition_date, INTERVAL 59 DAY), 1, 0)) AS is_returned_1m,
+      MAX(IF(activity.partition_date BETWEEN DATE_ADD(dimentions.partition_date, 90) AND DATE_ADD(dimentions.partition_date, INTERVAL 119 DAY), 1, 0)) AS is_returned_3m,
+      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 5), 1, 0)) = 1, 0, 1) AS is_bounced_5d,
+      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 30), 1, 0)) = 1, 0, 1) AS is_bounced_30d,
+      IF(MAX(IF(activity.partition_date <= DATE_ADD(dimentions.partition_date, 90), 1, 0)) = 1, 0, 1) AS is_bounced_90d
   FROM dimentions
   LEFT JOIN orders ON dimentions.device_id = orders.device_id
     AND orders.order_date = dimentions.partition_date
@@ -189,8 +196,8 @@ WITH installs AS (
     AND dimentions.partition_date = payments_events.event_date
   LEFT JOIN activity ON dimentions.device_id = activity.device_id
     AND activity.partition_date > dimentions.partition_date
---    AND activity.partition_date <= DATE_ADD(dimentions.partition_date, 120)
-    AND activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 120 DAY)    
+    AND activity.partition_date <= DATE_ADD(dimentions.partition_date, 120)
+--    AND activity.partition_date <= DATE_ADD(dimentions.partition_date, INTERVAL 120 DAY)    
   LEFT JOIN ads_costs ON dimentions.device_id = ads_costs.device_id
   GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25
   ORDER BY 1
@@ -230,15 +237,19 @@ WITH installs AS (
         is_bounced_5d,
         is_bounced_30d,
         is_bounced_90d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 7 DAY), orders.gmv, 0)) as gmv_7d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY), orders.gmv, 0)) as gmv_30d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 7 DAY), orders.profit, 0)) as profit_7d,
-        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY), orders.profit, 0)) as profit_30d    
+--        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 7 DAY), orders.gmv, 0)) as gmv_7d,
+--        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY), orders.gmv, 0)) as gmv_30d,
+--        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 7 DAY), orders.profit, 0)) as profit_7d,
+--        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY), orders.profit, 0)) as profit_30d
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 7), orders.gmv, 0)) as gmv_7d,
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 30), orders.gmv, 0)) as gmv_30d,
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 7), orders.profit, 0)) as profit_7d,
+        SUM(IF(orders.order_date <= DATE_ADD(dataset.partition_date, 30), orders.profit, 0)) as profit_30d   
     FROM dataset
     LEFT JOIN orders ON dataset.device_id = orders.device_id
         AND orders.order_date > dataset.partition_date
---        AND orders.order_date <= DATE_ADD(dataset.partition_date, 30)
-        AND orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY)
+        AND orders.order_date <= DATE_ADD(dataset.partition_date, 30)
+--        AND orders.order_date <= DATE_ADD(dataset.partition_date, INTERVAL 30 DAY)
     WHERE partition_date IS NOT NULL
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32
 
