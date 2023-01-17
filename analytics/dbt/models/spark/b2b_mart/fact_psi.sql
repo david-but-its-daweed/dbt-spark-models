@@ -31,7 +31,7 @@ statuses as (
 ),
 
 psi as (
-    select status, statusId as status_id, ctms, _id, ctxId as merchant_order_id, scndCtxId as product_id
+    select status, statusId as status_id, stms, _id, ctxId as merchant_order_id, scndCtxId as product_id
     from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} f
     left join statuses s on f.statusId = s.s_id
     where type = 10
@@ -42,15 +42,16 @@ merchant as (
         _id as merchant_order_id, 
         orderId as order_id,
         merchantId as merchant_id, 
-        manDays as man_days
+        manDays as man_days,
+        friendlyId as merchant_order_friendly_id
 from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
 ),
 
 not_jp_users AS (
-    SELECT DISTINCT order_id
+    SELECT DISTINCT order_id, friendly_id
     FROM {{ ref('fact_user_request') }} f
     left join 
-        (select distinct order_id, user_id from {{ ref('fact_order') }}) o on f.user_id = o.user_id
+        (select distinct order_id, friendly_id, user_id from {{ ref('fact_order') }}) o on f.user_id = o.user_id
     WHERE is_joompro_employee != TRUE OR is_joompro_employee IS NULL
 ),
 
@@ -66,9 +67,12 @@ select product_id,
     time,
     order_id,
     merchant_id, 
+    merchant_order_friendly_id,
+    friendly_id,
     man_days,
     min(case when status_id = 10 then time end) over (partition by product_id, merchant_order_id) as psi_waiting_time,
     min(case when status_id = 20 then time end) over (partition by product_id, merchant_order_id) as psi_start_time,
+    min(case when status_id = 30 then time end) over (partition by product_id, merchant_order_id) as psi_ready_time,
     min(case when status_id = 50 then time end) over (partition by product_id, merchant_order_id) as psi_end_time,
     max(case when current_status = 1 then status_id end) over (partition by product_id, merchant_order_id) as current_status,
     lag(status_id) over (partition by product_id, merchant_order_id order by time) as lag_status
@@ -77,15 +81,17 @@ from
 select distinct
     p.product_id, 
     p.merchant_order_id, 
+    m.merchant_order_friendly_id,
     case when psi_status_id = _id then 1 else 0 end as current_status, 
     psi_status_id,
     p.status as product_status,
     type,
     psi.status,
     psi.status_id,
-    ctms as time,
+    stms as time,
     m.order_id,
     m.merchant_id, 
+    n.friendly_id,
     m.man_days
 from merchant m 
 inner join not_jp_users n on m.order_id = n.order_id
@@ -93,7 +99,7 @@ left join products p on m.merchant_order_id = p.merchant_order_id
 left join psi on p.product_id = psi.product_id and p.merchant_order_id = psi.merchant_order_id
 where psi_status_id is not null and psi.status_id > 0)
 )
-where (lag_status != status_id or lag_status is null) and status_id != 50),
+where (lag_status != status_id or lag_status is null) and status_id != 50 and psi_start_time is not null),
 
 
 status_10 as (
@@ -105,13 +111,14 @@ select
     merchant_order_id,
     status
 from
-(select product_id, 
+(select distinct
+    product_id, 
     merchant_order_id,
     'waiting' as status,
-    time
+    psi_start_time as time
 from table1 where status_id = 10
 union all 
-select 
+select distinct
     product_id, 
     merchant_order_id,
     'fixing' as status,
@@ -129,8 +136,8 @@ select distinct product_id,
     status,
     current_status,
     date(from_unixtime(psi_start_time/1000)) as psi_start,
-    int((psi_end_time/1000 - psi_start_time/1000 )/86400) as time_psi,
     date(from_unixtime(psi_waiting_time/1000)) as psi_waiting,
+    date(from_unixtime(psi_ready_time/1000)) as psi_ready,
     date(from_unixtime(psi_end_time/1000)) as psi_end_time,
     date(from_unixtime(waiting_time/1000)) as waiting_time,
     date(from_unixtime(running_time/1000)) as running_time,
@@ -139,10 +146,14 @@ select distinct product_id,
     date(from_unixtime(failed_time/1000)) as failed_time,
     case when status = 'fixing' then int((running_time/1000 - psi_waiting_time/1000)/86400) end as fixing_time,
     psis,
+    psis_order,
     psi_number,
     order_id,
     merchant_id, 
-    man_days
+    merchant_order_friendly_id,
+    friendly_id,
+    man_days,
+    current_date() as today
 from
 (
 select 
@@ -156,16 +167,20 @@ select
     time,
     current_status,
     psi_start_time,
+    psi_ready_time,
     psi_waiting_time,
     psi_end_time,
-    min(case when status_id in (10, 40) then time end) over (partition by merchant_order_id, product_id, psi_number) as waiting_time,
+    min(status_10_time) over (partition by merchant_order_id, product_id, psi_number) as waiting_time,
     min(case when status_id = 20 then time end) over (partition by merchant_order_id, product_id, psi_number) as running_time,
     min(case when status_id = 30 then time end) over (partition by merchant_order_id, product_id, psi_number) as ready_time,
     min(case when status_id = 40 and status_10_time < time then time end) over (partition by merchant_order_id, product_id, psi_number) as failed_time,
     max(psi_number) over (partition by merchant_order_id, product_id) as psis,
+    max(psi_number) over (partition by order_id) as psis_order,
     psi_number,
     order_id,
     merchant_id, 
+    merchant_order_friendly_id,
+    friendly_id,
     man_days
     from
 (
@@ -180,12 +195,15 @@ select
     t.time,
     current_status,
     psi_start_time,
+    psi_ready_time,
     psi_waiting_time,
     psi_end_time,
     s.time as status_10_time,
     psi_number,
     order_id,
     merchant_id, 
+    merchant_order_friendly_id,
+    friendly_id,
     man_days
 from table1 t
 left join status_10 s on s.merchant_order_id = t.merchant_order_id and s.product_id = t.product_id
