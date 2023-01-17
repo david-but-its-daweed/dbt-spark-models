@@ -27,13 +27,7 @@ WITH installs AS (
     END AS os_type,
     country
   FROM {{ source('ads', 'ads_install') }}
-  WHERE
-      {% if is_incremental() %}
-    join_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-    AND join_date < DATE('{{ var("end_date_ymd") }}')
-      {% else %}
-    join_date >= DATE('2019-12-25')
-      {% endif %}
+  WHERE join_date >= DATE('2019-12-25')
 
 ), ads_costs AS (
     
