@@ -28,7 +28,7 @@ WITH activity AS (
         FROM
             {{ source('mart', 'star_active_device') }}
         WHERE
-            date_msk >= '2021-01-01'
+            date_msk >= '2019-01-01'
             AND os_type IN ('android', 'ios', 'trampolineweb', 'fullweb')
             AND NOT ephemeral
     ) AS t1
@@ -68,7 +68,7 @@ purchases AS (
         FROM
             {{ source('mart', 'star_order_2020') }}
         WHERE
-            date(created_time_utc + INTERVAL 3 HOUR) >= '2021-01-01'
+            date(created_time_utc + INTERVAL 3 HOUR) >= '2019-01-01'
         GROUP BY 1, 2, 3, 4
     )
     GROUP BY 1, 2, 3
