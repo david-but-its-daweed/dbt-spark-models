@@ -90,6 +90,8 @@ rfq_1 as (SELECT
     rp.response_status,
     rp.reject_reason,
     rp.merchant_id,
+    category_id,
+    category_name,
     case when documents_attached > 0 then True else False end as documents_attached,
     product_id
 FROM rfq_requests AS rq
@@ -109,6 +111,8 @@ rfq as (
         reject_reason,
         documents_attached,
         merchant_id,
+        category_id,
+        category_name,
         0 as converted,
         0 as rfq_converted
     from rfq_1
@@ -125,6 +129,8 @@ rfq as (
         reject_reason,
         documents_attached,
         merchant_id,
+        category_id,
+        category_name,
         0 as converted,
         0 as rfq_converted
     from rfq_1
@@ -141,6 +147,8 @@ rfq as (
         reject_reason,
         documents_attached,
         merchant_id,
+        category_id,
+        category_name,
         0 as converted,
         0 as rfq_converted
     from rfq_1
@@ -169,6 +177,8 @@ orders_statuses as (
         reject_reason,
         documents_attached,
         merchant_id,
+        0 as category_id,
+        '' as category_name,
         max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted,
         max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id, rfq_request_id) AS rfq_converted
       FROM {{ ref('fact_order_change') }} o
@@ -229,7 +239,9 @@ stg1 AS (
         total_products,
         rfq_products,
         total_products_1,
-        rfq_products_1
+        rfq_products_1,
+        max(category_id) OVER (PARTITION BY o.order_id, rfq_request_id) as category_id,
+        max(category_name) OVER (PARTITION BY o.order_id, rfq_request_id) as category_name
     FROM (select * from orders_statuses union all select * from rfq) AS o
     LEFT JOIN order_owner AS ao ON o.order_id = ao.order_id
     LEFT JOIN  products as p on p.order_id = o.order_id
@@ -250,6 +262,8 @@ orders_hist AS (
         reject_reason,
         owner_role,
         merchant_id,
+        max(category_id) as category_id,
+        max(category_name) as category_name,
         max(documents_attached) as documents_attached,
         max(converted) as converted,
         max(rfq_converted) as rfq_converted,
@@ -312,6 +326,8 @@ SELECT DISTINCT
     rfq_products_1,
     documents_attached,
     merchant_id,
+    category_id,
+    category_name,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
     ROW_NUMBER() OVER (PARTITION BY order_id ORDER by rfq_response_ts_msk, order_rfq_response_id) as order_rn,
@@ -358,6 +374,8 @@ FROM
     rfq_products,
     total_products_1,
     rfq_products_1,
+    category_id,
+    category_name,
     documents_attached,
     merchant_id
 from orders_hist
