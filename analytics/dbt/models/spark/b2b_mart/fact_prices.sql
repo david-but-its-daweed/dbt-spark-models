@@ -246,6 +246,28 @@ select p.order_id,
         group by p.order_id
 ),
 
+grant as (
+select p.order_id, 
+        round(SUM(IF(tag in ('grant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub
+        from all_prices p
+        left join 
+        (
+        select order_id, 
+        max(case when from = 'USD' and to = 'RUB' then rate end) as usd_rate,
+        max(case when from = 'USD' and to = 'RUB' then company_rate end) as usd_company_rate,
+        max(case when from = 'USD' and to = 'RUB' then markup_rate end) as usd_markup_rate,
+        max(case when from = 'USD' and to = 'RUB' then rate*(1+markup_rate) end) as usd_rate_with_markup,
+        max(case when from = 'CNY' and to = 'RUB' then rate end) as cny_rate,
+        max(case when from = 'CNY' and to = 'RUB' then company_rate end) as cny_company_rate,
+        max(case when from = 'CNY' and to = 'RUB' then markup_rate end) as cny_markup_rate,
+        max(case when from = 'CNY' and to = 'RUB' then rate*(1+markup_rate) end) as cny_rate_with_markup
+        from order_rates
+        group by order_id
+        ) r on p.order_id = r.order_id
+        where fee_rub is not null and stage = 'confirmed'
+        group by p.order_id
+),
+
 prices as (
     select distinct
         pf.*, ddp_forecast_price_rub,
@@ -270,9 +292,11 @@ prices as (
         agent_fee_forecast_price_rub,
         certification_forecast_price_rub,
         vat_forecast_price_rub,
-        general_cargo_forecast_price_rub
+        general_cargo_forecast_price_rub,
+        subsidy_confirmed_price_rub
     from prices_final pf
     left join prices_forecast p on pf.order_id = p.order_id
+    left join grant g on pf.order_id = g.order_id
 
 ),
 
@@ -336,6 +360,7 @@ select distinct
         certification_forecast_price_rub,
         vat_forecast_price_rub,
         general_cargo_forecast_price_rub,
+        subsidy_confirmed_price_rub,
         usd_rate,
         usd_company_rate,
         usd_markup_rate,
