@@ -246,7 +246,7 @@ select p.order_id,
         group by p.order_id
 ),
 
-grant as (
+subsidy as (
 select p.order_id, 
         round(SUM(IF(tag in ('grant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub
         from all_prices p
@@ -296,7 +296,7 @@ prices as (
         subsidy_confirmed_price_rub
     from prices_final pf
     left join prices_forecast p on pf.order_id = p.order_id
-    left join grant g on pf.order_id = g.order_id
+    left join subsidy g on pf.order_id = g.order_id
 
 ),
 
