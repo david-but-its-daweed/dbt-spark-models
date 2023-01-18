@@ -212,6 +212,8 @@ stg1 AS (
         o.merchant_id,
         COALESCE(o.sub_status, o.status) as sub_status,
         o.event_ts_msk,
+        MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id) AS event_ts,
+        MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, order_rfq_response_id) AS event_product_ts,
         owner_moderator_email,
         FIRST_VALUE(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_status,
         FIRST_VALUE(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_sub_status,
@@ -255,16 +257,16 @@ orders_hist AS (
         max(rfq_products) as rfq_products,
         max(total_products_1) as total_products_1,
         max(rfq_products_1) as rfq_products_1,
-        MAX(IF(status = 'selling' AND sub_status = 'new', event_ts_msk, '')) AS new_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'priceEstimation', event_ts_msk, '')) AS price_estimation_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'negotiation', event_ts_msk, '')) AS negotiation_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'finalPricing', event_ts_msk, '')) AS final_pricing_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'signingAndPayment', event_ts_msk, '')) AS signing_and_payment_ts_msk,
-        MAX(IF(status = 'rfq' AND sub_status = 'rfq_created', event_ts_msk, '')) AS rfq_created_ts_msk,
-        MAX(IF(status = 'rfq' AND sub_status = 'rfq_sent', event_ts_msk, '')) AS rfq_sent_ts_msk,
-        MAX(IF(status = 'rfq' AND sub_status = 'rfq_response', event_ts_msk, '')) AS rfq_response_ts_msk,
-        MAX(IF(status = 'manufacturing', event_ts_msk, '')) AS manufacturing_ts_msk,
-        MAX(IF(status = 'cancelled', event_ts_msk, '')) AS cancelled_ts_msk
+        MAX(IF(status = 'selling' AND sub_status = 'new', event_ts, '')) AS new_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'priceEstimation', event_ts, '')) AS price_estimation_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'negotiation', event_ts, '')) AS negotiation_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'finalPricing', event_ts, '')) AS final_pricing_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'signingAndPayment', event_ts, '')) AS signing_and_payment_ts_msk,
+        MAX(IF(status = 'rfq' AND sub_status = 'rfq_created', event_ts, '')) AS rfq_created_ts_msk,
+        MAX(IF(status = 'rfq' AND sub_status = 'rfq_sent', event_ts, '')) AS rfq_sent_ts_msk,
+        MAX(IF(status = 'rfq' AND sub_status = 'rfq_response', event_product_ts, '')) AS rfq_response_ts_msk,
+        MAX(IF(status = 'manufacturing', event_ts, '')) AS manufacturing_ts_msk,
+        MAX(IF(status = 'cancelled', event_ts, '')) AS cancelled_ts_msk
     FROM stg1
     WHERE status in ('selling', 'rfq', 'manufacturing', 'cancelled')
     GROUP BY order_id,
@@ -359,6 +361,6 @@ FROM
     documents_attached,
     merchant_id
 from orders_hist
-WHERE COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
-AND COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
+WHERE COALESCE(rfq_created_ts_msk, new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
+AND COALESCE(rfq_created_ts_msk, new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
 )
