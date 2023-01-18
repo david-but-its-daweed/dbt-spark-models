@@ -217,7 +217,7 @@ stg1 AS (
         FIRST_VALUE(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_sub_status,
         rfq_request_id,
         order_rfq_response_id,
-        product_id,
+        o.product_id,
         response_status,
         reject_reason,
         converted,
