@@ -242,7 +242,7 @@ select p.order_id,
         from order_rates
         group by order_id
         ) r on p.order_id = r.order_id
-        where fee_rub is not null and stage = 'forecast'
+        where fee_rub is not null and stage = 'confirmed'
         group by p.order_id
 ),
 
