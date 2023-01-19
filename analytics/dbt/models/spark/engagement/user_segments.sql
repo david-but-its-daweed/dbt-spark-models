@@ -46,8 +46,8 @@ activity2 AS (
         week_join_msk,
         user_id,
         num_evs,
-        round(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
-        round(datediff(week_msk, week_join_msk) / 7) AS cohort_week
+        floor(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
+        floor(datediff(week_msk, week_join_msk) / 7) AS cohort_week
     FROM
         activity
 ),
@@ -56,7 +56,7 @@ purchases AS (
     SELECT
         real_user_id,
         os_type,
-        round(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
+        floor(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
         sum(num_orders) AS num_orders
     FROM (
         SELECT
