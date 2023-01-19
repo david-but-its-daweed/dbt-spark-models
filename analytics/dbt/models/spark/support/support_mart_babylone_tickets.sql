@@ -1,7 +1,8 @@
 {{ config(
      schema='support',
-     materialized='view',
+     materialized='table',
      partition_by=['partition_date'],
+     file_format='delta',
      meta = {
        'team': 'analytics',
        'bigquery_load': 'true',
