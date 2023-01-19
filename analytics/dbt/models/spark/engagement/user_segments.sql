@@ -47,7 +47,7 @@ activity2 AS (
         user_id,
         num_evs,
         round(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
-        round(floor(datediff(week_msk, week_join_msk) / 7) AS cohort_week
+        round(datediff(week_msk, week_join_msk) / 7) AS cohort_week
     FROM
         activity
 ),
