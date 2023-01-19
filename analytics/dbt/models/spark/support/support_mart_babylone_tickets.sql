@@ -149,7 +149,7 @@ first_entries AS (
 messages_first_replies AS (
   SELECT
     ticket_id,
-    'markeplace' AS business_unit,
+    'marketplace' AS business_unit,
     'agent_first_reply' AS event,
     MIN(IF(author_type = 'agent', first_entry_ts, NULL)) AS `timestamp`
   FROM
@@ -179,7 +179,7 @@ closing_marketplace AS (
 messages_last_replies AS (
   SELECT
     t.ticket_id,
-    'markeplace' AS business_unit,
+    'marketplace' AS business_unit,
     'agent_last_reply' AS event,
     MIN(
       IF(t.author_type = 'agent', t.last_entry_ts, NULL)
