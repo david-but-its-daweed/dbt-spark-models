@@ -18,8 +18,8 @@ select
     concat_ws(',', origTags) as original_tags
 
 from 
-    {{ ref('mart', 'published_products_current') }}
-left join {{ ref('mongo', 'product_products_daily_snapshot') }}
+    {{ source('mart', 'published_products_current') }}
+left join {{ source('mongo', 'product_products_daily_snapshot') }}
     on published_products_current.product_id = product_products_daily_snapshot._id
-left join  {{ ref('mongo','abu_core_brands_daily_snapshot') }} as brands
+left join  {{ source('mongo','abu_core_brands_daily_snapshot') }} as brands
     on product_products_daily_snapshot.brandId = brands._id.oid
