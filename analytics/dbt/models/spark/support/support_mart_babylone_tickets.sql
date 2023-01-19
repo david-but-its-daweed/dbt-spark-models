@@ -344,7 +344,7 @@ final AS (
     DISTINCT t.ticket_id,
     t.business_unit,
     t.event,
-    t.`timestamp`,
+    TIMESTAMP(t.`timestamp`) AS `timestamp`,
     DATE(t.`timestamp`) AS partition_date,
     CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END AS first_queue,
     CASE WHEN b.current_queue == 'Limbo' THEN (
