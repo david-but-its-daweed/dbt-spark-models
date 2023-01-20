@@ -164,7 +164,7 @@ max(psi_ready) over (partition by p.merchant_order_id) as psi_ready_order,
 psi_ready,
 psi_end_time, 
 psis
-from {{ ('production_stream_metrics') }} p 
+from {{ ref('production_stream_metrics') }} p 
 left join psi on p.merchant_order_id = psi.merchant_order_id
 where order_id is not null and merchant_id is not null
     {% if is_incremental() %}
