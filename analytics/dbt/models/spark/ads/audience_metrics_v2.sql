@@ -269,7 +269,7 @@ WITH installs AS (
         SUM(is_pmt_start) AS pmt_start_users,
         SUM(is_pmt_success) AS pmt_success_users,
         SUM(is_product_purchase) AS purchase_users,  
-        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 1 DAY), 0, SUM(is_returned_1d)) AS retention_1d_users,
+--        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 1 DAY), 0, SUM(is_returned_1d)) AS retention_1d_users,
 --        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 13 DAY), 0, SUM(is_returned_1w)) AS retention_1w_users,
 --        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 59 DAY), 0, SUM(is_returned_1m)) AS retention_1m_users,
 --        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 119 DAY), 0, SUM(is_returned_3m)) AS retention_3m_users,
