@@ -12,7 +12,7 @@ select
     videoId as video_id,
     brandId as brand_id,
     class as brand_class,
-    brand_auth,
+    brandAuth as brand_auth,
     1 + size(extraImages) as images_count,
     size (origTags) as original_tags_count,
     concat_ws(',', origTags) as original_tags
