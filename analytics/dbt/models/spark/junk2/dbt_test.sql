@@ -1,7 +1,7 @@
 {{ config(
     schema='junk2',
     materialized='incremental',
-    file_format='delta'
+    file_format='delta',
 ) }}
 
 {% if not is_incremental() %}

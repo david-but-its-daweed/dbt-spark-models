@@ -23,6 +23,7 @@ sources:
       - name: babylone_events
       - name: fact_order_2020
       - name: link_device_real_user
+      - name: published_products_current
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
@@ -52,6 +53,8 @@ sources:
       - name: logistics_customer_features_daily_snapshot
       - name: b2b_core_form_with_status_daily_snapshot
       - name: b2b_core_order_products_daily_snapshot
+      - name: product_products_daily_snapshot
+      - name: abu_core_brands_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -63,9 +66,6 @@ sources:
   - name: logistics_mart
     tables:
       - name: fact_order
-  - name: support
-    tables:
-      - name: support_mart_ticket_id_ext
   - name: payments
     tables:
       - name: card_bins_snapshot
@@ -73,4 +73,8 @@ sources:
   - name: recom
     tables:
       - name: context_device_counters_v5
+  - name: product
+    tables:
+      - name: diagnoses_changes
+
 
