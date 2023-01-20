@@ -40,7 +40,7 @@ order_v2_mongo AS
         final_gross_profit,
         initial_gross_profit,
         ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) as rn
-    FROM {{ (ref'fact_order_change') }}
+    FROM {{ ref('fact_order_change') }}
     )
     WHERE rn = 1
 ),
