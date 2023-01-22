@@ -333,7 +333,7 @@ WITH installs AS (
             WHEN campaign_id <> "UNKNOWN" THEN campaign_id
             ELSE partner_id
         END AS unique_id,
-        SUM(spend)
+        SUM(spend) AS spend
     FROM ads.advertising_costs_v3
     WHERE advertising_purpose = "prospecting"
             {% if is_incremental() %}
