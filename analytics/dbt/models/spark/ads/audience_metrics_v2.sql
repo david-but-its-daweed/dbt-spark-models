@@ -368,7 +368,7 @@ WITH installs AS (
         os_type,
         country,
         CASE
-            WHEN source = "other" THEN COALESCE(installs.partner_id, 'unknown')
+            WHEN source = "other" THEN COALESCE(partner_id, 'unknown')
             ELSE source
         END AS source,
         NULL AS orders_total_segment,
