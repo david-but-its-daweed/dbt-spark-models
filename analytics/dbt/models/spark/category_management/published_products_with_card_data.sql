@@ -3,7 +3,7 @@
     materialized='table',
     meta = {
       'team': 'category_management',
-      'bigquery_load': true,
+      'bigquery_load': 'true',
     }
 ) }}
 
