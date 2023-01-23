@@ -54,7 +54,7 @@ transfer_to_queue AS (
     payload.ticketId AS ticket_id,
     'marketplace' AS business_unit,
     'transfer_to_queue' AS event,
-    MIN(event_ts_utc) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
   FROM
     {{ source('mart', 'babylone_events') }}
   WHERE
@@ -71,7 +71,7 @@ transfer_to_agent AS (
     payload.ticketId AS ticket_id,
     'marketplace' AS business_unit,
     'transfer_to_agent' AS event,
-    MIN(event_ts_utc) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
   FROM
     {{ source('mart', 'babylone_events') }}
   WHERE
@@ -86,33 +86,33 @@ transfer_to_agent AS (
 ticket_entry_add AS (
   SELECT
     partition_date,
-    event_ts_utc,
+    event_ts_msk,
     ticket_id,
     author_id,
     author_type,
     entry_id,
     entry_type,
-    MAX(event_ts_utc) OVER(
+    MAX(event_ts_msk) OVER(
       PARTITION BY author_id,
       ticket_id,
       partition_date
       ORDER BY
-        event_ts_utc ASC ROWS BETWEEN UNBOUNDED PRECEDING
+        event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING
         AND UNBOUNDED FOLLOWING
     ) AS last_ts,
-    MIN(event_ts_utc) OVER(
+    MIN(event_ts_msk) OVER(
       PARTITION BY author_id,
       ticket_id,
       partition_date
       ORDER BY
-        event_ts_utc ASC ROWS BETWEEN UNBOUNDED PRECEDING
+        event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING
         AND UNBOUNDED FOLLOWING
     ) AS first_ts
   FROM
     (
       SELECT
         t.partition_date AS partition_date,
-        t.event_ts_utc,
+        t.event_ts_msk,
         t.payload.ticketId AS ticket_id,
         t.payload.authorId AS author_id,
         t.payload.authorType AS author_type,
@@ -127,22 +127,22 @@ ticket_entry_add AS (
 ),
 first_entries AS (
   SELECT
-    event_ts_utc,
+    event_ts_msk,
     ticket_id,
     author_type,
     entry_id,
-    FIRST_VALUE(event_ts_utc) OVER(
+    FIRST_VALUE(event_ts_msk) OVER(
       PARTITION BY ticket_id,
       author_type
       ORDER BY
-        event_ts_utc ASC ROWS BETWEEN UNBOUNDED PRECEDING
+        event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING
         AND UNBOUNDED FOLLOWING
     ) AS first_entry_ts,
-    LAST_VALUE(event_ts_utc) OVER(
+    LAST_VALUE(event_ts_msk) OVER(
       PARTITION BY ticket_id,
       author_type
       ORDER BY
-        event_ts_utc ASC ROWS BETWEEN UNBOUNDED PRECEDING
+        event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING
         AND UNBOUNDED FOLLOWING
     ) AS last_entry_ts
   FROM
@@ -169,7 +169,7 @@ closing_marketplace AS (
     payload.ticketId AS ticket_id,
     'marketplace' AS business_unit,
     'closing' AS event,
-    MIN(event_ts_utc) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
     {{ source('mart', 'babylone_events') }}
   WHERE
