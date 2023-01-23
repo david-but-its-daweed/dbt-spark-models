@@ -17,7 +17,9 @@ not_jp_users AS (
 
 tags as
 (
-select distinct explode(tags) as tag, request_id from  {{ ref('fact_user_request') }}
+select distinct explode(tags) as tag, 
+    _id as request_id 
+    from  {{ source('mongo', 'b2b_core_popup_requests_daily_snapshot') }}
     ),
 
 user_interaction as 
