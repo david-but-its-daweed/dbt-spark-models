@@ -274,7 +274,7 @@ order by order_id
 where rate is not null
 ),
 
-gmv as (
+merchant_gmv as (
 select merchant_id, merchant_order_id,
 sum(
     case when complete_payment>0 then complete_payment
@@ -341,7 +341,7 @@ from {{ ref('fact_merchant_order') }}
 
 retention AS (
     SELECT
-        marchant_id,
+        merchant_id,
         COUNT(DISTINCT CASE WHEN prev_period_order = 1 THEN user_id END) AS prev_order,
         COUNT(DISTINCT CASE WHEN current_period_order = 1 THEN user_id END) AS current_order,
         COUNT(DISTINCT CASE WHEN prev_period_order = 1 AND current_period_order = 1 THEN user_id END) AS prev_current_order,
@@ -365,7 +365,7 @@ retention AS (
                 THEN gmv ELSE 0 END) AS current_final_gmv
             from orders1 AS o 
             left join merchant_orders1 i ON i.order_id = o.order_id
-         left join gmv ON i.merchant_order_id = gmv.merchant_order_id
+         left join merchant_gmv ON i.merchant_order_id = merchant_gmv.merchant_order_id
             GROUP BY
                 o.user_id,
                 i.merchant_id
@@ -411,5 +411,5 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     date('{{ var("start_date_ymd") }}') as partition_date_msk
     from rfq_metrics full join production_metrics 
     on production_metrics.merchant_id = rfq_metrics.merchant_id
-    left join (select merchant_id, sum(gmv) as gmv from gmv group by merchant_id) on rfq_metrics.merchant_id = gmv.merchant_id
+    left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv on rfq_metrics.merchant_id = gmv.merchant_id
     left join retention on rfq_metrics.merchant_id = retention.merchant_id
