@@ -6,6 +6,7 @@
      meta = {
        'team': 'analytics',
        'bigquery_load': 'true',
+       'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date'
      }
  ) }}
