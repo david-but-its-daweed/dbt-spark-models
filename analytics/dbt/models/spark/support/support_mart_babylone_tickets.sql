@@ -15,7 +15,9 @@ WITH creations_marketplace AS (
     payload.ticketId AS ticket_id,
     'marketplace' AS business_unit,
     'creation' AS event,
-    MIN(event_ts_utc) AS `timestamp` -- MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    payload.lang AS language,
+    payload.country AS country,
+    MIN(event_ts_msk) AS `timestamp` -- MIN(DATETIME_TRUNC(DATETIME(event_ts_msk), HOUR)) AS `timestamp`
   FROM
     {{ source('mart', 'babylone_events') }}
   WHERE
@@ -24,14 +26,16 @@ WITH creations_marketplace AS (
   GROUP BY
     1,
     2,
-    3
+    3,
+    4,
+    5
 ),
 transfer_to_bot AS (
   SELECT
     payload.ticketId AS ticket_id,
     'marketplace' AS business_unit,
     'transfer_to_bot' AS event,
-    MIN(event_ts_utc) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_msk), HOUR)) AS `timestamp`
   FROM
     {{ source('mart', 'babylone_events') }}
   WHERE
