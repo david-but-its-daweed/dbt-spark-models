@@ -330,13 +330,13 @@ orders1 AS (
     SELECT
         order_id, user_id,
         DATE(min_manufactured_ts_msk) AS partition_date_msk
-    FROM b2b_mart.fact_order
+    FROM {{ ref('fact_order') }}
     WHERE next_effective_ts_msk IS NULL
 ),
 
 merchant_orders1 as (
 select distinct order_id, merchant_id, merchant_order_id
-from b2b_mart.fact_merchant_order
+from {{ ref('fact_merchant_order') }}
 ),
 
 retention AS (
