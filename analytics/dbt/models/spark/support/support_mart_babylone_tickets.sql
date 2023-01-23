@@ -307,7 +307,10 @@ base AS (
     closing_marketplace
   UNION ALL
   SELECT
-    *
+    ticket_id,
+    business_unit,
+    event,
+    `timestamp`
   FROM
     creations_marketplace
   UNION ALL
@@ -349,8 +352,8 @@ final AS (
     DISTINCT t.ticket_id,
     t.business_unit,
     t.event,
-    t.country,
-    t.language,
+    i.country,
+    i.language,
     CAST(t.`timestamp` AS TIMESTAMP) AS `timestamp`,
     DATE(t.`timestamp`) AS partition_date,
     CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END AS first_queue,
@@ -373,6 +376,7 @@ final AS (
     LEFT JOIN channel AS f ON t.ticket_id = f.ticket_id
     LEFT JOIN bot_result AS g ON t.ticket_id = g.ticket_id
     LEFT JOIN scenario AS h ON t.ticket_id = h.ticket_id
+    LEFT JOIN creations_marketplace AS i ON t.ticket_id = i.ticket_id
 )
 SELECT
   *
