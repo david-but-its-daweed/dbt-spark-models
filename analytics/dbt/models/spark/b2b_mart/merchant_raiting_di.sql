@@ -363,7 +363,7 @@ retention AS (
                 THEN gmv ELSE 0 END) AS prev_final_gmv,
             SUM(CASE WHEN o.partition_date_msk > date('{{ var("start_date_ymd") }}') - interval 90 days
                 THEN gmv ELSE 0 END) AS current_final_gmv
-            orders1 AS o 
+            from orders1 AS o 
             left join merchant_orders1 i ON i.order_id = o.order_id
          left join gmv ON i.merchant_order_id = gmv.merchant_order_id
             GROUP BY
