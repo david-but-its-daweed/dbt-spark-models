@@ -84,7 +84,6 @@ where
     1=1 
     {% if is_incremental() %}
       and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 90 days
-      and DATE(rfq_sent_ts_msk) < date('{{ var("end_date_ymd") }}') - interval 90 days
     {% else %}
       and DATE(rfq_sent_ts_msk)  >= date('2023-01-18') - interval 90 days
     {% endif %}
@@ -169,7 +168,6 @@ left join psi on p.merchant_order_id = psi.merchant_order_id
 where order_id is not null and merchant_id is not null
     {% if is_incremental() %}
       and DATE(manufacturing) >= date('{{ var("start_date_ymd") }}') - interval 90 days
-      and DATE(manufacturing) < date('{{ var("end_date_ymd") }}') - interval 90 days
     {% else %}
       and DATE(manufacturing)  >= date('2023-01-18') - interval 90 days
     {% endif %}
@@ -225,7 +223,155 @@ production_metrics as (select
     psis_failed,
     average_psi_attemps
 from 
-orders_stat o left join products_stat p on o.merchant_id = p.merchant_id)
+orders_stat o left join products_stat p on o.merchant_id = p.merchant_id),
+
+currencies_list_v1 as 
+(
+select 'USD' as from, 1 as for_join
+union all
+select 'RUB' as from, 1 as for_join
+union all
+select 'EUR' as from, 1 as for_join
+union all
+select 'CNY' as from, 1 as for_join
+),
+
+currencies_list as (
+    select t1.from, t2.from as to, t1.from||'-'||t2.from as currency, 1 as for_join
+    from currencies_list_v1 as t1 left join currencies_list_v1 as t2 on t1.for_join = t2.for_join
+),
+
+
+currencies as 
+(
+select order_id, currencies.rates as rates, currencies.companyRates as company_rates, 1 as for_join
+from
+(
+select orderId as order_id, currencies, row_number() over (
+    partition by orderId order by currencies.rates is not null desc, currencies.companyRates is not null desc, updatedTime) as rn
+from
+(select payload.* from {{ source('b2b_mart', 'operational_events') }}
+where type = 'orderChangedByAdmin'
+and payload.updatedTime is not null and payload.status = 'manufacturing'
+order by updatedTime desc
+)
+)
+where rn = 1
+),
+
+order_rates as(
+select * from
+(
+select order_id, 
+case when from = to then 1 else rates[currency]['exchangeRate'] end as rate, 
+case when from = to then 0 else rates[currency]['markupRate'] end as markup_rate, 
+case when from = to then 1 else company_rates[currency]['exchangeRate'] end as company_rate,
+from, to
+from currencies t1 
+left join currencies_list t2 on t1.for_join = t2.for_join
+order by order_id
+)
+where rate is not null
+),
+
+gmv as (
+select merchant_id, merchant_order_id,
+sum(
+    case when complete_payment>0 then complete_payment
+    when remaining_payment>0 then remaining_payment + advance_payment
+    else advance_payment/advance_percent end
+) as gmv
+from
+(
+select 
+orderId as order_id, 
+_id as merchant_order_id, 
+merchantId as merchant_id,
+max(advancePercent/1000000) as advance_percent, 
+min(time) as time,
+max(case when status = 20 then coalesce(rate, 1) *amount/1000000 else 0 end) as advance_payment,
+max(case when status = 40 then coalesce(rate, 1) *amount/1000000 else 0 end) as remaining_payment,
+max(case when status = 60 then coalesce(rate, 1) *amount/1000000 else 0 end) as complete_payment
+from
+(
+select 
+orderId, _id, 
+advancePercent, 
+merchantId,
+paymentType, history.paymentStatus as status, from_unixtime(history.utms/1000) as time, 
+history.requestedPrice.amount, history.requestedPrice.ccy, 
+coalesce(order_rates.rate, 1/order_rates_1.rate) as rate
+from
+(
+select payment.advancePercent, payment.paymentType, 
+explode(payment.paymentStatusHistory) as history, orderId, _id, merchantId,
+paymentSchedule 
+from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}  
+) price
+left join order_rates on order_rates.from = price.history.requestedPrice.ccy and order_rates.to = 'USD' 
+    and order_rates.order_id = price.orderId
+left join order_rates order_rates_1 on order_rates_1.to = price.history.requestedPrice.ccy and order_rates_1.from = 'USD'
+    and order_rates_1.order_id = price.orderId
+where history.paymentStatus in (20, 40, 60)
+)
+group by orderId, _id, 
+merchantId
+)
+where 1=1
+    {% if is_incremental() %}
+      and DATE(time) >= date('{{ var("start_date_ymd") }}') - interval 90 days
+    {% else %}
+      and DATE(time)  >= date('2023-01-18') - interval 90 days
+    {% endif %}
+group by merchant_id, merchant_order_id
+ ),
+ 
+orders1 AS (
+    SELECT
+        order_id, user_id,
+        DATE(min_manufactured_ts_msk) AS partition_date_msk
+    FROM b2b_mart.fact_order
+    WHERE next_effective_ts_msk IS NULL
+),
+
+merchant_orders1 as (
+select distinct order_id, merchant_id, merchant_order_id
+from b2b_mart.fact_merchant_order
+),
+
+retention AS (
+    SELECT
+        marchant_id,
+        COUNT(DISTINCT CASE WHEN prev_period_order = 1 THEN user_id END) AS prev_order,
+        COUNT(DISTINCT CASE WHEN current_period_order = 1 THEN user_id END) AS current_order,
+        COUNT(DISTINCT CASE WHEN prev_period_order = 1 AND current_period_order = 1 THEN user_id END) AS prev_current_order,
+        SUM(CASE WHEN prev_period_order = 1 THEN prev_final_gmv ELSE 0 END) AS prev_final_gmv,
+        SUM(CASE WHEN prev_period_order = 1 AND current_period_order = 1 THEN prev_final_gmv ELSE 0 END) AS prev_current_final_gmv,
+        SUM(CASE WHEN current_period_order = 1 THEN current_final_gmv ELSE 0 END) AS current_final_gmv,
+        SUM(CASE WHEN prev_period_order = 1 AND current_period_order = 1 THEN current_final_gmv ELSE 0 END) AS current_prev_final_gmv
+    FROM
+        (SELECT
+            o.user_id,
+            i.merchant_id,
+            MAX(CASE WHEN o.partition_date_msk > date('{{ var("start_date_ymd") }}') - interval 180 days
+                AND o.partition_date_msk <= date('{{ var("start_date_ymd") }}') - interval 90 days
+                THEN 1 ELSE 0 END) AS prev_period_order,
+            MAX(CASE WHEN o.partition_date_msk > date('{{ var("start_date_ymd") }}') - interval 90 days
+                THEN 1 ELSE 0 END) AS current_period_order,
+            SUM(CASE WHEN o.partition_date_msk > date('{{ var("start_date_ymd") }}') - interval 180 days
+                AND o.partition_date_msk <= date('{{ var("start_date_ymd") }}') - interval 90 days
+                THEN gmv ELSE 0 END) AS prev_final_gmv,
+            SUM(CASE WHEN o.partition_date_msk > date('{{ var("start_date_ymd") }}') - interval 90 days
+                THEN gmv ELSE 0 END) AS current_final_gmv
+            orders1 AS o 
+            left join merchant_orders1 i ON i.order_id = o.order_id
+         left join gmv ON i.merchant_order_id = gmv.merchant_order_id
+            GROUP BY
+                o.user_id,
+                i.merchant_id
+        )
+    GROUP BY merchant_id
+)
 
 select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
@@ -254,6 +400,16 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     psis,
     psis_failed,
     average_psi_attemps,
+    gmv,
+    prev_order,
+    current_order,
+    prev_current_order,
+    prev_final_gmv,
+    prev_current_final_gmv,
+    current_final_gmv,
+    current_prev_final_gmv,
     date('{{ var("start_date_ymd") }}') as partition_date_msk
     from rfq_metrics full join production_metrics 
     on production_metrics.merchant_id = rfq_metrics.merchant_id
+    left join (select merchant_id, sum(gmv) as gmv from gmv group by merchant_id) on rfq_metrics.merchant_id = gmv.merchant_id
+    left join retention on rfq_metrics.merchant_id = retention.merchant_id
