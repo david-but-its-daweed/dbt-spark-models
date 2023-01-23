@@ -59,4 +59,4 @@ if [ "$CHANGE_PROFILES_YML" = true ]; then
     cecho "GREEN" "Successfully updated 'schema' option in ${PROFILES_YML} into '${JUNK_DATABASE}'"
 fi
 
-dbt run --profiles-dir $PROFILES_DIR --vars $DBT_VARS $@
+dbt run --vars $DBT_VARS $@
