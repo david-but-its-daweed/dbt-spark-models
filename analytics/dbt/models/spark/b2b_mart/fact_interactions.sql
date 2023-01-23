@@ -35,7 +35,8 @@ user_interaction as
     utm_medium,
     source, 
     type,
-    campaign
+    campaign,
+    repeated_order
     from (
         select 
             _id as interaction_id, 
