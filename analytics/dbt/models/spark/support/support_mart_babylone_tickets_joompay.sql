@@ -221,7 +221,7 @@ current_queue AS (
         AND UNBOUNDED FOLLOWING
     ) AS current_queue
   FROM
-    mart.onfy_babylone_events AS t
+    mart.narwhal_babylone_events AS t
     JOIN mongo.babylone_narwhal_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
   WHERE
     t.`type` = 'ticketChange'
@@ -288,7 +288,7 @@ scenario AS (
     DISTINCT payload.ticketId AS ticket_id,
     payload.reactionState AS reaction_state
   FROM
-    mart.onfy_babylone_events
+    mart.narwhal_babylone_events
   WHERE
     `type` = 'botReaction'
 ),
