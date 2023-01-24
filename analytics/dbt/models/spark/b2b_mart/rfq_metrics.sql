@@ -379,6 +379,4 @@ FROM
     documents_attached,
     merchant_id
 from orders_hist
-WHERE COALESCE(rfq_created_ts_msk, new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
-AND COALESCE(rfq_created_ts_msk, new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
 )
