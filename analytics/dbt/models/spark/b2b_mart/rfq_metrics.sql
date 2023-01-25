@@ -330,9 +330,9 @@ SELECT DISTINCT
     category_name,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
-    RANK() OVER (PARTITION BY order_id ORDER by rfq_response_ts_msk, order_rfq_response_id) as order_rn,
-    RANK() OVER (PARTITION BY order_id, rfq_request_id ORDER BY rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
-    RANK() OVER (PARTITION BY order_id, rfq_request_id, merchant_id  ORDER BY rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
+    ROW_NUMBER() OVER (PARTITION BY order_id ORDER by rfq_response_ts_msk is null or order_rfq_response_id is null, rfq_response_ts_msk, order_rfq_response_id) as order_rn,
+    ROW_NUMBER() OVER (PARTITION BY order_id, rfq_request_id ORDER BY rfq_response_ts_msk is null or order_rfq_response_id is null, rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
+    ROW_NUMBER() OVER (PARTITION BY order_id, rfq_request_id, merchant_id  ORDER BY rfq_response_ts_msk is null or order_rfq_response_id is null, rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
     CASE WHEN cancelled_ts_msk = '' THEN ''
         WHEN manufacturing_ts_msk != '' THEN 'manufacturing'
         WHEN signing_and_payment_ts_msk != '' THEN 'signing_and_payment'
