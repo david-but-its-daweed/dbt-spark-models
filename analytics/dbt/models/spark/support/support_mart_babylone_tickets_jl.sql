@@ -280,7 +280,7 @@ bot_result AS (
     ticket_id,
     CASE WHEN agentIds IS NULL THEN 'no' ELSE 'yes' END AS was_escalated
   FROM
-    support.support_mart_ticket_id_ext --?
+    support.support_mart_ticket_id_ext_jl --?
     JOIN transfer_to_bot USING (ticket_id)
 ),
 scenario AS (
