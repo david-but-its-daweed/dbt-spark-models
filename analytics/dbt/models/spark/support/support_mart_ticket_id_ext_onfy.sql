@@ -16,7 +16,7 @@ WITH users_with_first_order AS
      SELECT
          user_id,
          MIN(created_time_utc) AS first_order_created_time_msk
-     FROM mart.fact_order_2020
+     FROM {{ source('mart', 'fact_order_2020') }}
      GROUP BY 1
     ),
 ticket_create_events AS
