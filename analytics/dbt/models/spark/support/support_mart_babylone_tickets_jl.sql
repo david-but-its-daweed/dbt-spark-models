@@ -346,7 +346,6 @@ final AS (
      i.country,
      i.language,
      t.event,
-     t.`timestamp`,
      TIMESTAMP(t.`timestamp`) AS `timestamp`,
      DATE(t.`timestamp`) AS partition_date,
      CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END AS first_queue,
