@@ -95,7 +95,7 @@ ticket_entry_add AS (
         event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING
         AND UNBOUNDED FOLLOWING
     ) AS last_ts,
-    MIN(event_ts_utc) OVER(
+    MIN(event_ts_msk) OVER(
       PARTITION BY author_id,
       ticket_id,
       partition_date
