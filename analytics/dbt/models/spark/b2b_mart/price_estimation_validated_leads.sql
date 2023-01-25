@@ -58,8 +58,7 @@ orders as (
         first_value(sub_status) over (partition by user_id, interaction_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_sub_status
     from {{ ref('fact_order_change') }} o 
     left join user_order u on o.order_id = u.order_id
-    left join (select distinct order_id, interaction_id, partition_date_msk from {{ ref('fact_interactions') }} where rn = 1) i on u.user_id = i.user_id
-     and o.order_id = i.order_id
+    left join (select distinct order_id, interaction_id, partition_date_msk from {{ ref('fact_interactions') }} where rn = 1) i on o.order_id = i.order_id
     )
 )
     
@@ -75,8 +74,7 @@ current_sub_status,
 min_price_estimation_time,
 current_status_time,
 last_status,
-last_sub_status,
-row_number() over (partition by )
+last_sub_status
 from users u 
 left join orders o on u.user_id = o.user_id
 left join admin a on u.user_id = a.user_id
