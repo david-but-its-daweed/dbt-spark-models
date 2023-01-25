@@ -49,7 +49,7 @@ admin AS (
 orders as (
     select distinct * from
     (select user_id, o.order_id,
-        partition_date_msk,
+        i.partition_date_msk,
         first_value(status) over (partition by user_id, interaction_id order by event_ts_msk desc) as current_status,
         first_value(sub_status) over (partition by user_id, interaction_id order by event_ts_msk desc) as current_sub_status,
         date(min(case when sub_status = "priceEstimation" or (status = 'selling' and sub_status != 'new') then event_ts_msk end) over (partition by user_id, interaction_id)) as min_price_estimation_time,
