@@ -11,8 +11,6 @@
      }
  ) }}
 
-%sql
-
 WITH creations_onfy AS (
   SELECT
     payload.ticketId AS ticket_id,
