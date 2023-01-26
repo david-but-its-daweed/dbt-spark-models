@@ -353,7 +353,7 @@ SELECT
     COALESCE(k.responses_to_support, 0) AS responses_to_support,
     COALESCE(k.responses_to_customer, 0) AS responses_to_customer,
     CASE WHEN o.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
-    l.csat AS csat,
+    l.csat AS csat
 FROM ticket_create_events AS t
 LEFT JOIN users_with_first_order AS a ON a.user_id = t.user_id
     AND t.ts_created >= a.first_order_created_time_msk

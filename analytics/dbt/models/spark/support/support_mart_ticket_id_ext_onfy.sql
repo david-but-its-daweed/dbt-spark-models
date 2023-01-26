@@ -134,7 +134,6 @@ first_entries AS
     last_agent AS
       (
        SELECT DISTINCT
-           t.payload.stateAgentId AS ticket_id,
            t.payload.ticketId AS ticket_id,
            LAST_VALUE(t.payload.stateAgentId) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS last_agent
        FROM mart.onfy_babylone_events AS t
