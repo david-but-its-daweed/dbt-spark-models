@@ -246,6 +246,7 @@ p.rfq_converted_products,
 p.rfq_products
 from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
-left join rfq on oh.order_id = rfq.order_id and op.product_id = rfq.product_id
+left join rfq on oh.order_id = rfq.order_id
 left join products p on oh.order_id = p.order_id
+where (op.product_id = rfq.product_id or op.product_id is null and rfq.product_id is null)
 )
