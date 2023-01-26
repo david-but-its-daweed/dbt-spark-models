@@ -269,7 +269,7 @@ WITH installs AS (
         SUM(is_pmt_start) AS pmt_start_users,
         SUM(is_pmt_success) AS pmt_success_users,
         SUM(is_product_purchase) AS purchase_users,  
-        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 1 DAY), 0, SUM(is_returned_1d)) AS retention_1d_users,
+--        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 1 DAY), 0, SUM(is_returned_1d)) AS retention_1d_users,
 --        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 13 DAY), 0, SUM(is_returned_1w)) AS retention_1w_users,
 --        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 59 DAY), 0, SUM(is_returned_1m)) AS retention_1m_users,
 --        IF(DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY) <= DATE_ADD(partition_date, INTERVAL 119 DAY), 0, SUM(is_returned_3m)) AS retention_3m_users,
@@ -309,10 +309,10 @@ WITH installs AS (
     FROM ads.device_advertising_costs
     WHERE
             {% if is_incremental() %}
-        date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-        AND date < DATE('{{ var("end_date_ymd") }}')
+        join_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+        AND join_date < DATE('{{ var("end_date_ymd") }}')
             {% else %}
-        date >= DATE('2019-12-25')
+        join_date >= DATE('2019-12-25')
             {% endif %}
     GROUP BY 1, 2, 3, 4, 5
     
@@ -333,15 +333,16 @@ WITH installs AS (
             WHEN campaign_id <> "UNKNOWN" THEN campaign_id
             ELSE partner_id
         END AS unique_id,
-        spend
+        SUM(spend) AS spend
     FROM ads.advertising_costs_v3
     WHERE advertising_purpose = "prospecting"
             {% if is_incremental() %}
-        AND date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
-        AND date < DATE('{{ var("end_date_ymd") }}')
+        AND effective_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 120 DAY
+        AND effective_date < DATE('{{ var("end_date_ymd") }}')
             {% else %}
-        AND date >= DATE('2019-12-25')
+        AND effective_date >= DATE('2019-12-25')
             {% endif %}
+    GROUP BY 1, 2, 3, 4, 5, 6
 
 ), spend AS (
 
@@ -367,7 +368,7 @@ WITH installs AS (
         os_type,
         country,
         CASE
-            WHEN source = "other" THEN COALESCE(installs.partner_id, 'unknown')
+            WHEN source = "other" THEN COALESCE(partner_id, 'unknown')
             ELSE source
         END AS source,
         NULL AS orders_total_segment,

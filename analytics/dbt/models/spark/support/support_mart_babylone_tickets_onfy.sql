@@ -11,19 +11,18 @@
      }
  ) }}
 
-WITH creations_marketplace AS (
+WITH creations_onfy AS (
   SELECT
     payload.ticketId AS ticket_id,
-    'marketplace' AS business_unit,
-    'creation' AS event,
-    payload.lang AS language,
     payload.country AS country,
-    MIN(event_ts_msk) AS `timestamp` -- MIN(DATETIME_TRUNC(DATETIME(event_ts_msk), HOUR)) AS `timestamp`
+    payload.lang AS language,
+    'onfy' AS business_unit,
+    'creation' AS event,
+    MIN(event_ts_msk) AS `timestamp` -- MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
   FROM
-    {{ source('mart', 'babylone_events') }}
+      mart.onfy_babylone_events
   WHERE
-    --partition_date = '2022-12-07' AND
-    `type` = 'ticketCreateJoom'
+    `type` = 'ticketCreate'
   GROUP BY
     1,
     2,
@@ -34,15 +33,13 @@ WITH creations_marketplace AS (
 transfer_to_bot AS (
   SELECT
     payload.ticketId AS ticket_id,
-    'marketplace' AS business_unit,
+    'onfy' AS business_unit,
     'transfer_to_bot' AS event,
-    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_msk), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
   FROM
-    {{ source('mart', 'babylone_events') }}
+    mart.onfy_babylone_events
   WHERE
-    --partition_date = '2022-12-07' AND
-    --AND
-    `type` = 'ticketChangeJoom'
+    `type` = 'ticketChange'
     AND payload.stateOwner = 'Automation'
   GROUP BY
     1,
@@ -52,14 +49,13 @@ transfer_to_bot AS (
 transfer_to_queue AS (
   SELECT
     payload.ticketId AS ticket_id,
-    'marketplace' AS business_unit,
+    'onfy' AS business_unit,
     'transfer_to_queue' AS event,
     MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
   FROM
-    {{ source('mart', 'babylone_events') }}
+    mart.onfy_babylone_events
   WHERE
-    --partition_date = '2022-12-07' AND
-    `type` = 'ticketChangeJoom'
+    `type` = 'ticketChange'
     AND payload.stateOwner = 'Queue'
   GROUP BY
     1,
@@ -69,14 +65,13 @@ transfer_to_queue AS (
 transfer_to_agent AS (
   SELECT
     payload.ticketId AS ticket_id,
-    'marketplace' AS business_unit,
+    'onfy' AS business_unit,
     'transfer_to_agent' AS event,
     MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
   FROM
-    {{ source('mart', 'babylone_events') }}
+    mart.onfy_babylone_events
   WHERE
-    --partition_date = '2022-12-07' AND
-    `type` = 'ticketChangeJoom'
+    `type` = 'ticketChange'
     AND payload.stateOwner = 'Agent'
   GROUP BY
     1,
@@ -119,10 +114,10 @@ ticket_entry_add AS (
         t.payload.entryId AS entry_id,
         t.payload.entryType AS entry_type
       FROM
-        {{ source('mart', 'babylone_events') }} AS t
+        mart.onfy_babylone_events AS t
       WHERE
         NOT t.payload.isAnnouncement
-        AND t.`type` = 'ticketEntryAddJoom' --AND t.partition_date = '2022-12-07'
+        AND t.`type` = 'ticketEntryAdd' --AND t.partition_date = '2022-12-07'
     )
 ),
 first_entries AS (
@@ -154,7 +149,7 @@ first_entries AS (
 messages_first_replies AS (
   SELECT
     ticket_id,
-    'marketplace' AS business_unit,
+    'onfy' AS business_unit,
     'agent_first_reply' AS event,
     MIN(IF(author_type = 'agent', first_entry_ts, NULL)) AS `timestamp`
   FROM
@@ -164,17 +159,16 @@ messages_first_replies AS (
     2,
     3
 ),
-closing_marketplace AS (
+closing_onfy AS (
   SELECT
     payload.ticketId AS ticket_id,
-    'marketplace' AS business_unit,
+    'onfy' AS business_unit,
     'closing' AS event,
     MIN(event_ts_msk) AS `timestamp`
   FROM
-    {{ source('mart', 'babylone_events') }}
+    mart.onfy_babylone_events
   WHERE
-    --partition_date = '2022-12-07' AND
-    `type` = 'ticketChangeJoom'
+    `type` = 'ticketChange'
     AND payload.stateOwner IN ('Rejected', 'Resolved')
   GROUP BY
     1,
@@ -184,14 +178,14 @@ closing_marketplace AS (
 messages_last_replies AS (
   SELECT
     t.ticket_id,
-    'marketplace' AS business_unit,
+    'onfy' AS business_unit,
     'agent_last_reply' AS event,
     MIN(
       IF(t.author_type = 'agent', t.last_entry_ts, NULL)
     ) AS `timestamp`
   FROM
     first_entries AS t
-    JOIN closing_marketplace AS a ON t.ticket_id = a.ticket_id
+    JOIN closing_onfy AS a ON t.ticket_id = a.ticket_id
   GROUP BY
     1,
     2,
@@ -203,10 +197,10 @@ all_queues AS (
       DISTINCT t.payload.ticketId AS ticket_id,
       a.name AS queue
     FROM
-      mart.babylone_events AS t
-      JOIN mongo.babylone_joom_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
+     mart.onfy_babylone_events AS t
+      JOIN mongo.babylone_onfy_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
     WHERE
-      t.`type` = 'ticketChangeJoom'
+      t.`type` = 'ticketChange'
       AND t.payload.stateQueueId IS NOT NULL --AND t.partition_date = '2022-12-07'
   )
   SELECT
@@ -227,19 +221,19 @@ current_queue AS (
         AND UNBOUNDED FOLLOWING
     ) AS current_queue
   FROM
-    mart.babylone_events AS t
-    JOIN mongo.babylone_joom_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
+    mart.onfy_babylone_events AS t
+    JOIN mongo.babylone_onfy_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
   WHERE
-    t.`type` = 'ticketChangeJoom'
+    t.`type` = 'ticketChange'
     AND t.payload.stateQueueId IS NOT NULL --AND t.partition_date = '2022-12-07'
 ),
 hidden_tickets AS (
   SELECT
     DISTINCT t.payload.ticketId AS ticket_id
   FROM
-    mart.babylone_events AS t
+    mart.onfy_babylone_events AS t
   WHERE
-    t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
+    t.`type` IN ('ticketCreate', 'ticketChange')
     AND t.payload.isHidden = TRUE --AND t.partition_date = '2022-12-07'
 ),
 all_tags AS (
@@ -248,36 +242,36 @@ all_tags AS (
       t.payload.ticketId AS ticket_id,
       EXPLODE(t.payload.tagIds) AS tag
     FROM
-      {{ source('mart', 'babylone_events') }} AS t
+      mart.onfy_babylone_events AS t
     WHERE
       t.payload.tagIds IS NOT NULL
-      AND t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom') --AND t.partition_date = '2022-12-07'
+      AND t.`type` IN ('ticketCreate', 'ticketChange') --AND t.partition_date = '2022-12-07'
   )
   SELECT
     t.ticket_id AS ticket_id,
     a.name AS tag
   FROM
     t
-    JOIN mongo.babylone_joom_tags_daily_snapshot AS a ON t.tag = a._id
+    JOIN mongo.babylone_onfy_tags_daily_snapshot AS a ON t.tag = a._id
 ),
 all_markers AS (
   SELECT
     t.payload.ticketId AS ticket_id,
     EXPLODE(t.payload.quickReplyMarkers) AS marker
   FROM
-    {{ source('mart', 'babylone_events') }} AS t
+    mart.onfy_babylone_events AS t
   WHERE
     t.payload.quickReplyMarkers IS NOT NULL
-    AND t.`type` = 'ticketEntryAddJoom' --AND t.partition_date = '2022-12-07'
+    AND t.`type` = 'ticketEntryAdd' --AND t.partition_date = '2022-12-07'
 ),
 channel AS (
   SELECT
     t.payload.ticketId AS ticket_id,
     MIN(t.payload.channel) AS channel
   FROM
-    {{ source('mart', 'babylone_events') }} AS t
+    mart.onfy_babylone_events AS t
   WHERE
-    t.`type` = 'ticketCreateJoom' --AND t.partition_date = '2022-12-07'
+    t.`type` = 'ticketCreate' --AND t.partition_date = '2022-12-07'
   GROUP BY
     1
 ),
@@ -286,7 +280,7 @@ bot_result AS (
     ticket_id,
     CASE WHEN agentIds IS NULL THEN 'no' ELSE 'yes' END AS was_escalated
   FROM
-    {{ ref('support_mart_ticket_id_ext') }}
+    support.support_mart_ticket_id_ext_onfy
     JOIN transfer_to_bot USING (ticket_id)
 ),
 scenario AS (
@@ -294,17 +288,15 @@ scenario AS (
     DISTINCT payload.ticketId AS ticket_id,
     payload.reactionState AS reaction_state
   FROM
-    {{ source('mart', 'babylone_events') }}
+    mart.onfy_babylone_events
   WHERE
-    --partition_date = '2022-12-07'
-    --AND
     `type` = 'botReaction'
 ),
 base AS (
   SELECT
     *
   FROM
-    closing_marketplace
+    closing_onfy
   UNION ALL
   SELECT
     ticket_id,
@@ -312,7 +304,7 @@ base AS (
     event,
     `timestamp`
   FROM
-    creations_marketplace
+    creations_onfy
   UNION ALL
   SELECT
     *
@@ -349,15 +341,15 @@ base AS (
 -- ORDER BY 2, 1
 final AS (
   SELECT
-    DISTINCT t.ticket_id,
-    t.business_unit,
-    t.event,
-    i.country,
-    i.language,
-    CAST(t.`timestamp` AS TIMESTAMP) AS `timestamp`,
-    DATE(t.`timestamp`) AS partition_date,
-    CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END AS first_queue,
-    CASE WHEN b.current_queue == 'Limbo' THEN (
+     DISTINCT t.ticket_id,
+     t.business_unit,
+     i.country,
+     i.language,
+     t.event,
+     TIMESTAMP(t.`timestamp`) AS `timestamp`,
+     DATE(t.`timestamp`) AS partition_date,
+     CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END AS first_queue,
+     CASE WHEN b.current_queue == 'Limbo' THEN (
       CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END
     ) ELSE b.current_queue END AS current_queue,
     CASE WHEN c.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS is_hidden,
@@ -376,9 +368,10 @@ final AS (
     LEFT JOIN channel AS f ON t.ticket_id = f.ticket_id
     LEFT JOIN bot_result AS g ON t.ticket_id = g.ticket_id
     LEFT JOIN scenario AS h ON t.ticket_id = h.ticket_id
-    LEFT JOIN creations_marketplace AS i ON t.ticket_id = i.ticket_id
+    LEFT JOIN creations_onfy AS i ON t.ticket_id = i.ticket_id
 )
+
 SELECT
-  *
+    *
 FROM
   final
