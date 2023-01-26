@@ -369,6 +369,7 @@ final AS (
     LEFT JOIN bot_result AS g ON t.ticket_id = g.ticket_id
     LEFT JOIN scenario AS h ON t.ticket_id = h.ticket_id
     LEFT JOIN creations_onfy AS i ON t.ticket_id = i.ticket_id
+  WHERE t.`timestamp` IS NOT NULL
 )
 
 SELECT
