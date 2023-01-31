@@ -28,7 +28,7 @@ WITH activity AS (
         FROM
             {{ source('mart', 'star_active_device') }}
         WHERE
-            date_msk >= '2021-01-01'
+            date_msk >= '2018-01-01'
             AND os_type IN ('android', 'ios', 'trampolineweb', 'fullweb')
             AND NOT ephemeral
     ) AS t1
@@ -46,8 +46,8 @@ activity2 AS (
         week_join_msk,
         user_id,
         num_evs,
-        round(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
-        round(datediff(week_msk, week_join_msk) / 7) AS cohort_week
+        floor(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
+        floor(datediff(week_msk, week_join_msk) / 7) AS cohort_week
     FROM
         activity
 ),
@@ -56,7 +56,7 @@ purchases AS (
     SELECT
         real_user_id,
         os_type,
-        round(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
+        floor(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
         sum(num_orders) AS num_orders
     FROM (
         SELECT
@@ -68,7 +68,7 @@ purchases AS (
         FROM
             {{ source('mart', 'star_order_2020') }}
         WHERE
-            date(created_time_utc + INTERVAL 3 HOUR) >= '2021-01-01'
+            date(created_time_utc + INTERVAL 3 HOUR) >= '2018-01-01'
         GROUP BY 1, 2, 3, 4
     )
     GROUP BY 1, 2, 3

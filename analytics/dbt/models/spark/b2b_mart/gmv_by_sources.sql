@@ -30,12 +30,19 @@ order_v2_mongo AS
 
  order_v2 AS
 (
-    SELECT DISTINCT 
-        order_id,
-        FIRST(client_converted_gmv) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS total_confirmed_price,
-        FIRST(final_gross_profit) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS final_gross_profit,
-        FIRST(initial_gross_profit) OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS initial_gross_profit
+    SELECT order_id,
+        total_confirmed_price,
+        final_gross_profit,
+        initial_gross_profit
+        from
+    (SELECT order_id,
+        total_confirmed_price,
+        final_gross_profit,
+        initial_gross_profit,
+        ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) as rn
     FROM {{ ref('fact_order_change') }}
+    )
+    WHERE rn = 1
 ),
 
 sources AS (
