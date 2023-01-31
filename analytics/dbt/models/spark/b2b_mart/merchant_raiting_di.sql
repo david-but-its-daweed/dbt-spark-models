@@ -428,13 +428,13 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     prev_current_final_gmv,
     current_final_gmv,
     current_prev_final_gmv,
-    date('{{ var("start_date_ymd") }}') as partition_date_msk,
     is_current, 
     is_deleted,
     name, 
     companyName as company_name, 
     enabled,
-    created_at
+    created_at,
+    date('{{ var("start_date_ymd") }}') as partition_date_msk
     from rfq_metrics full join production_metrics 
     on production_metrics.merchant_id = rfq_metrics.merchant_id
     left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv on rfq_metrics.merchant_id = gmv.merchant_id
