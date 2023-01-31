@@ -48,7 +48,7 @@ dim as (
     name, companyName, enabled,
     DATE(millis_to_ts_msk(createdTimeMs)) as created_at
     from {{ source('b2b_mart', 'dim_merchant') }}
-    where date(next_effective_ts) >= date(3030, 1, 1)
+    where date(next_effective_ts) >= date('3030-01-01')
 ),
     
 rfq_stat as
