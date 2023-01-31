@@ -391,7 +391,7 @@ retention AS (
     GROUP BY merchant_id
 )
 
-select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merchant_id,
+select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
     rfq_answers,
     rfqs,
@@ -435,8 +435,9 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     enabled,
     created_at,
     date('{{ var("start_date_ymd") }}') as partition_date_msk
-    from rfq_metrics full join production_metrics 
-    on production_metrics.merchant_id = rfq_metrics.merchant_id
-    left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv on rfq_metrics.merchant_id = gmv.merchant_id
-    left join retention on rfq_metrics.merchant_id = retention.merchant_id
-    left join dim on rfq_metrics.merchant_id = dim.merchant_id
+    from rfq_metrics 
+    full join production_metrics on production_metrics.merchant_id = rfq_metrics.merchant_id
+    full join dim on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) = dim.merchant_id
+    left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv 
+        on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) = gmv.merchant_id
+    left join retention on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) = retention.merchant_id
