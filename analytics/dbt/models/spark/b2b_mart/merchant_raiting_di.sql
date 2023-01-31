@@ -40,6 +40,16 @@ expensive as (
     )
     )
 ),
+
+dim as (
+    select distinct _id as merchant_id, 
+    __is_current as is_current, 
+    __is_deleted as is_deleted,
+    name, companyName, enabled,
+    DATE(millis_to_ts_msk(createdTimeMs)) as created_at
+    from {{ source('b2b_mart', 'dim_merchant') }}
+    where date(next_effective_ts) >= date(3030, 1, 1)
+),
     
 rfq_stat as
 (    
@@ -418,8 +428,15 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     prev_current_final_gmv,
     current_final_gmv,
     current_prev_final_gmv,
-    date('{{ var("start_date_ymd") }}') as partition_date_msk
+    date('{{ var("start_date_ymd") }}') as partition_date_msk,
+    is_current, 
+    is_deleted,
+    name, 
+    companyName as company_name, 
+    enabled,
+    created_at
     from rfq_metrics full join production_metrics 
     on production_metrics.merchant_id = rfq_metrics.merchant_id
     left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv on rfq_metrics.merchant_id = gmv.merchant_id
     left join retention on rfq_metrics.merchant_id = retention.merchant_id
+    left join dim on rfq_metrics.merchant_id = dim.merchant_id
