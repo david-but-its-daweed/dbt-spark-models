@@ -431,7 +431,7 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     is_current, 
     is_deleted,
     name, 
-    companyName as company_name, 
+    companyName as company_name,
     enabled,
     created_at,
     date('{{ var("start_date_ymd") }}') as partition_date_msk
