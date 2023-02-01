@@ -8,7 +8,8 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date',
-       'alerts_channel': "#olc_dbt_alerts"
+       'alerts_channel': "#olc_dbt_alerts",
+       'bigquery_fail_on_missing_partitions': 'false'
      }
  ) }}
 
@@ -25,6 +26,7 @@ WITH creations_marketplace AS (
   WHERE
     --partition_date = '2022-12-07' AND
     `type` = 'ticketCreateJoom'
+    AND event_ts_msk IS NOT NULL
   GROUP BY
     1,
     2,
@@ -384,3 +386,4 @@ SELECT
   *
 FROM
   final
+WHERE partition_date IS NOT NULL
