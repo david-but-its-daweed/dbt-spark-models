@@ -14,7 +14,7 @@
      }
  ) }}
  
- WITH prebase_marketplace AS (
+WITH prebase_marketplace AS (
 SELECT
     payload.ticketId AS ticket_id,
     payload.changedByType AS state_owner,
@@ -32,13 +32,13 @@ t_marketplace AS (
         t.ticket_id,
         a.name AS tag,
         a.type AS tag_type,
+        b.name AS subject_category,
         t.state_owner AS state_owner,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?):'))) AS subject_category_1,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?)\\.'))) AS subject_category_2,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_marketplace AS t
     LEFT JOIN mongo.babylone_joom_tags_daily_snapshot AS a ON t.tag = a._id
-    GROUP BY 1, 2, 3, 4, 5, 6
+    LEFT JOIN mongo.babylone_joom_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    GROUP BY 1, 2, 3, 4, 5
     ORDER BY 1
  )
 ,
@@ -48,10 +48,9 @@ tt_marketplace AS (
         t.ticket_id,
         t.tag,
         t.tag_type,
-        t.subject_category_1,
-        t.subject_category_2,
+        t.subject_category,
         t.event_ts_msk,
-        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category_1, t.subject_category_2 ORDER BY t.event_ts_msk) AS state_owner
+        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category ORDER BY t.event_ts_msk) AS state_owner
     FROM t_marketplace AS t
     ORDER BY 1
 ),
@@ -61,7 +60,7 @@ SELECT
     t.ticket_id,
     t.tag,
     t.tag_type,
-    CASE WHEN t.subject_category_1 = '' THEN t.subject_category_2 ELSE t.subject_category_1 END AS subject_category,
+    t.subject_category,
     t.state_owner,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_marketplace AS t
@@ -104,13 +103,13 @@ t_jl AS (
         t.ticket_id,
         a.name AS tag,
         a.type AS tag_type,
+        b.name AS subject_category,
         t.state_owner AS state_owner,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?):'))) AS subject_category_1,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?)\\.'))) AS subject_category_2,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_jl AS t
     LEFT JOIN mongo.babylone_logistics_tags_daily_snapshot AS a ON t.tag = a._id
-    GROUP BY 1, 2, 3, 4, 5, 6
+    LEFT JOIN mongo.babylone_logistics_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    GROUP BY 1, 2, 3, 4, 5
     ORDER BY 1
  )
 ,
@@ -120,10 +119,9 @@ tt_jl AS (
         t.ticket_id,
         t.tag,
         t.tag_type,
-        t.subject_category_1,
-        t.subject_category_2,
+        t.subject_category,
         t.event_ts_msk,
-        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category_1, t.subject_category_2 ORDER BY t.event_ts_msk) AS state_owner
+        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category ORDER BY t.event_ts_msk) AS state_owner
     FROM t_jl AS t
     ORDER BY 1
 ),
@@ -133,7 +131,7 @@ SELECT
     t.ticket_id,
     t.tag,
     t.tag_type,
-    CASE WHEN t.subject_category_1 = '' THEN t.subject_category_2 ELSE t.subject_category_1 END AS subject_category,
+    t.subject_category,
     t.state_owner,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_jl AS t
@@ -176,13 +174,13 @@ t_joompay AS (
         t.ticket_id,
         a.name AS tag,
         a.type AS tag_type,
+        b.name AS subject_category,
         t.state_owner AS state_owner,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?):'))) AS subject_category_1,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?)\\.'))) AS subject_category_2,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_joompay AS t
     LEFT JOIN mongo.babylone_narwhal_tags_daily_snapshot AS a ON t.tag = a._id
-    GROUP BY 1, 2, 3, 4, 5, 6
+    LEFT JOIN mongo.babylone_narwhal_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    GROUP BY 1, 2, 3, 4, 5
     ORDER BY 1
  )
 ,
@@ -192,10 +190,9 @@ tt_joompay AS (
         t.ticket_id,
         t.tag,
         t.tag_type,
-        t.subject_category_1,
-        t.subject_category_2,
+        t.subject_category,
         t.event_ts_msk,
-        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category_1, t.subject_category_2 ORDER BY t.event_ts_msk) AS state_owner
+        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category ORDER BY t.event_ts_msk) AS state_owner
     FROM t_joompay AS t
     ORDER BY 1
 ),
@@ -205,7 +202,7 @@ SELECT
     t.ticket_id,
     t.tag,
     t.tag_type,
-    CASE WHEN t.subject_category_1 = '' THEN t.subject_category_2 ELSE t.subject_category_1 END AS subject_category,
+    t.subject_category,
     t.state_owner,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_joompay AS t
@@ -248,13 +245,13 @@ t_onfy AS (
         t.ticket_id,
         a.name AS tag,
         a.type AS tag_type,
+        b.name AS subject_category,
         t.state_owner AS state_owner,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?):'))) AS subject_category_1,
-        LOWER((REGEXP_EXTRACT(a.name, '^(.+?)\\.'))) AS subject_category_2,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_jl AS t
     LEFT JOIN mongo.babylone_onfy_tags_daily_snapshot AS a ON t.tag = a._id
-    GROUP BY 1, 2, 3, 4, 5, 6
+    LEFT JOIN mongo.babylone_onfy_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    GROUP BY 1, 2, 3, 4, 5
     ORDER BY 1
  )
 ,
@@ -264,10 +261,9 @@ tt_onfy AS (
         t.ticket_id,
         t.tag,
         t.tag_type,
-        t.subject_category_1,
-        t.subject_category_2,
+        t.subject_category,
         t.event_ts_msk,
-        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category_1, t.subject_category_2 ORDER BY t.event_ts_msk) AS state_owner
+        FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category ORDER BY t.event_ts_msk) AS state_owner
     FROM t_onfy AS t
     ORDER BY 1
 ),
@@ -277,7 +273,7 @@ SELECT
     t.ticket_id,
     t.tag,
     t.tag_type,
-    CASE WHEN t.subject_category_1 = '' THEN t.subject_category_2 ELSE t.subject_category_1 END AS subject_category,
+    t.subject_category,
     t.state_owner,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_onfy AS t
@@ -301,6 +297,7 @@ SELECT
 FROM base_onfy AS t
 LEFT JOIN support.support_mart_ticket_id_ext_onfy AS a ON t.ticket_id = a.ticket_id
 )
+
 
 SELECT
     *
