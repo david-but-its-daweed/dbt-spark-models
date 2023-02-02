@@ -6,7 +6,8 @@
     meta = {
       'team': 'general_analytics',
       'bigquery_load': 'true',
-      'bigquery_partitioning_date_column': 'partition_date_msk'
+      'bigquery_partitioning_date_column': 'partition_date_msk',
+      'bigquery_known_gaps': ['2023-01-27']
     }
 ) }}
 
@@ -38,6 +39,16 @@ expensive as (
     left join price p on r.product_id = p.product_id
     )
     )
+),
+
+dim as (
+    select distinct _id as merchant_id, 
+    __is_current as is_current, 
+    __is_deleted as is_deleted,
+    name, companyName, enabled,
+    DATE(millis_to_ts_msk(createdTimeMs)) as created_at
+    from {{ source('b2b_mart', 'dim_merchant') }}
+    where date(next_effective_ts) >= date('3030-01-01')
 ),
     
 rfq_stat as
@@ -380,7 +391,7 @@ retention AS (
     GROUP BY merchant_id
 )
 
-select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merchant_id,
+select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
     rfq_answers,
     rfqs,
@@ -417,8 +428,16 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     prev_current_final_gmv,
     current_final_gmv,
     current_prev_final_gmv,
+    is_current, 
+    is_deleted,
+    name, 
+    companyName as company_name,
+    enabled,
+    created_at,
     date('{{ var("start_date_ymd") }}') as partition_date_msk
-    from rfq_metrics full join production_metrics 
-    on production_metrics.merchant_id = rfq_metrics.merchant_id
-    left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv on rfq_metrics.merchant_id = gmv.merchant_id
-    left join retention on rfq_metrics.merchant_id = retention.merchant_id
+    from rfq_metrics 
+    full join production_metrics on production_metrics.merchant_id = rfq_metrics.merchant_id
+    full join dim on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) = dim.merchant_id
+    left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv 
+        on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) = gmv.merchant_id
+    left join retention on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) = retention.merchant_id

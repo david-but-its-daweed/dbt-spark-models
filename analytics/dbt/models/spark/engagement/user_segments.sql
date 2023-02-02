@@ -9,6 +9,7 @@
 ) }}
 
 
+
 WITH activity AS (
     SELECT
         t2.real_user_id,
@@ -52,16 +53,27 @@ activity2 AS (
         activity
 ),
 
+users_first_identification AS (
+    SELECT
+        real_user_id,        
+        os_type,
+        week_join_msk,
+        user_id,
+        country
+    FROM 
+        activity2
+    WHERE
+        cohort_week = 0
+),
+
 purchases AS (
     SELECT
         real_user_id,
-        os_type,
-        floor(datediff(week_msk, week_join_msk) / 28) AS cohort_month,
+        floor(datediff(week_msk, week_join_msk) / 7) AS cohort_week,
         sum(num_orders) AS num_orders
     FROM (
         SELECT
             real_user_id,
-            os_type,
             date(date_trunc('WEEK', real_user_join_ts_msk)) AS week_join_msk,
             date(date_trunc('WEEK', created_time_utc + INTERVAL 3 HOUR)) AS week_msk,
             count(*) AS num_orders
@@ -69,13 +81,16 @@ purchases AS (
             {{ source('mart', 'star_order_2020') }}
         WHERE
             date(created_time_utc + INTERVAL 3 HOUR) >= '2018-01-01'
-        GROUP BY 1, 2, 3, 4
+        GROUP BY 1, 2, 3
     )
-    GROUP BY 1, 2, 3
+    GROUP BY 1, 2
 ),
 
 activity_purch AS (
     SELECT
+        t0.os_type as os_type__first,
+        t0.user_id as user_id__first,
+        t0.country as country__first,
         t1.real_user_id,
         t1.week_msk,
         t1.os_type,
@@ -89,11 +104,13 @@ activity_purch AS (
         if(datediff(t1.week_msk, t1.week_join_msk) > 364,
             true, false) AS user1yearold_flg
     FROM
-        activity2 AS t1
+        users_first_identification AS t0 
+    JOIN activity2 AS t1 ON
+        t0.real_user_id = t1.real_user_id
+        AND t0.week_join_msk = t1.week_join_msk
     LEFT JOIN purchases AS t2 ON
         t1.real_user_id = t2.real_user_id
-        AND t1.cohort_month = t2.cohort_month
-        AND t1.os_type = t2.os_type
+        AND t1.cohort_week = t2.cohort_week
 ),
 
 util1 AS (
@@ -119,10 +136,8 @@ utility_table AS (
 activity_extended AS (
     SELECT
         a.real_user_id,
-        a.os_type,
         a.week_join_msk,
         a.num_orders,
-        a.user1yearold_flg,
         u.time_unit,
         a.cohort_month AS active_dt,
         a.cohort_month + u.add_dt AS active_window_dt,
@@ -130,57 +145,49 @@ activity_extended AS (
     FROM (
         SELECT
             real_user_id,
-            os_type,
             week_join_msk,
             cohort_month,
-            user1yearold_flg,
             if(sum(num_orders) >= 1, 1, 0) AS num_orders
         FROM
             activity_purch
-        GROUP BY 1, 2, 3, 4, 5
+        GROUP BY 1, 2, 3
     ) AS a
     CROSS JOIN
         utility_table AS u
 ),
 
+activity_extended_grouped AS (
+    SELECT
+        real_user_id,
+        week_join_msk,
+        time_unit,
+        active_window_dt,
+        sum(delta_action_cnt) AS delta_action_cnt
+    FROM
+        activity_extended
+    GROUP BY 1, 2, 3, 4
+),
+
 count_deltas AS (
     SELECT
         real_user_id,
-        os_type,
-        time_unit,
         week_join_msk,
+        time_unit,
         active_window_dt,
-        user1yearold_flg,
-        min(action_cnt) AS action_cnt
-    FROM (
-        SELECT
-            real_user_id,
-            os_type,
-            week_join_msk,
-            num_orders,
-            user1yearold_flg,
-            time_unit,
-            active_dt,
-            active_window_dt,
-            delta_action_cnt,
-            sum(delta_action_cnt) OVER (
-                PARTITION BY real_user_id, os_type, time_unit
-                ORDER BY active_window_dt
-            ) AS action_cnt
-        FROM
-            activity_extended
-    )
-    GROUP BY 1, 2, 3, 4, 5, 6
+        sum(delta_action_cnt) OVER (
+            PARTITION BY real_user_id, time_unit
+            ORDER BY active_window_dt
+        ) AS action_cnt
+    FROM
+        activity_extended_grouped
 ),
 
 count_deltas_quarter AS (
     SELECT
         real_user_id,
-        os_type,
         week_join_msk,
         active_window_dt,
-        action_cnt,
-        user1yearold_flg
+        action_cnt
     FROM
         count_deltas
     WHERE
@@ -190,25 +197,21 @@ count_deltas_quarter AS (
 count_deltas_half_year AS (
     SELECT
         real_user_id,
-        os_type,
         week_join_msk,
         active_window_dt,
-        action_cnt,
-        user1yearold_flg
+        action_cnt
     FROM
         count_deltas
     WHERE
-        time_unit = 'half_year'
+        time_unit = 'half-year'
 ),
 
 count_deltas_year AS (
     SELECT
         real_user_id,
-        os_type,
         week_join_msk,
         active_window_dt,
-        action_cnt,
-        user1yearold_flg
+        action_cnt
     FROM
         count_deltas
     WHERE
@@ -218,23 +221,19 @@ count_deltas_year AS (
 segs_util AS (
     SELECT
         t1.real_user_id,
-        t1.os_type,
         t1.week_join_msk,
         t1.active_window_dt,
         t1.action_cnt AS stat_3m,
-        t1.user1yearold_flg,
         coalesce(t2.action_cnt, 0) AS stat_6m,
         coalesce(t3.action_cnt, 0) AS stat_12m
     FROM
         count_deltas_quarter AS t1
     LEFT JOIN count_deltas_half_year AS t2 ON
         t1.real_user_id = t2.real_user_id
-        AND t1.os_type = t2.os_type
         AND t1.week_join_msk = t2.week_join_msk
         AND t1.active_window_dt = t2.active_window_dt
     LEFT JOIN count_deltas_year AS t3 ON
         t1.real_user_id = t3.real_user_id
-        AND t1.os_type = t3.os_type
         AND t1.week_join_msk = t3.week_join_msk
         AND t1.active_window_dt = t3.active_window_dt
 ),
@@ -242,13 +241,12 @@ segs_util AS (
 segs AS (
     SELECT
         real_user_id,
-        os_type,
         week_join_msk,
         active_window_dt,
         stat_3m,
         stat_6m,
         stat_12m,
-        if(stat_12m >= 10 AND user1yearold_flg, "Power",
+        if(stat_12m >= 10 AND active_window_dt >= 12, "Power",
             if(stat_3m = 3 OR stat_6m >= 4, "Core Power",
                 if(stat_3m = 0, "At Risk", "Core Regular"))) AS user_segment
     FROM
@@ -257,15 +255,18 @@ segs AS (
 
 segs_finall AS (
     SELECT
+        t1.os_type__first AS os_type,
+        t1.user_id__first AS user_id,
+        t1.country__first AS country,
+        t1.user1yearold_flg,
         t1.real_user_id,
         t1.week_msk,
-        t1.os_type,
-        t1.country,
+        t1.os_type AS os_type__week_msk,
+        t1.country AS country__week_msk,
         t1.week_join_msk,
-        t1.user_id,
+        t1.user_id AS user_id__week_msk,
         t1.cohort_month,
         t1.cohort_week,
-        t1.user1yearold_flg,
         t2.user_segment,
         t1.num_orders,
         t1.num_active_days
@@ -273,9 +274,11 @@ segs_finall AS (
         activity_purch AS t1
     INNER JOIN segs AS t2 ON
         t1.real_user_id = t2.real_user_id
-        AND t1.os_type = t2.os_type
         AND t1.week_join_msk = t2.week_join_msk
         AND t1.cohort_month = t2.active_window_dt
 )
 
-SELECT * FROM segs_finall
+select
+    *
+from
+    segs_finall

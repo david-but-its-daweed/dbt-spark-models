@@ -8,7 +8,8 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date',
-       'alerts_channel': "#olc_dbt_alerts"
+       'alerts_channel': "#olc_dbt_alerts",
+       'bigquery_known_gaps': ['2022-12-14', '2023-01-29']
      }
  ) }}
 
