@@ -31,7 +31,8 @@ ticket_create_events AS
          t.payload.customerExternalId AS user_id,
          t.payload.lang AS language,
          t.payload.country AS country,
-         t.payload.messageSource AS os
+         t.payload.messageSource AS os,
+         t.payload.isHidden AS is_hidden
      FROM mart.onfy_babylone_events AS t
      WHERE t.`type` = 'ticketCreate'
     ),
@@ -333,6 +334,7 @@ SELECT
     t.ticket_id AS ticket_id,
     t.user_id AS user_id,
     t.country AS country,
+    t.is_hidden AS is_hidden,
     n.button_place AS button_place,
     t.os AS os, --но вообще бы дёргать нормальную ось (тут проблемы с INTERNAL, присваиваемым ко всем скрытым тикетам)
     CASE WHEN a.first_order_created_time_msk IS NULL THEN 'no' ELSE 'yes' END AS has_success_payments,
