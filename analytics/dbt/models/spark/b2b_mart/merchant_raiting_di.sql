@@ -6,7 +6,8 @@
     meta = {
       'team': 'general_analytics',
       'bigquery_load': 'true',
-      'bigquery_partitioning_date_column': 'partition_date_msk'
+      'bigquery_partitioning_date_column': 'partition_date_msk',
+      'bigquery_known_gaps': ['2023-01-27']
     }
 ) }}
 
@@ -39,6 +40,16 @@ expensive as (
     )
     )
 ),
+
+dim as (
+    select distinct _id as merchant_id, 
+    __is_current as is_current, 
+    __is_deleted as is_deleted,
+    name, companyName, enabled,
+    DATE(millis_to_ts_msk(createdTimeMs)) as created_at
+    from {{ source('b2b_mart', 'dim_merchant') }}
+    where date(next_effective_ts) >= date('3030-01-01')
+),
     
 rfq_stat as
 (    
@@ -47,16 +58,16 @@ select
   count(distinct order_rfq_response_id) as rfq_answers,
   count(distinct rfq_request_id) as rfqs,
   AVG(time_rfq_response) as time,
-  AVG(CASE WHEN
-      date_format(timestamp(rfq_sent_ts_msk) + INTERVAL 5 HOUR, "H") >= 8
-      AND date_format(timestamp(rfq_sent_ts_msk) + INTERVAL 5 HOUR, "H") <= 21
-      AND NOT(
-        date_format(timestamp(rfq_sent_ts_msk) + INTERVAL 5 HOUR, "MM-dd") >= "12-30"
-        AND date_format(timestamp(rfq_sent_ts_msk) + INTERVAL 5 HOUR, "MM-dd") <= "01-08")
-      AND NOT(date_format(timestamp(rfq_sent_ts_msk) + INTERVAL 5 HOUR, "MM-dd") >= "01-30"
-        AND date_format(timestamp(rfq_sent_ts_msk) + INTERVAL 5 HOUR, "MM-dd") <= "02-08")
+  percentile_approx(CASE WHEN
+      rfq_merchant_rn = 1
+      AND time_rfq_response >= percentile_10 AND time_rfq_response <= percentile_90
     THEN time_rfq_response
-  END) AS time_corrected,
+  END, 0.5) AS time_corrected,
+  
+  avg(percentile_10) as percentile_10,
+  
+  avg(percentile_90) as percentile_90,
+    
   count(distinct case when response_status in ('accepted', 'rejected') then order_rfq_response_id end) as responsed,
   count(
       distinct case when response_status in ('accepted', 'rejected') and different_prices then order_rfq_response_id end
@@ -76,16 +87,19 @@ select
   count(distinct product_id) as rfq_products,
   count(distinct case when documents_attached then order_rfq_response_id end) as rfq_with_attached_docks,
   avg(manufacturingDays) as rfq_manufacturing_days
-from {{ ref('rfq_metrics') }} r
+from (select *, 
+  percentile_approx(CASE WHEN rfq_merchant_rn = 1 then time_rfq_response END, 0.1) over (partition by merchant_id) as percentile_10,
+  percentile_approx(CASE WHEN rfq_merchant_rn = 1 then time_rfq_response END, 0.9) over (partition by merchant_id) as percentile_90
+  from {{ ref('rfq_metrics') }}) r
 left join (select distinct _id, manufacturingDays from {{ source('mongo', 'b2b_core_rfq_response_daily_snapshot') }} ) c
     on r.order_rfq_response_id = c._id
 left join expensive as e on r.order_rfq_response_id = e.id
 where 
     1=1 
     {% if is_incremental() %}
-      and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 90 days
+      and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
     {% else %}
-      and DATE(rfq_sent_ts_msk)  >= date('2023-01-18') - interval 90 days
+      and DATE(rfq_sent_ts_msk)  >= date('2023-01-18') - interval 30 days
     {% endif %}
 AND merchant_id is not null
 group by merchant_id
@@ -116,6 +130,8 @@ rfq_metrics as (select
     rfqs,
     time as rfq_time,
     time_corrected as rfq_time_corrected,
+    percentile_10 as rfq_time_percentile_10,
+    percentile_90 as rfq_time_percentile_90,
     responsed as rfq_validated,
     responsed_with_prices as rfq_validated_with_price,
     rfq_incorrect,
@@ -306,7 +322,14 @@ from
 select payment.advancePercent, payment.paymentType, 
 explode(payment.paymentStatusHistory) as history, orderId, _id, merchantId,
 paymentSchedule 
-from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}  
+from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}  m
+    inner join (
+    select distinct 
+    merchant_id,
+    merchant_order_id
+    from orders
+) o on m.merchantId = o.merchant_id and m._id = o.merchant_order_id
+    
 ) price
 left join order_rates on order_rates.from = price.history.requestedPrice.ccy and order_rates.to = 'USD' 
     and order_rates.order_id = price.orderId
@@ -318,11 +341,6 @@ group by orderId, _id,
 merchantId
 )
 where 1=1
-    {% if is_incremental() %}
-      and DATE(time) >= date('{{ var("start_date_ymd") }}') - interval 90 days
-    {% else %}
-      and DATE(time)  >= date('2023-01-18') - interval 90 days
-    {% endif %}
 group by merchant_id, merchant_order_id
  ),
  
@@ -373,12 +391,14 @@ retention AS (
     GROUP BY merchant_id
 )
 
-select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merchant_id,
+select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
     rfq_answers,
     rfqs,
     rfq_time,
     rfq_time_corrected,
+    rfq_time_percentile_10,
+    rfq_time_percentile_90,
     rfq_validated,
     rfq_validated_with_price,
     rfq_incorrect,
@@ -408,8 +428,16 @@ select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) as merc
     prev_current_final_gmv,
     current_final_gmv,
     current_prev_final_gmv,
+    is_current, 
+    is_deleted,
+    name, 
+    companyName as company_name,
+    enabled,
+    created_at,
     date('{{ var("start_date_ymd") }}') as partition_date_msk
-    from rfq_metrics full join production_metrics 
-    on production_metrics.merchant_id = rfq_metrics.merchant_id
-    left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv on rfq_metrics.merchant_id = gmv.merchant_id
-    left join retention on rfq_metrics.merchant_id = retention.merchant_id
+    from rfq_metrics 
+    full join production_metrics on production_metrics.merchant_id = rfq_metrics.merchant_id
+    full join dim on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id) = dim.merchant_id
+    left join (select merchant_id, sum(gmv) as gmv from merchant_gmv group by merchant_id) gmv 
+        on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) = gmv.merchant_id
+    left join retention on coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) = retention.merchant_id

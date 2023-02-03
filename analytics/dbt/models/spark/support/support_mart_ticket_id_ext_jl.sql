@@ -7,7 +7,9 @@
        'team': 'analytics',
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
-       'bigquery_partitioning_date_column': 'partition_date'
+       'bigquery_partitioning_date_column': 'partition_date',
+       'alerts_channel': "#olc_dbt_alerts",
+       'bigquery_fail_on_missing_partitions': 'false'
      }
  ) }}
 
@@ -112,7 +114,17 @@ first_entries AS
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChange'
             AND t.payload.stateQueueId IS NOT NULL 
-      ),                
+      ),
+      
+   last_agent AS
+     (
+      SELECT DISTINCT
+          t.payload.ticketId AS ticket_id,
+          LAST_VALUE(t.payload.stateAgentId) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS last_agent
+      FROM mart.logistics_babylone_events AS t
+      WHERE t.`type` = 'ticketChange'
+            AND t.payload.stateAgentId IS NOT NULL
+      ), 
     all_queues AS
       (
        WITH t AS
@@ -339,6 +351,7 @@ SELECT
     g.parcelIds,
     h.orderIds,
     i.agentIds,
+    q.last_agent,
     COALESCE(k.responses_to_support, 0) AS responses_to_support,
     COALESCE(k.responses_to_customer, 0) AS responses_to_customer,
     CASE WHEN o.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
@@ -359,3 +372,5 @@ LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
 LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
 LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
+LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
+
