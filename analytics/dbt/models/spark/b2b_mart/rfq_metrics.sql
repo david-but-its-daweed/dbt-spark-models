@@ -28,6 +28,7 @@ orders AS (
         AND NOT COALESCE(r.is_joompro_employee, FALSE)
 ),
 
+
 admin AS (
     SELECT
         admin_id,
@@ -68,6 +69,7 @@ rfq_requests AS (
 response AS (
     SELECT
         order_rfq_response_id,
+        documents_attached,
         rfq_request_id,
         created_ts_msk AS response_created_ts_msk,
         status AS response_status,
@@ -78,7 +80,7 @@ response AS (
     WHERE next_effective_ts_msk IS NULL
 ),
 
-rfq_1 as (SELECT
+rfq as (SELECT
     rq.order_id,
     rq.rfq_request_id,
     rq.request_created_ts_msk,
@@ -89,106 +91,34 @@ rfq_1 as (SELECT
     rp.response_status,
     rp.reject_reason,
     rp.merchant_id,
+    category_id,
+    category_name,
+    case when documents_attached > 0 then True else False end as documents_attached,
     product_id
 FROM rfq_requests AS rq
 LEFT JOIN response AS rp ON rq.rfq_request_id = rp.rfq_request_id
 ),
 
-rfq as (
-    SELECT 
-        order_id,
-        'rfq' as status,
-        'rfq_created' as sub_status,
-        min(request_created_ts_msk) over (partition by order_id) as event_ts_msk,
-        rfq_request_id,
-        order_rfq_response_id,
-        response_status,
-        reject_reason,
-        0 as converted,
-        0 as rfq_converted
-    from rfq_1
-    union all 
-        SELECT 
-        order_id,
-        'rfq' as status,
-        'rfq_sent' as sub_status,
-        min(request_sent_ts_msk) over (partition by order_id) as event_ts_msk,
-        rfq_request_id,
-        order_rfq_response_id,
-        response_status,
-        reject_reason,
-        0 as converted,
-        0 as rfq_converted
-    from rfq_1
-    union all 
-        SELECT 
-        order_id,
-        'rfq' as status,
-        'rfq_response' as sub_status,
-        min(response_created_ts_msk) over (partition by order_id) as event_ts_msk,
-        rfq_request_id,
-        order_rfq_response_id,
-        response_status,
-        reject_reason,
-        0 as converted,
-        0 as rfq_converted
-    from rfq_1
-),
-
 order_products as (
-    select distinct
-        order_id, id as product_id
-        FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} as o
-    JOIN (select _id, orderId as order_id from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}) m ON m._id = o.merchOrdId
-),
-
-orders_statuses as (
-    select 
-        distinct * 
+    select order_id, product_id, max(order_product) as order_product, max(rfq_product) as rfq_product
     from
-    (select 
-        o.order_id,
-        o.status,
-        COALESCE(o.sub_status, o.status) as sub_status,
-        MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, o.status, o.sub_status ) AS event_ts_msk,
-        rfq_request_id,
-        order_rfq_response_id,
-        response_status,
-        reject_reason,
-        max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id) AS converted,
-        max(case when op.product_id is not null then 1 else 0 end) OVER (PARTITION BY o.order_id, rfq_request_id) AS rfq_converted
-      FROM {{ ref('fact_order_change') }} o
-      left join rfq_1 on o.order_id = rfq_1.order_id
-      left join order_products op on o.order_id = op.order_id and op.product_id = rfq_1.product_id
-     )
+    (select distinct
+        order_id, id as product_id, 1 as order_product, 0 as rfq_product
+    FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} as o
+    JOIN (select _id, orderId as order_id from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}) m ON m._id = o.merchOrdId
+    UNION ALL 
+    select distinct order_id, product_id, 0 as order_product, 1 as rfq_product 
+    from rfq)
+    group by order_id, product_id
 ),
 
 products as (
-    select 
-    op.order_id, 
-    count(distinct op.product_id) as total_products,
-    count(distinct rfq_1.product_id) as rfq_products
-    from order_products op
-    left join rfq_1 on op.order_id = rfq_1.order_id and op.product_id = rfq_1.product_id
-    group by op.order_id
-),
-
-products_1 as (
-    select 
-    op.order_id, 
-    count(distinct op.product_id) as total_products_1,
-    count(distinct rfq_1.product_id) as rfq_products_1
-    from
-    (
-        select op.order_id, 
-            op.product_id,
-            row_number() over (partition by fo.user_id, op.product_id order by created_ts_msk) as rn
-        from order_products op
-    left join (select distinct order_id, user_id, created_ts_msk from {{ ref('fact_order') }} ) fo on op.order_id = fo.order_id
-    ) op
-    left join rfq_1 on op.order_id = rfq_1.order_id and op.product_id = rfq_1.product_id
-    where rn = 1
-    group by op.order_id
+    select order_id, 
+    sum(order_product) as order_products,
+    sum(order_product*rfq_product) as rfq_converted_products,
+    sum(rfq_product) as rfq_products
+    from order_products
+    group by order_id
 ),
 
 stg1 AS (
@@ -197,25 +127,15 @@ stg1 AS (
         o.status,
         COALESCE(o.sub_status, o.status) as sub_status,
         o.event_ts_msk,
+        MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, o.status, COALESCE(o.sub_status, o.status)) AS event_ts,
         owner_moderator_email,
         FIRST_VALUE(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_status,
         FIRST_VALUE(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_sub_status,
-        rfq_request_id,
-        order_rfq_response_id,
-        response_status,
-        reject_reason,
-        converted,
-        owner_role,
-        rfq_converted,
-        total_products,
-        rfq_products,
-        total_products_1,
-        rfq_products_1
-    FROM (select * from orders_statuses union all select * from rfq) AS o
+        owner_role
+    FROM {{ ref('fact_order_change') }} AS o
     LEFT JOIN order_owner AS ao ON o.order_id = ao.order_id
-    LEFT JOIN  products as p on p.order_id = o.order_id
-    LEFT JOIN  products_1 as p1 on p1.order_id = o.order_id
 ),
+
 
 
 orders_hist AS (
@@ -224,47 +144,32 @@ orders_hist AS (
         owner_moderator_email,
         current_status,
         current_sub_status,
-        rfq_request_id,
-        order_rfq_response_id,
-        response_status,
-        reject_reason,
         owner_role,
-        max(converted) as converted,
-        max(rfq_converted) as rfq_converted,
-        max(total_products) as total_products,
-        max(rfq_products) as rfq_products,
-        max(total_products_1) as total_products_1,
-        max(rfq_products_1) as rfq_products_1,
-        MAX(IF(status = 'selling' AND sub_status = 'new', event_ts_msk, '')) AS new_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'priceEstimation', event_ts_msk, '')) AS price_estimation_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'negotiation', event_ts_msk, '')) AS negotiation_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'finalPricing', event_ts_msk, '')) AS final_pricing_ts_msk,
-        MAX(IF(status = 'selling' AND sub_status = 'signingAndPayment', event_ts_msk, '')) AS signing_and_payment_ts_msk,
-        MAX(IF(status = 'rfq' AND sub_status = 'rfq_created', event_ts_msk, '')) AS rfq_created_ts_msk,
-        MAX(IF(status = 'rfq' AND sub_status = 'rfq_sent', event_ts_msk, '')) AS rfq_sent_ts_msk,
-        MAX(IF(status = 'rfq' AND sub_status = 'rfq_response', event_ts_msk, '')) AS rfq_response_ts_msk,
-        MAX(IF(status = 'manufacturing', event_ts_msk, '')) AS manufacturing_ts_msk,
-        MAX(IF(status = 'cancelled', event_ts_msk, '')) AS cancelled_ts_msk
+        MAX(IF(status = 'selling' AND sub_status = 'new', event_ts, '')) AS new_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'priceEstimation', event_ts, '')) AS price_estimation_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'negotiation', event_ts, '')) AS negotiation_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'finalPricing', event_ts, '')) AS final_pricing_ts_msk,
+        MAX(IF(status = 'selling' AND sub_status = 'signingAndPayment', event_ts, '')) AS signing_and_payment_ts_msk,
+        MAX(IF(status = 'manufacturing', event_ts, '')) AS manufacturing_ts_msk,
+        MAX(IF(status = 'cancelled', event_ts, '')) AS cancelled_ts_msk
     FROM stg1
     WHERE status in ('selling', 'rfq', 'manufacturing', 'cancelled')
     GROUP BY order_id,
         owner_moderator_email,
         current_status,
         current_sub_status,
-        rfq_request_id,
-        order_rfq_response_id,
-        response_status,
-        reject_reason,
         owner_role
 )
 
 
-SELECT order_id,
+select
+order_id,
     owner_moderator_email,
     current_status,
     current_sub_status,
     rfq_request_id,
     order_rfq_response_id,
+    product_id,
     response_status,
     reject_reason,
     new_ts_msk,
@@ -279,15 +184,19 @@ SELECT order_id,
     cancelled_ts_msk,
     owner_role,
     converted,
-    rfq_converted,
-    total_products,
+    rfq_converted_products,
+    order_products,
     rfq_products,
-    total_products_1,
-    rfq_products_1,
+    documents_attached,
+    merchant_id,
+    category_id,
+    category_name,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
-    ROW_NUMBER() OVER (PARTITION BY order_id ORDER by order_rfq_response_id) as order_rn,
-    ROW_NUMBER() OVER (PARTITION BY order_id, rfq_request_id ORDER BY order_rfq_response_id) as rfq_rn,
+    RANK() OVER (PARTITION BY order_id ORDER by (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as order_rn,
+    RANK() OVER (PARTITION BY order_id, rfq_request_id ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
+    RANK() OVER (PARTITION BY order_id, rfq_request_id, merchant_id  ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
+    MAX(order_rfq_response_id) OVER (PARTITION BY order_id, rfq_request_id) as max_response,
     CASE WHEN cancelled_ts_msk = '' THEN ''
         WHEN manufacturing_ts_msk != '' THEN 'manufacturing'
         WHEN signing_and_payment_ts_msk != '' THEN 'signing_and_payment'
@@ -302,33 +211,42 @@ SELECT order_id,
         WHEN new_ts_msk != '' THEN 'new'
         END as cancelled_after
 FROM
-(SELECT DISTINCT
-    order_id,
-    owner_moderator_email,
-    current_status,
-    current_sub_status,
-    rfq_request_id,
-    order_rfq_response_id,
-    response_status,
-    reject_reason,
-    new_ts_msk,
-    price_estimation_ts_msk,
-    negotiation_ts_msk,
-    final_pricing_ts_msk,
-    signing_and_payment_ts_msk,
-    rfq_created_ts_msk,
-    rfq_sent_ts_msk,
-    rfq_response_ts_msk,
-    manufacturing_ts_msk,
-    cancelled_ts_msk,
-    owner_role,
-    converted,
-    rfq_converted,
-    total_products,
-    rfq_products,
-    total_products_1,
-    rfq_products_1
-from orders_hist
-WHERE COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) IS NOT NULL
-AND COALESCE(new_ts_msk, price_estimation_ts_msk, negotiation_ts_msk, final_pricing_ts_msk, signing_and_payment_ts_msk) != ''
+(
+select distinct
+oh.order_id,
+oh.owner_moderator_email,
+oh.owner_role,
+oh.current_status, 
+oh.current_sub_status,
+oh.new_ts_msk,
+oh.price_estimation_ts_msk,
+oh.negotiation_ts_msk,
+oh.final_pricing_ts_msk,
+oh.signing_and_payment_ts_msk,
+oh.manufacturing_ts_msk,
+oh.cancelled_ts_msk,
+op.product_id,
+op.order_product,
+op.rfq_product,
+op.order_product*op.rfq_product as converted,
+rfq.rfq_request_id,
+rfq.request_created_ts_msk as rfq_created_ts_msk,
+rfq.request_sent_ts_msk as rfq_sent_ts_msk,
+rfq.response_created_ts_msk as rfq_response_ts_msk,
+rfq.sent_status,
+rfq.order_rfq_response_id,
+rfq.response_status,
+rfq.reject_reason,
+rfq.merchant_id,
+rfq.category_id,
+rfq.category_name,
+rfq.documents_attached,
+p.order_products,
+p.rfq_converted_products,
+p.rfq_products
+from orders_hist oh
+left join order_products op on oh.order_id = op.order_id
+left join rfq on oh.order_id = rfq.order_id
+left join products p on oh.order_id = p.order_id
+where (op.product_id = rfq.product_id or op.product_id is null and rfq.product_id is null)
 )

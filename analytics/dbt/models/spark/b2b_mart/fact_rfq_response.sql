@@ -9,6 +9,7 @@
 ) }}
 SELECT order_rfq_response_id,
        comment,
+       documents_attached,
        TIMESTAMP(created_ts_msk) AS created_ts_msk,
        description,
        merchant_id,

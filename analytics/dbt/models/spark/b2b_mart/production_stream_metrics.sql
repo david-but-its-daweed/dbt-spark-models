@@ -99,6 +99,7 @@ order_statuses as
         MIN(case when status = "manufacturing" then o.event_ts_msk end) as manufacturing,
         MIN(case when status = "cancelled" then o.event_ts_msk end) as cancelled,
         MIN(case when status = "shipping" then o.event_ts_msk end) as shipping,
+        MIN(case when sub_status = "delivered" then o.event_ts_msk end) as delivered,
         MIN(case when status = "claim" then o.event_ts_msk end) as claimed,
         MIN(case when status = "closed" then o.event_ts_msk end) as closed
     FROM {{ ref('fact_order_change') }} o
@@ -142,8 +143,11 @@ select
         
     case when claimed is not null then 'claimed'
         when cancelled is not null and cancelled > manufacturing then 'cancelled' 
-        when orders.sub_status = 3100 then 'delivered'
-        when orders.status = 50 then 'closed' end as claim
+        when closed is not null then 'closed'
+        when delivered is not null then 'delivered'
+        when shipping is not null then 'shipping'
+        when manufacturing is not null then 'manufacturing'
+        end as claim
 from merchant_orders 
 left join order_statuses on merchant_orders.order_id = order_statuses.order_id
 left join orders on order_statuses.order_id = orders.order_id

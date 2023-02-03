@@ -11,6 +11,7 @@
     )
 }}
 SELECT _id AS order_rfq_response_id,
+    size(docIds) AS documents_attached,
     comment,
     millis_to_ts_msk(ctms) AS created_ts_msk,
     dscr AS description,

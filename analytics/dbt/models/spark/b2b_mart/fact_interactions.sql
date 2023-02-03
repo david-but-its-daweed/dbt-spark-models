@@ -15,18 +15,16 @@ not_jp_users AS (
   WHERE is_joompro_employee = TRUE
 ),
 
-source as (
-select 
-    first_value(source) over (partition by uid order by ctms) as source,
-    first_value(type) over (partition by uid order by ctms) as type,
-    first_value(campaign) over (partition by uid order by ctms) as campaign,
-    uid as user_id
-    from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
-),
+tags as
+(
+select distinct explode(tags) as tag, 
+    _id as request_id 
+    from  {{ source('mongo', 'b2b_core_popup_requests_daily_snapshot') }}
+    ),
 
 user_interaction as 
 (select 
-     interaction_id, 
+    interaction_id, 
     user_id, 
     interaction_create_date, 
     date(interaction_create_date) as partition_date_msk,
@@ -37,21 +35,23 @@ user_interaction as
     utm_medium,
     source, 
     type,
-    campaign
+    campaign,
+    repeated_order
     from (
         select 
             _id as interaction_id, 
             uid as user_id, 
+            max(case when tag = 'repeated_order' then 1 else 0 end) as repeated_order,
             min(from_unixtime(ctms/1000 + 10800)) as interaction_create_date,
             max(map_from_entries(utmLabels)["utm_campaign"]) as utm_campaign,
             max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
             max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
-            max(s.source) as source, 
-            max(s.type) as type,
-            max(s.campaign) as campaign
+            max(source) as source, 
+            max(type) as type,
+            max(campaign) as campaign
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} m
         left join not_jp_users n on n.user_id = m.uid
-        left join source s on s.user_id = m.uid
+        left join tags t on t.request_id = m.popupRequestID
         where n.user_id is null
         group by _id, uid
     )
@@ -315,12 +315,13 @@ select
 interaction_id,
     partition_date_msk,
     created_week,
-    utm_campaign,
-    utm_source,
-    utm_medium,
-    source, 
-    type,
-    campaign,
+    FIRST_VALUE(utm_campaign) over (partition by user_id order by order_id is null, partition_date_msk) as utm_campaign,
+    FIRST_VALUE(utm_source) over (partition by user_id order by order_id is null, partition_date_msk) as utm_source,
+    FIRST_VALUE(utm_medium) over (partition by user_id order by order_id is null, partition_date_msk) as utm_medium,
+    FIRST_VALUE(source) over (partition by user_id order by order_id is null, partition_date_msk) as source,
+    FIRST_VALUE(type) over (partition by user_id order by order_id is null, partition_date_msk) as type,
+    FIRST_VALUE(campaign) over (partition by user_id order by order_id is null, partition_date_msk) as campaign,
+    repeated_order,
     user_id,
     validation_status, 
     reject_reason,
@@ -346,6 +347,12 @@ interaction_id,
         min_signing_and_payment_ts_msk,
         rn,
         interaction_min_time,
+        source as current_source,
+        utm_campaign as current_utm_campaign,
+        utm_source as current_utm_source,
+        utm_medium as current_utm_medium,
+        type as current_type,
+        campaign as current_campaign,
         rank(interaction_id) over (partition by user_id, interaction_min_time is not null order by interaction_min_time) as sucessfull_interaction_number
         from
 (
@@ -359,6 +366,7 @@ select
     source, 
     type,
     campaign,
+    repeated_order,
     user_id,
     validation_status, 
     reject_reason,
@@ -395,6 +403,7 @@ select
         source, 
         type,
         campaign,
+        repeated_order,
         in.user_id,
         validation_status, 
         reject_reason,
@@ -436,6 +445,7 @@ select
         source, 
         type,
         campaign,
+        repeated_order,
         in.user_id,
         validation_status, 
         reject_reason,

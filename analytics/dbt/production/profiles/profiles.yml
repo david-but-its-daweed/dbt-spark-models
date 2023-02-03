@@ -1,4 +1,4 @@
-default:
+spark:
   outputs:
     prod:
       host: thrift-service-prod.joom.ai
