@@ -76,5 +76,8 @@ sources:
   - name: product
     tables:
       - name: diagnoses_changes
+  - name: platform
+    tables:
+      -name: s3_costs
 
 
