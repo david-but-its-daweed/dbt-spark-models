@@ -78,6 +78,6 @@ sources:
       - name: diagnoses_changes
   - name: platform
     tables:
-      -name: s3_costs
+      - name: s3_costs
 
 
