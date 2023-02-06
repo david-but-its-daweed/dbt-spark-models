@@ -10,7 +10,8 @@
       'predictor_prophet_seasonality_mode': 'multiplicative',
       'predictor_frequency': '1d',
       'predictor_num_forecast_points': '120'
-    }
+    },
+    tags=['platform']
 ) }}
 SELECT
     *
