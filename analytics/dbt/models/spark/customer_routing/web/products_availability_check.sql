@@ -15,10 +15,9 @@
 SELECT DISTINCT
     device_id,
     partition_date AS partition_date_msk,
-    DATE(event_ts_msk) AS day_msk,
     device.os_type,
-    FIRST(payload.avail) OVER (PARTITION BY c.device_id, DATE(event_ts_msk) ORDER BY event_ts_msk) AS avail_flg,
-    FIRST(payload.productId) OVER (PARTITION BY c.device_id, DATE(event_ts_msk) ORDER BY event_ts_msk) AS product_id
+    FIRST(payload.avail) OVER (PARTITION BY device_id, DATE(from_unixtime(event_ts / 1000)) ORDER BY from_unixtime(event_ts / 1000)) AS avail_flg,
+    FIRST(payload.productId) OVER (PARTITION BY device_id, DATE(from_unixtime(event_ts / 1000)) ORDER BY from_unixtime(event_ts / 1000)) AS product_id
 FROM {{ source('mart', 'device_events') }}
 WHERE
     `type` IN ('productOpenServer')
