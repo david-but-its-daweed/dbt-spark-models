@@ -72,7 +72,7 @@ sources AS (
         CASE 
             WHEN onfy_mart.device_events.type = 'externalLink' 
             THEN onfy_mart.device_events.payload.params.utm_campaign
-            ELSE onfy_mart.device_events.payload.utm_campaign 
+            else onfy_mart.device_events.payload.utm_campaign 
         END AS utm_campaign
     FROM 
         onfy_mart.device_events
@@ -91,7 +91,7 @@ last_not_unknown AS (
         to_utc_timestamp(first_second_purchases.second_purchase_date_ts_cet, 'Europe/Berlin') AS second_purchase_date_ts_utc,
         first_second_purchases.second_purchase_device_id,
         MAX(not_unknown_sources.event_ts_cet) AS source_ts_cet,
-        to_utc_timestamp(MAX(not_unknown_sources.event_ts_cet), 'Europe/Berlin') AS source_ts_utc,
+        coalesce(to_utc_timestamp(MAX(not_unknown_sources.event_ts_cet), 'Europe/Berlin'), to_utc_timestamp(max(all_sources.event_ts_cet), 'Europe/Berlin')) AS source_ts_utc,
         COALESCE(MAX_BY(not_unknown_sources.source, not_unknown_sources.event_ts_cet), 'Unknown') AS source,
         COALESCE(
             MAX_BY(not_unknown_sources.device_id, not_unknown_sources.event_ts_cet),
@@ -324,7 +324,7 @@ users_spends_campaigns AS (
         users_corrected.source_corrected,
         users_corrected.campaign_corrected,
         COALESCE(MAX(ads_spends_corrected.partition_date), date_trunc('DAY', users_corrected.first_purchase_date_ts_utc)) AS spend_date,
-        COALESCE(date_trunc('DAY', users_corrected.source_ts_utc), MAX(ads_spends_corrected.partition_date)) AS session_date
+        COALESCE(date_trunc('DAY', users_corrected.first_purchase_date_ts_utc), MAX(ads_spends_corrected.partition_date)) AS first_purchase_date
     FROM 
         users_corrected
         LEFT JOIN ads_spends_corrected
@@ -355,7 +355,7 @@ users_spends_campaigns AS (
 
 users_by_day AS (
     SELECT 
-        users_spends_campaigns.session_date AS session_date,
+        users_spends_campaigns.first_purchase_date AS first_purchase_date,
         users_spends_campaigns.source_corrected,
         users_spends_campaigns.campaign_corrected,
         count (distinct users_spends_campaigns.user_email_hash) AS first_purchases,
@@ -368,7 +368,7 @@ users_by_day AS (
     FROM 
         users_spends_campaigns
     GROUP BY
-        users_spends_campaigns.session_date,
+        users_spends_campaigns.first_purchase_date,
         users_spends_campaigns.source_corrected,
         users_spends_campaigns.campaign_corrected
 ),
@@ -389,7 +389,7 @@ ads_spends_corrected_day AS (
 )
 
 SELECT DISTINCT
-    COALESCE(ads_spends_corrected_day.spend_day, users_by_day.session_date) AS partition_date, 
+    COALESCE(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date) AS partition_date, 
     COALESCE(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected) AS source,
     COALESCE(ads_spends_corrected_day.campaign_corrected, users_by_day.campaign_corrected) AS campaign,
     COALESCE(users_by_day.first_purchases, 0) AS first_purchases,
@@ -398,6 +398,6 @@ SELECT DISTINCT
 FROM 
     ads_spends_corrected_day
     FULL OUTER JOIN users_by_day
-        ON ads_spends_corrected_day.spend_day = users_by_day.session_date
+        ON ads_spends_corrected_day.spend_day = users_by_day.first_purchase_date
         AND LOWER(ads_spends_corrected_day.campaign_corrected) = LOWER(users_by_day.campaign_corrected)
         AND LOWER(ads_spends_corrected_day.source_corrected) = LOWER(users_by_day.source_corrected)
