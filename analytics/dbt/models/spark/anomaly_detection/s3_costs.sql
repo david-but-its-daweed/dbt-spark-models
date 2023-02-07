@@ -9,7 +9,7 @@
       'predictor_value_column': 'cost',
       'predictor_prophet_seasonality_mode': 'multiplicative',
       'predictor_frequency': '1d',
-      'predictor_num_forecast_points': '120',
+      'predictor_num_forecast_points': '30',
       'anomalies_channel': '#anomalies-automatic',
       'anomalies_significance_score': 'cumulative_deviation',
       'anomalies_significance_threshold': '0.2',
