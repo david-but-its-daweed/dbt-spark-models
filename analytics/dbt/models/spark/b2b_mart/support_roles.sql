@@ -42,6 +42,10 @@ SELECT
 UNION ALL 
 SELECT
 "m.fedotov@joom.com" AS email,
+"Head KAM" AS role
+UNION ALL 
+SELECT
+"obiketova@joom.com" AS email,
 "KAM" AS role
 UNION ALL 
 SELECT
