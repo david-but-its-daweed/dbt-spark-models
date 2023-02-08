@@ -342,14 +342,34 @@ base AS (
   FROM
     messages_last_replies
 ),
--- SELECT
---     event,
---     `timestamp`,
---     COUNT(DISTINCT ticket_id) AS tickets
--- FROM base
--- WHERE `timestamp` IS NOT NULL
--- GROUP BY 1, 2
--- ORDER BY 2, 1
+
+csat_prebase AS
+             (
+              SELECT
+                  t.payload.ticketId AS ticket_id,
+                  LAST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
+              FROM {{ source('mart', 'babylone_events') }} AS t
+              WHERE t.`type` = 'babyloneWidgetAction'
+                    AND t.payload.widgetType = 'did_we_help'
+                    AND t.payload.selectedOptionsIds[0] IS NOT NULL
+             ),
+        csat AS
+             (
+              SELECT
+                  t.ticket_id AS ticket_id,
+                  MIN(t.csat) AS csat
+              FROM csat_prebase AS t
+              GROUP BY 1
+             ),
+        csat_was_triggered AS
+             (
+              SELECT DISTINCT
+                  t.payload.ticketId AS ticket_id
+              FROM {{ source('mart', 'babylone_events') }} AS t
+              WHERE t.`type` = 'babyloneWidgetAction'
+                    AND t.payload.widgetType = 'did_we_help'
+                    AND t.payload.selectedOptionsIds[0] IS NULL
+              ),       
 final AS (
   SELECT
     DISTINCT t.ticket_id,
@@ -368,7 +388,9 @@ final AS (
     e.marker AS marker_from_quickreply,
     f.channel,
     g.was_escalated,
-    h.reaction_state
+    h.reaction_state,
+    CASE WHEN l.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
+    k.csat AS csat
   FROM
     base AS t
     LEFT JOIN all_queues AS a ON t.ticket_id = a.ticket_id
@@ -380,6 +402,8 @@ final AS (
     LEFT JOIN bot_result AS g ON t.ticket_id = g.ticket_id
     LEFT JOIN scenario AS h ON t.ticket_id = h.ticket_id
     LEFT JOIN creations_marketplace AS i ON t.ticket_id = i.ticket_id
+    LEFT JOIN csat AS k ON t.ticket_id = k.ticket_id
+    LEFT JOIN csat_was_triggered AS l ON t.ticket_id = l.ticket_id
   WHERE t.`timestamp` IS NOT NULL
 )
 SELECT
