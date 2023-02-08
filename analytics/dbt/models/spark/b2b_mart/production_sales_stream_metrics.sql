@@ -111,7 +111,7 @@ admin AS (
     SELECT
         admin_id,
         a.email,
-        s.role as owner_role,
+        s.role as owner_role
     FROM {{ ref('dim_user_admin') }} a
     LEFT JOIN {{ ref('support_roles') }} s on a.email = s.email
 ),
