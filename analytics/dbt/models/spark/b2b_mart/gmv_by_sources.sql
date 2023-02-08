@@ -14,6 +14,15 @@ with not_jp_users AS (
   WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
 ),
 
+admin AS (
+    SELECT
+        admin_id,
+        a.email,
+        s.role as owner_role
+    FROM {{ ref('dim_user_admin') }} a
+    LEFT JOIN {{ ref('support_roles') }} s on a.email = s.email
+),
+
 order_v2_mongo AS
 (
     SELECT fo.order_id AS order_id,
@@ -33,12 +42,14 @@ order_v2_mongo AS
     SELECT order_id,
         total_confirmed_price,
         final_gross_profit,
-        initial_gross_profit
+        initial_gross_profit,
+        owner_moderator_id
         from
     (SELECT order_id,
         total_confirmed_price,
         final_gross_profit,
         initial_gross_profit,
+        owner_moderator_id,
         ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) as rn
     FROM {{ ref('fact_order_change') }}
     )
@@ -71,6 +82,8 @@ after_second_qrt_new_order AS
         type,
         campaign,
         user_id,
+        a.email as owner_email,
+        a.owner_role,
         CASE WHEN
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
@@ -78,6 +91,7 @@ after_second_qrt_new_order AS
     FROM order_v2 AS p
     INNER JOIN order_v2_mongo AS o ON  p.order_id = o.order_id
     LEFT JOIN sources AS s on p.order_id = s.order_id
+    LEFT JOIN admin AS a on p.owner_moderator_id = a.admin_id
     WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547')
     GROUP BY 
       manufactured_date, 
@@ -92,7 +106,9 @@ after_second_qrt_new_order AS
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
       END,
-      user_id
+      user_id,
+      a.email,
+      a.owner_role
 ),
 
 users as (
