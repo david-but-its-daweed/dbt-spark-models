@@ -221,6 +221,7 @@ rfq as (select
      group by 1)
 
 SELECT
+    DATE(oh.selling_day) AS partition_date,
     oh.order_id,
     u.user_id, 
     validation_status, 
