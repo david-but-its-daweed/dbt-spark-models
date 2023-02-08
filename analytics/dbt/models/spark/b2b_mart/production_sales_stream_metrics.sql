@@ -20,8 +20,77 @@ users_hist as (
     user_id,
     min(partition_date_msk) as validated_date
     from {{ ref('fact_user_change') }}
-    where status = 'validated'
+    where validation_status = 'validated'
     group by user_id
+),
+
+
+validation_status as (
+    SELECT
+    10 AS id,
+    'initial' AS status
+    UNION ALL
+    SELECT
+        20 AS id,
+        'needsValidation' AS status
+    UNION ALL
+    SELECT
+        25 AS id,
+        'onHold' AS status
+    UNION ALL
+    SELECT
+        30 AS id,
+        'validated' AS status
+    UNION ALL
+    SELECT
+        40 AS id,
+    'rejected' AS status
+),
+
+reject_reasons as (
+    SELECT
+    1010 AS id,
+    'noFeedback' AS reason
+UNION ALL
+SELECT
+    1020 AS id,
+    'unsuitableDeliveryTerms' AS reason
+UNION ALL
+SELECT
+    1030 AS id,
+    'unsuitableFinancialTerms' AS reason
+UNION ALL
+SELECT
+    1040 AS id,
+    'unsuitableWarehouseTerms' AS reason
+UNION ALL
+SELECT
+    1050 AS id,
+    'unsuitableVolume' AS reason
+UNION ALL
+SELECT
+    1060 AS id,
+    'needsTimeForDecision' AS reason
+UNION ALL
+SELECT
+    1070 AS id,
+    'didNotSendRequest' AS reason
+UNION ALL
+SELECT
+    1080 AS id,
+    'deadRequest' AS reason
+UNION ALL
+SELECT
+    1090 AS id,
+    'uncommunicativeClient' AS reason
+UNION ALL
+SELECT
+    1100 AS id,
+    'noLegalEntity' AS reason
+UNION ALL
+SELECT
+    1110 AS id,
+    'other' AS reason
 ),
 
 users as (
@@ -158,7 +227,6 @@ SELECT
     reject_reason,
     created_date,
     validated_date,
-    partition_date,
     owner_email,
     owner_role,
     rfq,
