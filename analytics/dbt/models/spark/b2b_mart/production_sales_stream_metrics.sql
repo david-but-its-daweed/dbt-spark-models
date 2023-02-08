@@ -218,6 +218,7 @@ rfq as (select
     order_id,
     case when max(rfq_created_ts_msk is not null) then 'with rfq' else 'without rfq' end as rfq
      from {{ ref('rfq_metrics') }}
+        where product_id is not null and product_id != ""
      group by 1)
 
 SELECT
