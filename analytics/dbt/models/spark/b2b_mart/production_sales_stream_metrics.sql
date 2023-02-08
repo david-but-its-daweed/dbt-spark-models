@@ -15,6 +15,28 @@ WITH requests AS (
     FROM {{ ref('fact_user_request') }}
 ),
 
+users_hist as (
+  select
+    user_id,
+    min(partition_date_msk) as validated_date
+    from {{ ref('fact_user_change') }}
+    where status = 'validated'
+    group by user_id
+),
+
+users as (
+select 
+    du.user_id, 
+    vs.status as validation_status, 
+    rr.reason as reject_reason,
+    date(created_ts_msk) as created_date,
+    validated_date
+    from {{ ref('dim_user') }} du
+    left join validation_status vs on du.validation_status = vs.id
+    left join reject_reasons rr on du.reject_reason = rr.id
+    left join users_hist uh on uh.user_id = du.user_id
+    where next_effective_ts_msk is null
+),
 
 admin AS (
     SELECT
@@ -23,9 +45,18 @@ admin AS (
     FROM {{ ref('dim_user_admin') }}
 ),
 
+not_jp_users AS (
+  SELECT DISTINCT f.user_id, f.order_id
+  FROM {{ ref('fact_order') }} f
+  LEFT JOIN {{ ref('fact_user_request') }} u ON f.user_id = u.user_id
+  WHERE is_joompro_employee = FALSE or is_joompro_employee is null
+    AND next_effective_ts_msk is null
+),
+
 stg1 AS (
     SELECT
         o.order_id,
+        nu.user_id,
         o.status,
         o.sub_status,
         o.event_ts_msk,
@@ -41,12 +72,14 @@ stg1 AS (
         LAG(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_status,
         LAG(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_sub_status
     FROM {{ ref('fact_order_change') }} AS o
+    INNER JOIN not_jp_users nu ON o.order_id = nu.orfer_id
     LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
 ),
 
 stg2 AS (
     SELECT
         order_id,
+        user_id,
         status,
         sub_status,
         event_ts_msk,
@@ -71,6 +104,7 @@ stg2 AS (
 orders_hist AS (
     SELECT
         order_id,
+        user_id,
         owner_moderator_email,
         current_status,
         current_sub_status,
@@ -100,12 +134,17 @@ orders_hist AS (
             WHEN sub_status = 'signingAndPayment' AND lead_status = 'cancelled' THEN 2 ELSE 0 END) AS signing_and_payment_valid
     FROM stg2
     WHERE flg = TRUE
-    GROUP BY 1, 2, 3, 4
+    GROUP BY 1, 2, 3, 4, 5
 )
 
 SELECT
     oh.order_id,
-    DATE(oh.selling_day) AS partition_date,
+    u.user_id, 
+    validation_status, 
+    reject_reason,
+    created_date,
+    validated_date,
+    partition_date,
     oh.gmv,
     oh.was_in_manufacturing,
     oh.cancelled_in_selling,
@@ -134,4 +173,5 @@ SELECT
         WHEN oh.signing_and_payment_valid = 2 THEN 'cancelled'
         ELSE 'not valid' END AS signing_and_payment
 FROM orders_hist AS oh
+inner join users u on oh.user_id = u.user_id
 WHERE oh.selling_day is not null
