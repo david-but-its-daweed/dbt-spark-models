@@ -55,6 +55,7 @@ sources:
       - name: b2b_core_order_products_daily_snapshot
       - name: product_products_daily_snapshot
       - name: abu_core_brands_daily_snapshot
+      - name: core_merchant_payment_channels_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
