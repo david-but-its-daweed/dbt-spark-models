@@ -237,7 +237,7 @@ hidden_tickets AS (
     mart.logistics_babylone_events AS t
   WHERE
     t.`type` IN ('ticketCreate', 'ticketChange')
-    AND t.payload.isHidden = TRUE --AND t.partition_date = '2022-12-07'
+    AND t.payload.isHidden IS FALSE --AND t.partition_date = '2022-12-07'
 ),
 all_tags AS (
   WITH t AS (
@@ -355,7 +355,7 @@ final AS (
      CASE WHEN b.current_queue == 'Limbo' THEN (
       CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END
     ) ELSE b.current_queue END AS current_queue,
-    CASE WHEN c.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS is_hidden,
+    CASE WHEN c.ticket_id IS NOT NULL THEN 'no' ELSE 'yes' END AS is_hidden,
     d.tag,
     e.marker AS marker_from_quickreply,
     f.channel,

@@ -12,7 +12,7 @@ with merchant_orders as
 (select
 merchant_order_id,
 merchant_id,
-merchant_type,
+fo.merchant_type,
 created_ts_msk
 from {{ ref('fact_merchant_order')}} fo
 left join (

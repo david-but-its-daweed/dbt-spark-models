@@ -3,4 +3,4 @@ target/
 dbt_packages/
 logs/
 localenv/*
-deploy/**/*.user.yml
+**/*.user.yml

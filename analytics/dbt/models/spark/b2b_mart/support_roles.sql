@@ -3,7 +3,8 @@
     materialized='table',
     file_format='parquet',
     meta = {
-      'bigquery_load': 'true'
+      'bigquery_load': 'true',
+      'priority_weight': '150'
     }
 ) }}
 
@@ -41,6 +42,10 @@ SELECT
 UNION ALL 
 SELECT
 "m.fedotov@joom.com" AS email,
+"Head KAM" AS role
+UNION ALL 
+SELECT
+"obiketova@joom.com" AS email,
 "KAM" AS role
 UNION ALL 
 SELECT
