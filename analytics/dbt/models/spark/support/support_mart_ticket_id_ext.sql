@@ -210,9 +210,15 @@ first_entries AS
              (
               SELECT DISTINCT
                   t.payload.ticketId AS ticket_id,
-                  t.payload.stateAgentId AS author_id
+                  t.payload.authorId AS author_id
               FROM  {{ source('mart', 'babylone_events') }} AS t
-              WHERE t.`type` = 'ticketChange'
+              WHERE t.`type` = 'ticketEntryAdd'
+              UNION DISTINCT
+              SELECT DISTINCT
+                  t.payload.ticketId AS ticket_id,
+                  t.payload.stateAgentId AS author_id --stateAgentId
+              FROM  {{ source('mart', 'babylone_events') }} AS t
+              WHERE t.`type` = 'ticketChangeJoom'
              )     
           SELECT
              t.ticket_id AS ticket_id,
