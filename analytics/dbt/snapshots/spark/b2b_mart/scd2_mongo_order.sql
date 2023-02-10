@@ -16,6 +16,9 @@ WITH manufactiring AS
     select millis_to_ts_msk(min(ts_msk)) as min_manufactured_ts_msk, order_id
     from
     (
+    select distinct ts_msk, order_id
+    from
+    (
         select min(sub_status) over (partition by order_id) as min_sub_status, sub_status, ts_msk, order_id
         from
         (
@@ -34,6 +37,7 @@ WITH manufactiring AS
         )
     )
     where min_sub_status= sub_status
+    )
     group by order_id
 )
 
