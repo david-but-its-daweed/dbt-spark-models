@@ -207,10 +207,16 @@ first_entries AS
          WITH t AS
              (
               SELECT DISTINCT
-                  t.payload.ticketId AS ticket_id,
-                  t.payload.stateAgentId AS author_id
-              FROM mart.narwhal_babylone_events AS t
-              WHERE t.`type` = 'ticketChange'
+                   t.payload.ticketId AS ticket_id,
+                   t.payload.authorId AS author_id
+               FROM mart.onfy_babylone_events AS t
+               WHERE t.`type` = 'ticketEntryAdd'
+               UNION DISTINCT
+               SELECT DISTINCT
+                   t.payload.ticketId AS ticket_id,
+                   t.payload.stateAgentId AS author_id
+               FROM mart.onfy_babylone_events AS t
+               WHERE t.`type` = 'ticketChange'
              )     
           SELECT
              t.ticket_id AS ticket_id,
