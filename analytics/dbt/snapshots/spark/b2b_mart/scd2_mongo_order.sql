@@ -13,16 +13,28 @@
 
 WITH manufactiring AS
 (
-    SELECT order_id,
-            millis_to_ts_msk(MIN(col.`1`)) AS min_manufactured_ts_msk
-    FROM (
-        SELECT _id AS order_id,
-            explode(array_sort(arrays_zip(state.statusHistory.status, state.statusHistory.updatedTimeMs)))
-        FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
-
+    select millis_to_ts_msk(min(ts_msk)) as min_manufacturing_ts_msk_1, order_id
+    from
+    (
+        select min(sub_status) over (partition by order_id) as min_sub_status, sub_status, ts_msk, order_id
+        from
+        (
+            SELECT 
+                order_id,
+                coalesce(col.`1`, col.`0`) AS sub_status,
+                col.`2` AS ts_msk
+            FROM 
+            (
+                SELECT _id AS order_id,
+                explode(arrays_zip(state.statusHistory.status, state.statusHistory.subStatus,  state.statusHistory.updatedTimeMs))
+                FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
+            
+            )
+            where  col.`0` = 20
         )
-    WHERE col.`0` = 20
-    GROUP BY 1
+    )
+    where min_sub_status= sub_status
+    group by order_id
 )
 
 
