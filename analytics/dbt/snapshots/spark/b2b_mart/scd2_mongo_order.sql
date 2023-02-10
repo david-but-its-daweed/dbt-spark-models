@@ -13,7 +13,7 @@
 
 WITH manufactiring AS
 (
-    select millis_to_ts_msk(min(ts_msk)) as min_manufacturing_ts_msk_1, order_id
+    select millis_to_ts_msk(min(ts_msk)) as min_manufactured_ts_msk, order_id
     from
     (
         select min(sub_status) over (partition by order_id) as min_sub_status, sub_status, ts_msk, order_id
