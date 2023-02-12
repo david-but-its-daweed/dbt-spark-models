@@ -79,6 +79,7 @@ sources:
       - name: diagnoses_changes
   - name: platform
     tables:
+      - name: aws_service_costs
       - name: s3_costs
   - name: pharmacy
     tables:
