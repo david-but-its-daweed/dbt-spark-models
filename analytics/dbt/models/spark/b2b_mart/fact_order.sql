@@ -3,8 +3,8 @@
     materialized='view',
     meta = {
       'team': 'general_analytics',
-      'bigquery_load': 'true'
-
+      'bigquery_load': 'true',
+      'priority_weight': '150'
     }
 ) }}
 
