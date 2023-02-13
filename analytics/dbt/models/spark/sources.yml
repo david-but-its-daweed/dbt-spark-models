@@ -79,6 +79,16 @@ sources:
       - name: diagnoses_changes
   - name: platform
     tables:
+      - name: aws_service_costs
       - name: s3_costs
-
-
+  - name: pharmacy
+    tables:
+      - name: google_campaign_insights
+      - name: fbads_adset_country_insights
+      - name: partners_insights
+  - name: onfy_mart
+    tables:
+      - name: device_events
+  - name: pharmacy_landing
+    tables:
+      - name: order

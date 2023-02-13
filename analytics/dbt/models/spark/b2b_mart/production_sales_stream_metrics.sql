@@ -231,7 +231,7 @@ SELECT
     validated_date,
     owner_email,
     owner_role,
-    rfq,
+    coalesce(rfq, "without rfq") as rfq,
     oh.gmv,
     oh.was_in_manufacturing,
     oh.cancelled_in_selling,

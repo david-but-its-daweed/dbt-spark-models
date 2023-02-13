@@ -66,7 +66,7 @@ rfq_recieved as (
                and {% if is_incremental() %}
       and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
     {% else %}
-      and DATE(rfq_sent_ts_msk)  >= date('2023-01-18') - interval 30 days
+      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 30 days
     {% endif %}
      ) r on c.categoryId = r.category_id
     group by merchantId
@@ -122,7 +122,7 @@ where
     {% if is_incremental() %}
       and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
     {% else %}
-      and DATE(rfq_sent_ts_msk)  >= date('2023-01-18') - interval 30 days
+      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 30 days
     {% endif %}
 AND merchant_id is not null
 group by merchant_id
@@ -209,7 +209,7 @@ where order_id is not null and merchant_id is not null
     {% if is_incremental() %}
       and DATE(manufacturing) >= date('{{ var("start_date_ymd") }}') - interval 90 days
     {% else %}
-      and DATE(manufacturing)  >= date('2023-01-18') - interval 90 days
+      and DATE(manufacturing)  >= date('2023-02-08') - interval 90 days
     {% endif %}
 )
 )
