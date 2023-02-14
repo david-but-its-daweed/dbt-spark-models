@@ -56,6 +56,18 @@ sources:
       - name: product_products_daily_snapshot
       - name: abu_core_brands_daily_snapshot
       - name: core_merchant_payment_channels_daily_snapshot
+      - name: babylone_joom_tags_daily_snapshot
+      - name: babylone_logistics_queues_daily_snapshot
+      - name: babylone_logistics_tags_daily_snapshot
+      - name: babylone_joom_queues_daily_snapshot
+      - name: babylone_narwhal_queues_daily_snapshot
+      - name: babylone_onfy_queues_daily_snapshot
+      - name: babylone_narwhal_tags_daily_snapshot
+      - name: babylone_onfy_tags_daily_snapshot
+      - name: babylone_joom_tag_categories_daily_snapshot
+      - name: babylone_logistics_tag_categories_daily_snapshot
+      - name: babylone_narwhal_tag_categories_daily_snapshot
+      - name: babylone_onfy_tag_categories_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance

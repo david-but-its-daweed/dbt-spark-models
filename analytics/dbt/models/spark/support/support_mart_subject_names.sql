@@ -21,7 +21,7 @@ SELECT
     EXPLODE(payload.tagIds) AS tag,
     partition_date,
     event_ts_msk AS event_ts_msk
-FROM mart.babylone_events
+FROM {{ source('mart', 'babylone_events') }}
 WHERE `type` = 'ticketChangeJoom' 
 AND partition_date > '2021-12-31'
 AND payload.changedByType IN ('agent', 'automation')
@@ -38,8 +38,8 @@ t_marketplace AS (
         t.partition_date,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_marketplace AS t
-    LEFT JOIN mongo.babylone_joom_tags_daily_snapshot AS a ON t.tag = a._id
-    LEFT JOIN mongo.babylone_joom_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    LEFT JOIN {{ source('mongo', 'babylone_joom_tags_daily_snapshot') }} AS a ON t.tag = a._id
+    LEFT JOIN {{ source('mongo', 'babylone_joom_tag_categories_daily_snapshot') }} AS b ON a.categoryId = b._id
     GROUP BY 1, 2, 3, 4, 5, 6
  )
 ,
@@ -84,7 +84,7 @@ SELECT
     a.country,
     a.language
 FROM base_marketplace AS t
-LEFT JOIN support.support_mart_ticket_id_ext AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mat_ticket_id_ext') }} AS a ON t.ticket_id = a.ticket_id
 ),
 
 prebase_jl AS (
@@ -111,8 +111,8 @@ t_jl AS (
         t.partition_date,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_jl AS t
-    LEFT JOIN mongo.babylone_logistics_tags_daily_snapshot AS a ON t.tag = a._id
-    LEFT JOIN mongo.babylone_logistics_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    LEFT JOIN {{ source('mongo', 'babylone_logistics_tags_daily_snapshot') }} AS a ON t.tag = a._id
+    LEFT JOIN {{ source('mongo', 'babylone_logistics_tag_categories_daily_snapshot') }} AS b ON a.categoryId = b._id
     GROUP BY 1, 2, 3, 4, 5, 6
  )
 ,
@@ -157,7 +157,7 @@ SELECT
     a.country,
     a.language
 FROM base_jl AS t
-LEFT JOIN support.support_mart_ticket_id_ext_jl AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mat_ticket_id_ext_jl') }} AS a ON t.ticket_id = a.ticket_id
 ),
 
 prebase_joompay AS (
@@ -184,8 +184,8 @@ t_joompay AS (
         t.partition_date,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_joompay AS t
-    LEFT JOIN mongo.babylone_narwhal_tags_daily_snapshot AS a ON t.tag = a._id
-    LEFT JOIN mongo.babylone_narwhal_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    LEFT JOIN {{ source('mongo', 'babylone_narwhal_tags_daily_snapshot') }} AS a ON t.tag = a._id
+    LEFT JOIN {{ source('mongo', 'babylone_narwhal_tag_categories_daily_snapshot') }} AS b ON a.categoryId = b._id
     GROUP BY 1, 2, 3, 4, 5, 6
  )
 ,
@@ -231,7 +231,7 @@ SELECT
     a.country,
     a.language
 FROM base_joompay AS t
-LEFT JOIN support.support_mart_ticket_id_ext_joompay AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mat_ticket_id_ext_joompay') }} AS a ON t.ticket_id = a.ticket_id
 ),
 
 prebase_onfy AS (
@@ -258,8 +258,8 @@ t_onfy AS (
         t.partition_date,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_jl AS t
-    LEFT JOIN mongo.babylone_onfy_tags_daily_snapshot AS a ON t.tag = a._id
-    LEFT JOIN mongo.babylone_onfy_tag_categories_daily_snapshot AS b ON a.categoryId = b._id
+    LEFT JOIN {{ source('mongo', 'babylone_onfy_tags_daily_snapshot') }} AS a ON t.tag = a._id
+    LEFT JOIN {{ source('mongo', 'babylone_onfy_tag_categories_daily_snapshot') }} AS b ON a.categoryId = b._id
     GROUP BY 1, 2, 3, 4, 5, 6
  )
 ,
@@ -304,7 +304,7 @@ SELECT
     a.country,
     a.language
 FROM base_onfy AS t
-LEFT JOIN support.support_mart_ticket_id_ext_onfy AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mat_ticket_id_ext_onfy') }} AS a ON t.ticket_id = a.ticket_id
 )
 
 
