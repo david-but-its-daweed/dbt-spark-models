@@ -141,7 +141,7 @@ group by 1,2
 
 select
     add_perc.region, 
-    date_trunc('week', order_created_date_utc) as week_date,
+    date(date_trunc('week', order_created_date_utc)) as week_date,
     round(avg(perc_5_delivered)) perc_5_delivered,
     round(avg(perc_10_delivered)) perc_10_delivered,
     round(avg(perc_25_delivered)) perc_25_delivered,
