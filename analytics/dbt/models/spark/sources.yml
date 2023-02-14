@@ -90,6 +90,7 @@ sources:
   - name: onfy_mart
     tables:
       - name: device_events
+      - name: devices_mart
   - name: pharmacy_landing
     tables:
       - name: order
