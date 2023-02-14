@@ -71,6 +71,7 @@ sources:
     tables:
       - name: card_bins_snapshot
       - name: checkout_data
+      - name: country_filter
   - name: recom
     tables:
       - name: context_device_counters_v5
