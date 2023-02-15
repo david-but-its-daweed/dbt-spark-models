@@ -19,7 +19,7 @@ documetns as (
         millis_to_ts(updatedTimeMs) updated_time,
         status,
         type
-    from {{ source('mongo', 'core_merchant_documents_daily_snapshot') }}
+    from {{ source('mongo', 'core_merchat_documents_daily_snapshot') }}
 )
 
 select doc_id,
