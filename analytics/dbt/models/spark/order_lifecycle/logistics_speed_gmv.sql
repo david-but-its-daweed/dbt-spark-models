@@ -24,6 +24,10 @@ with regions as(
     select 
         "DACH" region, 
         explode(array("DE", "AU", "CH")) country
+    union
+    select 
+        "DACHFR" region, 
+        explode(array("DE", "AU", "CH", "FR")) country
 )
 
 , filter_logistics_mart as(
