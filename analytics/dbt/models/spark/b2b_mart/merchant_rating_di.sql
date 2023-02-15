@@ -62,7 +62,7 @@ rfq_recieved as (
         category_id
     FROM {{ ref('fact_rfq_requests') }}
     WHERE next_effective_ts_msk IS NULL 
-               and {% if is_incremental() %}
+     {% if is_incremental() %}
       and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
     {% else %}
       and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 30 days
