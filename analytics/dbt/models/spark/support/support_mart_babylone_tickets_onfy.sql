@@ -283,7 +283,7 @@ bot_result AS (
     ticket_id,
     CASE WHEN agentIds IS NULL THEN 'no' ELSE 'yes' END AS was_escalated
   FROM
-    {{ ref('support_mat_ticket_id_ext_onfy') }}
+    {{ ref('support_mart_ticket_id_ext_onfy') }}
     JOIN transfer_to_bot USING (ticket_id)
 ),
 scenario AS (

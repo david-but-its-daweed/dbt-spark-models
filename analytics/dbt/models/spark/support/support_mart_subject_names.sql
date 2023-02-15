@@ -84,7 +84,7 @@ SELECT
     a.country,
     a.language
 FROM base_marketplace AS t
-LEFT JOIN {{ ref('support_mat_ticket_id_ext') }} AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mart_ticket_id_ext') }} AS a ON t.ticket_id = a.ticket_id
 ),
 
 prebase_jl AS (
@@ -157,7 +157,7 @@ SELECT
     a.country,
     a.language
 FROM base_jl AS t
-LEFT JOIN {{ ref('support_mat_ticket_id_ext_jl') }} AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mart_ticket_id_ext_jl') }} AS a ON t.ticket_id = a.ticket_id
 ),
 
 prebase_joompay AS (
@@ -231,7 +231,7 @@ SELECT
     a.country,
     a.language
 FROM base_joompay AS t
-LEFT JOIN {{ ref('support_mat_ticket_id_ext_joompay') }} AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mart_ticket_id_ext_joompay') }} AS a ON t.ticket_id = a.ticket_id
 ),
 
 prebase_onfy AS (
@@ -304,7 +304,7 @@ SELECT
     a.country,
     a.language
 FROM base_onfy AS t
-LEFT JOIN {{ ref('support_mat_ticket_id_ext_onfy') }} AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN {{ ref('support_mart_ticket_id_ext_onfy') }} AS a ON t.ticket_id = a.ticket_id
 )
 
 
