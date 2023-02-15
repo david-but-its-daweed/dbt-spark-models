@@ -22,7 +22,7 @@ WITH creations_onfy AS (
     'creation' AS event,
     MIN(event_ts_msk) AS `timestamp`
   FROM
-      mart.onfy_babylone_events
+      {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketCreate'
      AND event_ts_msk IS NOT NULL
@@ -40,7 +40,7 @@ transfer_to_bot AS (
     'transfer_to_bot' AS event,
     MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner = 'Automation'
@@ -56,7 +56,7 @@ transfer_to_queue AS (
     'transfer_to_queue' AS event,
     MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner = 'Queue'
@@ -72,7 +72,7 @@ transfer_to_agent AS (
     'transfer_to_agent' AS event,
     MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner = 'Agent'
@@ -117,7 +117,7 @@ ticket_entry_add AS (
         t.payload.entryId AS entry_id,
         t.payload.entryType AS entry_type
       FROM
-        mart.onfy_babylone_events AS t
+        {{ source('mart', 'onfy_babylone_events') }} AS t
       WHERE
         NOT t.payload.isAnnouncement
         AND t.`type` = 'ticketEntryAdd'
@@ -169,7 +169,7 @@ closing_onfy AS (
     'closing' AS event,
     MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner IN ('Rejected', 'Resolved')
@@ -200,7 +200,7 @@ all_queues AS (
       DISTINCT t.payload.ticketId AS ticket_id,
       a.name AS queue
     FROM
-     mart.onfy_babylone_events AS t
+     {{ source('mart', 'onfy_babylone_events') }} AS t
       JOIN {{ source('mongo', 'babylone_onfy_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
     WHERE
       t.`type` = 'ticketChange'
@@ -224,7 +224,7 @@ current_queue AS (
         AND UNBOUNDED FOLLOWING
     ) AS current_queue
   FROM
-    mart.onfy_babylone_events AS t
+    {{ source('mart', 'onfy_babylone_events') }} AS t
     JOIN {{ source('mongo', 'babylone_onfy_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
   WHERE
     t.`type` = 'ticketChange'
@@ -234,7 +234,7 @@ hidden_tickets AS (
   SELECT
     DISTINCT t.payload.ticketId AS ticket_id
   FROM
-    mart.onfy_babylone_events AS t
+    {{ source('mart', 'onfy_babylone_events') }} AS t
   WHERE
     t.`type` IN ('ticketCreate', 'ticketChange')
     AND t.payload.isHidden IS FALSE
@@ -245,7 +245,7 @@ all_tags AS (
       t.payload.ticketId AS ticket_id,
       EXPLODE(t.payload.tagIds) AS tag
     FROM
-      mart.onfy_babylone_events AS t
+      {{ source('mart', 'onfy_babylone_events') }} AS t
     WHERE
       t.payload.tagIds IS NOT NULL
       AND t.`type` IN ('ticketCreate', 'ticketChange')
@@ -262,7 +262,7 @@ all_markers AS (
     t.payload.ticketId AS ticket_id,
     EXPLODE(t.payload.quickReplyMarkers) AS marker
   FROM
-    mart.onfy_babylone_events AS t
+    {{ source('mart', 'onfy_babylone_events') }} AS t
   WHERE
     t.payload.quickReplyMarkers IS NOT NULL
     AND t.`type` = 'ticketEntryAdd'
@@ -272,7 +272,7 @@ channel AS (
     t.payload.ticketId AS ticket_id,
     MIN(t.payload.channel) AS channel
   FROM
-    mart.onfy_babylone_events AS t
+    {{ source('mart', 'onfy_babylone_events') }} AS t
   WHERE
     t.`type` = 'ticketCreate'
   GROUP BY
@@ -291,7 +291,7 @@ scenario AS (
     DISTINCT payload.ticketId AS ticket_id,
     payload.reactionState AS reaction_state
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'botReaction'
 ),

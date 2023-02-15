@@ -24,6 +24,7 @@ sources:
       - name: fact_order_2020
       - name: link_device_real_user
       - name: published_products_current
+      - name: onfy_babylone_events
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot

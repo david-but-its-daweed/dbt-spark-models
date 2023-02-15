@@ -241,7 +241,7 @@ SELECT
     EXPLODE(payload.tagIds) AS tag,
     event_ts_msk AS event_ts_msk,
     partition_date
-FROM mart.onfy_babylone_events
+FROM {{ source('mart', 'onfy_babylone_events') }}
 WHERE `type` = 'ticketChange' 
 AND partition_date > '2021-12-31'
 AND payload.changedByType IN ('agent', 'automation')
