@@ -4,8 +4,7 @@
     file_format='parquet',
     meta = {
       'bigquery_load': 'true'
-    },
-    tags=['manual']
+    }
 ) }}
 
 
