@@ -1,7 +1,6 @@
 {{ config(
     schema='onfy',
-    materialized='view',
-    incremental_strategy='insert_overwrite',
+    materialized='table',
     meta = {
       'team': 'onfy',
       'bigquery_load': 'true'
@@ -13,7 +12,7 @@ WITH numbered_purchases AS (
         *, 
         RANK() OVER (PARTITION BY user_email_hash ORDER BY created ASC) AS purchase_num
     FROM 
-        pharmacy_landing.order
+        {{ source('pharmacy_landing', 'order') }}
 ),
 
 first_second_purchases AS (
@@ -75,7 +74,7 @@ sources AS (
             else onfy_mart.device_events.payload.utm_campaign 
         END AS utm_campaign
     FROM 
-        onfy_mart.device_events
+        {{ source('onfy_mart', 'device_events') }}
     WHERE 
         onfy_mart.device_events.type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
 ),
@@ -191,7 +190,7 @@ fb_google_base AS (
         date,
         spend
     FROM 
-        pharmacy.fbads_adset_country_insights
+        {{ source('pharmacy', 'fbads_adset_country_insights') }}
 
         UNION ALL
 
@@ -202,7 +201,7 @@ fb_google_base AS (
         effective_date AS date,
         spend
     FROM 
-        pharmacy.google_campaign_insights
+        {{ source('pharmacy', 'google_campaign_insights') }}
 ),
 
 fb_google_with_partners AS (
@@ -271,7 +270,7 @@ united_spends AS (
         join_date AS partition_date,
         spend
     FROM 
-        pharmacy.partners_insights
+        {{ source('pharmacy', 'partners_insights') }}
 ),
 
 ads_spends_corrected AS (

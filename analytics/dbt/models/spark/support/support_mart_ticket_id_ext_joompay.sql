@@ -18,7 +18,7 @@ WITH users_with_first_order AS
      SELECT
          user_id,
          MIN(created_time_utc) AS first_order_created_time_msk
-     FROM mart.fact_order_2020
+     FROM {{ source('mart', 'fact_order_2020') }}
      GROUP BY 1
     ),
 ticket_create_events AS
@@ -110,7 +110,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           LAST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS current_queue
       FROM mart.narwhal_babylone_events AS t
-      JOIN mongo.babylone_narwhal_queues_daily_snapshot AS a 
+      JOIN {{ source('mongo', 'babylone_narwhal_queues_daily_snapshot') }} AS a 
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChange'
             AND t.payload.stateQueueId IS NOT NULL 
@@ -123,7 +123,7 @@ first_entries AS
                 t.payload.ticketId AS ticket_id,
                 a.name AS queue
             FROM mart.narwhal_babylone_events AS t
-            JOIN mongo.babylone_narwhal_queues_daily_snapshot AS a 
+            JOIN {{ source('mongo', 'babylone_narwhal_queues_daily_snapshot') }} AS a 
                  ON t.payload.stateQueueId = a._id
             WHERE t.`type` = 'ticketChange'
                   AND t.payload.stateQueueId IS NOT NULL
@@ -160,7 +160,7 @@ first_entries AS
                  t.ticket_id AS ticket_id,
                  a.name AS tag
              FROM t AS t
-             JOIN mongo.babylone_narwhal_tags_daily_snapshot AS a ON t.tag = a._id
+             JOIN {{ source('mongo', 'babylone_narwhal_tags_daily_snapshot') }} AS a ON t.tag = a._id
             )
         SELECT
             t.ticket_id AS ticket_id,
@@ -210,8 +210,13 @@ first_entries AS
                   t.payload.ticketId AS ticket_id,
                   t.payload.authorId AS author_id
               FROM mart.narwhal_babylone_events AS t
-              WHERE t.payload.authorType = 'agent'
-                    AND t.`type` = 'ticketEntryAdd'
+              WHERE t.`type` = 'ticketEntryAdd'
+              UNION DISTINCT
+              SELECT DISTINCT
+                  t.payload.ticketId AS ticket_id,
+                  t.payload.stateAgentId AS author_id --stateAgentId
+              FROM mart.narwhal_babylone_events AS t
+              WHERE t.`type` = 'ticketChange'
              )     
           SELECT
              t.ticket_id AS ticket_id,
