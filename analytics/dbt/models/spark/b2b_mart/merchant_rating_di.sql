@@ -72,25 +72,6 @@ rfq_recieved as (
     group by merchantId
 ),
 
-
-
-rfq_recieved as (
-    select merchantId, count(distinct rfq_request_id) as rfq_recieved
-    from
-    (select distinct merchantId, split(path, '/')[0] as categoryId 
-from mongo.b2b_core_published_products_daily_snapshot a 
-join mart.category_levels b  on a.categoryId = b.category_id
-     ) c
-    left join (SELECT
-        rfq_request_id,
-        category_name as category_id
-    FROM b2b_mart.fact_rfq_requests
-    WHERE next_effective_ts_msk IS NULL 
-               and DATE(sent_ts_msk)  >= date('2023-02-08') - interval 30 days
-     ) r on c.categoryId = r.category_id
-    group by merchantId
-),
-    
 rfq_stat as
 (    
 select 
