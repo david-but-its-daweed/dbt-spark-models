@@ -55,6 +55,7 @@ rfq_recieved as (
     select merchantId, count(distinct rfq_request_id) as rfq_recieved
     from
     (select distinct merchantId, split(path, '/')[0] as categoryId 
+     from
     {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }}
      join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id
      ) c
