@@ -56,7 +56,7 @@ rfq_recieved as (
     from
     (select distinct merchantId, split(path, '/')[0] as categoryId 
      from
-    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }}
+    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
      join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id
      ) c
     left join (SELECT
