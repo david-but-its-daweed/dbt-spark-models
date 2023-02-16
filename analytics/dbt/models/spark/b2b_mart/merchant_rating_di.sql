@@ -63,9 +63,9 @@ rfq_recieved as (
     FROM {{ ref('fact_rfq_requests') }}
     WHERE next_effective_ts_msk IS NULL 
      {% if is_incremental() %}
-      and DATE(sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
+      and DATE(sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 90 days
     {% else %}
-      and DATE(sent_ts_msk)  >= date('2023-02-08') - interval 30 days
+      and DATE(sent_ts_msk)  >= date('2023-02-08') - interval 90 days
     {% endif %}
      ) r on c.categoryId = r.category_id
     group by merchantId
@@ -119,9 +119,9 @@ left join rfq_recieved rr on r.merchant_id = rr.merchantId
 where 
     1=1 
     {% if is_incremental() %}
-      and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
+      and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 90 days
     {% else %}
-      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 30 days
+      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 90 days
     {% endif %}
 AND merchant_id is not null
 group by merchant_id
