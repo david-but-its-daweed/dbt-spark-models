@@ -8,7 +8,8 @@
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',
       'bigquery_known_gaps': ['2023-01-27']
-    }
+    },
+    tags=['manual']
 ) }}
 
 with price as (
@@ -50,6 +51,26 @@ dim as (
     from {{ source('b2b_mart', 'dim_merchant') }}
     where date(next_effective_ts) >= date('3030-01-01')
 ),
+
+rfq_recieved as (
+    select merchantId, count(distinct rfq_request_id) as rfq_recieved
+    from
+    (select distinct categoryId, merchantId from 
+    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }}
+     ) c
+    left join (SELECT
+        rfq_request_id,
+        category_id
+    FROM {{ ref('fact_rfq_requests') }}
+    WHERE next_effective_ts_msk IS NULL 
+               and {% if is_incremental() %}
+      and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
+    {% else %}
+      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 30 days
+    {% endif %}
+     ) r on c.categoryId = r.category_id
+    group by merchantId
+),
     
 rfq_stat as
 (    
@@ -76,7 +97,7 @@ select
       in ('totalyDifferent', 'littleDifferent', 'termsNotSuit', 'incorrectPackaging') 
       then order_rfq_response_id end) as rfq_incorrect,
   count(distinct case when reject_reason 
-      in ('expensive') and different_prices
+      in ('expensive') and different_prices and not expensive
       then order_rfq_response_id end) as rfq_expensive,
   count(distinct case when converted = 1 then order_id end) as rfq_orders_converted,
   count(distinct case when converted = 1 then order_rfq_response_id end) as rfq_answer_converted,
@@ -86,7 +107,8 @@ select
       and category_id > '' then category_id end) as rfq_categories,
   count(distinct product_id) as rfq_products,
   count(distinct case when documents_attached then order_rfq_response_id end) as rfq_with_attached_docks,
-  avg(manufacturingDays) as rfq_manufacturing_days
+  avg(manufacturingDays) as rfq_manufacturing_days,
+  max(rfq_recieved) as rfq_recieved
 from (select *, 
   percentile_approx(CASE WHEN rfq_merchant_rn = 1 then time_rfq_response END, 0.1) over (partition by merchant_id) as percentile_10,
   percentile_approx(CASE WHEN rfq_merchant_rn = 1 then time_rfq_response END, 0.9) over (partition by merchant_id) as percentile_90
@@ -94,12 +116,13 @@ from (select *,
 left join (select distinct _id, manufacturingDays from {{ source('mongo', 'b2b_core_rfq_response_daily_snapshot') }} ) c
     on r.order_rfq_response_id = c._id
 left join expensive as e on r.order_rfq_response_id = e.id
+left join rfq_recieved rr on r.merchant_id = rr.merchantId
 where 
     1=1 
     {% if is_incremental() %}
       and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
     {% else %}
-      and DATE(rfq_sent_ts_msk)  >= date('2023-01-18') - interval 30 days
+      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 30 days
     {% endif %}
 AND merchant_id is not null
 group by merchant_id
@@ -126,6 +149,7 @@ products as (
 rfq_metrics as (select 
     coalesce(rfq_stat.merchant_id, products.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
+    rfq_recieved,
     rfq_answers,
     rfqs,
     time as rfq_time,
@@ -185,7 +209,7 @@ where order_id is not null and merchant_id is not null
     {% if is_incremental() %}
       and DATE(manufacturing) >= date('{{ var("start_date_ymd") }}') - interval 90 days
     {% else %}
-      and DATE(manufacturing)  >= date('2023-01-18') - interval 90 days
+      and DATE(manufacturing)  >= date('2023-02-08') - interval 90 days
     {% endif %}
 )
 )
@@ -393,6 +417,7 @@ retention AS (
 
 select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
+    rfq_recieved,
     rfq_answers,
     rfqs,
     rfq_time,

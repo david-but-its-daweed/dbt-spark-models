@@ -1,7 +1,6 @@
 {{ config(
     schema='onfy',
-    materialized='view',
-    incremental_strategy='insert_overwrite',
+    materialized='table',
     meta = {
       'team': 'onfy',
       'bigquery_load': 'true'
@@ -13,7 +12,7 @@ WITH numbered_purchases AS (
         *, 
         RANK() OVER (PARTITION BY user_email_hash ORDER BY created ASC) AS purchase_num
     FROM 
-        pharmacy_landing.order
+        {{ source('pharmacy_landing', 'order') }}
 ),
 
 first_second_purchases AS (
@@ -44,6 +43,8 @@ sources AS (
                 WHEN onfy_mart.device_events.type = 'externalLink'
                 THEN
                     CASE
+                        WHEN LOWER(onfy_mart.device_events.payload.params.utm_source) like '%google%' 
+                        THEN 'google' 
                         WHEN onfy_mart.device_events.payload.params.utm_source IS NOT NULL
                         THEN onfy_mart.device_events.payload.params.utm_source
                         WHEN 
@@ -55,9 +56,9 @@ sources AS (
                         WHEN
                             (onfy_mart.device_events.payload.referrer like '%facebook.com%') 
                             OR (onfy_mart.device_events.payload.referrer like '%instagram.com%')             
-                        THEN 'UNMARKED_facebook_or_instagram'                        
+                        THEN 'UNMARKED_facebook_or_instagram'      
                     END
-                WHEN onfy_mart.device_events.type in ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall')
+                WHEN onfy_mart.device_events.type in ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
                 THEN
                     CASE
                         WHEN onfy_mart.device_events.payload.utm_source = 'Unattributed' THEN 'Facebook'
@@ -67,15 +68,15 @@ sources AS (
                     END
             END
         , 'Unknown') AS source,
-        case 
-            when onfy_mart.device_events.type = 'externalLink' 
-            then onfy_mart.device_events.payload.params.utm_campaign
+        CASE 
+            WHEN onfy_mart.device_events.type = 'externalLink' 
+            THEN onfy_mart.device_events.payload.params.utm_campaign
             else onfy_mart.device_events.payload.utm_campaign 
-        end AS utm_campaign
+        END AS utm_campaign
     FROM 
-        onfy_mart.device_events
+        {{ source('onfy_mart', 'device_events') }}
     WHERE 
-        onfy_mart.device_events.type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall')
+        onfy_mart.device_events.type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
 ),
 
        
@@ -89,7 +90,7 @@ last_not_unknown AS (
         to_utc_timestamp(first_second_purchases.second_purchase_date_ts_cet, 'Europe/Berlin') AS second_purchase_date_ts_utc,
         first_second_purchases.second_purchase_device_id,
         MAX(not_unknown_sources.event_ts_cet) AS source_ts_cet,
-        to_utc_timestamp(MAX(not_unknown_sources.event_ts_cet), 'Europe/Berlin') AS source_ts_utc,
+        coalesce(to_utc_timestamp(MAX(not_unknown_sources.event_ts_cet), 'Europe/Berlin'), to_utc_timestamp(max(all_sources.event_ts_cet), 'Europe/Berlin')) AS source_ts_utc,
         COALESCE(MAX_BY(not_unknown_sources.source, not_unknown_sources.event_ts_cet), 'Unknown') AS source,
         COALESCE(
             MAX_BY(not_unknown_sources.device_id, not_unknown_sources.event_ts_cet),
@@ -123,13 +124,13 @@ last_not_unknown_devices_partners AS (
     SELECT DISTINCT 
         last_not_unknown.*,
         CASE 
-            WHEN lower(last_not_unknown.utm_campaign) LIKE '%adcha%' THEN 'adchampagne'
-            WHEN lower(last_not_unknown.utm_campaign) LIKE '%rocket%' THEN 'rocket10'
-            WHEN lower(last_not_unknown.utm_campaign) LIKE '%whiteleads%' THEN 'whiteleads'
-            WHEN lower(last_not_unknown.utm_campaign) LIKE '%ohm%' THEN 'ohm'
-            WHEN lower(last_not_unknown.utm_campaign) LIKE '%mobihunter%' THEN 'mobihunter'
+            WHEN LOWER(last_not_unknown.utm_campaign) LIKE '%adcha%' THEN 'adchampagne'
+            WHEN LOWER(last_not_unknown.utm_campaign) LIKE '%rocket%' THEN 'rocket10'
+            WHEN LOWER(last_not_unknown.utm_campaign) LIKE '%whiteleads%' THEN 'whiteleads'
+            WHEN LOWER(last_not_unknown.utm_campaign) LIKE '%ohm%' THEN 'ohm'
+            WHEN LOWER(last_not_unknown.utm_campaign) LIKE '%mobihunter%' THEN 'mobihunter'
             ELSE 'onfy'
-        end AS partner,
+        END AS partner,
         CASE
             WHEN first_purchase_device.app_type = 'WEB' AND first_purchase_device.device_type = 'DESKTOP' THEN 'web_desktop'
             WHEN first_purchase_device.app_type = 'WEB' AND first_purchase_device.device_type IN ('PHONE', 'TABLET') THEN 'web_mobile'
@@ -164,21 +165,21 @@ last_not_unknown_devices_partners AS (
 users_corrected AS (
     SELECT DISTINCT
         last_not_unknown_devices_partners.*,
-        CASE 
+        LOWER(CASE 
             WHEN last_not_unknown_devices_partners.partner = 'onfy' 
             THEN COALESCE(pharmacy.utm_campaigns_corrected.source_corrected, last_not_unknown_devices_partners.source)
             ELSE last_not_unknown_devices_partners.partner
-        END AS source_corrected,
+        END) AS source_corrected,
         CASE 
             WHEN last_not_unknown_devices_partners.partner = 'onfy' 
-            THEN COALESCE(pharmacy.utm_campaigns_corrected.campaign_corrected, last_not_unknown_devices_partners.utm_campaign) 
+            THEN COALESCE(pharmacy.utm_campaigns_corrected.campaign_corrected, last_not_unknown_devices_partners.utm_campaign)
             ELSE last_not_unknown_devices_partners.partner
         END AS campaign_corrected
     FROM 
         last_not_unknown_devices_partners
         LEFT JOIN pharmacy.utm_campaigns_corrected
-            ON COALESCE(pharmacy.utm_campaigns_corrected.utm_campaign, '') = COALESCE(last_not_unknown_devices_partners.utm_campaign, '') 
-            AND COALESCE(pharmacy.utm_campaigns_corrected.utm_source, '') = COALESCE(last_not_unknown_devices_partners.source, '') 
+            ON COALESCE(LOWER(pharmacy.utm_campaigns_corrected.utm_campaign), '') = COALESCE(LOWER(last_not_unknown_devices_partners.utm_campaign), '') 
+            AND COALESCE(LOWER(pharmacy.utm_campaigns_corrected.utm_source), '') = COALESCE(LOWER(last_not_unknown_devices_partners.source), '') 
 ),
 
 fb_google_base AS (
@@ -189,7 +190,7 @@ fb_google_base AS (
         date,
         spend
     FROM 
-        pharmacy.fbads_adset_country_insights
+        {{ source('pharmacy', 'fbads_adset_country_insights') }}
 
         UNION ALL
 
@@ -200,7 +201,7 @@ fb_google_base AS (
         effective_date AS date,
         spend
     FROM 
-        pharmacy.google_campaign_insights
+        {{ source('pharmacy', 'google_campaign_insights') }}
 ),
 
 fb_google_with_partners AS (
@@ -209,18 +210,18 @@ fb_google_with_partners AS (
         fb_google_base.campaign_name,
         fb_google_base.source,
         CASE 
-            WHEN lower(fb_google_base.campaign_name) LIKE '%adcha%' THEN 'adchampagne'
-            WHEN lower(fb_google_base.campaign_name) LIKE '%rocket%' THEN 'rocket10'
-            WHEN lower(fb_google_base.campaign_name) LIKE '%whiteleads%' THEN 'whiteleads'
-            WHEN lower(fb_google_base.campaign_name) LIKE '%ohm%' THEN 'ohm'
-            WHEN lower(fb_google_base.campaign_name) LIKE '%mobihunter%' THEN 'mobihunter'
+            WHEN LOWER(fb_google_base.campaign_name) LIKE '%adcha%' THEN 'adchampagne'
+            WHEN LOWER(fb_google_base.campaign_name) LIKE '%rocket%' THEN 'rocket10'
+            WHEN LOWER(fb_google_base.campaign_name) LIKE '%whiteleads%' THEN 'whiteleads'
+            WHEN LOWER(fb_google_base.campaign_name) LIKE '%ohm%' THEN 'ohm'
+            WHEN LOWER(fb_google_base.campaign_name) LIKE '%mobihunter%' THEN 'mobihunter'
             ELSE 'onfy'
-        end AS partner,
+        END AS partner,
         CASE 
             WHEN exclusions.platform IS NOT NULL THEN exclusions.platform
-            WHEN exclusions.platform IS NULL AND lower(fb_google_base.campaign_name) LIKE '%ios%' THEN 'ios'
-            WHEN exclusions.platform IS NULL AND lower(fb_google_base.campaign_name) LIKE '%android%' THEN 'android'
-            WHEN exclusions.platform IS NULL AND lower(fb_google_base.campaign_name) LIKE '%web%' THEN 'web'
+            WHEN exclusions.platform IS NULL AND LOWER(fb_google_base.campaign_name) LIKE '%ios%' THEN 'ios'
+            WHEN exclusions.platform IS NULL AND LOWER(fb_google_base.campaign_name) LIKE '%android%' THEN 'android'
+            WHEN exclusions.platform IS NULL AND LOWER(fb_google_base.campaign_name) LIKE '%web%' THEN 'web'
             ELSE 'other'
         END AS campaign_platform,
         fb_google_base.date AS campaign_date_utc,
@@ -253,13 +254,13 @@ united_spends AS (
           ELSE source
         END AS source,
         CASE 
-            WHEN lower(partner) LIKE '%adcha%' THEN 'adchampagne'
-            WHEN lower(partner) LIKE '%rocket%' THEN 'rocket10'
-            WHEN lower(partner) LIKE '%whiteleads%' THEN 'whiteleads'
-            WHEN lower(partner) LIKE '%ohm%' THEN 'ohm'
-            WHEN lower(partner) LIKE '%mobihunter%' THEN 'mobihunter'
+            WHEN LOWER(partner) LIKE '%adcha%' THEN 'adchampagne'
+            WHEN LOWER(partner) LIKE '%rocket%' THEN 'rocket10'
+            WHEN LOWER(partner) LIKE '%whiteleads%' THEN 'whiteleads'
+            WHEN LOWER(partner) LIKE '%ohm%' THEN 'ohm'
+            WHEN LOWER(partner) LIKE '%mobihunter%' THEN 'mobihunter'
             ELSE partner
-        end AS partner,
+        END AS partner,
         CASE 
             WHEN os_type = 'android' THEN os_type
             WHEN os_type = 'ios' THEN os_type
@@ -269,7 +270,7 @@ united_spends AS (
         join_date AS partition_date,
         spend
     FROM 
-        pharmacy.partners_insights
+        {{ source('pharmacy', 'partners_insights') }}
 ),
 
 ads_spends_corrected AS (
@@ -277,20 +278,20 @@ ads_spends_corrected AS (
         united_spends.partition_date,
         CASE 
             WHEN united_spends.partner = 'onfy' 
-            THEN COALESCE (pharmacy.spends_campaigns_corrected.source, 'Not_from_dict')
+            THEN COALESCE (pharmacy.spends_campaigns_corrected.source, united_spends.source, 'Not_from_dict')
             ELSE united_spends.partner
         END AS source_corrected,
         CASE 
             WHEN united_spends.partner = 'onfy' 
-            THEN COALESCE (pharmacy.spends_campaigns_corrected.campaign_corrected, 'Not_from_dict') 
+            THEN COALESCE (pharmacy.spends_campaigns_corrected.campaign_corrected, united_spends.campaign_name, 'Not_from_dict') 
             ELSE united_spends.partner
         END AS campaign_corrected,
-        sum(spend) AS spend
+        SUM(spend) AS spend
     FROM 
         united_spends
         LEFT JOIN pharmacy.spends_campaigns_corrected
-            ON united_spends.campaign_name = pharmacy.spends_campaigns_corrected.campaign_name
-            AND united_spends.source = pharmacy.spends_campaigns_corrected.source
+            ON LOWER(united_spends.campaign_name) = LOWER(pharmacy.spends_campaigns_corrected.campaign_name)
+            AND LOWER(united_spends.source) = LOWER(pharmacy.spends_campaigns_corrected.source)
     GROUP BY 
         united_spends.partition_date,
         united_spends.partner,
@@ -321,13 +322,14 @@ users_spends_campaigns AS (
         users_corrected.source_app_device_type,
         users_corrected.source_corrected,
         users_corrected.campaign_corrected,
-        COALESCE(MAX(ads_spends_corrected.partition_date), date_trunc('DAY', users_corrected.first_purchase_date_ts_utc)) AS spend_date
+        COALESCE(MAX(ads_spends_corrected.partition_date), date_trunc('DAY', users_corrected.first_purchase_date_ts_utc)) AS spend_date,
+        COALESCE(date_trunc('DAY', users_corrected.first_purchase_date_ts_utc), MAX(ads_spends_corrected.partition_date)) AS first_purchase_date
     FROM 
         users_corrected
         LEFT JOIN ads_spends_corrected
-            ON ads_spends_corrected.campaign_corrected = users_corrected.campaign_corrected
-            AND ads_spends_corrected.source_corrected = users_corrected.source_corrected
-            AND ads_spends_corrected.partition_date <= users_corrected.source_ts_utc
+            ON LOWER(ads_spends_corrected.campaign_corrected) = LOWER(users_corrected.campaign_corrected)
+            AND LOWER(ads_spends_corrected.source_corrected) = LOWER(users_corrected.source_corrected)
+            AND ads_spends_corrected.partition_date <= date_trunc('DAY', users_corrected.source_ts_utc)
     GROUP BY
         users_corrected.user_email_hash,
         users_corrected.first_purchase_date_ts_cet,
@@ -352,7 +354,7 @@ users_spends_campaigns AS (
 
 users_by_day AS (
     SELECT 
-        users_spends_campaigns.spend_date AS user_partition_date,
+        users_spends_campaigns.first_purchase_date AS first_purchase_date,
         users_spends_campaigns.source_corrected,
         users_spends_campaigns.campaign_corrected,
         count (distinct users_spends_campaigns.user_email_hash) AS first_purchases,
@@ -365,17 +367,18 @@ users_by_day AS (
     FROM 
         users_spends_campaigns
     GROUP BY
-        users_spends_campaigns.spend_date,
+        users_spends_campaigns.first_purchase_date,
         users_spends_campaigns.source_corrected,
         users_spends_campaigns.campaign_corrected
 ),
+
 
 ads_spends_corrected_day AS (
     SELECT 
         date_trunc('DAY', partition_date) AS spend_day,
         source_corrected,
         campaign_corrected,
-        sum(spend) AS spend
+        SUM(spend) AS spend
     FROM 
         ads_spends_corrected
     GROUP BY 
@@ -385,7 +388,7 @@ ads_spends_corrected_day AS (
 )
 
 SELECT DISTINCT
-    COALESCE(ads_spends_corrected_day.spend_day, users_by_day.user_partition_date) AS partition_date, 
+    COALESCE(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date) AS partition_date, 
     COALESCE(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected) AS source,
     COALESCE(ads_spends_corrected_day.campaign_corrected, users_by_day.campaign_corrected) AS campaign,
     COALESCE(users_by_day.first_purchases, 0) AS first_purchases,
@@ -394,6 +397,6 @@ SELECT DISTINCT
 FROM 
     ads_spends_corrected_day
     FULL OUTER JOIN users_by_day
-        ON ads_spends_corrected_day.spend_day = users_by_day.user_partition_date
-        AND ads_spends_corrected_day.campaign_corrected = users_by_day.campaign_corrected
-        AND ads_spends_corrected_day.source_corrected = users_by_day.source_corrected
+        ON ads_spends_corrected_day.spend_day = users_by_day.first_purchase_date
+        AND LOWER(ads_spends_corrected_day.campaign_corrected) = LOWER(users_by_day.campaign_corrected)
+        AND LOWER(ads_spends_corrected_day.source_corrected) = LOWER(users_by_day.source_corrected)

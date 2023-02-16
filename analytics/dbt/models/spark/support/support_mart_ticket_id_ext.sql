@@ -8,7 +8,8 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date',
-       'alerts_channel': "#olc_dbt_alerts"
+       'alerts_channel': "#olc_dbt_alerts",
+       'bigquery_fail_on_missing_partitions': 'false'
      }
  ) }}
 
@@ -24,16 +25,18 @@ WITH users_with_first_order AS
 ticket_create_events AS
     (
      SELECT
-         t.event_ts_msk AS ts_created,
-         t.partition_date AS partition_date,
          t.payload.ticketId AS ticket_id,
-         t.payload.deviceId AS device_id,
-         t.payload.customerExternalId AS user_id,
-         t.payload.lang AS language,
-         t.payload.country AS country,
-         t.payload.messageSource AS os
+         MAX(t.event_ts_msk) AS ts_created,
+         MAX(t.partition_date) AS partition_date,
+         MAX(t.payload.deviceId) AS device_id,
+         MAX(t.payload.customerExternalId) AS user_id,
+         MAX(t.payload.lang) AS language,
+         MAX(t.payload.country) AS country,
+         MAX(t.payload.messageSource) AS os,
+         MAX(t.payload.isHidden) AS is_hidden
      FROM {{ source('mart', 'babylone_events') }} AS t
-     WHERE t.`type` = 'ticketCreateJoom'
+     WHERE t.`type` IN ('ticketCreateJoom', 'ticketCreate')
+     GROUP BY 1
     ),
  ticket_entry_add AS
     (
@@ -209,8 +212,13 @@ first_entries AS
                   t.payload.ticketId AS ticket_id,
                   t.payload.authorId AS author_id
               FROM  {{ source('mart', 'babylone_events') }} AS t
-              WHERE t.payload.authorType = 'agent'
-                    AND t.`type` = 'ticketEntryAdd'
+              WHERE t.`type` = 'ticketEntryAdd'
+              UNION DISTINCT
+              SELECT DISTINCT
+                  t.payload.ticketId AS ticket_id,
+                  t.payload.stateAgentId AS author_id --stateAgentId
+              FROM  {{ source('mart', 'babylone_events') }} AS t
+              WHERE t.`type` = 'ticketChangeJoom'
              )     
           SELECT
              t.ticket_id AS ticket_id,
@@ -333,6 +341,7 @@ SELECT
     t.ticket_id AS ticket_id,
     t.user_id AS user_id,
     t.country AS country,
+    CASE WHEN ((t.is_hidden IS TRUE) AND (i.agentIds IS NOT NULL)) THEN FALSE ELSE t.is_hidden END AS is_hidden,
     n.button_place AS button_place,
     t.os AS os, --но вообще бы дёргать нормальную ось (тут проблемы с INTERNAL, присваиваемым ко всем скрытым тикетам)
     CASE WHEN a.first_order_created_time_msk IS NULL THEN 'no' ELSE 'yes' END AS has_success_payments,

@@ -8,7 +8,8 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date',
-       'alerts_channel': "#olc_dbt_alerts"
+       'alerts_channel': "#olc_dbt_alerts",
+       'bigquery_fail_on_missing_partitions': 'false'
      }
  ) }}
 
@@ -30,7 +31,8 @@ ticket_create_events AS
          t.payload.customerExternalId AS user_id,
          t.payload.lang AS language,
          t.payload.country AS country,
-         t.payload.messageSource AS os
+         t.payload.messageSource AS os,
+         t.payload.isHidden AS is_hidden
      FROM mart.onfy_babylone_events AS t
      WHERE t.`type` = 'ticketCreate'
     ),
@@ -205,11 +207,16 @@ first_entries AS
          WITH t AS
              (
               SELECT DISTINCT
-                  t.payload.ticketId AS ticket_id,
-                  t.payload.authorId AS author_id
-              FROM mart.onfy_babylone_events AS t
-              WHERE t.payload.authorType = 'agent'
-                    AND t.`type` = 'ticketEntryAdd'
+                   t.payload.ticketId AS ticket_id,
+                   t.payload.authorId AS author_id
+               FROM mart.onfy_babylone_events AS t
+               WHERE t.`type` = 'ticketEntryAdd'
+               UNION DISTINCT
+               SELECT DISTINCT
+                   t.payload.ticketId AS ticket_id,
+                   t.payload.stateAgentId AS author_id
+               FROM mart.onfy_babylone_events AS t
+               WHERE t.`type` = 'ticketChange'
              )     
           SELECT
              t.ticket_id AS ticket_id,
@@ -332,6 +339,7 @@ SELECT
     t.ticket_id AS ticket_id,
     t.user_id AS user_id,
     t.country AS country,
+    CASE WHEN ((t.is_hidden IS TRUE) AND (i.agentIds IS NOT NULL)) THEN FALSE ELSE t.is_hidden END AS is_hidden,
     n.button_place AS button_place,
     t.os AS os, --но вообще бы дёргать нормальную ось (тут проблемы с INTERNAL, присваиваемым ко всем скрытым тикетам)
     CASE WHEN a.first_order_created_time_msk IS NULL THEN 'no' ELSE 'yes' END AS has_success_payments,

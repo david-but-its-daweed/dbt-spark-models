@@ -12,13 +12,13 @@ with merchant_orders as
 (select
 merchant_order_id,
 merchant_id,
-merchant_type,
+fo.merchant_type,
 created_ts_msk
 from {{ ref('fact_merchant_order')}} fo
 left join (
     select distinct _id, case when typ = 1 or typ is null then 'External' else 'Interanal' end as merchant_type
     from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}) mt on fo.merchant_order_id = mt._id
-where merchant_type is not null)
+where mt.merchant_type is not null)
 , 
 internal_merchants as (
 select _id as merchant_id, from_unixtime(activationTimeMs/1000 + 10800) as activation_time, 'internal' as merchant_type,

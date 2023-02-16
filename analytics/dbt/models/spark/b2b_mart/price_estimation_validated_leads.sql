@@ -53,6 +53,7 @@ orders as (
         first_value(status) over (partition by user_id, interaction_id order by event_ts_msk desc) as current_status,
         first_value(sub_status) over (partition by user_id, interaction_id order by event_ts_msk desc) as current_sub_status,
         date(min(case when sub_status = "priceEstimation" or (status = 'selling' and sub_status != 'new') then event_ts_msk end) over (partition by user_id, interaction_id)) as min_price_estimation_time,
+        date(min(case when status = "manufacturing" then event_ts_msk end) over (partition by user_id, interaction_id)) as min_manufacturing_time,
         date(first_value(event_ts_msk) over (partition by user_id, interaction_id order by case when status not in ('cancelled', 'closed', 'claimed') then 0 else 1 end, event_ts_msk desc)) as current_status_time,
         first_value(status) over (partition by user_id, interaction_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_status,
         first_value(sub_status) over (partition by user_id, interaction_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk desc) as last_sub_status
@@ -72,6 +73,7 @@ owner_email,
 current_status,
 current_sub_status,
 min_price_estimation_time,
+min_manufacturing_time,
 current_status_time,
 last_status,
 last_sub_status

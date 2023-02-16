@@ -8,7 +8,8 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date',
-       'alerts_channel': "#olc_dbt_alerts"
+       'alerts_channel': "#olc_dbt_alerts",
+       'bigquery_fail_on_missing_partitions': 'false'
      }
  ) }}
 
@@ -24,6 +25,7 @@ WITH creations_onfy AS (
       mart.onfy_babylone_events
   WHERE
     `type` = 'ticketCreate'
+     AND event_ts_msk IS NOT NULL
   GROUP BY
     1,
     2,
@@ -235,7 +237,7 @@ hidden_tickets AS (
     mart.onfy_babylone_events AS t
   WHERE
     t.`type` IN ('ticketCreate', 'ticketChange')
-    AND t.payload.isHidden = TRUE --AND t.partition_date = '2022-12-07'
+    AND t.payload.isHidden IS FALSE --AND t.partition_date = '2022-12-07'
 ),
 all_tags AS (
   WITH t AS (
@@ -353,7 +355,7 @@ final AS (
      CASE WHEN b.current_queue == 'Limbo' THEN (
       CASE WHEN a.queues [0] == 'Limbo' THEN a.queues [1] ELSE a.queues [0] END
     ) ELSE b.current_queue END AS current_queue,
-    CASE WHEN c.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS is_hidden,
+    CASE WHEN c.ticket_id IS NOT NULL THEN 'no' ELSE 'yes' END AS is_hidden,
     d.tag,
     e.marker AS marker_from_quickreply,
     f.channel,
@@ -377,3 +379,4 @@ SELECT
     *
 FROM
   final
+WHERE partition_date IS NOT NULL

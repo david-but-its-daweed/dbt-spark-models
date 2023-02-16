@@ -55,6 +55,7 @@ sources:
       - name: b2b_core_order_products_daily_snapshot
       - name: product_products_daily_snapshot
       - name: abu_core_brands_daily_snapshot
+      - name: core_merchant_payment_channels_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -70,11 +71,25 @@ sources:
     tables:
       - name: card_bins_snapshot
       - name: checkout_data
+      - name: country_filter
   - name: recom
     tables:
       - name: context_device_counters_v5
   - name: product
     tables:
       - name: diagnoses_changes
-
-
+  - name: platform
+    tables:
+      - name: aws_service_costs
+      - name: s3_costs
+  - name: pharmacy
+    tables:
+      - name: google_campaign_insights
+      - name: fbads_adset_country_insights
+      - name: partners_insights
+  - name: onfy_mart
+    tables:
+      - name: device_events
+  - name: pharmacy_landing
+    tables:
+      - name: order

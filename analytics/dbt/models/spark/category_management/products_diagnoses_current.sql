@@ -20,7 +20,7 @@ from
     (
     select 
         *,
-         coalesce (lead(event_ts) over (partition by product_id order by event_ts asc), "9999-12-31 23:59:59") as next_effective_ts
+         coalesce (lead(event_ts) over (partition by product_id, diag_code, diag_digest order by event_ts asc), "9999-12-31 23:59:59") as next_effective_ts
     from {{ source('product', 'diagnoses_changes') }}
     where true
         and partition_date > "2022-01-11" -- hardcoded; there are no J1178 earlier
