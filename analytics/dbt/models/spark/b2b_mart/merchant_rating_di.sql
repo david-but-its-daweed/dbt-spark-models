@@ -61,7 +61,7 @@ rfq_recieved as (
      ) c
     left join (SELECT
         rfq_request_id,
-        category_id
+        category_name as category_id
     FROM {{ ref('fact_rfq_requests') }}
     WHERE next_effective_ts_msk IS NULL 
      {% if is_incremental() %}
