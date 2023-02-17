@@ -110,3 +110,4 @@ sources:
       - name: order
       - name: order_parcel
       - name: store
+      - name: order_parcel_checkpoint
