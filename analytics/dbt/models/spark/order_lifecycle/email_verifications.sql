@@ -14,8 +14,6 @@
     }
 ) }}
 
-%sql
-
 WITH creation_timestamp AS (
    SELECT userId,
           MIN(createdTime) AS createdTime,
