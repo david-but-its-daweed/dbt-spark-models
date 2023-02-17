@@ -51,26 +51,54 @@ dim as (
     where date(next_effective_ts) >= date('3030-01-01')
 ),
 
-rfq_recieved as (
-    select merchantId, count(distinct rfq_request_id) as rfq_recieved
+rfq_recieved_1 as (
+    select merchantId, count(distinct rfq_request_id) as rfq_recieved, 1 as for_join
     from
-    (select distinct categoryId, merchantId from 
-    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }}
+    (select distinct merchantId, split(path, '/')[0] as categoryId 
+     from
+    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
+     join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id
      ) c
     left join (SELECT
         rfq_request_id,
-        category_id
+        category_name as category_id
     FROM {{ ref('fact_rfq_requests') }}
     WHERE next_effective_ts_msk IS NULL 
      {% if is_incremental() %}
-      and DATE(sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
+      and DATE(sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 90 days
     {% else %}
-      and DATE(sent_ts_msk)  >= date('2023-02-08') - interval 30 days
+      and DATE(sent_ts_msk)  >= date('2023-02-08') - interval 90 days
     {% endif %}
      ) r on c.categoryId = r.category_id
     group by merchantId
 ),
-    
+
+rfq_recieved_2 as (
+    select count(distinct rfq_request_id) as rfq_recieved, 1 as for_join
+    from
+    (select distinct merchantId, split(path, '/')[0] as categoryId 
+     from
+    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
+     join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id
+     ) c
+    left join (SELECT
+        rfq_request_id,
+        category_name as category_id
+    FROM {{ ref('fact_rfq_requests') }}
+    WHERE next_effective_ts_msk IS NULL 
+     {% if is_incremental() %}
+      and DATE(sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 90 days
+    {% else %}
+      and DATE(sent_ts_msk)  >= date('2023-02-08') - interval 90 days
+    {% endif %}
+     ) r on c.categoryId = r.category_id
+),
+
+rfq_recieved as (
+    select merchantId, coalesce(r1.rfq_recieved, r2.rfq_recieved) as rfq_recieved
+    from rfq_recieved_1 r1 left join rfq_recieved_2 r2 on r1.for_join = r2.for_join
+),
+
 rfq_stat as
 (    
 select 
@@ -119,9 +147,9 @@ left join rfq_recieved rr on r.merchant_id = rr.merchantId
 where 
     1=1 
     {% if is_incremental() %}
-      and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 30 days
+      and DATE(rfq_sent_ts_msk) >= date('{{ var("start_date_ymd") }}') - interval 90 days
     {% else %}
-      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 30 days
+      and DATE(rfq_sent_ts_msk)  >= date('2023-02-08') - interval 90 days
     {% endif %}
 AND merchant_id is not null
 group by merchant_id

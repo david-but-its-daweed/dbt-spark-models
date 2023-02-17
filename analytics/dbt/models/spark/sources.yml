@@ -8,6 +8,7 @@ sources:
       - name: referral_payout_stats
       - name: referral_reference_stats
       - name: device_advertising_costs
+      - name: web_analytics_pageviews_with_segments
   - name: mart
     tables:
       - name: dim_device_min
