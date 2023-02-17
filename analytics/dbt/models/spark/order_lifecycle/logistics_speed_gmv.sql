@@ -43,7 +43,7 @@ select
     round(delivery_duration_tracking) as delivery_duration_tracking,
     round(datediff(tracking_destination_country_time_utc, order_created_time_utc)) as delivery_duration_destination,
     round(datediff(tracking_issuing_point_time_utc, tracking_destination_country_time_utc)) as delivery_duration_from_destination,
-    if(tracking_destination_country_time_utc is not null and (refund_type is null or refund_type != "not_delivered") or delivery_duration_tracking is not null, 1, 0) share_data_exist, --заказы для которых сможем посчитать скорость
+    if(tracking_destination_country_time_utc is not null and (refund_type is null or refund_type != "not_delivered") or delivery_duration_tracking is not null, 1, 0) is_data_exist, --заказы для которых сможем посчитать скорость
     if(refund_type = "not_delivered", 1 , 0) is_refunded_not_deliv
 from 
     {{ source('logistics_mart', 'fact_order') }}
