@@ -2,7 +2,7 @@
     schema='support',
     incremental_strategy='insert_overwrite',
     materialized='incremental',
-    file_format='delta',
+    file_format='parquet',
     partition_by=['partition_date'],
     meta = {
        'team': 'analytics',
