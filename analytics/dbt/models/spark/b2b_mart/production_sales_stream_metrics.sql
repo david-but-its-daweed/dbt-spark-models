@@ -217,7 +217,7 @@ orders_hist AS (
 rfq as (select
     order_id,
     case when max(rfq_created_ts_msk is not null) then 'with rfq' else 'without rfq' end as rfq,
-    case when max(rfq_created_ts_msk is not null and rfq_converted_products > 1) then 'rfq converted' else 'own sourcing' end as sourcing,
+    case when max(rfq_created_ts_msk is not null and rfq_converted_products > 0) then 'rfq converted' else 'own sourcing' end as sourcing,
     sum(case when order_rn = 1 then rfq_converted_products else 0 end)/sum(case when order_rn = 1 then order_products else 0 end) as rfq_products,
     sum(case when order_rn = 1 then rfq_converted_products else 0 end)/sum(case when order_rn = 1 then rfq_products else 0 end) as rfq_products_conversion
      from {{ ref('rfq_metrics') }}
