@@ -111,7 +111,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           LAST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS current_queue
       FROM mart.logistics_babylone_events AS t
-      JOIN mongo.babylone_logistics_queues_daily_snapshot AS a 
+      JOIN {{ source('mongo', 'babylone_logistics_queues_daily_snapshot') }} AS a 
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChange'
             AND t.payload.stateQueueId IS NOT NULL 
@@ -134,7 +134,7 @@ first_entries AS
                 t.payload.ticketId AS ticket_id,
                 a.name AS queue
             FROM mart.logistics_babylone_events AS t
-            JOIN mongo.babylone_logistics_queues_daily_snapshot AS a 
+            JOIN {{ source('mongo', 'babylone_logistics_queues_daily_snapshot') }} AS a 
                  ON t.payload.stateQueueId = a._id
             WHERE t.`type` = 'ticketChange'
                   AND t.payload.stateQueueId IS NOT NULL
@@ -162,7 +162,7 @@ first_entries AS
                  t.ticket_id AS ticket_id,
                  a.name AS tag
              FROM t AS t
-             JOIN mongo.babylone_logistics_tags_daily_snapshot AS a ON t.tag = a._id
+             JOIN {{ source('mongo', 'babylone_logistics_tags_daily_snapshot') }} AS a ON t.tag = a._id
             )
         SELECT
             t.ticket_id AS ticket_id,

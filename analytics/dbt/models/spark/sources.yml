@@ -8,6 +8,7 @@ sources:
       - name: referral_payout_stats
       - name: referral_reference_stats
       - name: device_advertising_costs
+      - name: web_analytics_pageviews_with_segments
   - name: mart
     tables:
       - name: dim_device_min
@@ -24,6 +25,7 @@ sources:
       - name: fact_order_2020
       - name: link_device_real_user
       - name: published_products_current
+      - name: onfy_babylone_events
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
@@ -56,6 +58,18 @@ sources:
       - name: product_products_daily_snapshot
       - name: abu_core_brands_daily_snapshot
       - name: core_merchant_payment_channels_daily_snapshot
+      - name: babylone_joom_tags_daily_snapshot
+      - name: babylone_logistics_queues_daily_snapshot
+      - name: babylone_logistics_tags_daily_snapshot
+      - name: babylone_joom_queues_daily_snapshot
+      - name: babylone_narwhal_queues_daily_snapshot
+      - name: babylone_onfy_queues_daily_snapshot
+      - name: babylone_narwhal_tags_daily_snapshot
+      - name: babylone_onfy_tags_daily_snapshot
+      - name: babylone_joom_tag_categories_daily_snapshot
+      - name: babylone_logistics_tag_categories_daily_snapshot
+      - name: babylone_narwhal_tag_categories_daily_snapshot
+      - name: babylone_onfy_tag_categories_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -71,6 +85,7 @@ sources:
     tables:
       - name: card_bins_snapshot
       - name: checkout_data
+      - name: country_filter
   - name: recom
     tables:
       - name: context_device_counters_v5
@@ -89,6 +104,10 @@ sources:
   - name: onfy_mart
     tables:
       - name: device_events
+      - name: devices_mart
   - name: pharmacy_landing
     tables:
       - name: order
+      - name: order_parcel
+      - name: store
+      - name: order_parcel_checkpoint

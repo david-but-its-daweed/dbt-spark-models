@@ -20,9 +20,9 @@ WITH creations_onfy AS (
     payload.lang AS language,
     'onfy' AS business_unit,
     'creation' AS event,
-    MIN(event_ts_msk) AS `timestamp` -- MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
-      mart.onfy_babylone_events
+      {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketCreate'
      AND event_ts_msk IS NOT NULL
@@ -38,9 +38,9 @@ transfer_to_bot AS (
     payload.ticketId AS ticket_id,
     'onfy' AS business_unit,
     'transfer_to_bot' AS event,
-    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner = 'Automation'
@@ -54,9 +54,9 @@ transfer_to_queue AS (
     payload.ticketId AS ticket_id,
     'onfy' AS business_unit,
     'transfer_to_queue' AS event,
-    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner = 'Queue'
@@ -70,9 +70,9 @@ transfer_to_agent AS (
     payload.ticketId AS ticket_id,
     'onfy' AS business_unit,
     'transfer_to_agent' AS event,
-    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner = 'Agent'
@@ -117,10 +117,10 @@ ticket_entry_add AS (
         t.payload.entryId AS entry_id,
         t.payload.entryType AS entry_type
       FROM
-        mart.onfy_babylone_events AS t
+        {{ source('mart', 'onfy_babylone_events') }} AS t
       WHERE
         NOT t.payload.isAnnouncement
-        AND t.`type` = 'ticketEntryAdd' --AND t.partition_date = '2022-12-07'
+        AND t.`type` = 'ticketEntryAdd'
     )
 ),
 first_entries AS (
@@ -169,7 +169,7 @@ closing_onfy AS (
     'closing' AS event,
     MIN(event_ts_msk) AS `timestamp`
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'ticketChange'
     AND payload.stateOwner IN ('Rejected', 'Resolved')
@@ -200,11 +200,11 @@ all_queues AS (
       DISTINCT t.payload.ticketId AS ticket_id,
       a.name AS queue
     FROM
-     mart.onfy_babylone_events AS t
-      JOIN mongo.babylone_onfy_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
+     {{ source('mart', 'onfy_babylone_events') }} AS t
+      JOIN {{ source('mongo', 'babylone_onfy_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
     WHERE
       t.`type` = 'ticketChange'
-      AND t.payload.stateQueueId IS NOT NULL --AND t.partition_date = '2022-12-07'
+      AND t.payload.stateQueueId IS NOT NULL
   )
   SELECT
     t.ticket_id AS ticket_id,
@@ -224,20 +224,20 @@ current_queue AS (
         AND UNBOUNDED FOLLOWING
     ) AS current_queue
   FROM
-    mart.onfy_babylone_events AS t
-    JOIN mongo.babylone_onfy_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
+    {{ source('mart', 'onfy_babylone_events') }} AS t
+    JOIN {{ source('mongo', 'babylone_onfy_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
   WHERE
     t.`type` = 'ticketChange'
-    AND t.payload.stateQueueId IS NOT NULL --AND t.partition_date = '2022-12-07'
+    AND t.payload.stateQueueId IS NOT NULL
 ),
 hidden_tickets AS (
   SELECT
     DISTINCT t.payload.ticketId AS ticket_id
   FROM
-    mart.onfy_babylone_events AS t
+    {{ source('mart', 'onfy_babylone_events') }} AS t
   WHERE
     t.`type` IN ('ticketCreate', 'ticketChange')
-    AND t.payload.isHidden IS FALSE --AND t.partition_date = '2022-12-07'
+    AND t.payload.isHidden IS FALSE
 ),
 all_tags AS (
   WITH t AS (
@@ -245,36 +245,36 @@ all_tags AS (
       t.payload.ticketId AS ticket_id,
       EXPLODE(t.payload.tagIds) AS tag
     FROM
-      mart.onfy_babylone_events AS t
+      {{ source('mart', 'onfy_babylone_events') }} AS t
     WHERE
       t.payload.tagIds IS NOT NULL
-      AND t.`type` IN ('ticketCreate', 'ticketChange') --AND t.partition_date = '2022-12-07'
+      AND t.`type` IN ('ticketCreate', 'ticketChange')
   )
   SELECT
     t.ticket_id AS ticket_id,
     a.name AS tag
   FROM
     t
-    JOIN mongo.babylone_onfy_tags_daily_snapshot AS a ON t.tag = a._id
+    JOIN {{ source('mongo', 'babylone_onfy_tags_daily_snapshot') }} AS a ON t.tag = a._id
 ),
 all_markers AS (
   SELECT
     t.payload.ticketId AS ticket_id,
     EXPLODE(t.payload.quickReplyMarkers) AS marker
   FROM
-    mart.onfy_babylone_events AS t
+    {{ source('mart', 'onfy_babylone_events') }} AS t
   WHERE
     t.payload.quickReplyMarkers IS NOT NULL
-    AND t.`type` = 'ticketEntryAdd' --AND t.partition_date = '2022-12-07'
+    AND t.`type` = 'ticketEntryAdd'
 ),
 channel AS (
   SELECT
     t.payload.ticketId AS ticket_id,
     MIN(t.payload.channel) AS channel
   FROM
-    mart.onfy_babylone_events AS t
+    {{ source('mart', 'onfy_babylone_events') }} AS t
   WHERE
-    t.`type` = 'ticketCreate' --AND t.partition_date = '2022-12-07'
+    t.`type` = 'ticketCreate'
   GROUP BY
     1
 ),
@@ -283,7 +283,7 @@ bot_result AS (
     ticket_id,
     CASE WHEN agentIds IS NULL THEN 'no' ELSE 'yes' END AS was_escalated
   FROM
-    support.support_mart_ticket_id_ext_onfy
+    {{ ref('support_mart_ticket_id_ext_onfy') }}
     JOIN transfer_to_bot USING (ticket_id)
 ),
 scenario AS (
@@ -291,7 +291,7 @@ scenario AS (
     DISTINCT payload.ticketId AS ticket_id,
     payload.reactionState AS reaction_state
   FROM
-    mart.onfy_babylone_events
+    {{ source('mart', 'onfy_babylone_events') }}
   WHERE
     `type` = 'botReaction'
 ),
@@ -334,14 +334,7 @@ base AS (
   FROM
     messages_last_replies
 ),
--- SELECT
---     event,
---     `timestamp`,
---     COUNT(DISTINCT ticket_id) AS tickets
--- FROM base
--- WHERE `timestamp` IS NOT NULL
--- GROUP BY 1, 2
--- ORDER BY 2, 1
+
 final AS (
   SELECT
      DISTINCT t.ticket_id,

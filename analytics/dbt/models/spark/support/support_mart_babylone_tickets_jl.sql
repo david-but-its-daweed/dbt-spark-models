@@ -20,7 +20,7 @@ WITH creations_logistics AS (
     payload.lang AS language,
     'logistics' AS business_unit,
     'creation' AS event,
-    MIN(event_ts_msk) AS `timestamp` -- MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
       mart.logistics_babylone_events
   WHERE
@@ -38,7 +38,7 @@ transfer_to_bot AS (
     payload.ticketId AS ticket_id,
     'logistics' AS business_unit,
     'transfer_to_bot' AS event,
-    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
     mart.logistics_babylone_events
   WHERE
@@ -54,7 +54,7 @@ transfer_to_queue AS (
     payload.ticketId AS ticket_id,
     'logistics' AS business_unit,
     'transfer_to_queue' AS event,
-    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
     mart.logistics_babylone_events
   WHERE
@@ -70,7 +70,7 @@ transfer_to_agent AS (
     payload.ticketId AS ticket_id,
     'logistics' AS business_unit,
     'transfer_to_agent' AS event,
-    MIN(event_ts_msk) AS `timestamp` --MIN(DATETIME_TRUNC(DATETIME(event_ts_utc), HOUR)) AS `timestamp`
+    MIN(event_ts_msk) AS `timestamp`
   FROM
     mart.logistics_babylone_events
   WHERE
@@ -120,7 +120,7 @@ ticket_entry_add AS (
         mart.logistics_babylone_events AS t
       WHERE
         NOT t.payload.isAnnouncement
-        AND t.`type` = 'ticketEntryAdd' --AND t.partition_date = '2022-12-07'
+        AND t.`type` = 'ticketEntryAdd'
     )
 ),
 first_entries AS (
@@ -201,10 +201,10 @@ all_queues AS (
       a.name AS queue
     FROM
      mart.logistics_babylone_events AS t
-      JOIN mongo.babylone_logistics_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
+      JOIN {{ source('mongo', 'babylone_logistics_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
     WHERE
       t.`type` = 'ticketChange'
-      AND t.payload.stateQueueId IS NOT NULL --AND t.partition_date = '2022-12-07'
+      AND t.payload.stateQueueId IS NOT NULL
   )
   SELECT
     t.ticket_id AS ticket_id,
@@ -225,10 +225,10 @@ current_queue AS (
     ) AS current_queue
   FROM
     mart.logistics_babylone_events AS t
-    JOIN mongo.babylone_logistics_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
+    JOIN {{ source('mongo', 'babylone_logistics_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
   WHERE
     t.`type` = 'ticketChange'
-    AND t.payload.stateQueueId IS NOT NULL --AND t.partition_date = '2022-12-07'
+    AND t.payload.stateQueueId IS NOT NULL
 ),
 hidden_tickets AS (
   SELECT
@@ -237,7 +237,7 @@ hidden_tickets AS (
     mart.logistics_babylone_events AS t
   WHERE
     t.`type` IN ('ticketCreate', 'ticketChange')
-    AND t.payload.isHidden IS FALSE --AND t.partition_date = '2022-12-07'
+    AND t.payload.isHidden IS FALSE
 ),
 all_tags AS (
   WITH t AS (
@@ -248,14 +248,14 @@ all_tags AS (
       mart.logistics_babylone_events AS t
     WHERE
       t.payload.tagIds IS NOT NULL
-      AND t.`type` IN ('ticketCreate', 'ticketChange') --AND t.partition_date = '2022-12-07'
+      AND t.`type` IN ('ticketCreate', 'ticketChange')
   )
   SELECT
     t.ticket_id AS ticket_id,
     a.name AS tag
   FROM
     t
-    JOIN mongo.babylone_logistics_tags_daily_snapshot AS a ON t.tag = a._id
+    JOIN {{ source('mongo', 'babylone_logistics_tags_daily_snapshot') }}  AS a ON t.tag = a._id
 ),
 all_markers AS (
   SELECT
@@ -265,7 +265,7 @@ all_markers AS (
     mart.logistics_babylone_events AS t
   WHERE
     t.payload.quickReplyMarkers IS NOT NULL
-    AND t.`type` = 'ticketEntryAdd' --AND t.partition_date = '2022-12-07'
+    AND t.`type` = 'ticketEntryAdd'
 ),
 channel AS (
   SELECT
@@ -274,7 +274,7 @@ channel AS (
   FROM
     mart.logistics_babylone_events AS t
   WHERE
-    t.`type` = 'ticketCreate' --AND t.partition_date = '2022-12-07'
+    t.`type` = 'ticketCreate'
   GROUP BY
     1
 ),
@@ -283,8 +283,8 @@ bot_result AS (
     ticket_id,
     CASE WHEN agentIds IS NULL THEN 'no' ELSE 'yes' END AS was_escalated
   FROM
-    support.support_mart_ticket_id_ext_jl --?
-    JOIN transfer_to_bot USING (ticket_id)
+    {{ ref('support_mart_ticket_id_ext_jl') }}
+  JOIN transfer_to_bot USING (ticket_id)
 ),
 scenario AS (
   SELECT
@@ -334,14 +334,7 @@ base AS (
   FROM
     messages_last_replies
 ),
--- SELECT
---     event,
---     `timestamp`,
---     COUNT(DISTINCT ticket_id) AS tickets
--- FROM base
--- WHERE `timestamp` IS NOT NULL
--- GROUP BY 1, 2
--- ORDER BY 2, 1
+
 final AS (
   SELECT
      DISTINCT t.ticket_id,

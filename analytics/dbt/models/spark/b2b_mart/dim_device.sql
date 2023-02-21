@@ -2,7 +2,8 @@
     schema='b2b_mart',
     materialized='incremental',
     partition_by=['partition_date_msk'],
-    file_format='delta',
+    incremental_strategy='insert_overwrite',
+    file_format='parquet',
     meta = {
       'team': 'general_analytics',
       'bigquery_load': 'true',

@@ -33,7 +33,7 @@ ticket_create_events AS
          t.payload.country AS country,
          t.payload.messageSource AS os,
          t.payload.isHidden AS is_hidden
-     FROM mart.onfy_babylone_events AS t
+     FROM {{ source('mart', 'onfy_babylone_events') }} AS t
      WHERE t.`type` = 'ticketCreate'
     ),
  ticket_entry_add AS
@@ -58,7 +58,7 @@ ticket_create_events AS
                t.payload.entryId AS entry_id,
                t.payload.entryType AS entry_type
           FROM
-              mart.onfy_babylone_events AS t
+              {{ source('mart', 'onfy_babylone_events') }} AS t
           WHERE NOT t.payload.isAnnouncement
                     AND t.`type` = 'ticketEntryAdd'
            )
@@ -109,8 +109,8 @@ first_entries AS
       SELECT DISTINCT
           t.payload.ticketId AS ticket_id,
           LAST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS current_queue
-      FROM mart.onfy_babylone_events AS t
-      JOIN mongo.babylone_onfy_queues_daily_snapshot AS a 
+      FROM {{ source('mart', 'onfy_babylone_events') }} AS t
+      JOIN {{ source('mongo', 'babylone_onfy_queues_daily_snapshot') }} AS a 
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChange'
             AND t.payload.stateQueueId IS NOT NULL 
@@ -122,8 +122,8 @@ first_entries AS
             SELECT DISTINCT
                 t.payload.ticketId AS ticket_id,
                 a.name AS queue
-            FROM mart.onfy_babylone_events AS t
-            JOIN mongo.babylone_onfy_queues_daily_snapshot AS a 
+            FROM {{ source('mart', 'onfy_babylone_events') }} AS t
+            JOIN {{ source('mongo', 'babylone_onfy_queues_daily_snapshot') }} AS a 
                  ON t.payload.stateQueueId = a._id
             WHERE t.`type` = 'ticketChange'
                   AND t.payload.stateQueueId IS NOT NULL
@@ -139,7 +139,7 @@ first_entries AS
        SELECT DISTINCT
            t.payload.ticketId AS ticket_id,
            LAST_VALUE(t.payload.stateAgentId) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS last_agent
-       FROM mart.onfy_babylone_events AS t
+       FROM {{ source('mart', 'onfy_babylone_events') }} AS t
        WHERE t.`type` = 'ticketChange'
             AND t.payload.stateAgentId IS NOT NULL
       ),     
@@ -150,7 +150,7 @@ first_entries AS
              SELECT
                  t.payload.ticketId AS ticket_id,
                  EXPLODE(t.payload.tagIds) AS tag
-             FROM mart.onfy_babylone_events AS t
+             FROM {{ source('mart', 'onfy_babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
                    AND t.`type` IN ('ticketCreate', 'ticketChange')
              ),
@@ -160,7 +160,7 @@ first_entries AS
                  t.ticket_id AS ticket_id,
                  a.name AS tag
              FROM t AS t
-             JOIN mongo.babylone_onfy_tags_daily_snapshot AS a ON t.tag = a._id
+             JOIN {{ source('mongo', 'babylone_onfy_tags_daily_snapshot') }} AS a ON t.tag = a._id
             )
         SELECT
             t.ticket_id AS ticket_id,
@@ -175,7 +175,7 @@ first_entries AS
              SELECT
                  t.payload.ticketId AS ticket_id,
                  EXPLODE(t.payload.parcelIds) AS parcelId
-             FROM mart.onfy_babylone_events AS t
+             FROM {{ source('mart', 'onfy_babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
                    AND t.`type` IN ('ticketCreate', 'ticketChange')
             )
@@ -192,7 +192,7 @@ first_entries AS
              SELECT
                  t.payload.ticketId AS ticket_id,
                  EXPLODE(t.payload.orderIds) AS orderId
-             FROM mart.onfy_babylone_events AS t
+             FROM {{ source('mart', 'onfy_babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
                    AND t.`type` IN ('ticketCreate', 'ticketChange')
             )
@@ -209,13 +209,13 @@ first_entries AS
               SELECT DISTINCT
                    t.payload.ticketId AS ticket_id,
                    t.payload.authorId AS author_id
-               FROM mart.onfy_babylone_events AS t
+               FROM {{ source('mart', 'onfy_babylone_events') }} AS t
                WHERE t.`type` = 'ticketEntryAdd'
                UNION DISTINCT
                SELECT DISTINCT
                    t.payload.ticketId AS ticket_id,
                    t.payload.stateAgentId AS author_id
-               FROM mart.onfy_babylone_events AS t
+               FROM {{ source('mart', 'onfy_babylone_events') }} AS t
                WHERE t.`type` = 'ticketChange'
              )     
           SELECT
@@ -234,9 +234,9 @@ first_entries AS
                   t.event_ts_msk AS event_ts_msk,
                   CASE WHEN t.payload.authorType != 'customer' THEN 'support' ELSE 'customer' END AS author_type,
                   ROW_NUMBER() OVER (PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk) AS num
-              FROM mart.onfy_babylone_events AS t
-              JOIN mart.onfy_babylone_events AS a ON a.payload.ticketId = t.payload.ticketId
-                                                                   AND a.`type` = 'ticketCreate'
+              FROM {{ source('mart', 'onfy_babylone_events') }} AS t
+              JOIN {{ source('mart', 'onfy_babylone_events') }} AS a ON a.payload.ticketId = t.payload.ticketId
+                                                                        AND a.`type` = 'ticketCreate'
               WHERE t.payload.entryType = 'message'
                     AND t.`type` = 'ticketEntryAdd'
              ),      
@@ -290,7 +290,7 @@ first_entries AS
               SELECT
                   t.payload.ticketId AS ticket_id,
                   LAST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
-              FROM mart.onfy_babylone_events AS t
+              FROM {{ source('mart', 'onfy_babylone_events') }} AS t
               WHERE t.`type` = 'babyloneWidgetAction'
                     AND t.payload.widgetType = 'did_we_help'
                     AND t.payload.selectedOptionsIds[0] IS NOT NULL
@@ -307,7 +307,7 @@ first_entries AS
              (
               SELECT DISTINCT
                   t.payload.ticketId AS ticket_id
-              FROM mart.onfy_babylone_events AS t
+              FROM {{ source('mart', 'onfy_babylone_events') }} AS t
               WHERE t.`type` = 'babyloneWidgetAction'
                     AND t.payload.widgetType = 'did_we_help'
                     AND t.payload.selectedOptionsIds[0] IS NULL
@@ -317,7 +317,7 @@ first_entries AS
                SELECT
                    t.payload.ticketId AS ticket_id,
                    MIN(t.event_ts_msk) AS resolution_ticket_ts_msk
-               FROM mart.onfy_babylone_events AS t
+               FROM {{ source('mart', 'onfy_babylone_events') }} AS t
                WHERE t.payload.stateOwner IN ('Resolved', 'Rejected')
                      AND t.`type` = 'ticketChange'
                GROUP BY 1
@@ -327,7 +327,7 @@ first_entries AS
                SELECT DISTINCT
                    (t.payload.ticketId) AS ticket_id,
                    FIRST_VALUE(t.payload.buttonPlace) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS button_place
-               FROM mart.onfy_babylone_events AS t
+               FROM {{ source('mart', 'onfy_babylone_events') }} AS t
                WHERE t.`type` = 'ticketEntryAdd'
                      AND t.payload.authorType = 'customer'
                      AND t.payload.buttonPlace IS NOT NULL
