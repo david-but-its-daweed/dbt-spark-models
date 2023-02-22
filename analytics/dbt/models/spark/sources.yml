@@ -112,6 +112,7 @@ sources:
       - name: order_parcel
       - name: store
       - name: order_parcel_checkpoint
+      - name: device
   - name: merchant
     tables:
       - name: dim_merchant_payment_channel
