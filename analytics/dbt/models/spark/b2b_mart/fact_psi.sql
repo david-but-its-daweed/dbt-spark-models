@@ -240,7 +240,7 @@ select
     psi_waiting_time,
     psi_end_time,
     min(status_10_time) over (partition by merchant_order_id, product_id, psi_number) as waiting_time,
-    min(case when status_id = 20 and psi_number = 1 then date_of_inspection when status_id = 20 and psi_attempt > 1 then time end) 
+    min(case when status_id = 20 and psi_number = 1 then date_of_inspection when status_id = 20 and psi_number > 1 then time end) 
         over (partition by merchant_order_id, product_id, psi_number) as running_time,
     min(case when status_id = 30 then time end) over (partition by merchant_order_id, product_id, psi_number) as ready_time,
     min(case when status_id = 40 and status_10_time < time then time end) over (partition by merchant_order_id, product_id, psi_number) as failed_time,
