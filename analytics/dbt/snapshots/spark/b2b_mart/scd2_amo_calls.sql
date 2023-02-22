@@ -79,7 +79,8 @@ with statuses as (
   SELECT "договор подписан" AS sub_status,
   "contract" AS status,
   5020 AS priority
-  UNION ALL "успешно реализовано (оплата)" AS sub_status,
+  UNION ALL 
+  SELECT "успешно реализовано (оплата)" AS sub_status,
   "payed" AS status,
   6010 AS priority
 )
@@ -97,6 +98,6 @@ SELECT
   s.sub_status,
   s.priority AS status_priority,
   skorozvonId AS skorozvon_id
-FROM {{ source('mongo', 'b2b_core_amo_crm_calls_daily_snapshot') }} AS с
+FROM {{ source('mongo', 'b2b_core_amo_crm_calls_daily_snapshot') }} AS c
 LEFT JOIN statuses AS s ON s.sub_status = c.leadStatus
 {% endsnapshot %}
