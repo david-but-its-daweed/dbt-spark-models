@@ -3,10 +3,10 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='order_id',
+      unique_key='call_id',
 
       strategy='timestamp',
-      updated_at='update_ts_msk',
+      updated_at='created_ts_msk',
       file_format='delta'
     )
 }}
@@ -87,11 +87,12 @@ with statuses as (
 
 
 SELECT 
+  callId AS call_id,
   callStatus AS call_status,
   millis_to_ts_msk(callTime) AS call_ts_msk,
   callerName AS owner_name,
   contactId AS amo_contact_id,
-  ctms AS ctms,
+  millis_to_ts_msk(ctms) AS created_ts_msk,
   duration AS call_duration,
   leadId AS lead_id,
   s.status,
