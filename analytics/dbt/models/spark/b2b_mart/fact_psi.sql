@@ -37,6 +37,17 @@ psi as (
     where type = 10
 ),
 
+date_of_inspection as (
+    select merchant_order_id, product_id, unix_timestamp(Timestamp(min(col.datePayload.value)))*1000 as date_of_inspection
+from
+    (select statusId as status_id, stms, _id, ctxId as merchant_order_id, scndCtxId as product_id, explode(payloadNew)
+    from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} f
+    where type = 10
+    )
+    where col.type = 'date' and col.name = 'dateOfInspection' and col.datePayload is not null
+group by merchant_order_id, product_id
+    ),
+
 problems as (
     select _id, 
 max(case when name = 'problems' and problem.value = 'goodQuality' then 1 else 0 end) as quality,
@@ -224,12 +235,13 @@ select
     status_id,
     time,
     current_status,
-    psi_start_time,
+    date_of_inspection as psi_start_time,
     psi_ready_time,
     psi_waiting_time,
     psi_end_time,
     min(status_10_time) over (partition by merchant_order_id, product_id, psi_number) as waiting_time,
-    min(case when status_id = 20 then time end) over (partition by merchant_order_id, product_id, psi_number) as running_time,
+    min(case when status_id = 20 and psi_number = 1 then date_of_inspection when status_id = 20 and psi_attempt > 1 then time end) 
+        over (partition by merchant_order_id, product_id, psi_number) as running_time,
     min(case when status_id = 30 then time end) over (partition by merchant_order_id, product_id, psi_number) as ready_time,
     min(case when status_id = 40 and status_10_time < time then time end) over (partition by merchant_order_id, product_id, psi_number) as failed_time,
     max(psi_number) over (partition by merchant_order_id, product_id) as psis,
@@ -269,6 +281,7 @@ select
     psi_waiting_time,
     psi_end_time,
     s.time as status_10_time,
+    date_of_inspection,
     psi_number,
     order_id,
     merchant_id, 
@@ -289,6 +302,7 @@ select
     client_comment
 from table1 t
 left join status_10 s on s.merchant_order_id = t.merchant_order_id and s.product_id = t.product_id
+left join date_of_inspection d on d.merchant_order_id = t.merchant_order_id and d.product_id = t.product_id
 where s.time <= t.time and s.lead_time >= t.time
 )
 )
