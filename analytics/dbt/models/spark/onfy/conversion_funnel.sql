@@ -8,7 +8,61 @@
     }
 ) }}
 
-with session_start as (
+with source as (
+    select distinct
+        device_id,
+        event_ts_cet as source_dt,
+        lead(event_ts_cet) over (partition by device_id order by event_ts_cet) as next_source_dt,
+        coalesce(
+            case 
+                when onfy_mart.device_events.type = 'externalLink'
+                then
+                    case
+                        when lower(onfy_mart.device_events.payload.params.utm_source) like '%google%' 
+                        then 'google' 
+                        when onfy_mart.device_events.payload.params.utm_source is not null
+                        then onfy_mart.device_events.payload.params.utm_source
+                        when 
+                            (onfy_mart.device_events.payload.referrer like '%/www.google%') 
+                            OR (onfy_mart.device_events.payload.referrer like '%/www.bing%')
+                            OR (onfy_mart.device_events.payload.referrer like '%/search.yahoo.com%')
+                            OR (onfy_mart.device_events.payload.referrer like '%/duckduckgo.com%')
+                        then 'Organic'
+                        when
+                            (onfy_mart.device_events.payload.referrer like '%facebook.com%') 
+                            OR (onfy_mart.device_events.payload.referrer like '%instagram.com%')             
+                        then 'UNMARKED_facebook_or_instagram'      
+                    end
+                when onfy_mart.device_events.type in ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
+                then
+                    case
+                        when onfy_mart.device_events.payload.utm_source = 'Unattributed' then 'Facebook'
+                        when onfy_mart.device_events.payload.utm_source is null then 'Unknown'
+                        when onfy_mart.device_events.payload.utm_source = 'Google Organic Search' then 'Organic'
+                        else onfy_mart.device_events.payload.utm_source
+                    end
+            end
+        , 'Unknown') AS utm_source,
+        case 
+            when onfy_mart.device_events.type = 'externalLink' 
+            then onfy_mart.device_events.payload.params.utm_campaign
+            else onfy_mart.device_events.payload.utm_campaign 
+        end as utm_campaign,
+            case 
+            when 
+                lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%adchampaign%'
+                OR lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign))like '%adchampagn%' 
+                then 'adchampagne'
+                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%rocket%' then 'rocket10'
+                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%whiteleads%' then 'whiteleads'
+                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%ohm%' then 'ohm'
+                else 'onfy'
+            end AS partner
+    from {{ source('onfy_mart', 'device_events')}}
+    where type in ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
+)
+
+, session_start as (
   select distinct
     device_id,
     event_ts_cet as session_dt,
@@ -16,10 +70,11 @@ with session_start as (
   from {{ source('onfy_mart', 'device_events')}}
   where type in ('sessionConfigured', 'homeOpen')
 )
-, minimal_envolvement as ( 
+
+, minimal_involvement as ( 
 select 
   device_id,
-  event_ts_cet as minimal_envolvement_dt,
+  event_ts_cet as minimal_involvement_dt,
   type
 from {{ source('onfy_mart', 'device_events')}}
 where type in ('search', 'searchServer', 'productOpen', 'catalogOpen')
@@ -60,19 +115,45 @@ select
 from {{ source('onfy_mart', 'device_events')}}
 where type = 'paymentCompleteServer'
 )
+
 -----------------------------------------------------------------------------------------
--- only taking sessions with minimal envolvement - to cut empty sessions, checking order status sessions and so on
+-- adding sources to sessions
 -----------------------------------------------------------------------------------------
-, minimal_envolvement_sessions as (
+
+, sourced_sessions as (
+select 
+    sessions.device_id,
+    sessions.session_dt,
+    next_session_dt,
+    max_by(sources.utm_source, sessions.session_dt) as source,
+    max_by(sources.utm_campaign, sessions.session_dt) as campaign,
+    max_by(sources.partner, sessions.session_dt) as partner
+from session_start as sessions
+left join source as sources
+    on sessions.device_id = sources.device_id
+    and sessions.session_dt between (sources.source_dt - INTERVAL 1 minutes) and coalesce(next_source_dt, current_timestamp())
+group by 
+    sessions.device_id,
+    sessions.session_dt,
+    next_session_dt
+)
+
+-----------------------------------------------------------------------------------------
+-- only taking sessions with minimal involvement - to cut empty sessions, checking order status sessions and so on
+-----------------------------------------------------------------------------------------
+, minimal_involvement_sessions as (
 select distinct
   sessions.device_id,
   session_dt as session_minenv_dt,
+  sessions.source,
+  sessions.campaign,
+  sessions.partner,
   lag(session_dt) over(partition by sessions.device_id order by session_dt) as prev_session_minenv_dt
   , lead(session_dt) over(partition by sessions.device_id order by session_dt) as next_session_minenv_dt
-from session_start as sessions
-join minimal_envolvement
-  on sessions.device_id = minimal_envolvement.device_id
-  and minimal_envolvement_dt between session_dt and coalesce(next_session_dt, CURRENT_TIMESTAMP())
+from sourced_sessions as sessions
+join minimal_involvement
+  on sessions.device_id = minimal_involvement.device_id
+  and minimal_involvement_dt between session_dt and coalesce(next_session_dt, CURRENT_TIMESTAMP())
 )
 -----------------------------------------------------------------------------------------
 /*
@@ -87,7 +168,7 @@ select
   payment_dt,
   datediff(session_minenv_dt, prev_session_minenv_dt) as session_diff_days, 
   row_number() over(partition by sessions.device_id, session_minenv_dt order by payment_dt desc) as rn
-from minimal_envolvement_sessions as sessions 
+from minimal_involvement_sessions as sessions 
 left join successful_payment as payment
   on sessions.device_id = payment.device_id
   and payment_dt between session_minenv_dt and coalesce(next_session_minenv_dt, CURRENT_TIMESTAMP())
@@ -112,7 +193,10 @@ from sessions_with_payments
 , actual_sessions as (
 select 
   device_id,
-  session_minenv_dt 
+  session_minenv_dt,
+  source,
+  campaign,
+  partner
 from sessions_counter
 where is_session = 1
 )
@@ -123,6 +207,9 @@ where is_session = 1
 select  
   session.device_id,
   session_minenv_dt,
+  session.source,
+  session.campaign,
+  session.partner,
   add_to_cart_dt,
   row_number() over(partition by session.device_id, session_minenv_dt order by add_to_cart_dt) as rnk_add_to_cart
 from actual_sessions session 
@@ -200,7 +287,10 @@ select
     cart_open_dt,
     checkout_dt,
     payment_start_dt,
-    payment_dt
+    payment_dt,
+    source,
+    campaign,
+    partner
 from payment_start_to_payment as events
 inner join devices_mart as devices
   on events.device_id = devices.device_id
