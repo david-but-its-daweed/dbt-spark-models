@@ -22,21 +22,8 @@ with first_purchases as
         order.user_email_hash
 ),
 
-devices as 
-(
-    select 
-        device_id,
-        app_device_type,
-        min_by(user_email_hash, min_purchase_date) as user_email_hash
-    from 
-      {{ source('onfy_mart', 'devices_mart') }}
-    group by 
-        device_id,
-        app_device_type
-),
-
 sources as (
-    select 
+    select distinct
         device_events.device_id,
         device_events.type,
         device_events.payload.link,
@@ -75,11 +62,11 @@ sources as (
             then device_events.payload.params.utm_campaign
             else device_events.payload.utm_campaign 
         end as utm_campaign,
-        devices_mart.user_email_hash
+        order.user_email_hash
     from 
         {{ source('onfy_mart', 'device_events') }} as device_events
-    left join devices as devices_mart
-        on device_events.device_id = devices_mart.device_id
+    left join  {{ source('pharmacy_landing', 'order') }} as order
+        on device_events.device_id = order.device_id
     where 
         device_events.type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
 ),
