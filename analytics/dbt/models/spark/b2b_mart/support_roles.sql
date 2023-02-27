@@ -137,6 +137,7 @@ SELECT
 "les.andrey@joom.com" AS email,
 "Dev" AS role,
 "" as name
+UNION ALL
 SELECT
 "ivan.dergachev@joompro-support.com" AS email,
 "CallCenter" AS role,
