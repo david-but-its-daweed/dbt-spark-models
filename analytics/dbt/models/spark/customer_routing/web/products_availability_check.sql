@@ -1,11 +1,13 @@
 {{ config(
     schema='customer_routing',
+    incremental_strategy='insert_overwrite',
     materialized='incremental',
+    file_format='parquet',
     partition_by=['partition_date_msk'],
-    file_format='delta',
     meta = {
       'team': 'clan',
       'bigquery_load': 'true',
+      'alerts_channel': "#olc_dbt_alerts",
       'bigquery_partitioning_date_column': 'partition_date_msk',
       'bigquery_fail_on_missing_partitions': 'false'
     }
@@ -14,6 +16,7 @@
 SELECT DISTINCT
     device_id,
     partition_date AS partition_date_msk,
+    DATE(from_unixtime(event_ts / 1000)) AS open_date_msk,
     device.os_type,
     FIRST(payload.avail) OVER (PARTITION BY device_id, DATE(from_unixtime(event_ts / 1000)) ORDER BY from_unixtime(event_ts / 1000)) AS avail_flg,
     FIRST(payload.productId) OVER (PARTITION BY device_id, DATE(from_unixtime(event_ts / 1000)) ORDER BY from_unixtime(event_ts / 1000)) AS product_id

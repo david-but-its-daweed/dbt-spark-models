@@ -1,8 +1,9 @@
 {{ config(
     schema='search',
+    incremental_strategy='insert_overwrite',
     materialized='incremental',
     partition_by=['partition_date'],
-    file_format='delta',
+    file_format='parquet',
     meta = {
       'team': 'search',
       'bigquery_load': 'true',

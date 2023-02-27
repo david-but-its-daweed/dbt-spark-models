@@ -8,6 +8,7 @@ sources:
       - name: referral_payout_stats
       - name: referral_reference_stats
       - name: device_advertising_costs
+      - name: web_analytics_pageviews_with_segments
   - name: mart
     tables:
       - name: dim_device_min
@@ -24,6 +25,7 @@ sources:
       - name: fact_order_2020
       - name: link_device_real_user
       - name: published_products_current
+      - name: onfy_babylone_events
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
@@ -46,6 +48,7 @@ sources:
       - name: b2b_core_rfq_request_daily_snapshot
       - name: b2b_core_rfq_response_daily_snapshot
       - name: b2b_core_customers_daily_snapshot
+      - name: b2b_core_amo_crm_calls_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: b2b_core_interactions_daily_snapshot
@@ -56,6 +59,18 @@ sources:
       - name: product_products_daily_snapshot
       - name: abu_core_brands_daily_snapshot
       - name: core_merchant_payment_channels_daily_snapshot
+      - name: babylone_joom_tags_daily_snapshot
+      - name: babylone_logistics_queues_daily_snapshot
+      - name: babylone_logistics_tags_daily_snapshot
+      - name: babylone_joom_queues_daily_snapshot
+      - name: babylone_narwhal_queues_daily_snapshot
+      - name: babylone_onfy_queues_daily_snapshot
+      - name: babylone_narwhal_tags_daily_snapshot
+      - name: babylone_onfy_tags_daily_snapshot
+      - name: babylone_joom_tag_categories_daily_snapshot
+      - name: babylone_logistics_tag_categories_daily_snapshot
+      - name: babylone_narwhal_tag_categories_daily_snapshot
+      - name: babylone_onfy_tag_categories_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -90,6 +105,30 @@ sources:
   - name: onfy_mart
     tables:
       - name: device_events
+      - name: devices_mart
   - name: pharmacy_landing
     tables:
       - name: order
+      - name: order_parcel
+      - name: store
+      - name: order_parcel_checkpoint
+      - name: device
+  - name: merchant
+    tables:
+      - name: dim_merchant_payment_channel
+        description: Merchant payment channels
+        columns:
+          - name: id
+            description: Payment channel id
+          - name: merchant_id
+            description: Merchant id
+          - name: method_id
+            description: Selected payment method id
+          - name: type
+            description: Payment channel type( 0 - default, 1 - JoomUSA, 2 - Hyperwallet)
+          - name: status
+            description: Payment channel status (0 - not configured, 1 - error, 2 - pending external, 3 - configured, 4 - deactivated)
+          - name: error_reasons
+            description: Payment channel error reasons (0 - KYC error, 1 - payment method error)
+          - name: updated_time
+            description: Updated time

@@ -1,8 +1,9 @@
 {{ config(
     schema='engagement',
+    incremental_strategy='insert_overwrite',
     materialized='incremental',
+    file_format='parquet',
     partition_by=['partition_date_msk'],
-    file_format='delta',
     meta = {
       'team': 'clan',
       'bigquery_load': 'true',

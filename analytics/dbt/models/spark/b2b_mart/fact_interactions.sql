@@ -353,7 +353,9 @@ interaction_id,
         utm_medium as current_utm_medium,
         type as current_type,
         campaign as current_campaign,
-        rank(interaction_id) over (partition by user_id, interaction_min_time is not null order by interaction_min_time) as sucessfull_interaction_number
+        rank(interaction_id) over (partition by user_id, interaction_min_time is not null order by interaction_min_time) as sucessfull_interaction_number,
+        rank(interaction_id) over (partition by user_id order by 
+                                   case when partition_date_msk <= order_min_time or order_min_time is null then 0 else 1 end) as sucessfull_order_number
         from
 (
 select 
@@ -391,7 +393,8 @@ select
         min_final_pricing_ts_msk,
         min_signing_and_payment_ts_msk,
         row_number() over (partition by interaction_id order by status_priority desc, substatus_priority desc, order_id) as rn,
-        min(min_status_manufacturing_ts_msk) over (partition by user_id, interaction_id) as interaction_min_time
+        min(min_status_manufacturing_ts_msk) over (partition by user_id, interaction_id) as interaction_min_time,
+        min(min_status_manufacturing_ts_msk) over (partition by user_id) as order_min_time
     from
     (select 
         in.interaction_id,

@@ -109,5 +109,9 @@ SELECT
 "CallCenter" AS role
 UNION ALL
 SELECT
-"Ivan.dergachev@joompro-support.com" AS email,
+"ivan.dergachev@joompro-support.com" AS email,
+"CallCenter" AS role
+UNION ALL 
+SELECT 
+"a.solomin@joompro-support.com" AS email,
 "CallCenter" AS role

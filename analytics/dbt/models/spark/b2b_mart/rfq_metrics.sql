@@ -99,6 +99,36 @@ FROM rfq_requests AS rq
 LEFT JOIN response AS rp ON rq.rfq_request_id = rp.rfq_request_id
 ),
 
+price as (
+    select min(least(prc[0], prc[1], prc[2])) as price, _id as product_id
+    from
+    (select _id, prcQtyDis from {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+    where prcQtyDis[0] is not null) a
+    left join 
+    (select pId, prc from {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }}
+    where prc[0] is not null) b on _id = pId
+    group by _id
+),
+    
+expensive as (
+    select distinct 
+    order_rfq_response_id as id, 
+    price > price_standart as expensive,
+    price_min != price_max as different_prices
+    from
+    (
+    select avg(price) over (partition by order_id, rfq_request_id) as price_standart,
+    min(price) over (partition by order_id, rfq_request_id) as price_min,
+    max(price) over (partition by order_id, rfq_request_id) as price_max,
+    price, order_id, rfq_request_id, order_rfq_response_id
+    from
+    (select distinct order_id, rfq_request_id, order_rfq_response_id, price
+    from rfq r
+    left join price p on r.product_id = p.product_id
+    )
+    )
+),
+
 order_products as (
     select order_id, product_id, max(order_product) as order_product, max(rfq_product) as rfq_product
     from
@@ -236,7 +266,7 @@ rfq.response_created_ts_msk as rfq_response_ts_msk,
 rfq.sent_status,
 rfq.order_rfq_response_id,
 rfq.response_status,
-rfq.reject_reason,
+case when rfq.reject_reason = 'expensive' and expensive and different_prices then 'expensive (other options cheaper)' else rfq.reject_reason end as reject_reason,
 rfq.merchant_id,
 rfq.category_id,
 rfq.category_name,
@@ -248,5 +278,6 @@ from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
 left join rfq on oh.order_id = rfq.order_id
 left join products p on oh.order_id = p.order_id
+left join expensive e on rfq.order_rfq_response_id = e.id
 where (op.product_id = rfq.product_id or op.product_id is null and rfq.product_id is null)
 )

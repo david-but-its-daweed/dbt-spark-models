@@ -216,7 +216,10 @@ orders_hist AS (
 
 rfq as (select
     order_id,
-    case when max(rfq_created_ts_msk is not null) then 'with rfq' else 'without rfq' end as rfq
+    case when max(rfq_created_ts_msk is not null) then 'with rfq' else 'without rfq' end as rfq,
+    case when max(rfq_created_ts_msk is not null and rfq_converted_products > 0) then 'rfq converted' else 'own sourcing' end as sourcing,
+    sum(case when order_rn = 1 then rfq_converted_products else 0 end)/sum(case when order_rn = 1 then order_products else 0 end) as rfq_products,
+    sum(case when order_rn = 1 then rfq_converted_products else 0 end)/sum(case when order_rn = 1 then rfq_products else 0 end) as rfq_products_conversion
      from {{ ref('rfq_metrics') }}
         where product_id is not null and product_id != ""
      group by 1)
@@ -232,6 +235,9 @@ SELECT
     owner_email,
     owner_role,
     coalesce(rfq, "without rfq") as rfq,
+    coalesce(sourcing, 'own sourcing') as sourcing,
+    rfq_products,
+    rfq_products_conversion,
     oh.gmv,
     oh.was_in_manufacturing,
     oh.cancelled_in_selling,
