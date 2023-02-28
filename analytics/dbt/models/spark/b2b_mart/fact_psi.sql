@@ -8,14 +8,40 @@
 ) }}
 
 
-with products as
-(select 
-    id as product_id, 
+with 
+
+products as
+(select product_id, 
+    merchant_order_id, 
+    psi_status_id, 
+    status,
+    type,
+    min(time_psi) as ready_for_psi
+from
+(
+select statuses1.status as running_status, statuses1.updatedTime as time_psi, 
+    product_id, 
+    merchant_order_id, 
+    psi_status_id, 
+    status,
+    type 
+from
+(
+select id as product_id, 
     merchOrdId as merchant_order_id, 
     psiStatusID as psi_status_id, 
     status,
+    explode(statuses) as statuses1,
     type 
-    from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
+from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
+)
+)
+where running_status = 10
+group by product_id, 
+    merchant_order_id, 
+    psi_status_id, 
+    status,
+    type 
 ),
 
 statuses as (
@@ -193,6 +219,7 @@ select distinct product_id,
     type,
     status,
     current_status,
+    date(from_unixtime(ready_for_psi/1000)) as ready_for_psi,
     date(from_unixtime(psi_start_time/1000)) as psi_start,
     date(from_unixtime(psi_waiting_time/1000)) as psi_waiting,
     date(from_unixtime(psi_ready_time/1000)) as psi_ready,
@@ -263,15 +290,16 @@ select
     max(other) over (partition by merchant_order_id, product_id, psi_number) as other,
     max(comment) over (partition by merchant_order_id, product_id, psi_number) as comment,
     max(client_other) over (partition by merchant_order_id, product_id, psi_number) as client_other,
-    max(client_comment) over (partition by merchant_order_id, product_id, psi_number) as client_comment
+    max(client_comment) over (partition by merchant_order_id, product_id, psi_number) as client_comment,
+    ready_for_psi
     from
 (
 select 
     t.product_id, 
     t.merchant_order_id, 
-    psi_status_id,
+    t.psi_status_id,
     product_status,
-    type,
+    t.type,
     s.status,
     status_id,
     t.time,
@@ -299,10 +327,12 @@ select
     other,
     comment,
     client_other,
-    client_comment
+    client_comment,
+    ready_for_psi
 from table1 t
 left join status_10 s on s.merchant_order_id = t.merchant_order_id and s.product_id = t.product_id
 left join date_of_inspection d on d.merchant_order_id = t.merchant_order_id and d.product_id = t.product_id
+left join products p on p.merchant_order_id = t.merchant_order_id and p.product_id = t.product_id
 where s.time <= t.time and s.lead_time >= t.time
 )
 )
