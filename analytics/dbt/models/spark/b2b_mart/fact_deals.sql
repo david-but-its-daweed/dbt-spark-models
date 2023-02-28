@@ -88,7 +88,7 @@ userId as user_id,
 date('{{ var("start_date_ymd") }}') as partition_date_msk
 from deals left join admin on deals.moderatorId = admin.admin_id
 where rn = 1
-) left join gmv on deals.interaction_id = gmv.interaction_id
+) d left join gmv on d.interaction_id = gmv.interaction_id
 group by deal_id, 
 deal_type, 
 estimated_date,
