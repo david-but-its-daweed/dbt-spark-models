@@ -125,13 +125,16 @@ select
     sessions.device_id,
     sessions.session_dt,
     next_session_dt,
-    max_by(sources.utm_source, sessions.session_dt) as source,
-    max_by(sources.utm_campaign, sessions.session_dt) as campaign,
+    lower(max_by(coalesce(utm.source_corrected, sources.utm_source), sessions.session_dt)) as source,
+    max_by(coalesce(utm.campaign_corrected, sources.utm_campaign), sessions.session_dt) as campaign,
     max_by(sources.partner, sessions.session_dt) as partner
 from session_start as sessions
 left join source as sources
     on sessions.device_id = sources.device_id
     and sessions.session_dt between (sources.source_dt - INTERVAL 1 minutes) and coalesce(next_source_dt, current_timestamp())
+left join pharmacy.utm_campaigns_corrected as utm
+        on coalesce(lower(utm.utm_campaign), '') = coalesce(lower(sources.utm_campaign), '') 
+        and coalesce(lower(utm.utm_source), '') = coalesce(lower(sources.utm_source), '') 
 group by 
     sessions.device_id,
     sessions.session_dt,
