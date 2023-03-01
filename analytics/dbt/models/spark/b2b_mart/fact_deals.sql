@@ -27,7 +27,7 @@ select payload.*
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'dealChanged'
 {% if is_incremental() %}
-       and date(FROM_UNIXTIME(updatedTime/1000)) <= date'{{ var("start_date_ymd") }}'
+       and date(FROM_UNIXTIME(payload.updatedTime/1000)) <= date'{{ var("start_date_ymd") }}'
      {% else %}
        and partition_date  <= date'2023-02-27'
      {% endif %}
