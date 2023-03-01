@@ -75,7 +75,7 @@ grades as (
   select "c" as grade, 3 as value
 ),
 
-grages_prob as (
+grades_prob as (
   select "unknown" as grade_prob, 0 as value
   union all 
   select "low" as grage, 1 as value
