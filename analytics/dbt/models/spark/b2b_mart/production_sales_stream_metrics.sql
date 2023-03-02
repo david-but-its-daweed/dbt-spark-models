@@ -218,11 +218,22 @@ rfq as (select
     order_id,
     case when max(rfq_created_ts_msk is not null) then 'with rfq' else 'without rfq' end as rfq,
     case when max(rfq_created_ts_msk is not null and rfq_converted_products > 0) then 'rfq converted' else 'own sourcing' end as sourcing,
-    sum(case when order_rn = 1 then rfq_converted_products else 0 end)/sum(case when order_rn = 1 then order_products else 0 end) as rfq_products,
-    sum(case when order_rn = 1 then rfq_converted_products else 0 end)/sum(case when order_rn = 1 then rfq_products else 0 end) as rfq_products_conversion
+    sum(case when order_rn = 1 then rfq_converted_products else 0 end) as rfq_converted_products,
+    sum(case when order_rn = 1 then rfq_products else 0 end) as rfq_products
      from {{ ref('rfq_metrics') }}
         where product_id is not null and product_id != ""
-     group by 1)
+     group by 1),
+     
+order_products as (
+    select order_id, count(distinct product_id) as order_products
+    from
+    (select distinct
+        order_id, id as product_id
+    FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} as o
+    JOIN (select _id, orderId as order_id from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}) m ON m._id = o.merchOrdId
+    )
+    group by order_id
+)
 
 SELECT
     DATE(oh.selling_day) AS partition_date,
@@ -237,7 +248,8 @@ SELECT
     coalesce(rfq, "without rfq") as rfq,
     coalesce(sourcing, 'own sourcing') as sourcing,
     rfq_products,
-    rfq_products_conversion,
+    rfq_converted_products,
+    order_products,
     oh.gmv,
     oh.was_in_manufacturing,
     oh.cancelled_in_selling,
@@ -268,4 +280,5 @@ SELECT
 FROM orders_hist AS oh
 inner join users u on oh.user_id = u.user_id
 left join rfq r on oh.order_id = r.order_id
+left join order_products op on oh.order_id = op.order_id
 WHERE oh.selling_day is not null

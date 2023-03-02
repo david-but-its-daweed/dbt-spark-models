@@ -140,6 +140,7 @@ select
     
     coalesce(shipping, closed) as manufacturing_ended,
     man_days,
+    delivered,
         
     case when claimed is not null then 'claimed'
         when cancelled is not null and cancelled > manufacturing then 'cancelled' 

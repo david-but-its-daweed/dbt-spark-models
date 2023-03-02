@@ -1,0 +1,10 @@
+version: 2
+
+seeds:
+  - name: slo_tables
+    config:
+      schema: platform
+
+  - name: slo_details
+    config:
+      schema: platform
