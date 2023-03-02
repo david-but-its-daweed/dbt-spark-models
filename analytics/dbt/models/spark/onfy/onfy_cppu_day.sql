@@ -7,7 +7,8 @@
     }
 ) }}
 
-with numbered_purchases as (
+with numbered_purchases as 
+(
     select
         *, 
         rank() over (partition by user_email_hash order by created asc) as purchase_num
@@ -72,7 +73,6 @@ sources as
     left join pharmacy_landing.device as second_purchase_device
         on second_purchase_device.id = first_second_purchases.second_purchase_device_id
 ),
-
 
 ads_spends_corrected as 
 (
@@ -181,7 +181,6 @@ users_by_day as
         users_spends_campaigns.campaign_corrected,
         users_spends_campaigns.first_purchase_app_device_type
 ),
-
 
 ads_spends_corrected_day as 
 (
