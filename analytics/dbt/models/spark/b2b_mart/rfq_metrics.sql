@@ -273,11 +273,13 @@ rfq.category_name,
 rfq.documents_attached,
 p.order_products,
 p.rfq_converted_products,
-p.rfq_products
+p.rfq_products,
+opp.amount
 from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
 left join rfq on oh.order_id = rfq.order_id
 left join products p on oh.order_id = p.order_id
 left join expensive e on rfq.order_rfq_response_id = e.id
-where (op.product_id = rfq.product_id or op.product_id is null and rfq.product_id is null)
+left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
+where (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
 )
