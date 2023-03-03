@@ -79,7 +79,7 @@ from
 select o.*, fm.order_id, 
 coalesce(r1.rate, 1/r2.rate, case when currency = 'USD' then 1 end) as rate, 
 coalesce(r1.company_rate, 1/r2.company_rate, case when currency = 'USD' then 1 end) as company_rate from orders o left join 
-(select distinct merchant_order_id, order_id from b2b_mart.fact_merchant_order) fm 
+(select distinct merchant_order_id, order_id from {{ ref('fact_merchant_order') }}) fm 
 on o.merchant_order_id = fm.merchant_order_id
 left join 
 order_rates r1 on fm.order_id = r1.order_id and r1.from = currency and r1.to = 'USD'
