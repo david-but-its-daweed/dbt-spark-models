@@ -239,7 +239,8 @@ order_id,
         WHEN negotiation_ts_msk != '' THEN 'negotiation'
         WHEN price_estimation_ts_msk != '' THEN 'price_estimation'
         WHEN new_ts_msk != '' THEN 'new'
-        END as cancelled_after
+        END as cancelled_after,
+    amount
 FROM
 (
 select distinct
