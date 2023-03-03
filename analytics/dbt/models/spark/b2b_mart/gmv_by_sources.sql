@@ -14,6 +14,31 @@ with not_jp_users AS (
   WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
 ),
 
+users_owner as (
+select user_id, day, min(owner_moderator_id) as owner_moderator_id
+from 
+(
+select user_id, owner_moderator_id,
+explode(sequence(to_date('2022-06-01'), to_date(CURRENT_DATE()), interval 1 day)) as day
+from
+(
+select
+user_id, date(event_ts_msk) as date_from, 
+coalesce(date(lead(event_ts_msk) over (partition by user_id order by event_ts_msk)), current_date()) as date_to,
+owner_moderator_id
+from
+(
+select user_id, event_ts_msk,
+coalesce(lead(owner_moderator_id) over (partition by user_id order by event_ts_msk), '0') as next_owner,
+owner_moderator_id
+from {{ ref('fact_user_change') }}
+where owner_moderator_id is not null)
+where owner_moderator_id != next_owner
+)
+)
+group by user_id, day
+),
+
 admin AS (
     SELECT
         admin_id,
@@ -130,7 +155,23 @@ users as (
      )
 )
 
-SELECT a.*, client, CASE WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
+SELECT 
+    a.t, 
+    a.order_id,
+    a.gmv_initial,
+    a.initial_gross_profit,
+    a.final_gross_profit,
+    a.utm_campaign,
+    a.utm_source,
+    a.utm_medium,
+    a.source,
+    a.type,
+    a.campaign,
+    a.user_id, 
+    ad.email as owner_email,
+    ad.owner_role as owner_role,
+    a.first_order,
+    client, CASE WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
                 AND t <= current_date()
                 THEN gmv_initial ELSE 0 END) OVER (PARTITION BY a.user_id) > 100000 THEN 'big client'
              WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
@@ -139,4 +180,6 @@ SELECT a.*, client, CASE WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
              ELSE 'small client' END as current_client
     FROM after_second_qrt_new_order as a
     left join users on a.user_id = users.user_id and a.t = users.day
+    left join users_owner uo on a.user_id = uo.user_id and a.t = uo.day
+    left join admin ad on uo.owner_moderator_id = ad.admin_id
 WHERE gmv_initial > 0
