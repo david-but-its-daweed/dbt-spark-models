@@ -25,3 +25,10 @@ slo_joompay_overview,models.joompay_overview_report_metrics,bq
 slo_onfy_overview,models.onfy_delivery_duration,bq
 slo_onfy_base_tables,models.onfy_orders,bq
 slo_onfy_base_tables,models.onfy_devices,bq
+slo_analytics_reports,cube.time_refunds_days,spark
+slo_analytics_reports,cube.time_orders_costs_cube_9_days,spark
+slo_analytics_reports,pharmacy.etl_pharmacy.order_cube,spark
+slo_analytics_reports,cube.time_orders_additional_cube_2_days,spark
+slo_analytics_reports,cube.cohort_buying_devices_absolute_days,spark
+slo_analytics_reports,cube.yappi_payment_orders_cube_days,spark
+slo_jl_external_cube,jl_external_cube_v10,spark

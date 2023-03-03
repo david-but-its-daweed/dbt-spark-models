@@ -1,10 +1,13 @@
-slo_id,owner,alert_channels,expected_time_utc_hours
-slo_marketplace_overview,@gburg,#gburg-temp-channel,7
-slo_analytics_base_tables,@gburg,#gburg-temp-channel,7
-slo_logistics_overview,@gburg,#gburg-temp-channel,7
-slo_logistics_base_tables,@gburg,#gburg-temp-channel,7
-slo_pro_overview,@gburg,#gburg-temp-channel,7
-slo_pro_base_tables,@gburg,#gburg-temp-channel,7
-slo_joompay_overview,@gburg,#gburg-temp-channel,7
-slo_onfy_overview,@gburg,#gburg-temp-channel,7
-slo_onfy_base_tables,@gburg,#gburg-temp-channel,7
+slo_id,owner,alert_channels,expected_time_utc_hours,description
+slo_marketplace_overview,@gburg,#gburg-temp-channel,7,
+slo_analytics_base_tables,@gburg,#gburg-temp-channel,7,
+slo_logistics_overview,@gburg,#gburg-temp-channel,7,
+slo_logistics_base_tables,@gburg,#gburg-temp-channel,7,
+slo_pro_overview,@gburg,#gburg-temp-channel,7,
+slo_pro_base_tables,@gburg,#gburg-temp-channel,7,
+slo_joompay_overview,@gburg,#gburg-temp-channel,7,
+slo_onfy_overview,@gburg,#gburg-temp-channel,7,
+slo_onfy_base_tables,@gburg,#gburg-temp-channel,7,
+slo_analytics_reports,@gburg,#gburg-temp-channel,6,
+slo_jl_external_cube,@gburg,#jl-etl-monitoring,7,it is in the report which is viewed by our team every morning
+
