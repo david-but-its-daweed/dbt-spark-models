@@ -10,4 +10,9 @@ slo_onfy_overview,@gburg,#gburg-temp-channel,7,
 slo_onfy_base_tables,@gburg,#gburg-temp-channel,7,
 slo_analytics_reports,@gburg,#gburg-temp-channel,6,
 slo_jl_external_cube,@gburg,#jl-etl-monitoring,7,it is in the report which is viewed by our team every morning
-
+slo_overview_marketplace,@gburg,#gburg-temp-channel,6,
+slo_overview_logistics,@gburg,#gburg-temp-channel,6,
+slo_overview_onfy,@gburg,#gburg-temp-channel,6,
+slo_overview_pro,@gburg,#gburg-temp-channel,6,
+slo_overview_yappi,@gburg,#gburg-temp-channel,6,
+slo_overview_joompay,@gburg,#gburg-temp-channel,6,
