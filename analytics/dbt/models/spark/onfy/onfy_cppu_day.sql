@@ -93,7 +93,8 @@ ads_spends_corrected as
             when united_spends.partner like '%adcha%' then 'adchampagne'
             else united_spends.partner
         end as campaign_corrected,
-        sum(spend) as spend
+        sum(spend) as spend,
+        sum(clicks) as clicks
     from 
         {{ source('onfy_mart', 'ads_spends') }} as united_spends
     left join pharmacy.spends_campaigns_corrected
@@ -189,7 +190,8 @@ ads_spends_corrected_day as
         campaign_platform,
         source_corrected,
         campaign_corrected,
-        sum(spend) as spend
+        sum(spend) as spend,
+        sum(clicks) as clicks
     from 
         ads_spends_corrected
     group by 
@@ -206,7 +208,8 @@ select distinct
     coalesce(ads_spends_corrected_day.campaign_platform, users_by_day.first_purchase_app_device_type) as platform,
     coalesce(users_by_day.first_purchases, 0) as first_purchases,
     coalesce(users_by_day.second_purchases, 0) as second_purchases, 
-    coalesce(ads_spends_corrected_day.spend, 0) as spend
+    coalesce(ads_spends_corrected_day.spend, 0) as spend,
+    coalesce(ads_spends_corrected_day.clicks, 0) as clicks
 from 
     ads_spends_corrected_day
 full outer join users_by_day
