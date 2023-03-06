@@ -32,7 +32,7 @@ orders AS (
 
 internal_products as (
     SELECT DISTINCT
-        product_id, max(product_type) over (partition by product_id) as product_type,
+        product_id, order_id, max(product_type) over (partition by product_id) as product_type,
          row_number() over (partition by o.user_id, mo.product_id order by mo.min_manufactured_ts_msk is null, mo.min_manufactured_ts_msk) as user_product_number
     FROM {{ ref('fact_merchant_order') }} mo
     LEFT JOIN orders o on o.order_id = mo.order_id
@@ -204,7 +204,7 @@ orders_hist AS (
 
 
 select
-    order_id,
+    rfq.order_id,
     owner_moderator_email,
     current_status,
     current_sub_status,
@@ -234,10 +234,10 @@ select
     category_name,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
-    RANK() OVER (PARTITION BY order_id ORDER by (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as order_rn,
-    RANK() OVER (PARTITION BY order_id, rfq_request_id ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
-    RANK() OVER (PARTITION BY order_id, rfq_request_id, merchant_id  ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
-    MAX(order_rfq_response_id) OVER (PARTITION BY order_id, rfq_request_id) as max_response,
+    RANK() OVER (PARTITION BY rfq.order_id ORDER by (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as order_rn,
+    RANK() OVER (PARTITION BY rfq.order_id, rfq_request_id ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
+    RANK() OVER (PARTITION BY rfq.order_id, rfq_request_id, merchant_id  ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
+    MAX(order_rfq_response_id) OVER (PARTITION BY rfq.order_id, rfq_request_id) as max_response,
     CASE WHEN cancelled_ts_msk = '' THEN ''
         WHEN manufacturing_ts_msk != '' THEN 'manufacturing'
         WHEN signing_and_payment_ts_msk != '' THEN 'signing_and_payment'
@@ -297,4 +297,4 @@ left join expensive e on rfq.order_rfq_response_id = e.id
 left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
 where (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
 ) rfq
-left join internal_products ip on ip.product_id = rfq.product_id
+left join internal_products ip on ip.product_id = rfq.product_id and rfq.order_id = ip.order_id
