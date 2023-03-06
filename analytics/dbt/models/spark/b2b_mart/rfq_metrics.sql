@@ -15,17 +15,29 @@ WITH requests AS (
     FROM {{ ref('fact_user_request') }}
 ),
 
+
 orders AS (
     SELECT
         o.order_id,
         o.created_ts_msk,
-        o.friendly_id
+        o.friendly_id,
+        o.user_id
     FROM {{ ref('fact_order') }} AS o
     LEFT JOIN requests AS r ON o.request_id = r.request_id
     WHERE TRUE
         AND o.created_ts_msk >= '2022-05-19'
         AND o.next_effective_ts_msk IS NULL
         AND NOT COALESCE(r.is_joompro_employee, FALSE)
+),
+
+internal_products as (
+    SELECT DISTINCT
+        product_id, max(product_type) as product_type,
+        row_number() over (partition by o.user_id, mo.product_id order by case when mo.min_manufactured_ts_msk is null, mo.min_manufactured_ts_msk) as user_product_number
+    FROM {{ ref('fact_merchant_order') }} mo
+    LEFT JOIN orders o on o.order_id = mo.order_id
+    WHERE next_effective_ts_msk IS NULL
+    group by product_id
 ),
 
 
@@ -193,13 +205,13 @@ orders_hist AS (
 
 
 select
-order_id,
+    order_id,
     owner_moderator_email,
     current_status,
     current_sub_status,
     rfq_request_id,
     order_rfq_response_id,
-    product_id,
+    rfq.product_id,
     response_status,
     reject_reason,
     new_ts_msk,
@@ -240,7 +252,9 @@ order_id,
         WHEN price_estimation_ts_msk != '' THEN 'price_estimation'
         WHEN new_ts_msk != '' THEN 'new'
         END as cancelled_after,
-    amount
+    amount,
+    product_type,
+    user_product_number
 FROM
 (
 select distinct
@@ -283,4 +297,5 @@ left join products p on oh.order_id = p.order_id
 left join expensive e on rfq.order_rfq_response_id = e.id
 left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
 where (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
-)
+) rfq
+left join internal_products ip on ip.product_id = rfq.product_id
