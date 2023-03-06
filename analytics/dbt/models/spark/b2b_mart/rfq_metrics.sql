@@ -32,12 +32,11 @@ orders AS (
 
 internal_products as (
     SELECT DISTINCT
-        product_id, max(product_type) as product_type,
-        row_number() over (partition by o.user_id, mo.product_id order by case when mo.min_manufactured_ts_msk is null, mo.min_manufactured_ts_msk) as user_product_number
+        product_id, max(product_type) over (partition by product_id) as product_type,
+         row_number() over (partition by o.user_id, mo.product_id order by mo.min_manufactured_ts_msk is null, mo.min_manufactured_ts_msk) as user_product_number
     FROM {{ ref('fact_merchant_order') }} mo
     LEFT JOIN orders o on o.order_id = mo.order_id
     WHERE next_effective_ts_msk IS NULL
-    group by product_id
 ),
 
 
