@@ -74,6 +74,24 @@ sources as
         on second_purchase_device.id = first_second_purchases.second_purchase_device_id
 ),
 
+installs as 
+(
+    select 
+        source_corrected,
+        campaign_corrected,
+        date_trunc('day', source_ts_utc) as source_day, 
+        if(source_app_device_type like '%web%', 'web', source_app_device_type) as source_app_device_type,
+        cast(count(distinct if(source_event_type in ('adjustInstall', 'adjustReinstall'), combined_id, null)) as bigint) as installs,
+        cast(count(distinct if (source_event_type in ('externalLink'), combined_id, null)) as bigint) as visits
+    from 
+        {{ source('onfy', 'lndc_user_attribution') }}
+    group by 
+        source_corrected,
+        campaign_corrected,
+        date_trunc('day', source_ts_utc), 
+        if(source_app_device_type like '%web%', 'web', source_app_device_type)
+),
+
 ads_spends_corrected as 
 (
     select
@@ -209,7 +227,9 @@ select distinct
     coalesce(users_by_day.first_purchases, 0) as first_purchases,
     coalesce(users_by_day.second_purchases, 0) as second_purchases, 
     coalesce(ads_spends_corrected_day.spend, 0) as spend,
-    coalesce(ads_spends_corrected_day.clicks, 0) as clicks
+    coalesce(ads_spends_corrected_day.clicks, 0) as clicks,
+    coalesce(installs.installs, 0) as installs,
+    coalesce(installs.visits, 0) as visits
 from 
     ads_spends_corrected_day
 full outer join users_by_day
@@ -217,3 +237,8 @@ full outer join users_by_day
     and lower(ads_spends_corrected_day.campaign_corrected) = lower(users_by_day.campaign_corrected)
     and lower(ads_spends_corrected_day.source_corrected) = lower(users_by_day.source_corrected)
     and lower(ads_spends_corrected_day.campaign_platform) = lower(users_by_day.first_purchase_app_device_type)
+left join installs
+    on ads_spends_corrected_day.spend_day = installs.source_day
+    and lower(ads_spends_corrected_day.campaign_corrected) = lower(installs.campaign_corrected)
+    and lower(ads_spends_corrected_day.source_corrected) = lower(installs.source_corrected)
+    and lower(ads_spends_corrected_day.campaign_platform) = lower(installs.source_app_device_type)  
