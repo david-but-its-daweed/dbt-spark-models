@@ -32,7 +32,7 @@ orders AS (
 
 internal_products as (
     SELECT DISTINCT
-        product_id, order_id, max(product_type) over (partition by product_id) as product_type,
+        product_id, mo.order_id, max(product_type) over (partition by product_id) as product_type,
          row_number() over (partition by o.user_id, mo.product_id order by mo.min_manufactured_ts_msk is null, mo.min_manufactured_ts_msk) as user_product_number
     FROM {{ ref('fact_merchant_order') }} mo
     LEFT JOIN orders o on o.order_id = mo.order_id
