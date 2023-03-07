@@ -365,16 +365,9 @@ select
     utm_campaign,
     utm_source,
     utm_medium,
-    case when type = 'Online' and utm_source = 'partners' then utm_medium
-        when type = 'Online' and source = 'WebsiteForm' and utm_medium is not null then utm_medium 
-        when type = 'Online' and source = 'WebsiteForm' and utm_medium is null then 'organic' 
-        else source end as source, 
-    case when type = 'Online' and utm_source = 'partners' then 'Partners' else type end as type,
-    case when type = 'Online' and utm_source = 'partners' then 'Online' 
-        when type = 'Online' and source = 'WebsiteForm' and utm_medium is not null and utm_medium != 'telegram' then utm_source 
-        when type = 'Online' and source = 'WebsiteForm' and utm_medium is not null and utm_medium = 'telegram' then 'tg' 
-        when type = 'Online' and source = 'WebsiteForm' and utm_medium is null then utm_source 
-        else campaign end as campaign,
+    source, 
+    type,
+    campaign,
     repeated_order,
     user_id,
     validation_status, 
