@@ -71,15 +71,7 @@ with deps as (SELECT output.tableName       as output_name,
                      start_date as start_date,
                      end_date   as end_date
               from airflow_data
-              where start_date > NOW() - interval 2 month),
-
-     expected_time as (SELECT id                      as partition_date,
-                              slo_id,
-                              expected_time_utc_hours as ready_time_hours
-                       FROM mart.dim_date
-                                left join platform.slo_details
-                       where 1 = 1
-                         and id < NOW())
+              where start_date > NOW() - interval 2 month)
 
 select source_id,
        dates.id as date,
@@ -90,6 +82,7 @@ select source_id,
        dependencies.input_path,
        dependencies.dag_id,
        dependencies.task_id,
+       dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
        (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                  as ready_time_hours,
        dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
        start_date,
