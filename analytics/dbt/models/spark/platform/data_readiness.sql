@@ -42,8 +42,8 @@ with deps as (SELECT output.tableName       as output_name,
      airflow_data as (SELECT task_id,
                              dag_id,
                              run_id,
+                             priority_weight,
                              start_date,
-                             prioroty_weight,
                              end_date
                       FROM platform.airflow_task_instance_archive
                       where start_date < to_date(NOW()) - interval 1 day
@@ -54,7 +54,7 @@ with deps as (SELECT output.tableName       as output_name,
                       SELECT task_id,
                              dag_id,
                              run_id,
-                             max(prioroty_weight) as prioroty_weight,
+                             max(priority_weight) as priority_weight,
                              min(start_date) as start_date,
                              min(end_date)   as end_date
 
@@ -70,6 +70,7 @@ with deps as (SELECT output.tableName       as output_name,
                                  WHEN hour(start_date) >= 22 THEN date_trunc('Day', start_date)
                                  ELSE date_trunc('Day', start_date) - interval 24 hours
                          END)   as partition_date,
+                     priority_weight,
                      start_date as start_date,
                      end_date   as end_date
               from airflow_data
@@ -87,6 +88,7 @@ select source_id,
        dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
        (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                  as ready_time_hours,
        dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
+       priority_weight,
        start_date,
        end_date
 from dependencies
