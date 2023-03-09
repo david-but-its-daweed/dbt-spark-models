@@ -57,11 +57,11 @@ payload.moderatorId as moderator_id,
 payload.orderId as order_id,
 payload.brokerOrderStatus as status,
 from_unixtime(payload.updatedTime/1000) as event_ts_msk,
-lag(payload.brokerOrderStatus) over (partition by payload.orderId, payload.brokerId order by event_ts_utc desc) as lag_status
+lag(payload.brokerOrderStatus) over (partition by payload.orderId order by event_ts_utc desc) as lag_status
 from {{ source('b2b_mart', 'operational_events') }}
     where type = 'brokerOrderChanged'
 )
-where status != lag_status
+where status != lag_status or lag_status is null
 ),
 
 logistician_order as (
@@ -75,9 +75,9 @@ payload.moderatorId as moderator_id,
 payload.orderId as order_id,
 payload.logisticianOrderStatus as status,
 from_unixtime(payload.updatedTime/1000) as event_ts_msk,
-lag(payload.brokerOrderStatus) over (partition by payload.orderId, payload.brokerId order by event_ts_utc desc) as lag_status
+lag(payload.brokerOrderStatus) over (partition by payload.orderId order by event_ts_utc desc) as lag_status
 from {{ source('b2b_mart', 'operational_events') }}
-    where type = 'logisticianOrderChanged'
+    where type = 'logisticianOrderChanged' or lag_status is null
 )
 where status != lag_status
 )
