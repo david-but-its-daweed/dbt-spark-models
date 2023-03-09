@@ -1,13 +1,13 @@
 slo_id,business_name,owner,alert_channels,expected_time_utc_hours,description
 slo_marketplace_overview,JM overview reports in Holistics,@gburg,#gburg-temp-channel,7,
-slo_analytics_base_tables,Basic analytics tables in BQ,@gburg,#gburg-temp-channel,7,
+slo_analytics_base_tables,basic analytics tables in BQ,@gburg,#gburg-temp-channel,7,
 slo_logistics_overview,JL overview reports in Holistics,@gburg,#gburg-temp-channel,7,
-slo_logistics_base_tables,Basic JL tables in BQ,@gburg,#gburg-temp-channel,7,
+slo_logistics_base_tables,basic JL tables in BQ,@gburg,#gburg-temp-channel,7,
 slo_pro_overview,Pro overview reports in Holistics,@gburg,#gburg-temp-channel,7,
-slo_pro_base_tables,Basic pro tables in BQ,@gburg,#gburg-temp-channel,7,
+slo_pro_base_tables,basic pro tables in BQ,@gburg,#gburg-temp-channel,7,
 slo_joompay_overview,Joompay overview reports in Holistics,@gburg,#gburg-temp-channel,7,
 slo_onfy_overview,Onfy overview reports in Holistics,@gburg,#gburg-temp-channel,7,
-slo_onfy_base_tables,Basic onfy tables in BQ,@gburg,#gburg-temp-channel,7,
+slo_onfy_base_tables,basic onfy tables in BQ,@gburg,#gburg-temp-channel,7,
 slo_analytics_reports,Time reports at analytics.joom.ai,@gburg,#gburg-temp-channel,6,used in Time report in analytics.joom.ai 
 slo_jl_external_cube,JL External Cube,@gburg,#gburg-temp-channel,7,it is in the report which is viewed by our team every morning
 slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,@gburg,#gburg-temp-channel,6,used in Overview report in analytics.joom.ai for Marketplace columns
