@@ -43,6 +43,7 @@ with deps as (SELECT output.tableName       as output_name,
                              dag_id,
                              run_id,
                              start_date,
+                             prioroty_weight,
                              end_date
                       FROM platform.airflow_task_instance_archive
                       where start_date < to_date(NOW()) - interval 1 day
@@ -53,6 +54,7 @@ with deps as (SELECT output.tableName       as output_name,
                       SELECT task_id,
                              dag_id,
                              run_id,
+                             max(prioroty_weight) as prioroty_weight,
                              min(start_date) as start_date,
                              min(end_date)   as end_date
 
