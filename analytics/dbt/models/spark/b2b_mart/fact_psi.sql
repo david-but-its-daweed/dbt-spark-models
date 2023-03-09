@@ -19,7 +19,7 @@ select merchant_order_id, product_id, status, event_ts_msk as event_date,
         status,
         event_ts_msk
     from {{ ref('statuses_events') }}
-    where type = 'product'
+    where entity = 'product'
     )
  ),
 
