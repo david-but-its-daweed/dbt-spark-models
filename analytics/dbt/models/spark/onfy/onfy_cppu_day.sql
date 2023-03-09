@@ -220,25 +220,25 @@ ads_spends_corrected_day as
 )
 
 select distinct
-    coalesce(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date) as partition_date, 
-    coalesce(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected) as source,
+    coalesce(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date, install.source_day) as partition_date, 
+    coalesce(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected, install.source_corrected) as source,
     coalesce(ads_spends_corrected_day.campaign_corrected, users_by_day.campaign_corrected) as campaign,
-    coalesce(ads_spends_corrected_day.campaign_platform, users_by_day.first_purchase_app_device_type) as platform,
+    coalesce(ads_spends_corrected_day.campaign_platform, users_by_day.first_purchase_app_device_type, install.source_app_device_type) as platform,
     coalesce(users_by_day.first_purchases, 0) as first_purchases,
     coalesce(users_by_day.second_purchases, 0) as second_purchases, 
     coalesce(ads_spends_corrected_day.spend, 0) as spend,
     coalesce(ads_spends_corrected_day.clicks, 0) as clicks,
-    coalesce(installs.installs, 0) as installs,
-    coalesce(installs.visits, 0) as visits
+    coalesce(install.installs, 0) as installs,
+    coalesce(install.visits, 0) as visits
 from 
     ads_spends_corrected_day
-full outer join users_by_day
+full join users_by_day
     on ads_spends_corrected_day.spend_day = users_by_day.first_purchase_date
     and lower(ads_spends_corrected_day.campaign_corrected) = lower(users_by_day.campaign_corrected)
     and lower(ads_spends_corrected_day.source_corrected) = lower(users_by_day.source_corrected)
     and lower(ads_spends_corrected_day.campaign_platform) = lower(users_by_day.first_purchase_app_device_type)
-left join installs
-    on ads_spends_corrected_day.spend_day = installs.source_day
-    and lower(ads_spends_corrected_day.campaign_corrected) = lower(installs.campaign_corrected)
-    and lower(ads_spends_corrected_day.source_corrected) = lower(installs.source_corrected)
-    and lower(ads_spends_corrected_day.campaign_platform) = lower(installs.source_app_device_type)  
+full join installs as install
+    on ads_spends_corrected_day.spend_day = install.source_day
+    and lower(ads_spends_corrected_day.campaign_corrected) = lower(install.campaign_corrected)
+    and lower(ads_spends_corrected_day.source_corrected) = lower(install.source_corrected)
+    and lower(ads_spends_corrected_day.campaign_platform) = lower(install.source_app_device_type)
