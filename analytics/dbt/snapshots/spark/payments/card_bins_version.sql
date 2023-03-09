@@ -7,7 +7,10 @@
 
       strategy='timestamp',
       updated_at='updated_ts',
-      file_format='delta'
+      file_format='delta',
+      meta = {
+            'priority_weight': '150'
+      }
     )
 }}
 
