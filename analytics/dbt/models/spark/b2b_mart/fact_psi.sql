@@ -39,7 +39,6 @@ select id as product_id,
     type 
 from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
 ) p left join products_statuses ps on p.merchant_order_id = ps.merchant_order_id and p.product_id = ps.product_id
-where running_status = 10
 group by product_id, 
     merchant_order_id, 
     psi_status_id, 
