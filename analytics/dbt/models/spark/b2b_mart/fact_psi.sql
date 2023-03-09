@@ -9,38 +9,44 @@
 
 
 with 
+products_statuses as (
+select merchant_order_id, product_id, status, date as event_date,
+    row_number() over (partition by merchant_order_id, product_id order by event_ts desc) as status_rn
+    from
+    (select 
+        payload.merchantOrderId as merchant_order_id,
+        payload.productId as product_id,
+        payload.psiStatusId as psi_status_id,
+        payload.status,
+        date(from_unixtime(payload.updatedTime/1000)) as date,
+        from_unixtime(payload.updatedTime/1000) as event_ts,
+        row_number() over (partition by payload.merchantOrderId, payload.productId, payload.status order by event_ts_utc desc) as rn
+    from b2b_mart.operational_events
+    where type = 'orderProductStatusChanged'
+    )
+    where rn = 1
+    ),
 
 products as
-(select product_id, 
-    merchant_order_id, 
+(select 
+    ps.product_id, 
+    ps.merchant_order_id, 
     psi_status_id, 
-    status,
     type,
-    min(time_psi) as ready_for_psi
-from
-(
-select statuses1.status as running_status, statuses1.updatedTime as time_psi, 
-    product_id, 
-    merchant_order_id, 
-    psi_status_id, 
-    status,
-    type 
+    max(case when status_rn = 1 then status end) as status,
+    min(case when status = 'readyForPsi' then event_date end) as ready_for_psi
 from
 (
 select id as product_id, 
     merchOrdId as merchant_order_id, 
     psiStatusID as psi_status_id, 
-    status,
-    explode(statuses) as statuses1,
     type 
 from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
-)
-)
+) p left join products_statuses ps on p.merchant_order_id = ps.merchant_order_id and p.product_id = ps.product_id
 where running_status = 10
 group by product_id, 
     merchant_order_id, 
     psi_status_id, 
-    status,
     type 
 ),
 
