@@ -10,22 +10,18 @@
 
 with 
 products_statuses as (
-select merchant_order_id, product_id, status, date as event_date,
-    row_number() over (partition by merchant_order_id, product_id order by event_ts desc) as status_rn
+select merchant_order_id, product_id, status, event_ts_msk as event_date,
+    row_number() over (partition by merchant_order_id, product_id order by event_ts_msk desc) as status_rn
     from
     (select 
-        payload.merchantOrderId as merchant_order_id,
-        payload.productId as product_id,
-        payload.psiStatusId as psi_status_id,
-        payload.status,
-        date(from_unixtime(payload.updatedTime/1000)) as date,
-        from_unixtime(payload.updatedTime/1000) as event_ts,
-        row_number() over (partition by payload.merchantOrderId, payload.productId, payload.status order by event_ts_utc desc) as rn
-    from b2b_mart.operational_events
-    where type = 'orderProductStatusChanged'
+        merchant_order_id,
+        product_id,
+        status,
+        event_ts_msk
+    from {{ ref('statuses_events') }}
+    where type = 'product'
     )
-    where rn = 1
-    ),
+ ),
 
 products as
 (select 
