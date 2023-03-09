@@ -107,17 +107,17 @@ last_not_unknown as (
         ) as utm_campaign
     from 
         first_purchases
-        full join sources as paid_sources
-            on paid_sources.user_email_hash = first_purchases.user_email_hash
-            and paid_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
-            and paid_sources.source not in ('Unknown', 'Organic', 'UNMARKED_facebook_or_instagram', 'social', 'email', 'newsletter')
-        full join sources as organic_sources
-            on organic_sources.user_email_hash = first_purchases.user_email_hash
-            and organic_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
-            and organic_sources.source <> 'Unknown'
-        full join sources as all_sources
-            on all_sources.user_email_hash = first_purchases.user_email_hash
-            and all_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
+    full join sources as paid_sources
+        on paid_sources.user_email_hash = first_purchases.user_email_hash
+        and paid_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
+        and paid_sources.source not in ('Unknown', 'Organic', 'UNMARKED_facebook_or_instagram', 'social', 'email', 'newsletter')
+    full join sources as organic_sources
+        on organic_sources.user_email_hash = first_purchases.user_email_hash
+        and organic_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
+        and organic_sources.source <> 'Unknown'
+    full join sources as all_sources
+        on all_sources.user_email_hash = first_purchases.user_email_hash
+        and all_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
     group by 
         first_purchases.user_email_hash,
         first_purchases.first_purchase_date_ts_cet,
@@ -152,10 +152,10 @@ last_not_unknown_devices_partners as (
         end as source_app_device_type
     from 
         last_not_unknown
-        left join {{ source('pharmacy_landing', 'device') }} as first_purchase_device
-            on first_purchase_device.id = last_not_unknown.first_purchase_device_id
-        left join {{ source('pharmacy_landing', 'device') }} as source_device
-            on source_device.id = last_not_unknown.source_device_id
+    left join {{ source('pharmacy_landing', 'device') }} as first_purchase_device
+        on first_purchase_device.id = last_not_unknown.first_purchase_device_id
+    left join {{ source('pharmacy_landing', 'device') }} as source_device
+        on source_device.id = last_not_unknown.source_device_id
 ),
 
 users_corrected as (
@@ -174,9 +174,9 @@ users_corrected as (
         end as campaign_corrected
     from 
         last_not_unknown_devices_partners
-        left join pharmacy.utm_campaigns_corrected
-            on coalesce(lower(pharmacy.utm_campaigns_corrected.utm_campaign), '') = coalesce(lower(last_not_unknown_devices_partners.utm_campaign), '') 
-            and coalesce(lower(pharmacy.utm_campaigns_corrected.utm_source), '') = coalesce(lower(last_not_unknown_devices_partners.source), '') 
+    left join pharmacy.utm_campaigns_corrected
+        on coalesce(lower(pharmacy.utm_campaigns_corrected.utm_campaign), '') = coalesce(lower(last_not_unknown_devices_partners.utm_campaign), '') 
+        and coalesce(lower(pharmacy.utm_campaigns_corrected.utm_source), '') = coalesce(lower(last_not_unknown_devices_partners.source), '') 
 )
 
 select *
