@@ -42,6 +42,7 @@ with deps as (SELECT output.tableName       as output_name,
      airflow_data as (SELECT task_id,
                              dag_id,
                              run_id,
+                             state,
                              priority_weight,
                              start_date,
                              end_date
@@ -54,13 +55,13 @@ with deps as (SELECT output.tableName       as output_name,
                       SELECT task_id,
                              dag_id,
                              run_id,
+                             max(state) as state,
                              max(priority_weight) as priority_weight,
                              min(start_date) as start_date,
                              min(end_date)   as end_date
 
                       FROM platform.airflow_task_instance
                       where start_date >= to_date(NOW()) - interval 1 day
-                        and state = 'success'
                         and start_date > NOW() - interval 2 month
                       group by task_id, dag_id, run_id),
 
@@ -70,6 +71,7 @@ with deps as (SELECT output.tableName       as output_name,
                                  WHEN hour(start_date) >= 22 THEN date_trunc('Day', start_date)
                                  ELSE date_trunc('Day', start_date) - interval 24 hours
                          END)   as partition_date,
+                     state,
                      priority_weight,
                      start_date as start_date,
                      end_date   as end_date
@@ -88,6 +90,7 @@ select source_id,
        dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
        (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                  as ready_time_hours,
        dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
+       state,
        priority_weight,
        start_date,
        end_date
