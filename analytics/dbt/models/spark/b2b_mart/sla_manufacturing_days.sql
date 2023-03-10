@@ -19,8 +19,7 @@ orders AS (
     SELECT
         o.order_id,
         o.created_ts_msk,
-        o.friendly_id,
-        r.orig_name
+        o.friendly_id
     FROM {{ ref('fact_order') }} AS o
     LEFT JOIN not_jp_users AS r ON o.user_id = r.user_id
     WHERE TRUE
@@ -124,7 +123,6 @@ orders_hist AS (
 SELECT
     o.order_id,
     o.friendly_id,
-    o.orig_name,
     DATE(o.created_ts_msk) AS created_day,
     DATE(DATE_TRUNC(o.created_ts_msk, WEEK)) AS created_week,
     o.created_ts_msk,
