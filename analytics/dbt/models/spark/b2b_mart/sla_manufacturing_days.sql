@@ -21,7 +21,7 @@ orders AS (
         o.created_ts_msk,
         o.friendly_id,
         r.orig_name
-    FROM {{ source('b2b_mart', 'fact_order') }} AS o
+    FROM {{ ref('fact_order') }} AS o
     LEFT JOIN not_jp_users AS r ON o.user_id = r.user_id
     WHERE TRUE
         AND o.created_ts_msk >= '2022-05-19'
@@ -55,7 +55,7 @@ stg1 AS (
         LAG(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_sub_status_ts,
         LAG(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_status,
         LAG(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_sub_status
-    FROM {{ source('b2b_mart', 'fact_order_change') }} AS o
+    FROM {{ ref('fact_order_change') }} AS o
     LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
 ),
 
@@ -89,7 +89,7 @@ merchant_order AS (
     SELECT
         order_id,
         MAX(manufacturing_days) AS manufacturing_days
-    FROM {{ source('b2b_mart', 'fact_merchant_order') }}
+    FROM {{ ref('fact_merchant_order') }}
     GROUP BY order_id
 ),
 
