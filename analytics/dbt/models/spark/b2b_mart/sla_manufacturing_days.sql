@@ -33,7 +33,7 @@ admin AS (
     SELECT
         admin_id,
         email
-    FROM {{ source('b2b_mart', 'dim_user_admin') }}
+    FROM {{ ref('dim_user_admin') }}
 ),
 
 stg1 AS (
