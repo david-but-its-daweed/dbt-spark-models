@@ -124,7 +124,6 @@ SELECT
     o.order_id,
     o.friendly_id,
     DATE(o.created_ts_msk) AS created_day,
-    DATE(DATE_TRUNC(o.created_ts_msk, WEEK)) AS created_week,
     o.created_ts_msk,
     mo.manufacturing_days,
     oh.current_status,
