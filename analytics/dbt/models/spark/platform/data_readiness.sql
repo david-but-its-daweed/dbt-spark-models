@@ -76,7 +76,9 @@ with deps as (SELECT output.tableName       as output_name,
                      start_date as start_date,
                      end_date   as end_date
               from airflow_data
-              where start_date > NOW() - interval 2 month)
+              where start_date > NOW() - interval 2 month),
+
+final_data as (
 
 select source_id,
        dates.id as date,
@@ -99,3 +101,9 @@ from dependencies
          left join data on dependencies.dag_id = data.dag_id
                 and dependencies.task_id = data.task_id
                 and dates.id = data.partition_date
+)
+
+SELECT
+       *, 
+       round(ready_time_hours - 0.5) + round((ready_time_hours - round(ready_time_hours - 0.5))* 60)/100 as ready_time_human
+FROM final_data

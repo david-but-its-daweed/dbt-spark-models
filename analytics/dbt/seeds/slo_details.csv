@@ -1,5 +1,5 @@
 slo_id,business_name,owner,alert_channels,expected_time_utc_hours,description
-slo_marketplace_overview,JM overview reports in Holistics,@gburg,#gburg-temp-channel,7,
+slo_istaff,Tables required for IStaff reports,@gburg,#gburg-temp-channel,7,
 slo_analytics_base_tables,basic analytics tables in BQ,@gburg,#gburg-temp-channel,7,
 slo_logistics_overview,JL overview reports in Holistics,@gburg,#gburg-temp-channel,7,
 slo_logistics_base_tables,basic JL tables in BQ,@gburg,#gburg-temp-channel,7,
