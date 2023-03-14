@@ -45,8 +45,9 @@ with deps as (SELECT output.tableName       as output_name,
                              state,
                              priority_weight,
                              start_date,
-                             end_date
-                      FROM platform.airflow_task_instance_archive
+                             end_date,
+                             duration
+                      FROM {{ ref("airflow_task_instance_archive")}}
                       where start_date < to_date(NOW()) - interval 1 day
                         and start_date > NOW() - interval 2 month
 
@@ -58,8 +59,8 @@ with deps as (SELECT output.tableName       as output_name,
                              max(state) as state,
                              max(priority_weight) as priority_weight,
                              min(start_date) as start_date,
-                             min(end_date)   as end_date
-
+                             min(end_date)   as end_date,
+                             min(duration)   as duration
                       FROM platform.airflow_task_instance
                       where start_date >= to_date(NOW()) - interval 1 day
                         and start_date > NOW() - interval 2 month
@@ -74,7 +75,8 @@ with deps as (SELECT output.tableName       as output_name,
                      state,
                      priority_weight,
                      start_date as start_date,
-                     end_date   as end_date
+                     end_date   as end_date,
+                     duration
               from airflow_data
               where start_date > NOW() - interval 2 month),
 
@@ -91,11 +93,13 @@ select source_id,
        dependencies.task_id,
        dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
        (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                  as ready_time_hours,
+       (unix_timestamp(start_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                as start_time_hours,
        dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
        state,
        priority_weight,
        start_date,
-       end_date
+       end_date,
+       duration
 from dependencies
          left join mart.dim_date as dates
          left join data on dependencies.dag_id = data.dag_id
@@ -105,5 +109,6 @@ from dependencies
 
 SELECT
        *, 
-       round(ready_time_hours - 0.5) + round((ready_time_hours - round(ready_time_hours - 0.5))* 60)/100 as ready_time_human
+       round(ready_time_hours - 0.5) + round((ready_time_hours - round(ready_time_hours - 0.5))* 60)/100 as ready_time_human, 
+       round(start_time_hours - 0.5) + round((start_time_hours - round(start_time_hours - 0.5))* 60)/100 as start_time_human
 FROM final_data
