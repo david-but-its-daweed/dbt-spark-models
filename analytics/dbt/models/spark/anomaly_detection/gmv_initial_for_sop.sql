@@ -21,5 +21,6 @@ WHERE partition_date >= date('{{ var("start_date_ymd") }}') - INTERVAL 2 years
     AND shipping_country IN ('RU', 'BY', 'UA', 
         'MD', 'PE', 'ZA', 'MX', 'ES', 'IT', 'KZ', 
         'FR', 'RO', 'NL', 'GE', 'MT', 'UK', 'AU', 
-        'CH', 'DE', 'GB', 'IL', 'US')
+        'CH', 'DE', 'GB', 'IL', 'US', 'BE', 'SE',
+        'AT', 'PL')
 GROUP BY 1,2
