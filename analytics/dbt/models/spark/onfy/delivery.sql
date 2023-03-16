@@ -97,7 +97,7 @@ FROM
         AND status_in_transit.status = 'IN_TRANSIT'  
     LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_checkpoint') }} AS status_delivered
         ON order_parcels.order_parcel_id = status_delivered.order_parcel_id
-        AND status_delivered.status = 'DELIVERED'    
+        AND status_delivered.status in ('DELIVERED', 'AVAILABLE_FOR_PICKUP')
 GROUP BY
     order_parcels.order_parcel_id,
     order_parcels.tracking_number,

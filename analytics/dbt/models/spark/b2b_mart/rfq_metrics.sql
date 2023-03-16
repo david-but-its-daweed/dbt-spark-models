@@ -15,17 +15,28 @@ WITH requests AS (
     FROM {{ ref('fact_user_request') }}
 ),
 
+
 orders AS (
     SELECT
         o.order_id,
         o.created_ts_msk,
-        o.friendly_id
+        o.friendly_id,
+        o.user_id
     FROM {{ ref('fact_order') }} AS o
     LEFT JOIN requests AS r ON o.request_id = r.request_id
     WHERE TRUE
         AND o.created_ts_msk >= '2022-05-19'
         AND o.next_effective_ts_msk IS NULL
         AND NOT COALESCE(r.is_joompro_employee, FALSE)
+),
+
+internal_products as (
+    SELECT DISTINCT
+        product_id, mo.order_id, max(product_type) over (partition by product_id) as product_type,
+         row_number() over (partition by o.user_id, mo.product_id order by mo.min_manufactured_ts_msk is null, mo.min_manufactured_ts_msk) as user_product_number
+    FROM {{ ref('fact_merchant_order') }} mo
+    LEFT JOIN orders o on o.order_id = mo.order_id
+    WHERE next_effective_ts_msk IS NULL
 ),
 
 
@@ -59,6 +70,7 @@ rfq_requests AS (
         created_ts_msk AS request_created_ts_msk,
         sent_ts_msk AS request_sent_ts_msk,
         status AS sent_status,
+        top_rfq,
         category_id,
         category_name,
         order_id
@@ -91,6 +103,7 @@ rfq as (SELECT
     rp.response_status,
     rp.reject_reason,
     rp.merchant_id,
+    top_rfq,
     category_id,
     category_name,
     case when documents_attached > 0 then True else False end as documents_attached,
@@ -193,13 +206,13 @@ orders_hist AS (
 
 
 select
-order_id,
+    rfq.order_id,
     owner_moderator_email,
     current_status,
     current_sub_status,
     rfq_request_id,
     order_rfq_response_id,
-    product_id,
+    rfq.product_id,
     response_status,
     reject_reason,
     new_ts_msk,
@@ -219,14 +232,15 @@ order_id,
     rfq_products,
     documents_attached,
     merchant_id,
+    top_rfq,
     category_id,
     category_name,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
-    RANK() OVER (PARTITION BY order_id ORDER by (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as order_rn,
-    RANK() OVER (PARTITION BY order_id, rfq_request_id ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
-    RANK() OVER (PARTITION BY order_id, rfq_request_id, merchant_id  ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
-    MAX(order_rfq_response_id) OVER (PARTITION BY order_id, rfq_request_id) as max_response,
+    RANK() OVER (PARTITION BY rfq.order_id ORDER by (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as order_rn,
+    RANK() OVER (PARTITION BY rfq.order_id, rfq_request_id ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
+    RANK() OVER (PARTITION BY rfq.order_id, rfq_request_id, merchant_id  ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
+    MAX(order_rfq_response_id) OVER (PARTITION BY rfq.order_id, rfq_request_id) as max_response,
     CASE WHEN cancelled_ts_msk = '' THEN ''
         WHEN manufacturing_ts_msk != '' THEN 'manufacturing'
         WHEN signing_and_payment_ts_msk != '' THEN 'signing_and_payment'
@@ -239,7 +253,10 @@ order_id,
         WHEN negotiation_ts_msk != '' THEN 'negotiation'
         WHEN price_estimation_ts_msk != '' THEN 'price_estimation'
         WHEN new_ts_msk != '' THEN 'new'
-        END as cancelled_after
+        END as cancelled_after,
+    amount,
+    product_type,
+    user_product_number
 FROM
 (
 select distinct
@@ -273,11 +290,15 @@ rfq.category_name,
 rfq.documents_attached,
 p.order_products,
 p.rfq_converted_products,
-p.rfq_products
+p.rfq_products,
+top_rfq,
+opp.amount
 from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
 left join rfq on oh.order_id = rfq.order_id
 left join products p on oh.order_id = p.order_id
 left join expensive e on rfq.order_rfq_response_id = e.id
-where (op.product_id = rfq.product_id or op.product_id is null and rfq.product_id is null)
-)
+left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
+where (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
+) rfq
+left join internal_products ip on ip.product_id = rfq.product_id and rfq.order_id = ip.order_id

@@ -22,6 +22,7 @@ SELECT _id AS rfq_request_id,
     status,
     millis_to_ts_msk(stms) sent_ts_msk,
     variants,
+    coalesce(isTop, FALSE) as top_rfq,
     millis_to_ts_msk(utms) AS update_ts_msk,
     rfq.categories[0] as category_id,
     category_name

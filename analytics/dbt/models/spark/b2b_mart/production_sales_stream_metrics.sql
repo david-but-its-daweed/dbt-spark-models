@@ -15,6 +15,36 @@ WITH requests AS (
     FROM {{ ref('fact_user_request') }}
 ),
 
+grades as (
+  select "unknown" as grade, 0 as value
+  union all 
+  select "a" as grade, 1 as value
+  union all 
+  select "b" as grade, 2 as value
+  union all 
+  select "c" as grade, 3 as value
+),
+
+grades_prob as (
+  select "unknown" as grade_prob, 0 as value
+  union all 
+  select "low" as grage, 1 as value
+  union all 
+  select "medium" as grage, 2 as value
+  union all 
+  select "high" as grage, 3 as value
+),
+
+customers as (
+    select distinct
+    _id as user_id,
+    grades.grade as grade,
+    grades_prob.grade_prob as grade_probability
+    from {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
+    left join grades on gradeInfo.grade = grades.value
+    left join grades_prob on gradeInfo.prob = grades_prob.value
+),
+
 users_hist as (
   select
     user_id,
@@ -276,9 +306,12 @@ SELECT
         ELSE 'not valid' END AS final_pricing,
     CASE WHEN oh.signing_and_payment_valid = 1 THEN 'valid'
         WHEN oh.signing_and_payment_valid = 2 THEN 'cancelled'
-        ELSE 'not valid' END AS signing_and_payment
+        ELSE 'not valid' END AS signing_and_payment,
+   grade,
+   grade_probability
 FROM orders_hist AS oh
 inner join users u on oh.user_id = u.user_id
 left join rfq r on oh.order_id = r.order_id
 left join order_products op on oh.order_id = op.order_id
+left join customers c on u.user_id = c.user_id
 WHERE oh.selling_day is not null

@@ -106,6 +106,7 @@ sources:
     tables:
       - name: device_events
       - name: devices_mart
+      - name: ads_spends
   - name: pharmacy_landing
     tables:
       - name: order
@@ -113,6 +114,10 @@ sources:
       - name: store
       - name: order_parcel_checkpoint
       - name: device
+  - name: onfy
+    tables:
+      - name: lndc_user_attribution
+        description: Last paid source for a user / device
   - name: merchant
     tables:
       - name: dim_merchant_payment_channel

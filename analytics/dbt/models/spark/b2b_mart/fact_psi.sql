@@ -9,39 +9,40 @@
 
 
 with 
+products_statuses as (
+select merchant_order_id, product_id, status, event_ts_msk as event_date,
+    row_number() over (partition by merchant_order_id, product_id order by event_ts_msk desc) as status_rn
+    from
+    (select 
+        merchant_order_id,
+        product_id,
+        status,
+        event_ts_msk
+    from {{ ref('statuses_events') }}
+    where entity = 'product'
+    )
+ ),
 
 products as
-(select product_id, 
-    merchant_order_id, 
+(select 
+    ps.product_id, 
+    ps.merchant_order_id, 
     psi_status_id, 
-    status,
     type,
-    min(time_psi) as ready_for_psi
-from
-(
-select statuses1.status as running_status, statuses1.updatedTime as time_psi, 
-    product_id, 
-    merchant_order_id, 
-    psi_status_id, 
-    status,
-    type 
+    max(case when status_rn = 1 then status end) as status,
+    min(case when status = 'readyForPsi' then event_date end) as ready_for_psi
 from
 (
 select id as product_id, 
     merchOrdId as merchant_order_id, 
     psiStatusID as psi_status_id, 
-    status,
-    explode(statuses) as statuses1,
     type 
 from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
-)
-)
-where running_status = 10
-group by product_id, 
-    merchant_order_id, 
+) p left join products_statuses ps on p.merchant_order_id = ps.merchant_order_id and p.product_id = ps.product_id
+group by ps.product_id, 
+    ps.merchant_order_id, 
     psi_status_id, 
-    status,
-    type 
+    type
 ),
 
 statuses as (
@@ -219,7 +220,7 @@ select distinct product_id,
     type,
     status,
     current_status,
-    date(from_unixtime(ready_for_psi/1000)) as ready_for_psi,
+    date(ready_for_psi) as ready_for_psi,
     date(from_unixtime(psi_start_time/1000)) as psi_start,
     date(from_unixtime(psi_waiting_time/1000)) as psi_waiting,
     date(from_unixtime(psi_ready_time/1000)) as psi_ready,
