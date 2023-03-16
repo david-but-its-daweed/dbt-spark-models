@@ -150,6 +150,7 @@ tt_jl AS (
         a.cnt_subject_categories,
         FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category, t.partition_date ORDER BY t.event_ts_msk) AS state_owner
     FROM t_jl AS t
+    LEFT JOIN cnt_categories_jl AS a ON t.ticket_id = a.ticket_id
 ),
 
 base_jl AS (
