@@ -60,7 +60,7 @@ SELECT
 UNION ALL 
 SELECT
 "evgenii.gashkov@joom.com" AS email,
-"Dev" AS role,
+"Head KAM" AS role,
 "" AS name
 UNION ALL 
 SELECT
