@@ -44,6 +44,15 @@ t_marketplace AS (
  )
 ,
 
+cnt_categories_marketplace AS (
+    SELECT
+        t.ticket_id,
+        COUNT(DISTINCT t.subject_category) AS cnt_subject_categories
+    FROM t_marketplace AS t
+    GROUP BY 1
+)
+,
+
 tt_marketplace AS (
     SELECT
         t.ticket_id,
@@ -52,8 +61,10 @@ tt_marketplace AS (
         t.subject_category,
         t.partition_date,
         t.event_ts_msk,
+        a.cnt_subject_categories,
         FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category, t.partition_date ORDER BY t.event_ts_msk) AS state_owner
     FROM t_marketplace AS t
+    LEFT JOIN cnt_categories_marketplace AS a ON t.ticket_id = a.ticket_id
 ),
 
 base_marketplace AS (
@@ -64,9 +75,10 @@ SELECT
     t.subject_category,
     t.state_owner,
     t.partition_date,
+    t.cnt_subject_categories,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_marketplace AS t
-GROUP BY 1, 2, 3, 4, 5, 6
+GROUP BY 1, 2, 3, 4, 5, 6, 7
     ),
 
 marketplace AS (
@@ -77,6 +89,7 @@ SELECT
     t.tag,
     t.tag_type,
     t.subject_category,
+    t.cnt_subject_categories,
     TIMESTAMP(t.event_ts_msk) AS event_ts_msk,
     t.partition_date,
     a.first_queue,
@@ -117,6 +130,15 @@ t_jl AS (
  )
 ,
 
+cnt_categories_jl AS (
+    SELECT
+        t.ticket_id,
+        COUNT(DISTINCT t.subject_category) AS cnt_subject_categories
+    FROM t_jl AS t
+    GROUP BY 1
+)
+,
+
 tt_jl AS (
     SELECT
         t.ticket_id,
@@ -125,6 +147,7 @@ tt_jl AS (
         t.subject_category,
         t.partition_date,
         t.event_ts_msk,
+        a.cnt_subject_categories,
         FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category, t.partition_date ORDER BY t.event_ts_msk) AS state_owner
     FROM t_jl AS t
 ),
@@ -137,9 +160,10 @@ SELECT
     t.subject_category,
     t.state_owner,
     t.partition_date,
+    t.cnt_subject_categories,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_jl AS t
-GROUP BY 1, 2, 3, 4, 5, 6
+GROUP BY 1, 2, 3, 4, 5, 6, 7
     ),
 
 jl AS (
@@ -150,6 +174,7 @@ SELECT
     t.tag,
     t.tag_type,
     t.subject_category,
+    t.cnt_subject_categories,
     TIMESTAMP(t.event_ts_msk) AS event_ts_msk,
     t.partition_date,
     a.first_queue,
@@ -190,6 +215,15 @@ t_joompay AS (
  )
 ,
 
+cnt_categories_joompay AS (
+    SELECT
+        t.ticket_id,
+        COUNT(DISTINCT t.subject_category) AS cnt_subject_categories
+    FROM t_joompay AS t
+    GROUP BY 1
+)
+,
+
 tt_joompay AS (
     SELECT
         t.ticket_id,
@@ -198,9 +232,10 @@ tt_joompay AS (
         t.subject_category,
         t.event_ts_msk,
         t.partition_date,
+        a.cnt_subject_categories,
         FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category, t.partition_date ORDER BY t.event_ts_msk) AS state_owner
     FROM t_joompay AS t
-    ORDER BY 1
+    LEFT JOIN cnt_categories_joompay AS a ON t.ticket_id = a.ticket_id
 ),
 
 base_joompay AS (
@@ -211,9 +246,10 @@ SELECT
     t.subject_category,
     t.state_owner,
     t.partition_date,
+    t.cnt_subject_categories,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_joompay AS t
-GROUP BY 1,2,3,4,5,6
+GROUP BY 1, 2, 3, 4, 5, 6, 7
     ),
 
 joompay AS (
@@ -224,6 +260,7 @@ SELECT
     t.tag,
     t.tag_type,
     t.subject_category,
+    t.cnt_subject_categories,
     TIMESTAMP(t.event_ts_msk) AS event_ts_msk,
     t.partition_date,
     a.first_queue,
@@ -264,6 +301,15 @@ t_onfy AS (
  )
 ,
 
+cnt_categories_onfy AS (
+    SELECT
+        t.ticket_id,
+        COUNT(DISTINCT t.subject_category) AS cnt_subject_categories
+    FROM t_onfy AS t
+    GROUP BY 1
+)
+,
+
 tt_onfy AS (
     SELECT
         t.ticket_id,
@@ -272,8 +318,10 @@ tt_onfy AS (
         t.subject_category,
         t.event_ts_msk,
         t.partition_date,
+        a.cnt_subject_categories,
         FIRST_VALUE(t.state_owner) OVER (PARTITION BY t.ticket_id, t.tag, t.tag_type, t.subject_category, t.partition_date ORDER BY t.event_ts_msk) AS state_owner
     FROM t_onfy AS t
+    LEFT JOIN cnt_categories_onfy AS a ON t.ticket_id = a.ticket_id
 ),
 
 base_onfy AS (
@@ -284,9 +332,10 @@ SELECT
     t.subject_category,
     t.state_owner,
     t.partition_date,
+    t.cnt_subject_categories,
     MIN(t.event_ts_msk) AS event_ts_msk
 FROM tt_onfy AS t
-GROUP BY 1, 2, 3, 4, 5, 6
+GROUP BY 1, 2, 3, 4, 5, 6, 7
     ),
 
 onfy AS (
@@ -297,6 +346,7 @@ SELECT
     t.tag,
     t.tag_type,
     t.subject_category,
+    t.cnt_subject_categories, 
     TIMESTAMP(t.event_ts_msk) AS event_ts_msk,
     t.partition_date,
     a.first_queue,

@@ -70,6 +70,7 @@ rfq_requests AS (
         created_ts_msk AS request_created_ts_msk,
         sent_ts_msk AS request_sent_ts_msk,
         status AS sent_status,
+        top_rfq,
         category_id,
         category_name,
         order_id
@@ -102,6 +103,7 @@ rfq as (SELECT
     rp.response_status,
     rp.reject_reason,
     rp.merchant_id,
+    top_rfq,
     category_id,
     category_name,
     case when documents_attached > 0 then True else False end as documents_attached,
@@ -230,6 +232,7 @@ select
     rfq_products,
     documents_attached,
     merchant_id,
+    top_rfq,
     category_id,
     category_name,
     (unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(signing_and_payment_ts_msk, 0, 19),"yyyy-MM-dd HH:mm:ss"))/(3600) as time_final_pricing,
@@ -288,6 +291,7 @@ rfq.documents_attached,
 p.order_products,
 p.rfq_converted_products,
 p.rfq_products,
+top_rfq,
 opp.amount
 from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
