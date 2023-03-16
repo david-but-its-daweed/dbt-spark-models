@@ -19,7 +19,7 @@ select user_id, day, min(owner_moderator_id) as owner_moderator_id
 from 
 (
 select user_id, owner_moderator_id,
-explode(sequence(to_date('2022-06-01'), to_date(CURRENT_DATE()), interval 1 day)) as day
+explode(sequence(to_date('2022-03-01'), to_date(CURRENT_DATE()), interval 1 day)) as day
 from
 (
 select
@@ -149,7 +149,7 @@ users as (
     from
     (select distinct order_id, user_id, gmv_initial, t, 1 as for_join from after_second_qrt_new_order) a
     left join  (SELECT
-        explode(sequence(to_date('2022-06-01'), to_date(CURRENT_DATE()), interval 1 day)) as day,
+        explode(sequence(to_date('2022-03-01'), to_date(CURRENT_DATE()), interval 1 day)) as day,
         1 AS for_join
         ) as d on a.for_join = d.for_join
      )
