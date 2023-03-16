@@ -59,7 +59,7 @@ grade,
 date_payed,
 previous_time_payed,
 min_date_payed,
-date(extract(year from attribution_day), extract(month from attribution_day), 1) as attribution_month
+make_date(extract(year from attribution_day), extract(month from attribution_day), 1) as attribution_month
 from (
 select u.user_id, g.order_id, u.grade, g.gmv_initial, g.date_payed, attribution_day, u.min_date_payed,
 max(case when g2.date_payed < attribution_day then g2.date_payed end) over (partition by u.user_id, u.grade order by attribution_day) as previous_time_payed
