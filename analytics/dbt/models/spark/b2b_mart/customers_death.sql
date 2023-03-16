@@ -8,9 +8,7 @@
 ) }}
 
 with day as (
-  SELECT attribution_day, 1 as for_join
- from UNNEST(GENERATE_DATE_ARRAY(
- '2022-04-01', current_date(), INTERVAL 1 day)) as attribution_day
+  SELECT sequence(to_date('2022-04-01'), current_date(), interval 1 month) as attribution_day, 1 as for_join
 )
 ,
 gmv as (
