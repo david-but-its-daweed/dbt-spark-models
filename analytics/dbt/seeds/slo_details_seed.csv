@@ -8,11 +8,11 @@ slo_pro_base_tables,basic pro tables in BQ,@gburg,#gburg-temp-channel,7,,mart
 slo_joompay_overview,Joompay overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report
 slo_onfy_overview,Onfy overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report
 slo_onfy_base_tables,basic onfy tables in BQ,@gburg,#gburg-temp-channel,7,,mart
-slo_analytics_reports,Time reports at analytics.joom.ai,@gburg,#gburg-temp-channel,6,used in Time report in analytics.joom.ai,report
+slo_analytics_reports,Time reports at analytics.joom.ai,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Time report in analytics.joom.ai,report
 slo_jl_external_cube,JL External Cube,@gburg,#gburg-temp-channel,7,it is in the report which is viewed by our team every morning,mart
-slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#gburg-temp-channel,6,used in Overview report in analytics.joom.ai for Marketplace columns,report
-slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#gburg-temp-channel,6,used in Overview report in analytics.joom.ai for B2B columns,report
-slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#gburg-temp-channel,6,used in Overview report in analytics.joom.ai for Onfy columns,report
-slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#gburg-temp-channel,6,used in Overview report in analytics.joom.ai for Pro columns,report
-slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#gburg-temp-channel,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,report
-slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#gburg-temp-channel,6,used in Overview report in analytics.joom.ai for Joompay columns,report
+slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Marketplace columns,report
+slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for B2B columns,report
+slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Onfy columns,report
+slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Pro columns,report
+slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,report
+slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Joompay columns,report
