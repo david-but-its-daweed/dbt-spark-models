@@ -12,3 +12,4 @@ SELECT DISTINCT
     date,
     ready_time_human
 FROM {{ref("data_readiness")}}
+where date > NOW() - interval 2 month
