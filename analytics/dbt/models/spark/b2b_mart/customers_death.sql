@@ -38,6 +38,8 @@ select
 repeated_order,
 dead,
 lag(dead) over (partition by user_id, grade order by attribution_month , previous_time_payed , date_payed is null desc, dead) as was_dead,
+sum(gmv_initial) over (partition by user_id, grade order by date_payed, attribution_month) as cummulative_gmv,
+row_number() over (partition by user_id, grade, attribution_month order by date_payed desc) as rn_gmv,
 user_id,
 gmv_initial,
 order_id,
