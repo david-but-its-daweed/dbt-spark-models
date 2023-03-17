@@ -1,5 +1,5 @@
 {{ config(
-    schema='platform',
+    schema='platform_slo',
     materialized='table',
     meta = {
       'bigquery_load': 'true'
