@@ -1,9 +1,6 @@
 {{ config(
     schema='platform',
-    materialized='view',
-    meta = {
-      'bigquery_load': 'true'
-    }
+    materialized='view'
 ) }}
 
 with deps as (SELECT output.tableName       as output_name,
