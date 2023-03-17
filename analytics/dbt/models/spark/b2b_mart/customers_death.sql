@@ -66,7 +66,7 @@ make_date(extract(year from attribution_day), extract(month from attribution_day
 from (
 select u.user_id, g.order_id, u.grade, g.gmv_initial, g.date_payed, attribution_day, u.min_date_payed,
 max(case when g2.date_payed < attribution_day then g2.date_payed end) over (partition by u.user_id, u.grade order by attribution_day) as previous_time_payed,
-sum(case when g2.date_payed < attribution_day then g2.gmv_initial end) over (partition by u.user_id, u.grade) as cumulative_gmv
+sum(case when g2.date_payed < attribution_day then g2.gmv_initial end) over (partition by u.user_id, u.grade, attribution_day) as cumulative_gmv
 from 
 (select distinct user_id, grade, min_date_payed, for_join from gmv) u
 left join
