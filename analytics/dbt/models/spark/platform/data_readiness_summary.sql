@@ -1,6 +1,6 @@
 {{ config(
     schema='platform',
-    materialized='view',
+    materialized='table',
     meta = {
       'bigquery_load': 'true'
     }
