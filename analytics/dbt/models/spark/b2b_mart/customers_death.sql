@@ -8,7 +8,7 @@
 ) }}
 
 with day as (
-  SELECT explode(sequence(to_date('2022-04-01'), current_date(), interval 1 month)) as attribution_day, 1 as for_join
+  SELECT explode(sequence(to_date('2022-04-01'), current_date(), interval 1 day)) as attribution_day, 1 as for_join
 )
 ,
 gmv as (
