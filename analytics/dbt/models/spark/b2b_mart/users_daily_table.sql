@@ -2,12 +2,13 @@
     schema='b2b_mart',
     materialized='incremental',
     partition_by=['partition_date_msk'],
-    file_format='delta',
+    incremental_strategy='insert_overwrite',
+    file_format='parquet',
     meta = {
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',
-      'bigquery_known_gaps': ['2023-01-27']
+      'bigquery_known_gaps': ['2023-03-01']
     }
 ) }}
 

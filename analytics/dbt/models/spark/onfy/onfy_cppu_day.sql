@@ -74,6 +74,24 @@ sources as
         on second_purchase_device.id = first_second_purchases.second_purchase_device_id
 ),
 
+installs as 
+(
+    select 
+        source_corrected,
+        campaign_corrected,
+        date_trunc('day', source_ts_utc) as source_day, 
+        if(source_app_device_type like '%web%', 'web', source_app_device_type) as source_app_device_type,
+        cast(count(distinct if(source_event_type in ('adjustInstall', 'adjustReinstall'), combined_id, null)) as bigint) as installs,
+        cast(count(distinct if (source_event_type in ('externalLink'), combined_id, null)) as bigint) as visits
+    from 
+        {{ source('onfy', 'lndc_user_attribution') }}
+    group by 
+        source_corrected,
+        campaign_corrected,
+        date_trunc('day', source_ts_utc), 
+        if(source_app_device_type like '%web%', 'web', source_app_device_type)
+),
+
 ads_spends_corrected as 
 (
     select
@@ -93,7 +111,8 @@ ads_spends_corrected as
             when united_spends.partner like '%adcha%' then 'adchampagne'
             else united_spends.partner
         end as campaign_corrected,
-        sum(spend) as spend
+        sum(spend) as spend,
+        sum(clicks) as clicks
     from 
         {{ source('onfy_mart', 'ads_spends') }} as united_spends
     left join pharmacy.spends_campaigns_corrected
@@ -189,7 +208,8 @@ ads_spends_corrected_day as
         campaign_platform,
         source_corrected,
         campaign_corrected,
-        sum(spend) as spend
+        sum(spend) as spend,
+        sum(clicks) as clicks
     from 
         ads_spends_corrected
     group by 
@@ -200,17 +220,25 @@ ads_spends_corrected_day as
 )
 
 select distinct
-    coalesce(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date) as partition_date, 
-    coalesce(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected) as source,
+    coalesce(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date, install.source_day) as partition_date, 
+    coalesce(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected, install.source_corrected) as source,
     coalesce(ads_spends_corrected_day.campaign_corrected, users_by_day.campaign_corrected) as campaign,
-    coalesce(ads_spends_corrected_day.campaign_platform, users_by_day.first_purchase_app_device_type) as platform,
+    coalesce(ads_spends_corrected_day.campaign_platform, users_by_day.first_purchase_app_device_type, install.source_app_device_type) as platform,
     coalesce(users_by_day.first_purchases, 0) as first_purchases,
     coalesce(users_by_day.second_purchases, 0) as second_purchases, 
-    coalesce(ads_spends_corrected_day.spend, 0) as spend
+    coalesce(ads_spends_corrected_day.spend, 0) as spend,
+    coalesce(ads_spends_corrected_day.clicks, 0) as clicks,
+    coalesce(install.installs, 0) as installs,
+    coalesce(install.visits, 0) as visits
 from 
     ads_spends_corrected_day
-full outer join users_by_day
+full join users_by_day
     on ads_spends_corrected_day.spend_day = users_by_day.first_purchase_date
     and lower(ads_spends_corrected_day.campaign_corrected) = lower(users_by_day.campaign_corrected)
     and lower(ads_spends_corrected_day.source_corrected) = lower(users_by_day.source_corrected)
     and lower(ads_spends_corrected_day.campaign_platform) = lower(users_by_day.first_purchase_app_device_type)
+full join installs as install
+    on ads_spends_corrected_day.spend_day = install.source_day
+    and lower(ads_spends_corrected_day.campaign_corrected) = lower(install.campaign_corrected)
+    and lower(ads_spends_corrected_day.source_corrected) = lower(install.source_corrected)
+    and lower(ads_spends_corrected_day.campaign_platform) = lower(install.source_app_device_type)
