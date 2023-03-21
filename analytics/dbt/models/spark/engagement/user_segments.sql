@@ -143,7 +143,7 @@ activity_extended AS (
     SELECT
         a.real_user_id,
         a.week_join_msk,
-        a.num_orders,
+        a.num_orders_flg,
         u.time_unit,
         a.cohort_month AS active_dt,
         a.cohort_month + u.add_dt AS active_window_dt,
