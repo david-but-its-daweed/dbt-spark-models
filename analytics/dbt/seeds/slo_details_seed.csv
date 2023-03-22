@@ -16,3 +16,4 @@ slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6
 slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Pro columns,report
 slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,report
 slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Joompay columns,report
+slo_pnl,PnL report,#analytics-achtung,6,PnL report data https://analytics.joom.ai/pnl/profit_by_day,report
