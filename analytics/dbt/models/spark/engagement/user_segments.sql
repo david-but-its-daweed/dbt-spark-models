@@ -93,9 +93,9 @@ purchases AS (
 
 activity_purch AS (
     SELECT
-        t0.os_type as os_type__first,
-        t0.user_id as user_id__first,
-        t0.country as country__first,
+        t0.os_type AS os_type__first,
+        t0.user_id AS user_id__first,
+        t0.country AS country__first,
         t1.real_user_id,
         t1.week_msk,
         t1.os_type,
@@ -105,8 +105,10 @@ activity_purch AS (
         t1.num_evs AS num_active_days,
         t1.cohort_month,
         t1.cohort_week,
-        t2.num_orders,
-        if(t2.num_orders >= 1, 1, 0) AS num_orders_flg,
+        coalesce(t2.num_orders, 0) AS num_orders,
+        coalesce(t2.gmv_initial, 0) AS gmv_initial,
+        coalesce(t2.ecgp_initial, 0) AS ecgp_initial,
+        if(t2.num_orders is not null AND t2.num_orders >= 1, 1, 0) AS num_orders_flg,
         if(datediff(t1.week_msk, t1.week_join_msk) > 364,
             true, false) AS user1yearold_flg
     FROM
