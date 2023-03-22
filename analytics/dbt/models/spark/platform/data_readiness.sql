@@ -14,7 +14,7 @@ with deps as (SELECT output.tableName       as output_name,
      slo_tables as (SELECT collect_list(slo_id) as slo_ids,
                            table_name,
                            table_type
-                    from platform.slo_tables
+                    from {{ref("slo_tables")}}
                     group by table_name, table_type),
 
      producer_tasks as (select table.tableName     as table_name,

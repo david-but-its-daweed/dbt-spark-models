@@ -1,4 +1,4 @@
-slo_id,business_name,owner,alert_channels,expected_time_utc_hours,description,slo_type
+slo_id,business_name,owner,alert_channels,expected_time_utc_hours_str,description,slo_type
 slo_istaff,IStaff reports,@gburg,#gburg-temp-channel,7,,report
 slo_analytics_base_tables,basic analytics tables in BQ,@gburg,#gburg-temp-channel,7,,mart
 slo_logistics_overview,JL overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report
@@ -16,4 +16,4 @@ slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6
 slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Pro columns,report
 slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,report
 slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Joompay columns,report
-slo_pnl,PnL report,#analytics-achtung,6,PnL report data https://analytics.joom.ai/pnl/profit_by_day,report
+slo_pnl,PnL report,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,9,PnL report data https://analytics.joom.ai/pnl/profit_by_day,report
