@@ -12,7 +12,7 @@
       'predictor_last_train_point': '{{ ds | plus_days(-1) }}',
       'predictor_num_forecast_points': '0',
       'predictor_prophet_seasonality_mode': 'multiplicative',
-      'anomalies_channel': '#anomalies-automatic',
+      'anomalies_channel': '#anomalies-nobody-cares-about',
       'anomalies_start_time': '{{ ds | plus_days(-3) }}',
       'anomalies_end_time': '{{ ds | plus_days(-1) }}',
       'anomalies_significance_score': 'cumulative_deviation',
