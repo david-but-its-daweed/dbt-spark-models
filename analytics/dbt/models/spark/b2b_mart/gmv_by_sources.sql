@@ -18,8 +18,8 @@ users_owner as (
 select user_id, day, min(owner_moderator_id) as owner_moderator_id
 from 
 (
-select user_id, owner_moderator_id,
-explode(sequence(to_date('2022-03-01'), to_date(CURRENT_DATE()), interval 1 day)) as day
+select user_id, owner_moderator_id, email,
+explode(sequence(to_date(date_from), to_date(date_to), interval 1 day)) as day
 from
 (
 select
@@ -33,7 +33,7 @@ coalesce(lead(owner_moderator_id) over (partition by user_id order by event_ts_m
 owner_moderator_id
 from {{ ref('fact_user_change') }}
 where owner_moderator_id is not null)
-where owner_moderator_id != next_owner
+where owner_moderator_id != next_owner or next_owner is null
 )
 )
 group by user_id, day
