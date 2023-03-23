@@ -8,7 +8,7 @@
       'predictor_time_column': 'd,t',
       'predictor_dimensions': 'request_root_path',
       'predictor_value_column': 'max_requests_count',
-      'predictor_frequency': '10min',
+      'predictor_frequency': '1d,10min',
       'predictor_last_train_point': '{{ ds | plus_days(-1) }}',
       'predictor_num_forecast_points': '0',
       'predictor_prophet_seasonality_mode': 'multiplicative',
@@ -17,7 +17,7 @@
       'anomalies_end_time': '{{ ds | plus_days(-1) }}',
       'anomalies_significance_score': 'cumulative_deviation',
       'anomalies_significance_threshold': '8.0',
-      'anomalies_group_by_time_column': 'd',
+      'anomalies_frequency': '1d',
       'anomalies_plot_start_time': '{{ ds | plus_days(-5) }}',
       'anomalies_max_count': '10',
     }
