@@ -1,6 +1,7 @@
 {{ config(
     schema='platform',
-    materialized='view'
+    materialized='view',
+    tags=['data_readiness']
 ) }}
 
 select source_id,
