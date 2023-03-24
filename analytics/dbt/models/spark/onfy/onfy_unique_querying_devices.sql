@@ -1,7 +1,6 @@
 {{ config(
     schema='onfy',
     materialized='incremental',
-    incremental_strategy='insert_overwrite',
     file_format='delta',
     meta = {
       'team': 'onfy'
