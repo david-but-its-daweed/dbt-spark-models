@@ -18,7 +18,7 @@ users_owner as (
 select user_id, day, min(owner_moderator_id) as owner_moderator_id
 from 
 (
-select user_id, owner_moderator_id, email,
+select user_id, owner_moderator_id,
 explode(sequence(to_date(date_from), to_date(date_to), interval 1 day)) as day
 from
 (
