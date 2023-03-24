@@ -18,7 +18,7 @@ onfy_unique_querying_devices AS (
     bf.device_id,
     COALESCE(isp, 'unknown') AS isp,
     COALESCE(user_agent, 'unknown') AS user_agent
-  FROM {{ source('threat', 'bot_factors_onfy') }}
+  FROM {{ source('threat', 'bot_factors_onfy') }} bf
   JOIN human_devices USING (device_id)
   WHERE
     published_at >= DATE'{{ var("start_date_ymd") }}'
