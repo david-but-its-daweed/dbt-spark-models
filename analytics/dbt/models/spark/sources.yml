@@ -107,6 +107,7 @@ sources:
       - name: device_events
       - name: devices_mart
       - name: ads_spends
+      - name: auth_proxy_devices_without_bots
   - name: pharmacy_landing
     tables:
       - name: order
@@ -137,3 +138,6 @@ sources:
             description: Payment channel error reasons (0 - KYC error, 1 - payment method error)
           - name: updated_time
             description: Updated time
+  - name: threat
+    tables:
+      - name: bot_factors_onfy
