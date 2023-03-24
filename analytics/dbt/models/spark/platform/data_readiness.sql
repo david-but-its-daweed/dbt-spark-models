@@ -14,7 +14,7 @@ with deps as (SELECT output.tableName       as output_name,
      slo_tables as (SELECT collect_list(slo_id) as slo_ids,
                            table_name,
                            table_type
-                    from platform.slo_tables
+                    from {{ref("slo_tables")}}
                     group by table_name, table_type),
 
      producer_tasks as (select table.tableName     as table_name,
@@ -32,12 +32,18 @@ with deps as (SELECT output.tableName       as output_name,
                              explode(array_union(coalesce(slo_tables.slo_ids, array()),
                                                  array(output_name || '_' || output_type))) as source_id,
                             producer_tasks.dag_id,
-                            producer_tasks.task_id
+                            producer_tasks.task_id,
+                            output_producer_tasks.dag_id as output_dag_id,
+                            output_producer_tasks.task_id as output_task_id
                       FROM deps
                                left join slo_tables on slo_tables.table_name = deps.output_name and slo_tables.table_type = deps.output_type
                                left join producer_tasks
                                     on producer_tasks.table_name = deps.input_name
-                                    and producer_tasks.table_type = deps.input_type),
+                                    and producer_tasks.table_type = deps.input_type
+                               left join producer_tasks as output_producer_tasks
+                                    on output_producer_tasks.table_name = deps.output_name
+                                    and output_producer_tasks.table_type = deps.output_type
+                                    ),
 
      airflow_data as (SELECT task_id,
                              dag_id,
@@ -91,6 +97,8 @@ select source_id,
        dependencies.input_path,
        dependencies.dag_id,
        dependencies.task_id,
+       dependencies.output_dag_id,
+       dependencies.output_task_id,
        dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
        (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                  as ready_time_hours,
        (unix_timestamp(start_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                as start_time_hours,

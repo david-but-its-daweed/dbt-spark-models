@@ -10,7 +10,7 @@
       'predictor_prophet_seasonality_mode': 'multiplicative',
       'predictor_frequency': '1d',
       'predictor_num_forecast_points': '30',
-      'anomalies_channel': '#anomalies-automatic',
+      'anomalies_channel': '#anomalies-nobody-cares-about',
       'anomalies_significance_score': 'cumulative_deviation',
       'anomalies_significance_threshold': '0.2',
       'anomalies_max_count': '10',

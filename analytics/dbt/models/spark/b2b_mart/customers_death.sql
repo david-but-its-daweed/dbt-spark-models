@@ -8,9 +8,7 @@
 ) }}
 
 with day as (
-  SELECT attribution_day, 1 as for_join
- from UNNEST(GENERATE_DATE_ARRAY(
- '2022-04-01', current_date(), INTERVAL 1 day)) as attribution_day
+  SELECT explode(sequence(to_date('2022-04-01'), current_date(), interval 1 day)) as attribution_day, 1 as for_join
 )
 ,
 gmv as (
@@ -40,6 +38,8 @@ select
 repeated_order,
 dead,
 lag(dead) over (partition by user_id, grade order by attribution_month , previous_time_payed , date_payed is null desc, dead) as was_dead,
+cumulative_gmv,
+row_number() over (partition by user_id, grade, attribution_month, dead order by cumulative_gmv desc) as rn_gmv,
 user_id,
 gmv_initial,
 order_id,
@@ -61,10 +61,12 @@ grade,
 date_payed,
 previous_time_payed,
 min_date_payed,
-date(extract(year from attribution_day), extract(month from attribution_day), 1) as attribution_month
+cumulative_gmv,
+make_date(extract(year from attribution_day), extract(month from attribution_day), 1) as attribution_month
 from (
 select u.user_id, g.order_id, u.grade, g.gmv_initial, g.date_payed, attribution_day, u.min_date_payed,
-max(case when g2.date_payed < attribution_day then g2.date_payed end) over (partition by u.user_id, u.grade order by attribution_day) as previous_time_payed
+max(case when g2.date_payed < attribution_day then g2.date_payed end) over (partition by u.user_id, u.grade order by attribution_day) as previous_time_payed,
+sum(case when g2.date_payed <= attribution_day then g2.gmv_initial end) over (partition by u.user_id, u.grade, attribution_day) as cumulative_gmv
 from 
 (select distinct user_id, grade, min_date_payed, for_join from gmv) u
 left join
