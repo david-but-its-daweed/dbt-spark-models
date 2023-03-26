@@ -19,7 +19,7 @@ select
     user_agent,
     ts,
     unique_querying_devices
-from ref('onfy_unique_querying_devices')
+from {{ ref('onfy_unique_querying_devices') }}
 where
     frequency = '5m'
     and isp is null
