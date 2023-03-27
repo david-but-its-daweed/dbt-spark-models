@@ -5,6 +5,7 @@
 select _id as merchant_id,
        createdTimeMs as created_time,
        updatedTimeMs as updated_time,
+       activationTimeMs as activation_time,
        name,
        cast(origin as INTEGER) as origin,
        enabled
