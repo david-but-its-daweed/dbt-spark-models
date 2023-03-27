@@ -16,14 +16,14 @@
 
 
 with times as (
-    select event_id, TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)) as event_ts_msk
+    select order_id, max(TIMESTAMP(millis_to_ts_msk(statuses.updatedTime))) as event_ts_msk
     from
     (
-    SELECT  event_id,
+    SELECT  payload.orderId AS order_id,
         payload.status AS status,
         payload.subStatus AS sub_status,
         explode(payload.statusHistory) as statuses
-    FROM b2b_mart.operational_events
+    FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE type  ='orderChangedByAdmin'
       {% if is_incremental() %}
        and partition_date >= date'{{ var("start_date_ymd") }}'
@@ -34,21 +34,23 @@ with times as (
     and payload.reason = 'statusChanged'
       )
       where status = statuses.status and coalesce(sub_status, '') = coalesce(statuses.subStatus, '')
+      and statuses.updatedTime <= 32511074144000 and statuses.updatedTime is not null
+      group by order_id
 )
 
 
 
 SELECT a.event_id,
         partition_date_msk AS partition_date_msk,
-        to_timestamp(t.event_ts_msk) AS event_ts_msk,
-        order_id,
+        TIMESTAMP(coalesce(t.event_ts_msk, a.event_ts_msk)) AS event_ts_msk,
+        a.order_id,
         client_currency,
         reason ,
-        TIMESTAMP(millis_to_ts_msk(owner_time)) AS owner_time_msk,
+        TIMESTAMP(coalesce(millis_to_ts_msk(owner_time), a.event_ts_msk)) AS owner_time_msk,
         owner_type,
         owner_moderator_id,
         owner_role_type,
-        TIMESTAMP(millis_to_ts_msk(biz_dev_time)) AS biz_dev_time_msk,
+        TIMESTAMP(coalesce(millis_to_ts_msk(biz_dev_time), a.event_ts_msk)) AS biz_dev_time_msk,
         biz_dev_type,
         biz_dev_moderator_id,
         biz_dev_role_type,
@@ -137,7 +139,6 @@ SELECT  event_id,
      {% else %}
     and partition_date   >= date'2022-05-19'
      {% endif %}
-    and payload.reason = 'statusChanged'
     UNION ALL
     SELECT  event_id,
         partition_date  AS partition_date_msk,
@@ -168,15 +169,15 @@ SELECT  event_id,
      {% else %}
        and partition_date   >= date'2022-05-19'
      {% endif %}
-    and payload.reason = 'statusChanged'
-) a left join times t on a.event_id = t.event_id
+) a 
+left join times t on a.order_id = t.order_id
 GROUP BY a.event_id,
         partition_date_msk,
         a.event_ts_msk,
         t.event_ts_msk,
-        order_id,
+        a.order_id,
         client_currency,
-        reason ,
+        reason,
         owner_time,
         owner_type,
         owner_moderator_id,
