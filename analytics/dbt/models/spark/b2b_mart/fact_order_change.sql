@@ -16,13 +16,15 @@
 
 
 with times as (
-    select order_id, max(TIMESTAMP(millis_to_ts_msk(statuses.updatedTime))) as event_ts_msk
+    select order_id, 
+    TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)) as event_ts_msk, 
+    statuses.subStatus, 
+    statuses.status
     from
     (
     SELECT  payload.orderId AS order_id,
-        payload.status AS status,
-        payload.subStatus AS sub_status,
-        explode(payload.statusHistory) as statuses
+        explode(payload.statusHistory) as statuses,
+        row_number() over (partition by payload.orderId order by event_ts_msk desc) as rn
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE type  ='orderChangedByAdmin'
       {% if is_incremental() %}
@@ -31,11 +33,9 @@ with times as (
      {% else %}
        and partition_date   >= date'2022-05-19'
      {% endif %}
-    and payload.reason = 'statusChanged'
       )
-      where status = statuses.status and coalesce(sub_status, '') = coalesce(statuses.subStatus, '')
-      and statuses.updatedTime <= 32511074144000 and statuses.updatedTime is not null
-      group by order_id
+      where statuses.updatedTime <= 32511074144000 and statuses.updatedTime is not null
+      and rn = 1
 )
 
 
@@ -54,8 +54,8 @@ SELECT a.event_id,
         biz_dev_type,
         biz_dev_moderator_id,
         biz_dev_role_type,
-        status,
-        sub_status,
+        a.status,
+        a.sub_status,
         SUM(case when col.tag = 'grant' then -col.stagedPrices.final else col.stagedPrices.final end) AS total_final_price,
         SUM(IF(col.tag = 'ddp', col.stagedPrices.final, 0)) AS ddp_final_price,
         SUM(IF(col.tag = 'dap', col.stagedPrices.final, 0)) AS dap_final_price,
@@ -170,7 +170,7 @@ SELECT  event_id,
        and partition_date   >= date'2022-05-19'
      {% endif %}
 ) a 
-left join times t on a.order_id = t.order_id
+left join times t on a.order_id = t.order_id and t.status = a.status and t.subStatus = a.sub_status
 GROUP BY a.event_id,
         partition_date_msk,
         a.event_ts_msk,
@@ -186,5 +186,5 @@ GROUP BY a.event_id,
         biz_dev_type,
         biz_dev_moderator_id,
         biz_dev_role_type,
-        status,
-        sub_status
+        a.status,
+        a.sub_status
