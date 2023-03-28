@@ -17,14 +17,17 @@
 
 with times as (
     select order_id, 
-    TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)) as event_ts_msk, 
+    min(TIMESTAMP(millis_to_ts_msk(statuses.updatedTime))) as event_ts_msk, 
     statuses.subStatus, 
     statuses.status
     from
     (
     SELECT  payload.orderId AS order_id,
+        payload.status AS status,
+        payload.subStatus AS sub_status,
         explode(payload.statusHistory) as statuses,
-        row_number() over (partition by payload.orderId order by event_ts_msk desc) as rn
+        event_ts_msk,
+        max(event_ts_msk) over (partition by payload.orderId) as max_time
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE type  ='orderChangedByAdmin'
       {% if is_incremental() %}
@@ -35,7 +38,10 @@ with times as (
      {% endif %}
       )
       where statuses.updatedTime <= 32511074144000 and statuses.updatedTime is not null
-      and rn = 1
+      and event_ts_msk = max_time
+      group by order_id, 
+        statuses.subStatus, 
+        statuses.status
 )
 
 
