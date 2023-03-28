@@ -21,7 +21,8 @@ orders AS (
         o.order_id,
         o.created_ts_msk,
         o.friendly_id,
-        o.user_id
+        o.user_id,
+        o.min_manufactured_ts_msk
     FROM {{ ref('fact_order') }} AS o
     LEFT JOIN requests AS r ON o.request_id = r.request_id
     WHERE TRUE
@@ -33,14 +34,18 @@ orders AS (
 internal_products as (
     SELECT DISTINCT
         product_id, mo.order_id, max(type) over (partition by product_id) as product_type,
-         row_number() over (partition by o.user_id, mo.product_id order by o.min_manufactured_ts_msk is null, o.min_manufactured_ts_msk) 
+         row_number() over (partition by o.user_id, product_id order by o.min_manufactured_ts_msk is null, o.min_manufactured_ts_msk) 
                 as user_product_number
     FROM (
-        select _id as product_id, orderId as order_id, type, merchOrdId as merchant_order_id
+        select orderId as order_id, _id as merchant_order_id
         from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
         )mo
+    LEFT JOIN (
+        select _id as product_id, type, merchOrdId as merchant_order_id
+        from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
+        ) op on mo.merchant_order_id = op.merchant_order_id
     LEFT JOIN orders o on o.order_id = mo.order_id
-    WHERE next_effective_ts_msk IS NULL
+    
 ),
 
 
