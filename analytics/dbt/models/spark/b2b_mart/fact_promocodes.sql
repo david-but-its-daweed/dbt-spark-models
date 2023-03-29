@@ -43,7 +43,7 @@ interactions as (
 
 select p.promocode_id,
 p.code,
-p.companyName as refferal_company_name,
+p.company_name as refferal_company_name,
 p.notes as owner_notes,
 p.is_partner,
 p.user_id as refferal_id,
