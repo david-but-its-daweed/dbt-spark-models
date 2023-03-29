@@ -29,7 +29,7 @@ with promocodes as (
           where 1=1
           and next_effective_ts_msk is null
           ) a on ownerId = a.user_id
-          where a.role != 'Dev' or u.isPartner
+          where (a.role != 'Dev' or u.isPartner) or (u.invitedByPromo is not null and a.role != 'Dev')
           order by c._id is null
           ),
           
