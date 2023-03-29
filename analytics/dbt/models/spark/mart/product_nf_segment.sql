@@ -47,6 +47,7 @@ with orders_with_feedback as
             on _id = order_id
             and reviews.next_effective_ts > partition_date + interval 80 days
             and partition_date + interval 80 days >= reviews.effective_ts
+        left join {{ source('logistics_mart', 'fact_order')}} using (order_id)
 
 
         where
