@@ -32,7 +32,7 @@ orders AS (
 ),
 
 internal_products as (
-    select product_id, order_id, product_type, merchant_id,
+    select product_id, order_id, product_type, merchant_id, user_id,
         row_number() over (partition by user_id, product_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
                 as user_product_number,
         rank() over (partition by user_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
