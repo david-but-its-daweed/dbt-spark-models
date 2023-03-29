@@ -94,4 +94,4 @@ interaction_id
 from
 b2b_mart.fact_interactions 
 where rn = 1
-) fi on i.user_id = fi.user_id --and date(created_date) >= date(TIMESTAMP(millis_to_ts_msk(ctms)))
+) fi on i.user_id = fi.user_id and date(created_date) >= date(TIMESTAMP(millis_to_ts_msk(ctms)))
