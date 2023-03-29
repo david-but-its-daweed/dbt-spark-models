@@ -34,7 +34,11 @@ orders AS (
 internal_products as (
     select product_id, order_id, product_type,
         row_number() over (partition by user_id, product_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
-                as user_product_number
+                as user_product_number,
+        rank() over (partition by user_id, order_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
+                as user_order_number,
+        rank() over (partition by user_id, order_id, merchant_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
+                as user_merchant_number
         from
     (
     select distinct * 
@@ -43,11 +47,12 @@ internal_products as (
         product_id, 
         mo.order_id, 
         o.user_id, 
+        mo.merchant_id,
         max(type) over (partition by product_id) as product_type,
         o.min_manufactured_ts_msk
     FROM (
-        select orderId as order_id, _id as merchant_order_id
-        from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
+        select order_id, merchant_order_id, merchant_id
+        from {{ ref('fact_merchant_order') }}
         ) mo
     LEFT JOIN (
         select _id as product_id, type, merchOrdId as merchant_order_id
@@ -57,6 +62,7 @@ internal_products as (
     union all 
     SELECT DISTINCT
         product_id, mo.order_id, o.user_id, 
+        merchant_id,
         max(product_type) over (partition by product_id) as product_type,
         o.min_manufactured_ts_msk
     FROM {{ ref('fact_merchant_order') }} mo
@@ -284,7 +290,9 @@ select
         END as cancelled_after,
     amount,
     product_type,
-    user_product_number
+    user_product_number,
+    user_order_number,
+    user_merchant_number
 FROM
 (
 select distinct
