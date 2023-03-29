@@ -14,7 +14,7 @@ with promocodes as (
             code,
             ownerId as owner_id,
             companyName as company_name,
-            c.notes as notes,
+            replace(replace(replace(c.notes, '<p>', ''), '</p>', ''), '<br>', ' ') as notes,
             u.isPartner as is_partner,
             u.invitedByPromo as invited_by_promo,
             a.email,
