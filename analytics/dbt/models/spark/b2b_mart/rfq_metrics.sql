@@ -337,7 +337,7 @@ left join expensive e on rfq.order_rfq_response_id = e.id
 left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
 where (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
 ) rfq
-left join (select distinct order_id, product_id, user_product_number from internal_products) ip 
+left join (select distinct order_id, product_id, product_type, user_product_number from internal_products) ip 
     on ip.product_id = rfq.product_id and rfq.order_id = ip.order_id
 left join (select distinct order_id, user_id, user_order_number from internal_products) ip1
 on rfq.order_id = ip1.order_id
