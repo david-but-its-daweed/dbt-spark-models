@@ -1,19 +1,19 @@
-slo_id,business_name,owner,alert_channels,expected_time_utc_hours_str,description,slo_type,target_sli
-slo_istaff,IStaff reports,@gburg,#gburg-temp-channel,7,,report,0
-slo_analytics_base_tables,basic analytics tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0
-slo_logistics_overview,JL overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0
-slo_logistics_base_tables,basic JL tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0
-slo_pro_overview,Pro overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0
-slo_pro_base_tables,basic pro tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0
-slo_joompay_overview,Joompay overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0
-slo_onfy_overview,Onfy overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0
-slo_onfy_base_tables,basic onfy tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0
-slo_analytics_reports,Time reports at analytics.joom.ai,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Time report in analytics.joom.ai,report,80
-slo_jl_external_cube,JL External Cube,@gburg,#gburg-temp-channel,7,it is in the report which is viewed by our team every morning,mart,0
-slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Marketplace columns,report,80
-slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for B2B columns,report,0
-slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Onfy columns,report,0
-slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Pro columns,report,0
-slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,report,0
-slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Joompay columns,report,0
-slo_pnl,PnL report,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,9,PnL report data https://analytics.joom.ai/pnl/profit_by_day,report,80
+slo_id,business_name,owner,alert_channels,expected_time_utc_hours_str,description,slo_type,target_sli,technical_alert_channels
+slo_istaff,IStaff reports,@gburg,#gburg-temp-channel,7,,report,0,
+slo_analytics_base_tables,basic analytics tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0,
+slo_logistics_overview,JL overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0,
+slo_logistics_base_tables,basic JL tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0,
+slo_pro_overview,Pro overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0,
+slo_pro_base_tables,basic pro tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0,
+slo_joompay_overview,Joompay overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0,
+slo_onfy_overview,Onfy overview reports in Holistics,@gburg,#gburg-temp-channel,7,,report,0,
+slo_onfy_base_tables,basic onfy tables in BQ,@gburg,#gburg-temp-channel,7,,mart,0,
+slo_analytics_reports,Time reports at analytics.joom.ai,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Time report in analytics.joom.ai,report,80,#analytics-achtung
+slo_jl_external_cube,JL External Cube,@gburg,#gburg-temp-channel,7,it is in the report which is viewed by our team every morning,mart,0,#analytics-achtung
+slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Marketplace columns,report,80,#analytics-achtung
+slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for B2B columns,report,0,#analytics-achtung
+slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Onfy columns,report,0,#analytics-achtung
+slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Pro columns,report,0,#analytics-achtung
+slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,report,0,#analytics-achtung
+slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Joompay columns,report,0,#analytics-achtung
+slo_pnl,PnL report,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,9,PnL report data https://analytics.joom.ai/pnl/profit_by_day,report,80,#analytics-achtung
