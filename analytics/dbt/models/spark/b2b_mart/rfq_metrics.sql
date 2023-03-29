@@ -265,7 +265,7 @@ select
     order_products,
     rfq_products,
     documents_attached,
-    merchant_id,
+    rfq.merchant_id,
     top_rfq,
     category_id,
     category_name,
