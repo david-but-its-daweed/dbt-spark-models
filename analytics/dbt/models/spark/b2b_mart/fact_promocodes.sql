@@ -69,7 +69,7 @@ min_status_manufacturing_ts_msk,
 current_status,
 current_substatus,
 final_gmv,
-invited_by_promo
+u.invited_by_promo
 from promocodes p
 left join promocodes u on p.promocode_id = u.invited_by_promo
 left join interactions i on p.promocode_id = i.promocode_id
