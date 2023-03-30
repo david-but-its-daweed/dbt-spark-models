@@ -22,7 +22,7 @@ with promocodes as (
             a.role
           from {{ source ('mongo', 'b2b_core_promocodes_daily_snapshot') }} p
           left join {{ source ('mongo', 'b2b_core_customers_daily_snapshot') }} c on ownerId = c._id
-          left join {{ source ('mongo', 'b2b_core_users_daily_snapshot') }} u on c._id = u._id
+          left join {{ source ('mongo', 'b2b_core_users_daily_snapshot') }} u on ownerId = u._id
           left join (
           select distinct user_id, email, role from {{ ref('dim_user_admin') }}
           inner join {{ ref('dim_user') }} on owner_id = admin_id
