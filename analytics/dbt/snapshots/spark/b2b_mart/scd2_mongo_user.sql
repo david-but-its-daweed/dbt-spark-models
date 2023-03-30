@@ -5,7 +5,7 @@
       target_schema='b2b_mart',
       unique_key='user_id',
       strategy='check',
-      check_cols=['update_ts_msk', 'owner_id'],
+      check_cols=['owner_id', 'reject_reason', 'validation_status', 'amo_crm_id'],
       updated_at='update_ts_msk',
       file_format='delta'
     )
