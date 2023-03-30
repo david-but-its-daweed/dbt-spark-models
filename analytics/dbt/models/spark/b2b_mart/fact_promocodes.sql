@@ -29,8 +29,27 @@ with promocodes as (
           where 1=1
           and next_effective_ts_msk is null
           ) a on ownerId = a.user_id
-          where (a.role != 'Dev' or u.isPartner) or (u.invitedByPromo is not null and a.role != 'Dev')
-          order by c._id is null
+          where (a.role != 'Dev' or u.isPartner)
+          ),
+          
+users as (
+    select 
+            companyName as company_name,
+            replace(replace(replace(c.notes, '<p>', ''), '</p>', ''), '<br>', ' ') as notes,
+            u.isPartner as is_partner,
+            u.invitedByPromo as invited_by_promo,
+            a.email,
+            u._id as user_id,
+            a.role
+          from {{ source ('mongo', 'b2b_core_users_daily_snapshot') }} u
+          left join {{ source ('mongo', 'b2b_core_customers_daily_snapshot') }} c on c._id = u._id
+          left join (
+          select distinct user_id, email, role from {{ ref('dim_user_admin') }}
+          inner join {{ ref('dim_user') }} on owner_id = admin_id
+          where 1=1
+          and next_effective_ts_msk is null
+          ) a on u._id = a.user_id
+          where (u.invitedByPromo is not null and a.role != 'Dev')
           ),
           
 interactions as (
@@ -71,7 +90,7 @@ current_substatus,
 final_gmv,
 u.invited_by_promo
 from promocodes p
-left join promocodes u on p.promocode_id = u.invited_by_promo
+left join users u on p.promocode_id = u.invited_by_promo
 left join interactions i on p.promocode_id = i.promocode_id
 left join (
 select 
