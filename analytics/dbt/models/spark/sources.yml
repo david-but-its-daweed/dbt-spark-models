@@ -71,6 +71,7 @@ sources:
       - name: babylone_logistics_tag_categories_daily_snapshot
       - name: babylone_narwhal_tag_categories_daily_snapshot
       - name: babylone_onfy_tag_categories_daily_snapshot
+      - name: b2b_core_promocodes_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -107,6 +108,7 @@ sources:
       - name: device_events
       - name: devices_mart
       - name: ads_spends
+      - name: auth_proxy_devices_without_bots
   - name: pharmacy_landing
     tables:
       - name: order
@@ -137,3 +139,6 @@ sources:
             description: Payment channel error reasons (0 - KYC error, 1 - payment method error)
           - name: updated_time
             description: Updated time
+  - name: threat
+    tables:
+      - name: bot_factors_onfy

@@ -62,6 +62,16 @@ with source as (
     where type in ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
 )
 
+, devices_mart as (
+select 
+  device_id,
+  app_device_type,
+  min(min_purchase_date) as min_purchase_date
+from {{ source('onfy_mart', 'devices_mart')}}
+where not is_bot
+group by 1, 2
+)
+
 , session_start as (
   select distinct
     device_id,
@@ -79,6 +89,7 @@ select
 from {{ source('onfy_mart', 'device_events')}}
 where type in ('search', 'searchServer', 'productOpen', 'catalogOpen')
 )
+
 , add_to_cart as (
 select 
   device_id,
@@ -86,6 +97,7 @@ select
 from {{ source('onfy_mart', 'device_events')}}
 where type = 'addToCart'
 )
+
 , cart_open as (
 select 
   device_id,
@@ -94,6 +106,7 @@ from {{ source('onfy_mart', 'device_events')}}
 where type = 'cartOpen'
   and payload.productIds is not null 
 )
+
 , checkout_open as (
 select 
   device_id,
@@ -101,6 +114,7 @@ select
 from {{ source('onfy_mart', 'device_events')}}
 where type = 'checkoutConfirmOpen'
 )
+
 , payment_start as (
 select 
   device_id,
@@ -108,6 +122,7 @@ select
 from {{ source('onfy_mart', 'device_events')}}
 where type = 'paymentStart'
 )
+
 , successful_payment as (
 select 
   device_id,
@@ -125,16 +140,13 @@ select
     sessions.device_id,
     sessions.session_dt,
     next_session_dt,
-    lower(max_by(coalesce(utm.source_corrected, sources.utm_source), sessions.session_dt)) as source,
-    max_by(coalesce(utm.campaign_corrected, sources.utm_campaign), sessions.session_dt) as campaign,
+    max_by(sources.utm_source, sessions.session_dt) as source,
+    max_by(sources.utm_campaign, sessions.session_dt) as campaign,
     max_by(sources.partner, sessions.session_dt) as partner
 from session_start as sessions
 left join source as sources
     on sessions.device_id = sources.device_id
     and sessions.session_dt between (sources.source_dt - INTERVAL 1 minutes) and coalesce(next_source_dt, current_timestamp())
-left join pharmacy.utm_campaigns_corrected as utm
-        on coalesce(lower(utm.utm_campaign), '') = coalesce(lower(sources.utm_campaign), '') 
-        and coalesce(lower(utm.utm_source), '') = coalesce(lower(sources.utm_source), '') 
 group by 
     sessions.device_id,
     sessions.session_dt,
@@ -158,25 +170,32 @@ join minimal_involvement
   on sessions.device_id = minimal_involvement.device_id
   and minimal_involvement_dt between session_dt and coalesce(next_session_dt, CURRENT_TIMESTAMP())
 )
------------------------------------------------------------------------------------------
-/*
-to cut "technical" session start events taking sessions only if:
- - previous session ended up with payment
- - it's been 30 days since last session 
-*/
------------------------------------------------------------------------------------------
+
 , sessions_with_payments as (
 select 
   sessions.*,
   payment_dt,
   datediff(session_minenv_dt, prev_session_minenv_dt) as session_diff_days, 
+  floor((bigint(session_minenv_dt) -  bigint(prev_session_minenv_dt))/3600) as session_diff_hours, 
   row_number() over(partition by sessions.device_id, session_minenv_dt order by payment_dt desc) as rn
 from minimal_involvement_sessions as sessions 
 left join successful_payment as payment
   on sessions.device_id = payment.device_id
   and payment_dt between session_minenv_dt and coalesce(next_session_minenv_dt, CURRENT_TIMESTAMP())
 )
-, sessions_counter as (
+
+
+-----------------------------------------------------------------------------------------
+/*
+30 days window
+
+to cut "technical" session start events taking sessions only if:
+ - previous session ended up with payment
+ - it's been 30 days since last session 
+*/
+-----------------------------------------------------------------------------------------
+
+, sessions_counter_30 as (
 select 
   *,
   case 
@@ -193,20 +212,18 @@ select
     else 0 end as is_session 
 from sessions_with_payments
 )
-, actual_sessions as (
+, actual_sessions_30 as (
 select 
   device_id,
   session_minenv_dt,
   source,
   campaign,
   partner
-from sessions_counter
+from sessions_counter_30
 where is_session = 1
 )
------------------------------------------------------------------------------------------
--- joining events with each other
------------------------------------------------------------------------------------------
-, minim_env_add_to_cart as (
+
+, minim_env_add_to_cart_30 as (
 select  
   session.device_id,
   session_minenv_dt,
@@ -215,74 +232,316 @@ select
   session.partner,
   add_to_cart_dt,
   row_number() over(partition by session.device_id, session_minenv_dt order by add_to_cart_dt) as rnk_add_to_cart
-from actual_sessions session 
+from actual_sessions_30 session 
 left join add_to_cart add_cart 
   on session.device_id = add_cart.device_id
   and add_to_cart_dt >= session_minenv_dt 
 )
 -----------------------------------------------------------------------------------------
-, add_to_cart_cart_open as (
+, add_to_cart_cart_open_30 as (
 select 
-  minim_env_add_to_cart.*,
+  minim_env_add_to_cart_30.*,
   cart_open_dt,
-  row_number() over(partition by minim_env_add_to_cart.device_id, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
-from minim_env_add_to_cart  
+  row_number() over(partition by minim_env_add_to_cart_30.device_id, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
+from minim_env_add_to_cart_30  
 left join cart_open 
-  on minim_env_add_to_cart.device_id = cart_open.device_id
+  on minim_env_add_to_cart_30.device_id = cart_open.device_id
   and cart_open_dt >= add_to_cart_dt --TIMESTAMP_SUB(add_to_cart_dt, interval 10 minute)
 where rnk_add_to_cart=1
 )
------------------------------------------------------------------------------------------
-, cart_open_to_checkout as (
+
+, cart_open_to_checkout_30 as (
 select 
-  cart_open.*,
+  add_to_cart_cart_open_30.*,
   checkout_dt,
-  row_number() over(partition by cart_open.device_id, cart_open_dt order by checkout_dt) as rnk_checkout
-from add_to_cart_cart_open cart_open
+  row_number() over(partition by add_to_cart_cart_open_30.device_id, cart_open_dt order by checkout_dt) as rnk_checkout
+from add_to_cart_cart_open_30 
 left join checkout_open  
-  on cart_open.device_id = checkout_open.device_id
+  on add_to_cart_cart_open_30.device_id = checkout_open.device_id
   and checkout_dt >=  cart_open_dt
 where rnk_cart_open=1
 )
------------------------------------------------------------------------------------------
-, checkout_to_payment_start as (
+
+, checkout_to_payment_start_30 as (
 select 
-  cart_open_to_checkout.*,
+  cart_open_to_checkout_30.*,
   payment_start_dt,
-  row_number() over(partition by cart_open_to_checkout.device_id, checkout_dt order by payment_start_dt) as rnk_payment_start
-from cart_open_to_checkout
+  row_number() over(partition by cart_open_to_checkout_30.device_id, checkout_dt order by payment_start_dt) as rnk_payment_start
+from cart_open_to_checkout_30
 left join payment_start
-  on cart_open_to_checkout.device_id = payment_start.device_id
+  on cart_open_to_checkout_30.device_id = payment_start.device_id
   and payment_start_dt >= checkout_dt
 where rnk_checkout = 1
 )
------------------------------------------------------------------------------------------
-, payment_start_to_payment as (
+
+, payment_start_to_payment_30 as (
 select 
-  checkout_to_payment_start.*,
+  checkout_to_payment_start_30.*,
   payment_dt,
-  row_number() over(partition by checkout_to_payment_start.device_id, payment_start_dt order by payment_dt) as rnk_payment
-from checkout_to_payment_start
+  row_number() over(partition by checkout_to_payment_start_30.device_id, payment_start_dt order by payment_dt) as rnk_payment
+from checkout_to_payment_start_30
 left join successful_payment
-  on checkout_to_payment_start.device_id = successful_payment.device_id
+  on checkout_to_payment_start_30.device_id = successful_payment.device_id
+  and payment_dt >= (payment_start_dt - INTERVAL 10 minutes) -- payment is a server event so it can be sent earlier than other events (which are client ones)
+where rnk_payment_start = 1 
+)
+
+-----------------------------------------------------------------------------------------
+/*
+7 days window
+
+to cut "technical" session start events taking sessions only if:
+ - previous session ended up with payment
+ - it's been 7 days since last session 
+*/
+-----------------------------------------------------------------------------------------
+, sessions_counter_7 as (
+select 
+  *,
+  case 
+    when 
+      prev_session_minenv_dt is null then 1 
+    when 
+      prev_session_minenv_dt is not null
+      and session_diff_days >= 7 then 1
+    when 
+      prev_session_minenv_dt is not null
+      and session_diff_days < 7 
+      and payment_dt is not null 
+      and rn=1 then 1
+    else 0 end as is_session 
+from sessions_with_payments
+)
+, actual_sessions_7 as (
+select 
+  device_id,
+  session_minenv_dt,
+  source,
+  campaign,
+  partner
+from sessions_counter_7
+where is_session = 1
+)
+
+, minim_env_add_to_cart_7 as (
+select  
+  session.device_id,
+  session_minenv_dt,
+  session.source,
+  session.campaign,
+  session.partner,
+  add_to_cart_dt,
+  row_number() over(partition by session.device_id, session_minenv_dt order by add_to_cart_dt) as rnk_add_to_cart
+from actual_sessions_7 session 
+left join add_to_cart add_cart 
+  on session.device_id = add_cart.device_id
+  and add_to_cart_dt >= session_minenv_dt 
+)
+-----------------------------------------------------------------------------------------
+, add_to_cart_cart_open_7 as (
+select 
+  minim_env_add_to_cart_7.*,
+  cart_open_dt,
+  row_number() over(partition by minim_env_add_to_cart_7.device_id, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
+from minim_env_add_to_cart_7  
+left join cart_open 
+  on minim_env_add_to_cart_7.device_id = cart_open.device_id
+  and cart_open_dt >= add_to_cart_dt 
+where rnk_add_to_cart=1
+)
+
+, cart_open_to_checkout_7 as (
+select 
+  add_to_cart_cart_open_7.*,
+  checkout_dt,
+  row_number() over(partition by add_to_cart_cart_open_7.device_id, cart_open_dt order by checkout_dt) as rnk_checkout
+from add_to_cart_cart_open_7 
+left join checkout_open  
+  on add_to_cart_cart_open_7.device_id = checkout_open.device_id
+  and checkout_dt >=  cart_open_dt
+where rnk_cart_open=1
+)
+
+, checkout_to_payment_start_7 as (
+select 
+  cart_open_to_checkout_7.*,
+  payment_start_dt,
+  row_number() over(partition by cart_open_to_checkout_7.device_id, checkout_dt order by payment_start_dt) as rnk_payment_start
+from cart_open_to_checkout_7
+left join payment_start
+  on cart_open_to_checkout_7.device_id = payment_start.device_id
+  and payment_start_dt >= checkout_dt
+where rnk_checkout = 1
+)
+
+, payment_start_to_payment_7 as (
+select 
+  checkout_to_payment_start_7.*,
+  payment_dt,
+  row_number() over(partition by checkout_to_payment_start_7.device_id, payment_start_dt order by payment_dt) as rnk_payment
+from checkout_to_payment_start_7
+left join successful_payment
+  on checkout_to_payment_start_7.device_id = successful_payment.device_id
+  and payment_dt >= (payment_start_dt - INTERVAL 10 minutes) -- payment is a server event so it can be sent earlier than other events (which are client ones)
+where rnk_payment_start = 1 
+)
+
+-----------------------------------------------------------------------------------------
+/*
+1 day window
+
+to cut "technical" session start events taking sessions only if:
+ - previous session ended up with payment
+ - it's been 1 day since last session 
+*/
+-----------------------------------------------------------------------------------------
+, sessions_counter_1 as (
+select 
+  *,
+  case 
+    when 
+      prev_session_minenv_dt is null then 1 
+    when 
+      prev_session_minenv_dt is not null
+      and session_diff_hours > 24 then 1
+    when 
+      prev_session_minenv_dt is not null
+      and session_diff_hours <= 24 
+      and payment_dt is not null 
+      and rn=1 then 1
+    else 0 end as is_session 
+from sessions_with_payments
+)
+, actual_sessions_1 as (
+select 
+  device_id,
+  session_minenv_dt,
+  source,
+  campaign,
+  partner
+from sessions_counter_1
+where is_session = 1
+)
+
+, minim_env_add_to_cart_1 as (
+select  
+  session.device_id,
+  session_minenv_dt,
+  session.source,
+  session.campaign,
+  session.partner,
+  add_to_cart_dt,
+  row_number() over(partition by session.device_id, session_minenv_dt order by add_to_cart_dt) as rnk_add_to_cart
+from actual_sessions_1 session 
+left join add_to_cart add_cart 
+  on session.device_id = add_cart.device_id
+  and add_to_cart_dt >= session_minenv_dt 
+)
+-----------------------------------------------------------------------------------------
+, add_to_cart_cart_open_1 as (
+select 
+  minim_env_add_to_cart_1.*,
+  cart_open_dt,
+  row_number() over(partition by minim_env_add_to_cart_1.device_id, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
+from minim_env_add_to_cart_1  
+left join cart_open 
+  on minim_env_add_to_cart_1.device_id = cart_open.device_id
+  and cart_open_dt >= add_to_cart_dt 
+where rnk_add_to_cart=1
+)
+
+, cart_open_to_checkout_1 as (
+select 
+  add_to_cart_cart_open_1.*,
+  checkout_dt,
+  row_number() over(partition by add_to_cart_cart_open_1.device_id, cart_open_dt order by checkout_dt) as rnk_checkout
+from add_to_cart_cart_open_1 
+left join checkout_open  
+  on add_to_cart_cart_open_1.device_id = checkout_open.device_id
+  and checkout_dt >=  cart_open_dt
+where rnk_cart_open=1
+)
+
+, checkout_to_payment_start_1 as (
+select 
+  cart_open_to_checkout_1.*,
+  payment_start_dt,
+  row_number() over(partition by cart_open_to_checkout_1.device_id, checkout_dt order by payment_start_dt) as rnk_payment_start
+from cart_open_to_checkout_1
+left join payment_start
+  on cart_open_to_checkout_1.device_id = payment_start.device_id
+  and payment_start_dt >= checkout_dt
+where rnk_checkout = 1
+)
+
+, payment_start_to_payment_1 as (
+select 
+  checkout_to_payment_start_1.*,
+  payment_dt,
+  row_number() over(partition by checkout_to_payment_start_1.device_id, payment_start_dt order by payment_dt) as rnk_payment
+from checkout_to_payment_start_1
+left join successful_payment
+  on checkout_to_payment_start_1.device_id = successful_payment.device_id
   and payment_dt >= (payment_start_dt - INTERVAL 10 minutes) -- payment is a server event so it can be sent earlier than other events (which are client ones)
 where rnk_payment_start = 1 
 )
 -----------------------------------------------------------------------------------------
-, devices_mart as (
+
+, all_together as (
 select 
-  device_id,
-  app_device_type,
-  min(min_purchase_date) as min_purchase_date
-from {{ source('onfy_mart', 'devices_mart')}}
-where not is_bot
-group by 1, 2
+    events_30.device_id,
+    events_30.session_minenv_dt,
+    events_30.add_to_cart_dt,
+    events_30.cart_open_dt,
+    events_30.checkout_dt,
+    events_30.payment_start_dt,
+    events_30.payment_dt,
+    events_30.source,
+    events_30.campaign,
+    events_30.partner,
+    '30 days' as window_size
+from payment_start_to_payment_30 as events_30
+where events_30.rnk_payment = 1
+
+union all
+
+select 
+    events_7.device_id,
+    events_7.session_minenv_dt,
+    events_7.add_to_cart_dt,
+    events_7.cart_open_dt,
+    events_7.checkout_dt,
+    events_7.payment_start_dt,
+    events_7.payment_dt,
+    events_7.source,
+    events_7.campaign,
+    events_7.partner,
+    '7 days' as window_size
+from payment_start_to_payment_7 as events_7
+where events_7.rnk_payment = 1
+
+union all
+
+select 
+    events_1.device_id,
+    events_1.session_minenv_dt,
+    events_1.add_to_cart_dt,
+    events_1.cart_open_dt,
+    events_1.checkout_dt,
+    events_1.payment_start_dt,
+    events_1.payment_dt,
+    events_1.source,
+    events_1.campaign,
+    events_1.partner,
+    '24 hours' as window_size
+from payment_start_to_payment_1 as events_1
+where events_1.rnk_payment = 1
 )
 select 
-    events.device_id,
+    all_together.device_id,
     devices.app_device_type,
     case 
-      when date(events.session_minenv_dt) > devices.min_purchase_date then True
+      when date(all_together.session_minenv_dt) > devices.min_purchase_date then True
       else False 
       end as is_buyer,
     session_minenv_dt,
@@ -293,8 +552,8 @@ select
     payment_dt,
     source,
     campaign,
-    partner
-from payment_start_to_payment as events
+    partner,
+    window_size
+from all_together
 inner join devices_mart as devices
-  on events.device_id = devices.device_id
-where rnk_payment = 1
+  on all_together.device_id = devices.device_id

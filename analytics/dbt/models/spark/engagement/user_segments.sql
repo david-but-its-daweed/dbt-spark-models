@@ -53,44 +53,49 @@ activity2 AS (
         activity
 ),
 
+users_first_identification_util AS (
+    SELECT
+        real_user_id,
+        min(week_msk) AS week_msk
+    FROM
+        activity2
+    GROUP BY 1
+),
+
 users_first_identification AS (
     SELECT
-        real_user_id,        
+        t1.real_user_id,
         os_type,
+        country,
         week_join_msk,
-        user_id,
-        country
-    FROM 
-        activity2
-    WHERE
-        cohort_week = 0
+        user_id
+    FROM
+        activity2 as t1
+    INNER JOIN users_first_identification_util AS t2 ON
+        t1.real_user_id = t2.real_user_id
+        AND t1.week_msk = t2.week_msk
 ),
 
 purchases AS (
     SELECT
         real_user_id,
-        floor(datediff(week_msk, week_join_msk) / 7) AS cohort_week,
-        sum(num_orders) AS num_orders
-    FROM (
-        SELECT
-            real_user_id,
-            date(date_trunc('WEEK', real_user_join_ts_msk)) AS week_join_msk,
-            date(date_trunc('WEEK', created_time_utc + INTERVAL 3 HOUR)) AS week_msk,
-            count(*) AS num_orders
-        FROM
-            {{ source('mart', 'star_order_2020') }}
-        WHERE
-            date(created_time_utc + INTERVAL 3 HOUR) >= '2018-01-01'
-        GROUP BY 1, 2, 3
-    )
-    GROUP BY 1, 2
+        date(date_trunc('WEEK', real_user_join_ts_msk)) AS week_join_msk,
+        date(date_trunc('WEEK', created_time_utc + INTERVAL 3 HOUR)) AS week_msk,
+        count(*) AS num_orders,
+        sum(gmv_initial) AS gmv_initial,
+        sum(ecgp_initial) AS ecgp_initial
+    FROM
+        {{ source('mart', 'star_order_2020') }}
+    WHERE
+        date(created_time_utc + INTERVAL 3 HOUR) >= '2018-01-01'
+    GROUP BY 1, 2, 3
 ),
 
 activity_purch AS (
     SELECT
-        t0.os_type as os_type__first,
-        t0.user_id as user_id__first,
-        t0.country as country__first,
+        t0.os_type AS os_type__first,
+        t0.user_id AS user_id__first,
+        t0.country AS country__first,
         t1.real_user_id,
         t1.week_msk,
         t1.os_type,
@@ -100,7 +105,10 @@ activity_purch AS (
         t1.num_evs AS num_active_days,
         t1.cohort_month,
         t1.cohort_week,
-        if(t2.num_orders >= 1, 1, 0) AS num_orders,
+        coalesce(t2.num_orders, 0) AS num_orders,
+        coalesce(t2.gmv_initial, 0) AS gmv_initial,
+        coalesce(t2.ecgp_initial, 0) AS ecgp_initial,
+        if(t2.num_orders is not null AND t2.num_orders >= 1, 1, 0) AS num_orders_flg,
         if(datediff(t1.week_msk, t1.week_join_msk) > 364,
             true, false) AS user1yearold_flg
     FROM
@@ -110,7 +118,7 @@ activity_purch AS (
         AND t0.week_join_msk = t1.week_join_msk
     LEFT JOIN purchases AS t2 ON
         t1.real_user_id = t2.real_user_id
-        AND t1.cohort_week = t2.cohort_week
+        AND t1.week_msk = t2.week_msk
 ),
 
 util1 AS (
@@ -137,17 +145,17 @@ activity_extended AS (
     SELECT
         a.real_user_id,
         a.week_join_msk,
-        a.num_orders,
+        a.num_orders_flg,
         u.time_unit,
         a.cohort_month AS active_dt,
         a.cohort_month + u.add_dt AS active_window_dt,
-        if(a.num_orders = 1, u.segment * 1, 0) AS delta_action_cnt
+        if(a.num_orders_flg = 1, u.segment * 1, 0) AS delta_action_cnt
     FROM (
         SELECT
             real_user_id,
             week_join_msk,
             cohort_month,
-            if(sum(num_orders) >= 1, 1, 0) AS num_orders
+            if(sum(num_orders_flg) >= 1, 1, 0) AS num_orders_flg
         FROM
             activity_purch
         GROUP BY 1, 2, 3
@@ -269,6 +277,8 @@ segs_finall AS (
         t1.cohort_week,
         t2.user_segment,
         t1.num_orders,
+        t1.gmv_initial,
+        t1.ecgp_initial,
         t1.num_active_days
     FROM
         activity_purch AS t1

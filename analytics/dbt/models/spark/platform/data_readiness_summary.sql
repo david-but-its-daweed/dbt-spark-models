@@ -1,0 +1,17 @@
+{{ config(
+    schema='platform_slo',
+    materialized='table',
+    meta = {
+      'bigquery_load': 'true'
+    },
+    tags=['data_readiness']
+) }}
+
+SELECT DISTINCT
+    input_name,
+    input_type,
+    date,
+    ready_time_human
+FROM {{ref("data_readiness")}}
+where date > NOW() - interval 2 month 
+and date < NOW()
