@@ -381,4 +381,5 @@ join users u on u.user_id = o.user_id
 left join gmv g on g.order_id = o.order_id
 left join (
     select distinct company_name, user_id, grade, grade_probability from {{ ref('users_daily_table') }}
+    where partition_date_msk = (select max(partition_date_msk) from {{ ref('users_daily_table') }})
 ) c on u.user_id = c.user_id
