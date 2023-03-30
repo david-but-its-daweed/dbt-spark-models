@@ -90,7 +90,7 @@ final_gmv,
 u.invited_by_promo
 from promocodes p
 left join users u on p.promocode_id = u.invited_by_promo
-left join interactions i on p.promocode_id = i.promocode_id
+left join interactions i on p.promocode_id = i.promocode_id and u.user_id = i.user_id
 left join (
 select 
 partition_date_msk,
