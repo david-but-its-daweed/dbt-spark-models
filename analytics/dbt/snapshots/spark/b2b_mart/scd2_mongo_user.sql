@@ -4,8 +4,8 @@
     config(
       target_schema='b2b_mart',
       unique_key='user_id',
-
-      strategy='timestamp',
+      strategy='check',
+      check_cols=['update_ts_msk', 'owner_id']
       updated_at='update_ts_msk',
       file_format='delta'
     )
