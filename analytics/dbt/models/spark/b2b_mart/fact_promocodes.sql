@@ -55,12 +55,13 @@ users as (
 interactions as (
     select 
         uid as user_id, 
-        first_value(promocodeId) over (partition by uid order by ctms) as promocode_id,
+        promocodeId as promocode_id,
         ctms
     from {{ source ('mongo', 'b2b_core_interactions_daily_snapshot') }}
 )
 
-select p.promocode_id,
+select 
+p.promocode_id,
 p.code,
 p.company_name as refferal_company_name,
 p.notes as owner_notes,
@@ -87,10 +88,20 @@ min_status_manufacturing_ts_msk,
 current_status,
 current_substatus,
 final_gmv,
-u.invited_by_promo
+u.invited_by_promo,
+row_number() over (partition by user_id order by 
+                   min_status_manufacturing_ts_msk is null,
+                   min_status_manufacturing_ts_msk,
+                   min_signing_and_payment_ts_msk is null,
+                   min_status_manufacturing_ts_msk,
+                   min_final_pricing_ts_msk is null,
+                   min_final_pricing_ts_msk,
+                   min_negotiation_ts_msk is null,
+                   min_negotiation_ts_msk
+                  ) as order_number
 from promocodes p
 left join users u on p.promocode_id = u.invited_by_promo
-left join interactions i on p.promocode_id = i.promocode_id and u.user_id = i.user_id
+left join interactions i on u.invited_by_promo = i.promocode_id and u.user_id = i.user_id
 left join (
 select 
 partition_date_msk,
@@ -111,5 +122,4 @@ order_id,
 interaction_id
 from
 b2b_mart.fact_interactions 
-where rn = 1
 ) fi on i.user_id = fi.user_id and date(created_date) >= date(TIMESTAMP(millis_to_ts_msk(ctms)))
