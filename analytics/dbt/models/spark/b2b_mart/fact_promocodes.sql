@@ -56,7 +56,7 @@ interactions as (
     select 
         uid as user_id, 
         promocodeId as promocode_id,
-        min(ctms)
+        min(ctms) as ctms
     from {{ source ('mongo', 'b2b_core_interactions_daily_snapshot') }}
     group by uid, promocodeId
 )
