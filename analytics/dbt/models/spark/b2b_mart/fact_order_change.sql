@@ -51,7 +51,7 @@ event_ts_msk,
     statuses.status
 )
 )
-where rn = 1 and
+where rn = 1
 )
 
 
