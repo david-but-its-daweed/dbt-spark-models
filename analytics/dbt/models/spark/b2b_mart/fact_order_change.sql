@@ -14,51 +14,9 @@
 ) }}
 
 
-
-with times as (
-    select distinct 
-order_id,
-event_ts_msk, 
-    subStatus, 
-    status
-    from
-(select order_id, 
-    event_ts_msk, 
-    subStatus, 
-    status,
-    row_number() over (partition by order_id, 
-    subStatus, 
-    status order by time desc) as rn
-    from
-(select 
-    order_id, 
-    TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)) as event_ts_msk, 
-    min(event_ts_msk) as time,
-    statuses.subStatus, 
-    statuses.status
-    from
-    (
-    SELECT  payload.orderId AS order_id,
-        explode(payload.statusHistory) as statuses,
-        event_ts_msk
-    FROM {{ source('b2b_mart', 'operational_events') }}
-    WHERE type  ='orderChangedByAdmin'
-      )
-    group by 
-    order_id, 
-    TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)), 
-    statuses.subStatus, 
-    statuses.status
-)
-)
-where rn = 1
-)
-
-
-
 SELECT a.event_id,
         partition_date_msk AS partition_date_msk,
-        TIMESTAMP(coalesce(t.event_ts_msk, a.event_ts_msk)) AS event_ts_msk,
+        TIMESTAMP(a.event_ts_msk) AS event_ts_msk,
         a.order_id,
         client_currency,
         reason ,
@@ -186,11 +144,9 @@ SELECT  event_id,
        and partition_date   >= date'2022-05-19'
      {% endif %}
 ) a 
-left join times t on a.order_id = t.order_id and t.status = a.status and t.subStatus = a.sub_status
 GROUP BY a.event_id,
         partition_date_msk,
         a.event_ts_msk,
-        t.event_ts_msk,
         a.order_id,
         client_currency,
         reason,
