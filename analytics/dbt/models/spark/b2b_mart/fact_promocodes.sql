@@ -14,7 +14,7 @@ with promocodes as (
             code,
             ownerId as owner_id,
             companyName as company_name,
-            replace(replace(replace(c.notes, '<p>', ''), '</p>', ''), '<br>', ' ') as notes,
+            replace(replace(replace(c.notes, '<p>', ''), '</p>', ' '), '<br>', ' ') as notes,
             u.isPartner as is_partner,
             u.invitedByPromo as invited_by_promo,
             a.email,
@@ -56,8 +56,9 @@ interactions as (
     select 
         uid as user_id, 
         promocodeId as promocode_id,
-        ctms
+        min(ctms)
     from {{ source ('mongo', 'b2b_core_interactions_daily_snapshot') }}
+    group by uid, promocodeId
 )
 
 select 
@@ -122,4 +123,4 @@ order_id,
 interaction_id
 from
 b2b_mart.fact_interactions 
-) fi on i.user_id = fi.user_id and date(created_date) >= date(TIMESTAMP(millis_to_ts_msk(ctms)))
+) fi on i.user_id = fi.user_id and date(partition_date_msk) >= date(TIMESTAMP(millis_to_ts_msk(ctms)))
