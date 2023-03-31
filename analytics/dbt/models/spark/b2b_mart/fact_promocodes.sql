@@ -89,7 +89,7 @@ current_status,
 current_substatus,
 final_gmv,
 u.invited_by_promo,
-row_number() over (partition by user_id order by 
+row_number() over (partition by u.user_id order by 
                    min_status_manufacturing_ts_msk is null,
                    min_status_manufacturing_ts_msk,
                    min_signing_and_payment_ts_msk is null,
