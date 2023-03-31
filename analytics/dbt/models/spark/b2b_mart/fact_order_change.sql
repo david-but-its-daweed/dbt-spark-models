@@ -27,7 +27,7 @@ event_ts_msk,
     subStatus, 
     status,
     row_number() over (partition by order_id, 
-    sub_status, 
+    subStatus, 
     status order by time desc) as rn
     from
 (select 
