@@ -8,33 +8,30 @@
     }
 ) }}
 
-WITH manufactiring AS
+WITH 
+sub_statuses as (
+    select 
+    'Client2BrokerPaymentSent' as status,  2010 as pr
+    union all
+    select 
+	'BrokerPaymentReceived', 2020 as pr
+    union all
+    select 
+	'Broker2JoomSIAPaymentSent', 2030 as pr
+    union all
+    select 
+	'JoomSIAPaymentReceived', 2049 as pr
+                 ),
+manufactiring AS
 (
-    select millis_to_ts_msk(min(ts_msk)) as min_manufactured_ts_msk, order_id
+    select order_id, min(event_ts_msk) as min_manufactured_ts_msk
     from
     (
-    select distinct ts_msk, order_id
-    from
-    (
-        select min(sub_status) over (partition by order_id) as min_sub_status, sub_status, ts_msk, order_id
-        from
-        (
-            SELECT 
-                order_id,
-                coalesce(col.`1`, col.`0`) AS sub_status,
-                col.`2` AS ts_msk
-            FROM 
-            (
-                SELECT _id AS order_id,
-                explode(arrays_zip(state.statusHistory.status, state.statusHistory.subStatus,  state.statusHistory.updatedTimeMs))
-                FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
-            
-            )
-            where  col.`0` = 20
-        )
+    select event_ts_msk, order_id, min(pr) over (partition by order_id) min_pr, pr
+    from {{ ref('fact_order_change') }} foc left join sub_statuses s on foc.sub_status = s.status
+    where foc.status = 'manufacturing'
     )
-    where min_sub_status= sub_status
-    )
+    where min_pr = pr or pr is null
     group by order_id
 )
 

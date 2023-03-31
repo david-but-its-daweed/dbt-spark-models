@@ -373,8 +373,13 @@ select distinct
         date,
         gmv_initial,
         initial_gross_profit,
-        final_gross_profit
+        final_gross_profit,
+        c.company_name, c.grade, c.grade_probability
 from prices p
 join all_orders o on o.order_id = p.order_id
 join users u on u.user_id = o.user_id
 left join gmv g on g.order_id = o.order_id
+left join (
+    select distinct company_name, user_id, grade, grade_probability from {{ ref('users_daily_table') }}
+    where partition_date_msk = (select max(partition_date_msk) from {{ ref('users_daily_table') }})
+) c on u.user_id = c.user_id

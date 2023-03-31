@@ -16,32 +16,42 @@
 
 
 with times as (
-    select order_id, 
-    min(TIMESTAMP(millis_to_ts_msk(statuses.updatedTime))) as event_ts_msk, 
+    select distinct 
+order_id,
+event_ts_msk, 
+    subStatus, 
+    status
+    from
+(select order_id, 
+    event_ts_msk, 
+    subStatus, 
+    status,
+    row_number() over (partition by order_id, 
+    subStatus, 
+    status order by time desc) as rn
+    from
+(select 
+    order_id, 
+    TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)) as event_ts_msk, 
+    min(event_ts_msk) as time,
     statuses.subStatus, 
     statuses.status
     from
     (
     SELECT  payload.orderId AS order_id,
-        payload.status AS status,
-        payload.subStatus AS sub_status,
         explode(payload.statusHistory) as statuses,
-        event_ts_msk,
-        max(event_ts_msk) over (partition by payload.orderId) as max_time
+        event_ts_msk
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE type  ='orderChangedByAdmin'
-      {% if is_incremental() %}
-       and partition_date >= date'{{ var("start_date_ymd") }}'
-       and partition_date < date'{{ var("end_date_ymd") }}'
-     {% else %}
-       and partition_date   >= date'2022-05-19'
-     {% endif %}
       )
-      where statuses.updatedTime <= 32511074144000 and statuses.updatedTime is not null
-      and event_ts_msk = max_time
-      group by order_id, 
-        statuses.subStatus, 
-        statuses.status
+    group by 
+    order_id, 
+    TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)), 
+    statuses.subStatus, 
+    statuses.status
+)
+)
+where rn = 1
 )
 
 

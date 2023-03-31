@@ -11,7 +11,7 @@
 with not_jp_users AS (
   SELECT DISTINCT user_id
   FROM {{ ref('fact_user_request') }}
-  WHERE is_joompro_employee != TRUE or is_joompro_employee IS NULL
+  WHERE is_joompro_employee = TRUE
 ),
 
 users_owner as (
@@ -55,8 +55,9 @@ order_v2_mongo AS
         DATE(fo.min_manufactured_ts_msk) AS manufactured_date,
         MIN(DATE(fo.min_manufactured_ts_msk)) OVER (PARTITION BY fo.user_id) AS min_manufactured_date
     FROM {{ ref('fact_order') }} AS fo
-    INNER JOIN not_jp_users AS u ON fo.user_id = u.user_id
+    LEFT JOIN not_jp_users AS u ON fo.user_id = u.user_id
     WHERE fo.last_order_status < 60
+        AND u.user_id IS NULL
         AND fo.last_order_status >= 10
         AND fo.next_effective_ts_msk IS NULL
         AND fo.min_manufactured_ts_msk IS NOT NULL
