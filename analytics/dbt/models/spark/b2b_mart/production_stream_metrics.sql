@@ -54,6 +54,7 @@ merchant_orders as
 (select merchant_order_id, order_id, merchant_id, man_days,
     row_number() over (partition by order_id order by man_days desc) = 1 as longest_order,
     count(merchant_order_id) over (partition by order_id) = 1 as one_merchant_order,
+    last_payment_status,
     no_operations_started,
     advance_payment_requested,
     advance_payment_in_progress,
