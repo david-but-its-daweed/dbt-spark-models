@@ -23,6 +23,7 @@ added_orders as (
     friendly_id as merchant_order_id, 
     orderId as order_id,
     merchantId as merchant_id, 
+    max(last_payment_status) as last_payment_status,
     max(manDays) as man_days,
     min(case when payment_status = "noOperationsStarted" then day end) as no_operations_started,
     min(to_date(advance_payment_requested, 'dd.MM.yyyy')) as advance_payment_requested,
@@ -38,10 +39,14 @@ added_orders as (
     min(case when payment_status = "merchantAcquiredPayment" then day end) as merchant_acquired_payment
     from {{ ref('added_data') }} a
     left join 
+    (
+        select *, first_value(payment_status) over (partition by _id, orderId, merchantId order by day desc) as last_payment_status
+        from
     (select distinct _id, friendlyId, orderId, merchantId, manDays, daysAfterQC, day, s.status as payment_status
     from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }} o
     left join statuses s on o._id = s.id
-    ) m on m.friendlyId = a.friendly_id
+    )
+        )m on m.friendlyId = a.friendly_id
 group by friendly_id, orderId, merchantId
 ),
 
@@ -67,6 +72,7 @@ select
     _id as merchant_order_id, 
     orderId as order_id,
     merchantId as merchant_id, 
+    max(last_payment_status) as last_payment_status,
     max(manDays) as man_days,
     min(date(case when payment_status = "noOperationsStarted" then day end)) as no_operations_started,
     min(date(case when payment_status = "advancePaymentRequested" then day end)) as advance_payment_requested,
@@ -81,10 +87,15 @@ select
     min(date(case when payment_status = "completePaymentAcquired" then day end)) as complete_payment_acquired,
     min(date(case when payment_status = "merchantAcquiredPayment" then day end)) as merchant_acquired_payment
 from 
-(select distinct _id, orderId, merchantId, manDays, daysAfterQC, day, s.status as payment_status
+(
+        select *, first_value(payment_status) over (partition by _id, orderId, merchantId order by day desc) as last_payment_status
+        from
+    (
+    select distinct _id, orderId, merchantId, manDays, daysAfterQC, day, s.status as payment_status
 from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }} o
 left join statuses s on o._id = s.id
 )
+    )
 group by _id, orderId, merchantId
     union all 
     select * from added_orders
@@ -137,6 +148,7 @@ select
     case when advance_payment_requested is not null then 'advance' else 'complete' end as payment_type,
     orders.status,
     orders.sub_status,
+    last_payment_status,
     
     coalesce(shipping, closed) as manufacturing_ended,
     man_days,
