@@ -7,6 +7,7 @@ sources:
       - name: web_analytics_cohorts_v4
       - name: referral_payout_stats
       - name: referral_reference_stats
+      - name: referral_bloggers
       - name: device_advertising_costs
       - name: web_analytics_pageviews_with_segments
   - name: mart
