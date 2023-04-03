@@ -345,4 +345,4 @@ left join (select distinct order_id, user_id, user_order_number from internal_pr
 on rfq.order_id = ip1.order_id
 left join (select distinct order_id, merchant_id, user_merchant_number from internal_products) ip2
 on rfq.order_id = ip2.order_id and ip2.merchant_id = rfq.merchant_id
-where rfq.product_id = op.product_id or rfq.product_id is null
+where rfq.product_id = op.product_id or rfq.product_id is null and op.product_id is null
