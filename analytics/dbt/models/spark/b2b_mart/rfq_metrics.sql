@@ -333,7 +333,7 @@ top_rfq,
 opp.amount
 from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
-left join rfq on oh.order_id = rfq.order_id
+left join rfq on oh.order_id = rfq.order_id and rfq.product_id = op.product_id
 left join products p on oh.order_id = p.order_id
 left join expensive e on rfq.order_rfq_response_id = e.id
 left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
