@@ -259,6 +259,8 @@ select
     rfq_response_ts_msk,
     manufacturing_ts_msk,
     cancelled_ts_msk,
+    order_product,
+    rfq_product,
     owner_role,
     converted,
     rfq_converted_products,
