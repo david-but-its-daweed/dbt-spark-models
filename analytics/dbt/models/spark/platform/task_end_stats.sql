@@ -6,8 +6,8 @@
 with data as (select dag_id,
                      task_id,
                      to_date(CASE
-                                 WHEN hour(start_date) >= 22 THEN date_trunc('Day', start_date)
-                                 ELSE date_trunc('Day', start_date) - interval 24 hours
+                                 WHEN hour(start_date) >= 22 THEN date_trunc('Day', start_date) + interval 24 hours
+                                 ELSE date_trunc('Day', start_date) 
                          END) as date,
                      duration,
                      start_date,
@@ -18,7 +18,7 @@ with data as (select dag_id,
      hours as (SELECT dag_id,
                       task_id,
                       effective_start_hours,
-                      (unix_timestamp(end_date) - unix_timestamp(date)) / 60 / 60 - 24 as ready_time_hours
+                      (unix_timestamp(end_date) - unix_timestamp(date)) / 60 / 60 as ready_time_hours
                from data
                 left join {{ref("effective_start_dates")}} using (dag_id, task_id, date)
     )
