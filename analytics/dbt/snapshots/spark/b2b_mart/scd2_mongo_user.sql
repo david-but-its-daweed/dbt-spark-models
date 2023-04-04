@@ -14,12 +14,14 @@
 SELECT _id AS user_id,
     anon,
     millis_to_ts_msk(ctms) AS created_ts_msk,
-    millis_to_ts_msk(utms+1) AS update_ts_msk,
+    millis_to_ts_msk(utms+2) AS update_ts_msk,
     addr.country AS pref_country,
     valSt.rjRsn AS reject_reason,
     valSt.st AS validation_status,
     roleSet.roles.`owner`.moderatorId as owner_id,
     amoCrmId AS amo_crm_id,
-    amoId AS amo_id
+    amoId AS amo_id,
+    invitedByPromo as invited_by_promo,
+    isPartner as is_partner
 FROM {{ source('mongo', 'b2b_core_users_daily_snapshot') }}
 {% endsnapshot %}
