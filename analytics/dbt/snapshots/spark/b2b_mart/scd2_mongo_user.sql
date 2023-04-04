@@ -21,7 +21,7 @@ SELECT _id AS user_id,
     roleSet.roles.`owner`.moderatorId as owner_id,
     amoCrmId AS amo_crm_id,
     amoId AS amo_id,
-    invitedByPromo as invited_by_promo,
-    isPartner as is_partner
+    invitedByPromo ,
+    isPartner
 FROM {{ source('mongo', 'b2b_core_users_daily_snapshot') }}
 {% endsnapshot %}
