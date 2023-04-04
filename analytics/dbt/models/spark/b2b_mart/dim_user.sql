@@ -18,6 +18,8 @@ SELECT
   owner_id AS owner_id,
   amo_crm_id,
   amo_id,
+  invitedByPromo as invited_by_promo,
   TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
   TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_user') }} t
+where isPartner is null
