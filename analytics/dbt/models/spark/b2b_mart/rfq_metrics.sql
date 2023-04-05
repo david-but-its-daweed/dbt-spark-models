@@ -236,6 +236,13 @@ orders_hist AS (
         current_status,
         current_sub_status,
         owner_role
+),
+
+merchants AS (
+select distinct _id as merchant_id, companyName as company_name, name, 
+    DATE(TIMESTAMP_MILLIS(createdTimeMs)) as created_time
+    from {{ source('b2b_mart', 'dim_merchant') }} m
+    where next_effective_ts >= '3030-01-01' 
 )
 
 
@@ -268,6 +275,7 @@ select
     rfq_products,
     documents_attached,
     rfq.merchant_id,
+    m.created_time as merchant_created_date,
     top_rfq,
     category_id,
     category_name,
@@ -344,3 +352,4 @@ left join (select distinct order_id, user_id, user_order_number from internal_pr
 on rfq.order_id = ip1.order_id
 left join (select distinct order_id, merchant_id, user_merchant_number from internal_products) ip2
 on rfq.order_id = ip2.order_id and ip2.merchant_id = rfq.merchant_id
+left join merchants m on m.merchant_id = rfq.merchant_id
