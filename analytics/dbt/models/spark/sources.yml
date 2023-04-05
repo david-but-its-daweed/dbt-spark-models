@@ -118,6 +118,9 @@ sources:
       - name: store
       - name: order_parcel_checkpoint
       - name: device
+      - name: order_parcel_item
+      - name: refund
+      - name: billing_operation
   - name: onfy
     tables:
       - name: lndc_user_attribution
