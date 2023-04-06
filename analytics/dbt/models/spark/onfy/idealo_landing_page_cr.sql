@@ -1,5 +1,5 @@
 {{ config(
-    schema='onfy',
+    schema='pharmacy',
     materialized='table',
     meta = {
       'team': 'onfy',
@@ -82,7 +82,7 @@ billing_data as (
         coalesce(sum(case when pharmacy_landing.billing_operation.type = 'COMMISSION_REVERSAL_VAT' then pharmacy_landing.billing_operation.price else 0 end), 0) as commission_refund_vat
     from
         {{ source('pharmacy_landing', 'billing_operation') }}
-        join { source('pharmacy_landing', 'order_parcel') }}
+        join {{ source('pharmacy_landing', 'order_parcel') }}
             on pharmacy_landing.billing_operation.order_parcel_id = pharmacy_landing.order_parcel.id 
     group by 
         pharmacy_landing.order_parcel.order_id
