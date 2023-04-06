@@ -144,7 +144,7 @@ rfq as (SELECT
     product_id
 FROM rfq_requests AS rq
 LEFT JOIN response AS rp ON rq.rfq_request_id = rp.rfq_request_id
-        and datediff(rp.response_created_ts_msk, rq.request_sent_ts_msk, MONTH) <= 3
+       and months_between(rp.response_created_ts_msk, rq.request_sent_ts_msk) <= 3
 ),
 
 price as (
