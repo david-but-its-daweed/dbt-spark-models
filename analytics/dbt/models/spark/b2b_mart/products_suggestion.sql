@@ -64,6 +64,7 @@ group by product_id)
 
 select 
 product_id,
+origName as name,
 cate_lv1,
 cate_lv2,
 cate_lv3,
@@ -71,6 +72,7 @@ cate_lv4
 from products p
 left join (
 select distinct _id, 
+    origName,
     level_1_category['name'] as cate_lv1,
     level_2_category['name'] as cate_lv2,
     level_3_category['name'] as cate_lv3,
