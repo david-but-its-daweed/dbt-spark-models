@@ -14,7 +14,7 @@
 SELECT _id AS user_id,
     anon,
     millis_to_ts_msk(ctms) AS created_ts_msk,
-    millis_to_ts_msk(utms+2) AS update_ts_msk,
+    millis_to_ts_msk(utms) AS update_ts_msk,
     companyAddress.country AS pref_country,
     valSt.rjRsn AS reject_reason,
     valSt.st AS validation_status,
