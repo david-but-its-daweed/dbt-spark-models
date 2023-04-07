@@ -3,7 +3,7 @@
     materialized='table',
     meta = {
       'team': 'onfy',
-      'bigquery_load': 'true',
+      'bigquery_load': 'false',
       'alerts_channel': 'onfy-etl-monitoring'
     }
 ) }}
