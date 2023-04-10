@@ -144,6 +144,7 @@ rfq as (SELECT
     product_id
 FROM rfq_requests AS rq
 LEFT JOIN response AS rp ON rq.rfq_request_id = rp.rfq_request_id
+       and months_between(rp.response_created_ts_msk, rq.request_sent_ts_msk) <= 3
 ),
 
 price as (
@@ -236,6 +237,13 @@ orders_hist AS (
         current_status,
         current_sub_status,
         owner_role
+),
+
+merchants AS (
+select distinct _id as merchant_id, companyName as company_name, name, 
+    DATE(TIMESTAMP_MILLIS(createdTimeMs)) as created_time
+    from {{ source('b2b_mart', 'dim_merchant') }} m
+    where next_effective_ts >= '3030-01-01' 
 )
 
 
@@ -259,6 +267,8 @@ select
     rfq_response_ts_msk,
     manufacturing_ts_msk,
     cancelled_ts_msk,
+    order_product,
+    rfq_product,
     owner_role,
     converted,
     rfq_converted_products,
@@ -266,6 +276,7 @@ select
     rfq_products,
     documents_attached,
     rfq.merchant_id,
+    m.created_time as merchant_created_date,
     top_rfq,
     category_id,
     category_name,
@@ -331,11 +342,10 @@ top_rfq,
 opp.amount
 from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
-left join rfq on oh.order_id = rfq.order_id
+left join rfq on oh.order_id = rfq.order_id and (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
 left join products p on oh.order_id = p.order_id
 left join expensive e on rfq.order_rfq_response_id = e.id
 left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
-where (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
 ) rfq
 left join (select distinct order_id, product_id, product_type, user_product_number from internal_products) ip 
     on ip.product_id = rfq.product_id and rfq.order_id = ip.order_id
@@ -343,3 +353,4 @@ left join (select distinct order_id, user_id, user_order_number from internal_pr
 on rfq.order_id = ip1.order_id
 left join (select distinct order_id, merchant_id, user_merchant_number from internal_products) ip2
 on rfq.order_id = ip2.order_id and ip2.merchant_id = rfq.merchant_id
+left join merchants m on m.merchant_id = rfq.merchant_id

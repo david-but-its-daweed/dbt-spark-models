@@ -1,0 +1,85 @@
+{{ config(
+    schema='b2b_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'bigquery_load': 'true'
+    }
+) }}
+
+
+
+with price as (
+    select min(least(prc[0], prc[1], prc[2])) as price, _id as product_id
+    from
+    (select _id, prcQtyDis from {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+    where prcQtyDis[0] is not null) a
+    left join 
+    (select pId, prc from {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }}
+    where prc[0] is not null) b on _id = pId
+    group by _id
+),
+    
+expensive as (
+    select
+    product_id,
+    max(price > price_standart) as expensive
+    from
+    (
+    select avg(price) over (partition by order_id, rfq_request_id) as price_standart,
+    min(price) over (partition by order_id, rfq_request_id) as price_min,
+    max(price) over (partition by order_id, rfq_request_id) as price_max,
+    count(case when reject_reason is not null or response_status is not null then product_id end) over (partition by order_id, rfq_request_id) as reasons,
+    price, order_id, rfq_request_id, order_rfq_response_id, product_id
+    from
+    (select distinct 
+    order_id, reject_reason, response_status, rfq_request_id, order_rfq_response_id, price, p.product_id
+    from {{ ref('rfq_metrics') }} r
+    inner join price p on r.product_id = p.product_id
+    where reject_reason not in (
+        'totalyDifferent', 'functionalCharacteristics', 'doesntSuitRequirements', 'visualCharacteristics'
+        ) and rfq_sent_ts_msk >= current_date() - interval 6 month
+    )
+    )
+    where reasons > 1 and price_min != price_max
+    group by product_id
+),
+
+products as
+(    
+    select product_id,
+    max(expensive) as expensive
+    from
+(
+select 
+  e.product_id,
+  case when 
+      reject_reason in ('expensive', 'expensive (other options cheaper)',
+            'higherThanMarketPrice', 'higherThanMarketPrice') or expensive
+    then True else False end as expensive
+from {{ ref('rfq_metrics') }} r
+inner join expensive as e on r.product_id = e.product_id
+)
+group by product_id)
+
+select 
+product_id,
+origName as name,
+cate_lv1,
+cate_lv2,
+cate_lv3,
+cate_lv4
+from products p
+left join (
+select distinct _id, 
+    origName,
+    level_1_category['name'] as cate_lv1,
+    level_2_category['name'] as cate_lv2,
+    level_3_category['name'] as cate_lv3,
+    level_4_category['name'] as cate_lv4
+from {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
+join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id) c on p.product_id = c._id
+where not expensive and product_id is not null
+and product_id in (
+    select distinct product_id from b2b_mart.sat_product_state
+    where status = 1)

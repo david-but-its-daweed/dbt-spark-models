@@ -75,8 +75,8 @@ with deps as (SELECT output.tableName       as output_name,
      data as (select task_id,
                      dag_id,
                      to_date(CASE
-                                 WHEN hour(start_date) >= 22 THEN date_trunc('Day', start_date)
-                                 ELSE date_trunc('Day', start_date) - interval 24 hours
+                                 WHEN hour(start_date) >= 22 THEN date_trunc('Day', start_date) + interval 24 hours
+                                 ELSE date_trunc('Day', start_date)
                          END)   as partition_date,
                      state,
                      priority_weight,
@@ -100,8 +100,8 @@ select source_id,
        dependencies.output_dag_id,
        dependencies.output_task_id,
        dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
-       (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                  as ready_time_hours,
-       (unix_timestamp(start_date) - unix_timestamp(partition_date)) / 60 / 60 - 24                as start_time_hours,
+       (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60                  as ready_time_hours,
+       (unix_timestamp(start_date) - unix_timestamp(partition_date)) / 60 / 60                as start_time_hours,
        dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
        state,
        priority_weight,

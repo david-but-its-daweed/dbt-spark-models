@@ -8,3 +8,7 @@ seeds:
   - name: slo_details_seed
     config:
       schema: platform
+  
+  - name: product_outliers_seed
+    config:
+      schema: mart

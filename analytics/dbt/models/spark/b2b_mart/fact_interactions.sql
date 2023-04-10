@@ -37,6 +37,7 @@ user_interaction as
     source, 
     type,
     campaign,
+    website_form,
     repeated_order
     from (
         select 
@@ -49,7 +50,8 @@ user_interaction as
             max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
             max(source) as source, 
             max(type) as type,
-            max(campaign) as campaign
+            max(campaign) as campaign,
+            max(websiteForm) as website_form
         from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} m
         left join not_jp_users n on n.user_id = m.uid
         left join tags t on t.request_id = m.popupRequestID
@@ -322,6 +324,7 @@ interaction_id,
     FIRST_VALUE(source) over (partition by user_id order by order_id is null, partition_date_msk) as source,
     FIRST_VALUE(type) over (partition by user_id order by order_id is null, partition_date_msk) as type,
     FIRST_VALUE(campaign) over (partition by user_id order by order_id is null, partition_date_msk) as campaign,
+    FIRST_VALUE(website_form) over (partition by user_id order by order_id is null, partition_date_msk) as website_form,
     repeated_order,
     user_id,
     validation_status, 
@@ -354,6 +357,7 @@ interaction_id,
         utm_medium as current_utm_medium,
         type as current_type,
         campaign as current_campaign,
+        website_form as current_website_form,
         rank(interaction_id) over (partition by user_id, interaction_min_time is not null order by interaction_min_time) as sucessfull_interaction_number,
         rank(interaction_id) over (partition by user_id order by 
                                    case when partition_date_msk <= order_min_time or order_min_time is null then 0 else 1 end) as sucessfull_order_number
@@ -369,6 +373,7 @@ select
     source, 
     type,
     campaign,
+    website_form,
     repeated_order,
     user_id,
     validation_status, 
@@ -407,6 +412,7 @@ select
         source, 
         type,
         campaign,
+        website_form,
         repeated_order,
         in.user_id,
         validation_status, 
@@ -449,6 +455,7 @@ select
         source, 
         type,
         campaign,
+        website_form,
         repeated_order,
         in.user_id,
         validation_status, 

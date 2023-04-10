@@ -26,6 +26,6 @@ select source_id,
     (ready_time_hours - effective_start_hours) * 60 as effective_duration_minutes,
     p50_effective_duration * 60 as p50_effective_duration_minutes,
     p80_effective_duration * 60 as p80_effective_duration_minutes
-from platform.data_readiness
-    left join platform.task_end_stats using (dag_id, task_id)
-    left join platform.effective_start_dates using (dag_id, task_id, date)
+from {{ref("data_readiness")}}
+    left join {{ref("task_end_stats")}} using (dag_id, task_id)
+    left join {{ref("effective_start_dates")}} using (dag_id, task_id, date)
