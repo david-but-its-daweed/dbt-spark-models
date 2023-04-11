@@ -94,7 +94,7 @@ from {{ ref('users_daily_table') }}
 
 select t1.*, 
 CASE WHEN 
-MAX(status_int > 100 and (prev_status_int is null or prev_status_int = 10)) OVER (PARTITION BY t1.deal_id)
+MAX(status_int > 100 and (prev_status_int is null or prev_status_int = 10) OVER (PARTITION BY t1.deal_id))
 THEN "fast_rejected" ELSE "normal" end as deal_normality,
 d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 i.source, i.type, i.campaign,
