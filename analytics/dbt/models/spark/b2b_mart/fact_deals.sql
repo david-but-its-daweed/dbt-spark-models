@@ -108,8 +108,8 @@ deal_id, status, status_int, current_date, min_date
 from
 (select distinct
 first_value(status) over (partition by deal_id order by date desc) as current_status,
-max(date) over (partition by deal_id order by date desc) as current_date,
-min(date) over (partition by deal_id order by date desc) as min_date,
+max(date) over (partition by deal_id) as current_date,
+min(date) over (partition by deal_id) as min_date,
 deal_id
 from
 (
