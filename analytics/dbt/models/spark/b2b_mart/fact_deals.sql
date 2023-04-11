@@ -148,7 +148,7 @@ gmv as (
     left join {{ ref('fact_interactions') }} i on g.order_id = i.order_id
 )
 
-select d.*,
+select distinct d.*,
 ds.status, ds.status_int, ds.current_date, ds.min_date
 from
 (
