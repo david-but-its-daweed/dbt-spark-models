@@ -74,6 +74,7 @@ sources:
       - name: babylone_narwhal_tag_categories_daily_snapshot
       - name: babylone_onfy_tag_categories_daily_snapshot
       - name: b2b_core_promocodes_daily_snapshot
+      - name: b2b_core_issues_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
