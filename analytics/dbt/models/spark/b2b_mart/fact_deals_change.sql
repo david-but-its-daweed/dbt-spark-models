@@ -8,46 +8,7 @@
     }
 ) }}
 
-with 
-100 as status_int
-union all
-select 'PriceTooHigh' as status,
-110 as status_int
-union all
-select 'ClientNoResponse' as status,
-120 as status_int
-union all
-select 'ProductNotFound' as status,
-130 as status_int
-union all
-select 'ImpossibleToDeliver' as status,
-140 as status_int
-union all
-select 'UnsuitablePartnershipTerms' as status,
-150 as status_int
-union all
-select 'Other' as status,
-160 as status_int
-union all
-select 'GoingIntoDetails' as status,
-170 as status_int
-union all
-select 'InProgress' as status,
-180 as status_int
-union all
-select 'Completed' as status,
-190 as status_int
-union all
-select 'Failed' as status,
-200 as status_int
-union all
-select 'Cancelled' as status,
-210 as status_int
-union all
-select 'UnableToWork' as status,
-220 as status_int),
-
-deals as (select distinct
+with deals as (select distinct
 interaction_id, user_id, deal_id, estimated_gmv, deal_type
 from {{ ref('fact_deals') }} where partition_date_msk = 
 (select max(partition_date_msk) from {{ ref('fact_deals') }})
@@ -170,6 +131,7 @@ left join (
 where deal_created_date >= w.week
 and (next_status_date >= w.week
     or next_status_date is null)
+and (min_date <= week + interval 1 week)
 ),
 
 
@@ -193,8 +155,8 @@ from
 select distinct 
 deal_id, 
 status,
-week,
-week - interval 1 month as week_month_ago,
+week + interval 1 month as week,
+week as week_month_ago,
 min_date,
 deal_created_date,
 status_int,
