@@ -8,35 +8,7 @@
     }
 ) }}
 
-with statuses as 
-(select 'RequestRetrieval' as status,
-10 as status_int
-union all
-select 'TrialPricing' as status,
-20 as status_int
-union all
-select 'WaitingTrialPricingFeedback' as status,
-30 as status_int
-union all
-select 'RFQ' as status,
-40 as status_int
-union all
-select 'PreparingSalesQuote' as status,
-50 as status_int
-union all
-select 'WaitingSalesQuoteFeedback' as status,
-60 as status_int
-union all
-select 'FormingOrder' as status,
-70 as status_int
-union all
-select 'SigningAndWaitingForPayment' as status,
-80 as status_int
-union all
-select 'ManufacturingAndDelivery' as status,
-90 as status_int
-union all
-select 'DealCompleted' as status,
+with 
 100 as status_int
 union all
 select 'PriceTooHigh' as status,
@@ -90,6 +62,151 @@ interactions as (
 users as (
 select distinct user_id, grade, grade_probability
 from {{ ref('users_daily_table') }}
+),
+
+
+t as (select distinct 
+deal_id, 
+status,
+date(min_date) - dayofweek(min_date) + 1 as week,
+min_date,
+deal_created_date,
+status_int,
+lead(min_date) over (partition by deal_id order by min_date) as next_status_date,
+lag(min_date) over (partition by deal_id order by min_date) as prev_status_date,
+lead(status) over (partition by deal_id order by min_date) as next_status,
+lag(status_int) over (partition by deal_id order by min_date) as prev_status_int,
+lead(status_int) over (partition by deal_id order by min_date) as next_status_int,
+lag(status) over (partition by deal_id order by min_date) as prev_status,
+'day' as attribution
+from
+(
+select distinct 
+deal_id, status, min_date, max_date, deal_created_date, status_int
+from
+(select distinct
+case when status in (10, 20, 30) then 'Pre-Estimate'
+when status in (40, 50, 60) then 'Quotation'
+when status in (70, 80) then 'Forming order & singing'
+when status in (90) then 'Manufacturing & Shipping'
+else 'Closed'
+end as status,
+case when status in (10, 20, 30) then 10
+when status in (40, 50, 60) then 40
+when status in (70, 80) then 70
+when status in (90) then 90
+else 'Closed'
+end as status_int,
+max(date) over (partition by deal_id , case when status in (10, 20, 30) then 'Pre-Estimate'
+when status in (40, 50, 60) then 'Quotation'
+when status in (70, 80) then 'Forming order & singing'
+when status in (90) then 'Manufacturing & Shipping'
+else 'Closed'
+end) as max_date,
+min(date) over (partition by deal_id, case when status in (10, 20, 30) then 'Pre-Estimate'
+when status in (40, 50, 60) then 'Quotation'
+when status in (70, 80) then 'Forming order & singing'
+when status in (90) then 'Manufacturing & Shipping'
+else 'Closed'
+end) as min_date,
+millis_to_ts_msk(ctms) as deal_created_date,
+deal_id
+from
+(
+select deal_id, millis_to_ts_msk(statuses.ctms) as date, ctms,
+statuses.status as status, statuses.moderatorId as owner_id
+
+from
+(select entityId as deal_id, explode(statusHistory) as statuses, ctms
+    from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
+    where type = 4 
+    )
+    order by date desc, deal_id
+)
+)
+)
+),
+
+
+t1 as (
+select 
+deal_id, 
+status,
+w.week,
+min_date,
+deal_created_date,
+status_int,
+next_status_date,
+prev_status_date,
+next_status,
+prev_status_int,
+next_status_int,
+prev_status,
+'month' as attribution
+from
+(
+select distinct 
+deal_id, 
+status,
+week,
+min_date,
+deal_created_date,
+status_int,
+next_status_date,
+prev_status_date,
+next_status,
+prev_status_int,
+next_status_int,
+prev_status,
+1 as for_join
+from
+t
+) t
+left join (
+    select
+    explode(sequence(to_date('2022-01-01'), current_date(), interval 1 week)) as week, 
+    1 as for_join
+    ) w on t.for_join = w.for_join
+where deal_created_date >= w.week
+and (next_status_date >= w.week
+    or next_status_date is null)
+),
+
+
+t2 as 
+( select 
+    deal_id, 
+    status,
+    explode(sequence(week_month_ago, week, interval 1 week)) as week,
+min_date,
+deal_created_date,
+status_int,
+next_status_date,
+prev_status_date,
+next_status,
+prev_status_int,
+next_status_int,
+prev_status,
+'month' as attribution
+from
+(
+select distinct 
+deal_id, 
+status,
+week,
+week - interval 1 month as week_month_ago,
+min_date,
+deal_created_date,
+status_int,
+next_status_date,
+prev_status_date,
+next_status,
+prev_status_int,
+next_status_int,
+prev_status
+from
+t
+)
 )
 
 
@@ -101,46 +218,11 @@ d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 i.source, i.type, i.campaign,
 i.current_source, i.current_type, i.current_campaign,
 grade, grade_probability
-from
-(
-select distinct 
-deal_id, 
-status,
-status_int, 
-min_date,
-deal_created_date,
-lead(min_date) over (partition by deal_id order by min_date) as next_status_date,
-lag(min_date) over (partition by deal_id order by min_date) as prev_status_date,
-lead(status_int) over (partition by deal_id order by min_date) as next_status_int,
-lag(status_int) over (partition by deal_id order by min_date) as prev_status_int,
-lead(status) over (partition by deal_id order by min_date) as next_status,
-lag(status) over (partition by deal_id order by min_date) as prev_status
-from
-(
-select distinct 
-deal_id, status, status_int, min_date, max_date, deal_created_date
-from
-(select distinct
-status as current_status,
-max(date) over (partition by deal_id , status) as max_date,
-min(date) over (partition by deal_id, status) as min_date,
-min(date) over (partition by deal_id) as deal_created_date,
-deal_id
-from
-(
-select deal_id, millis_to_ts_msk(statuses.ctms) as date, 
-statuses.status as status, statuses.moderatorId as owner_id
-
-from
-(select entityId as deal_id, explode(statusHistory) as statuses, etms
-    from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
-    where type = 4 
-    )
-    order by date desc, deal_id
-)
-) d left join statuses s on s.status_int = d.current_status
-)
-) t1 
+from (
+    select * from t1
+    union all 
+    select * from t2) t1
 left join deals d on t1.deal_id = d.deal_id
 left join interactions i on i.interaction_id = d.interaction_id
 left join users u on d.user_id = u.user_id
+
