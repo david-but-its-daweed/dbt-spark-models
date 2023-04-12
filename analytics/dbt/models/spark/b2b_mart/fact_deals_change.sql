@@ -131,7 +131,7 @@ left join (
 where deal_created_date >= w.week
 and (next_status_date >= w.week
     or next_status_date is null)
-and (min_date <= week + interval 1 week)
+and (min_date <= w.week + interval 1 week)
 ),
 
 
