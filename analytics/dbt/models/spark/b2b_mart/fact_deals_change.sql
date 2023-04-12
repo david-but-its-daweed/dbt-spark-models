@@ -185,7 +185,7 @@ from
 select distinct
 t1.*, 
 CASE WHEN 
-MAX(status_int = 100 and (prev_status_int is null or prev_status_int = 10)) OVER (PARTITION BY t1.deal_id)
+MAX(d.status_int > 100 and (prev_status_int is null or prev_status_int = 10)) OVER (PARTITION BY t1.deal_id)
 THEN "fast_rejected" ELSE "normal" end as deal_normality,
 d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 d.status as current_status, d.status_int as current_status_int, d.current_date as current_status_date,
