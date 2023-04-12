@@ -54,13 +54,13 @@ case when status in (10, 20, 30) then 'Pre-Estimate'
 when status in (40, 50, 60) then 'Quotation'
 when status in (70, 80) then 'Forming order & singing'
 when status in (90) then 'Manufacturing & Shipping'
-else 100
+else 100'Closed'
 end as status,
 case when status in (10, 20, 30) then 10
 when status in (40, 50, 60) then 40
 when status in (70, 80) then 70
 when status in (90) then 90
-else 'Closed'
+else 100
 end as status_int,
 max(date) over (partition by deal_id , case when status in (10, 20, 30) then 'Pre-Estimate'
 when status in (40, 50, 60) then 'Quotation'
