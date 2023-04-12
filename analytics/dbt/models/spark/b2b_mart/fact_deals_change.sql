@@ -182,8 +182,11 @@ i.current_source, i.current_type, i.current_campaign,
 grade, grade_probability
 from (
     select * from t1
+    where week <= current_date()
     union all 
-    select * from t2) t1
+    select * from t2
+    where week <= current_date()
+) t1
 left join deals d on t1.deal_id = d.deal_id
 left join interactions i on i.interaction_id = d.interaction_id
 left join users u on d.user_id = u.user_id
