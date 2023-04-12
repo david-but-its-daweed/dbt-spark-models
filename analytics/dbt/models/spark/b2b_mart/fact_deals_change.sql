@@ -103,7 +103,7 @@ next_status,
 prev_status_int,
 next_status_int,
 prev_status,
-'month' as attribution
+'day' as attribution
 from
 (
 select distinct 
