@@ -23,6 +23,9 @@ interactions as (
 users as (
 select distinct user_id, grade, grade_probability
 from {{ ref('users_daily_table') }}
+    where partition_date_msk = (
+    select max(partition_date_msk) from {{ ref('users_daily_table') }}
+    )
 ),
 
 
@@ -128,7 +131,7 @@ left join (
     explode(sequence(to_date('2022-01-01'), current_date(), interval 1 week)) as week, 
     1 as for_join
     ) w on t.for_join = w.for_join
-where deal_created_date >= w.week
+where deal_created_date <= w.week
 and (next_status_date >= w.week
     or next_status_date is null)
 and (min_date <= w.week + interval 1 week)
@@ -172,14 +175,21 @@ t
 )
 
 
-select t1.*, 
+select 
+    *,
+    row_number() over (partition by week, attribution, deal_id order by min_date) as week_event_number,
+    row_number() over (partition by week, attribution, deal_id order by min_date desc) as week_event_number_desc
+from
+(
+select distinct
+t1.*, 
 CASE WHEN 
 MAX(status_int > 100 and (prev_status_int is null or prev_status_int = 10)) OVER (PARTITION BY t1.deal_id)
 THEN "fast_rejected" ELSE "normal" end as deal_normality,
 d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 i.source, i.type, i.campaign,
 i.current_source, i.current_type, i.current_campaign,
-grade, grade_probability
+grade, grade_probability,
 from (
     select * from t1
     where week <= current_date()
@@ -190,4 +200,4 @@ from (
 left join deals d on t1.deal_id = d.deal_id
 left join interactions i on i.interaction_id = d.interaction_id
 left join users u on d.user_id = u.user_id
-
+)
