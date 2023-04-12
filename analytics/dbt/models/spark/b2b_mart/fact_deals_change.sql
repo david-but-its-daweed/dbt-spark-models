@@ -191,7 +191,7 @@ d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 d.status as current_status, d.status_int as current_status_int, d.current_date as current_status_date,
 i.source, i.type, i.campaign,
 i.current_source, i.current_type, i.current_campaign,
-grade, grade_probability,
+grade, grade_probability
 from (
     select * from t1
     where week <= current_date()
