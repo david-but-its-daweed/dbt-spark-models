@@ -54,7 +54,7 @@ case when status in (10, 20, 30) then 'Pre-Estimate'
 when status in (40, 50, 60) then 'Quotation'
 when status in (70, 80) then 'Forming order & singing'
 when status in (90) then 'Manufacturing & Shipping'
-else 'Closed'
+else 100
 end as status,
 case when status in (10, 20, 30) then 10
 when status in (40, 50, 60) then 40
@@ -185,7 +185,7 @@ from
 select distinct
 t1.*, 
 CASE WHEN 
-MAX(status_int > 100 and (prev_status_int is null or prev_status_int = 10)) OVER (PARTITION BY t1.deal_id)
+MAX(status_int = 100 and (prev_status_int is null or prev_status_int = 10)) OVER (PARTITION BY t1.deal_id)
 THEN "fast_rejected" ELSE "normal" end as deal_normality,
 d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 d.status as current_status, d.status_int as current_status_int, d.current_date as current_status_date,
