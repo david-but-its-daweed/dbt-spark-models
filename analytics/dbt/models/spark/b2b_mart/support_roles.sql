@@ -30,7 +30,7 @@ SELECT
 UNION ALL 
 SELECT
 "konstantin.gorbunov@joompro-support.com" AS email,
-"Sales" AS role,
+"KAM" AS role,
 "" AS name
 UNION ALL 
 SELECT
@@ -140,10 +140,30 @@ SELECT
 UNION ALL
 SELECT
 "ivan.dergachev@joompro-support.com" AS email,
-"CallCenter" AS role,
+"Sales" AS role,
 "Иван Дергачёв" AS name
 UNION ALL 
 SELECT 
 "a.solomin@joompro-support.com" AS email,
-"CallCenter" AS role,
+"Sales" AS role,
 "Александр Соломин" AS name
+UNION ALL 
+SELECT 
+"dkizerov@joom.com" AS email,
+"KAM" as role,
+"Даниил Кизеров" as name
+UNION ALL 
+SELECT 
+"vladislav.skarzhinets@joom.com" AS email,
+"KAM" as role,
+"Владислав Скаржинец" as name
+UNION ALL 
+SELECT 
+"k.gaiko@joompro-support.com"  AS email,
+"Sales" AS role,
+"Кристина Гайко" AS name
+UNION ALL
+SELECT 
+"t.bagutdinov@joompro-support.com" AS email,
+"Sales" as role,
+"Тимур Багаутдинов" as name
