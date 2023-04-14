@@ -22,9 +22,9 @@ SELECT
          WHEN a.currency = 'Euro' THEN 'EUR' ELSE 'RUB' END AS currency,
     t.`date`,
     SUM(t.salary + t.fix) AS total_payment
-FROM {{ source('support', 'shiftbase_rosters_snapshot_2023') }} AS t
-JOIN {{ source('support', 'shiftbase_users') }} AS a ON t.user_id = a.id and t.partition_date = a.partition_date
-JOIN {{ source('support', 'shiftbase_teams') }} AS b ON t.team_id = b.id and t.partition_date = b.partition_date
+FROM support.shiftbase_rosters_snapshot_2023 AS t
+JOIN support.shiftbase_users AS a ON t.user_id = a.id and t.partition_date = a.partition_date
+JOIN support.shiftbase_teams AS b ON t.team_id = b.id and t.partition_date = b.partition_date
 WHERE t.partition_date = (SELECT MAX(partition_date) FROM {{ source('support', 'shiftbase_rosters_snapshot_2023') }})
 GROUP BY 1, 2, 3, 4
 ),
@@ -40,8 +40,8 @@ SELECT
     1 AS all_resolved_tickets,
     t.total_payment
 FROM t
-LEFT JOIN {{ source('support', 'cbr_currency_rate') }} AS a ON (CASE WHEN t.`date` < '2023-04-07' THEN '2023-04-07' ELSE t.`date` END) = a.partition_date AND a.to = 'USD' --с '2023-04-07' есть данные о курсах валют
-LEFT JOIN {{ source('support', 'cbr_currency_rate') }} AS b ON  (CASE WHEN t.`date` < '2023-04-07' THEN '2023-04-07' ELSE t.`date` END) = b.partition_date AND b.to = 'EUR'
+LEFT JOIN support.cbr_currency_rate AS a ON (CASE WHEN t.`date` < '2023-04-07' THEN '2023-04-07' ELSE t.`date` END) = a.partition_date AND a.to = 'USD' --с '2023-04-07' есть данные о курсах валют
+LEFT JOIN support.cbr_currency_rate AS b ON  (CASE WHEN t.`date` < '2023-04-07' THEN '2023-04-07' ELSE t.`date` END) = b.partition_date AND b.to = 'EUR'
 ),
 
 base AS (
@@ -55,7 +55,7 @@ base AS (
     b.total_payment_converted
   FROM
     {{ ref('support_mart_ticket_id_ext') }} AS t
-    LEFT JOIN {{ source('mongo', 'babylone_joom_agents_daily_snapshot') }} AS a ON t.last_agent = a._id
+    LEFT JOIN mongo.babylone_joom_agents_daily_snapshot AS a ON t.last_agent = a._id
     RIGHT JOIN sb AS b ON a.email = b.email --LEFT
         AND DATE(t.resolution_ticket_ts_msk) = b.`date`
   WHERE
