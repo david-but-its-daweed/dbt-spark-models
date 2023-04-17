@@ -25,7 +25,7 @@ SELECT
 FROM support.shiftbase_rosters_snapshot_2023 AS t
 JOIN support.shiftbase_users AS a ON t.user_id = a.id and t.partition_date = a.partition_date
 JOIN support.shiftbase_teams AS b ON t.team_id = b.id and t.partition_date = b.partition_date
-WHERE t.partition_date = (SELECT MAX(partition_date) FROM {{ source('support', 'shiftbase_rosters_snapshot_2023') }})
+WHERE t.partition_date = (SELECT MAX(partition_date) FROM support.shiftbase_rosters_snapshot_2023
 GROUP BY 1, 2, 3, 4
 ),
 
