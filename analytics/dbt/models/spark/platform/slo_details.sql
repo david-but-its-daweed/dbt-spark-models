@@ -3,7 +3,9 @@
     materialized='view',
     meta = {
       'bigquery_load': 'true'
-    }
+    },
+    tags=['data_readiness']
+
 ) }}
 
 SELECT *,

@@ -74,6 +74,9 @@ sources:
       - name: babylone_narwhal_tag_categories_daily_snapshot
       - name: babylone_onfy_tag_categories_daily_snapshot
       - name: b2b_core_promocodes_daily_snapshot
+      - name: b2b_core_issues_daily_snapshot
+      - name: b2b_core_customer_plans_daily_snapshot
+      - name: babylone_joom_agents_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -146,4 +149,13 @@ sources:
             description: Updated time
   - name: threat
     tables:
+      - name: bot_factors_onfy
+  - name: support
+    tables:
+      - name: shiftbase_rosters_snapshot_2023
+      - name: shiftbase_users
+      - name: shiftbase_teams
+      - name: cbr_currency_rate
+    
+    
       - name: bot_factors_onfy
