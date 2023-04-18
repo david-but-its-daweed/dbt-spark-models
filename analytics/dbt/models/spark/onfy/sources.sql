@@ -15,6 +15,7 @@ with sources as
         device_id,
         event_ts_cet as source_dt,
         lead(event_ts_cet) over (partition by device_id order by event_ts_cet) as next_source_dt,
+        onfy_mart.device_events.type,
         coalesce(
             case 
                 when onfy_mart.device_events.type = 'externalLink'
@@ -60,7 +61,7 @@ with sources as
                 when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%ohm%' then 'ohm'
                 else 'onfy'
             end as partner
-    from {{ source('onfy_mart', 'device_events') }} as device_events
+    from {{ source('onfy_mart', 'device_events') }}
     where 1=1
         and type in ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
 ),
