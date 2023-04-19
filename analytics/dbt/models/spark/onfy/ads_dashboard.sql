@@ -203,12 +203,6 @@ data_combined as
 
 
 select 
-    source,
-    report_month,
-    count(cast(session_dt as string), device_id) as sessions,
-    count(distinct order_id) as orders
+    *
 from 
     data_combined  
-group by 
-    source,
-    report_month
