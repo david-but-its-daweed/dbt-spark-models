@@ -8,7 +8,7 @@ slo_pro_base_tables,basic pro tables in BQ,@gburg,#slo-monitoring,7,,mart,0,
 slo_joompay_overview,Joompay overview reports in Holistics,@gburg,#slo-monitoring,7,,report,0,
 slo_onfy_overview,Onfy overview reports in Holistics,@gburg,#slo-monitoring,7,,report,0,
 slo_onfy_base_tables,basic onfy tables in BQ,@gburg,#slo-monitoring,7,,mart,0,
-slo_analytics_reports,<https://analytics.joom.ai/time/orders|Time report>,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Time report in analytics.joom.ai,report,80,#analytics-achtung
+slo_analytics_reports,<https://analytics.joom.ai/time/orders|The ‘time/orders’ report>,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Time report in analytics.joom.ai,report,80,#analytics-achtung
 slo_jl_external_cube,JL External Cube,@yushkov,#jl-etl-monitoring,7,it is in the report which is viewed by our team every morning,mart,0,""
 slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Marketplace columns,report,80,#analytics-achtung
 slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for B2B columns,report,0,#analytics-achtung
