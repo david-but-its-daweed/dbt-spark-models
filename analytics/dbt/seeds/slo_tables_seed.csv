@@ -42,4 +42,3 @@ slo_overview_joompay,cube.joompay_overview_v1_days,spark
 slo_pnl,cube.profit,spark
 slo_pivots,odbc.orders_sheet,bq
 slo_pivots,odbc.products_current_sheet,bq
-slo_test_gburg,anomaly_detection.detector_roas_7d,bq
