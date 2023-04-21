@@ -217,14 +217,12 @@ first_entries AS
                   t.payload.authorId AS author_id
               FROM  {{ source('mart', 'babylone_events') }} AS t
               WHERE t.`type` = 'ticketEntryAdd'
-              ORDER BY t.event_ts_msk
               UNION DISTINCT
               SELECT DISTINCT
                   t.payload.ticketId AS ticket_id,
                   t.payload.stateAgentId AS author_id --stateAgentId
               FROM  {{ source('mart', 'babylone_events') }} AS t
               WHERE t.`type` = 'ticketChangeJoom'
-              ORDER BY t.event_ts_msk
              )     
           SELECT
              t.ticket_id AS ticket_id,
