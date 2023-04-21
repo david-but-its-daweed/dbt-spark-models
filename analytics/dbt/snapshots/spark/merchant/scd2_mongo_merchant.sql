@@ -7,23 +7,20 @@
       strategy='timestamp',
       updated_at='updated_time',
       file_format='delta',
-      invalidate_hard_deletes=True,
-      meta = {
-          'bigquery_load': 'true',
-      }
+      invalidate_hard_deletes=True
     )
 }}
 
 
 select merchant_id,
-       created_time,
-       updated_time,
-       activation_time,
+       millis_to_ts(created_time)    as created_time,
+       millis_to_ts(updated_time)    as updated_time,
+       millis_to_ts(activation_time) as activation_time,
        name,
        origin,
        enabled,
        disablingReason,
        disablingNote
-from {{ref('merchant')}}
+from {{ ref('merchant') }}
 
 {% endsnapshot %}
