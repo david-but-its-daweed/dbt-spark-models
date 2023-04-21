@@ -127,6 +127,7 @@ first_entries AS
                  ON t.payload.stateQueueId = a._id
             WHERE t.`type` = 'ticketChange'
                   AND t.payload.stateQueueId IS NOT NULL
+            ORDER BY t.event_ts_msk
             )
         SELECT
            t.ticket_id AS ticket_id,
@@ -153,6 +154,7 @@ first_entries AS
              FROM {{ source('mart', 'onfy_babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
                    AND t.`type` IN ('ticketCreate', 'ticketChange')
+             ORDER BY t.event_ts_msk
              ),
         base AS
             (
@@ -178,6 +180,7 @@ first_entries AS
              FROM {{ source('mart', 'onfy_babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
                    AND t.`type` IN ('ticketCreate', 'ticketChange')
+             ORDER BY t.event_ts_msk
             )
         SELECT
             t.ticket_id AS ticket_id,
@@ -195,6 +198,7 @@ first_entries AS
              FROM {{ source('mart', 'onfy_babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
                    AND t.`type` IN ('ticketCreate', 'ticketChange')
+             ORDER BY t.event_ts_msk
             )
          SELECT
             t.ticket_id AS ticket_id,
@@ -211,12 +215,14 @@ first_entries AS
                    t.payload.authorId AS author_id
                FROM {{ source('mart', 'onfy_babylone_events') }} AS t
                WHERE t.`type` = 'ticketEntryAdd'
+               ORDER BY t.event_ts_msk
                UNION DISTINCT
                SELECT DISTINCT
                    t.payload.ticketId AS ticket_id,
                    t.payload.stateAgentId AS author_id
                FROM {{ source('mart', 'onfy_babylone_events') }} AS t
                WHERE t.`type` = 'ticketChange'
+               ORDER BY t.event_ts_msk
              )     
           SELECT
              t.ticket_id AS ticket_id,
