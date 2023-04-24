@@ -42,3 +42,5 @@ SELECT m._id AS                              merchant_id,
 
 from {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }} m
 LEFT JOIN jp_merchants jp ON m._id = jp.merchant_id
+
+{% endsnapshot %}
