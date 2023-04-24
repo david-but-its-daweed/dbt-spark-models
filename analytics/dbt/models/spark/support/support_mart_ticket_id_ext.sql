@@ -13,9 +13,6 @@
      }
  ) }}
 
-
-%sql
-
 WITH users_with_first_order AS
     (
      SELECT
