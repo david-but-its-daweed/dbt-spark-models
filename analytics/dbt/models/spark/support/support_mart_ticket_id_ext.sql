@@ -14,6 +14,8 @@
  ) }}
 
 
+%sql
+
 WITH users_with_first_order AS
     (
      SELECT
@@ -105,7 +107,33 @@ first_entries AS
       WHERE entry_type != 'privateNote'
             AND author_id != '000000000000050001000001'
             AND author_type != 'customer'
-     ),             
+     ),
+     
+   first_queue AS
+     (
+      SELECT DISTINCT
+          t.payload.ticketId AS ticket_id,
+          FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue
+      FROM {{ source('mart', 'babylone_events') }} AS t
+      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+           ON t.payload.stateQueueId = a._id
+      WHERE t.`type` = 'ticketChangeJoom'
+            AND t.payload.stateQueueId IS NOT NULL 
+      ),
+      
+    first_queue_not_limbo AS
+     (
+      SELECT DISTINCT
+          t.payload.ticketId AS ticket_id,
+          FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue_not_limbo
+      FROM {{ source('mart', 'babylone_events') }} AS t
+      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+           ON t.payload.stateQueueId = a._id
+              AND a._id != 'limbo'
+      WHERE t.`type` = 'ticketChangeJoom'
+            AND t.payload.stateQueueId IS NOT NULL 
+      ),
+
    current_queue AS
      (
       SELECT DISTINCT
@@ -132,6 +160,7 @@ first_entries AS
            (
             SELECT DISTINCT
                 t.payload.ticketId AS ticket_id,
+                t.event_ts_msk,
                 a.name AS queue
             FROM {{ source('mart', 'babylone_events') }} AS t
             JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
@@ -152,6 +181,7 @@ first_entries AS
             (
              SELECT
                  t.payload.ticketId AS ticket_id,
+                 t.event_ts_msk,
                  EXPLODE(t.payload.tagIds) AS tag
              FROM {{ source('mart', 'babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
@@ -178,6 +208,7 @@ first_entries AS
             (
              SELECT
                  t.payload.ticketId AS ticket_id,
+                 t.event_ts_msk,
                  EXPLODE(t.payload.parcelIds) AS parcelId
              FROM {{ source('mart', 'babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
@@ -196,6 +227,7 @@ first_entries AS
             (
              SELECT
                  t.payload.ticketId AS ticket_id,
+                 t.event_ts_msk,
                  EXPLODE(t.payload.orderIds) AS orderId
              FROM {{ source('mart', 'babylone_events') }} AS t
              WHERE t.payload.tagIds IS NOT NULL
@@ -215,13 +247,13 @@ first_entries AS
               SELECT DISTINCT
                   t.payload.ticketId AS ticket_id,
                   t.payload.authorId AS author_id
-              FROM  {{ source('mart', 'babylone_events') }} AS t
+              FROM {{ source('mart', 'babylone_events') }} AS t
               WHERE t.`type` = 'ticketEntryAdd'
               UNION DISTINCT
               SELECT DISTINCT
                   t.payload.ticketId AS ticket_id,
                   t.payload.stateAgentId AS author_id --stateAgentId
-              FROM  {{ source('mart', 'babylone_events') }} AS t
+              FROM {{ source('mart', 'babylone_events') }} AS t
               WHERE t.`type` = 'ticketChangeJoom'
              )     
           SELECT
@@ -356,8 +388,10 @@ SELECT
     CASE WHEN b.resolution_ticket_ts_msk IS NULL THEN 'no' ELSE 'yes' END AS is_closed,
     CASE WHEN p.current_queue == 'Limbo' THEN (CASE WHEN f.queues[0] == 'Limbo' THEN f.queues[1] ELSE f.queues[0] END) ELSE p.current_queue END AS current_queue,
     f.queues,
-    f.queues[0] AS first_queue,
-    CASE WHEN f.queues[0] == 'Limbo' THEN f.queues[1] ELSE f.queues[0] END AS first_queue_not_limbo,
+    --f.queues[0] AS first_queue,
+    --CASE WHEN f.queues[0] == 'Limbo' THEN f.queues[1] ELSE f.queues[0] END AS first_queue_not_limbo,
+    r.first_queue,
+    s.first_queue_not_limbo,
     e.tags,
     g.parcelIds,
     h.orderIds,
@@ -383,4 +417,7 @@ LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
 LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
 LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
+LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
+LEFT JOIN first_queue AS r ON r.ticket_id = t.ticket_id
+LEFT JOIN first_queue_not_limbo AS s ON s.ticket_id = t.ticket_id
 LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
