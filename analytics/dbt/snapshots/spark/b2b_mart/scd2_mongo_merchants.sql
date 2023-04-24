@@ -38,7 +38,7 @@ SELECT m._id AS                              merchant_id,
        leadCommission AS lead_comission,
        name,
        millis_to_ts_msk(unblockTime) AS unblock_time,
-       millis_to_ts_msk(updatedTimeMs) AS updated_ts_msk
+       millis_to_ts_msk(updatedTimeMs) AS update_ts_msk
 
 from {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }} m
 LEFT JOIN jp_merchants jp ON m._id = jp.merchant_id
