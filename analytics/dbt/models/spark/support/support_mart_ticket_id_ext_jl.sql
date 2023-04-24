@@ -159,6 +159,7 @@ first_entries AS
            (
             SELECT DISTINCT
                 t.payload.ticketId AS ticket_id,
+                t.event_ts_msk,
                 a.name AS queue
             FROM mart.logistics_babylone_events AS t
             JOIN {{ source('mongo', 'babylone_logistics_queues_daily_snapshot') }} AS a 
@@ -179,6 +180,7 @@ first_entries AS
             (
              SELECT
                  t.payload.ticketId AS ticket_id,
+                 t.event_ts_msk,
                  EXPLODE(t.payload.tagIds) AS tag
              FROM mart.logistics_babylone_events AS t
              WHERE t.payload.tagIds IS NOT NULL
@@ -205,6 +207,7 @@ first_entries AS
             (
              SELECT
                  t.payload.ticketId AS ticket_id,
+                 t.event_ts_msk,
                  EXPLODE(t.payload.parcelIds) AS parcelId
              FROM mart.logistics_babylone_events AS t
              WHERE t.payload.tagIds IS NOT NULL
@@ -223,6 +226,7 @@ first_entries AS
             (
              SELECT
                  t.payload.ticketId AS ticket_id,
+                 t.event_ts_msk,
                  EXPLODE(t.payload.orderIds) AS orderId
              FROM mart.logistics_babylone_events AS t
              WHERE t.payload.tagIds IS NOT NULL
