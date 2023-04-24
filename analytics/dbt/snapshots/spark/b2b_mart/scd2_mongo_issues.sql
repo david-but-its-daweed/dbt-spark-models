@@ -26,7 +26,7 @@ reporterId as reporter_id,
 statusHistory as status_history,
 type,
 millis_to_ts_msk(ctms) AS created_ts_msk,
-millis_to_ts_msk(utms) AS updated_ts_msk
+millis_to_ts_msk(utms) AS update_ts_msk
 
 from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
 
