@@ -40,7 +40,9 @@ SELECT _id AS                              order_product_id,
        trademark,
        type,
        variants,
-       vatRate AS vat_rate
+       vatRate AS vat_rate,
+       millis_to_ts_msk(ctms)  AS created_ts_msk ,
+       millis_to_ts_msk(utms)  AS update_ts_msk
 from mongo.b2b_core_order_products_daily_snapshot
 
 {% endsnapshot %}
