@@ -1,4 +1,4 @@
-{% snapshot scd2_interactions %}
+{% snapshot scd2_mongo_interactions %}
 
 {{
     config(
@@ -40,7 +40,7 @@ friendlyId as interaction_friendly_id,
 popupRequestID as popup_request_id,
 promocodeId as promocode_id,
 millis_to_ts_msk(ctms) AS created_ts_msk,
-millis_to_ts_msk(utms) AS updated_ts_msk
+millis_to_ts_msk(utms) AS update_ts_msk
 
 from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} i left join utm on i._id = utm.interaction_id
 
