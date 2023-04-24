@@ -1,0 +1,5 @@
+storage_class,usage_type
+STANDARD,EUC1-TimedStorage-ByteHrs
+GLACIER,EUC1-TimedStorage-GlacierByteHrs
+STANDARD_IA,EUC1-TimedStorage-SIA-ByteHrs
+INTELLIGENT_TIERING,EUC1-TimedStorage-INT-FA-ByteHrs
