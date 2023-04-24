@@ -417,4 +417,4 @@ LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
 LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
 LEFT JOIN first_queue AS r ON r.ticket_id = t.ticket_id
 LEFT JOIN first_queue_not_limbo AS s ON s.ticket_id = t.ticket_id
-LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
+
