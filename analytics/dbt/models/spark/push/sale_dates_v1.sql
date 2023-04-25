@@ -7,4 +7,4 @@
   ) 
 }}
 
-SELECT * FROM {{ source('push', 'sale_dates') }}
+SELECT * FROM {{ source('push', 'sale_dates_v1') }}
