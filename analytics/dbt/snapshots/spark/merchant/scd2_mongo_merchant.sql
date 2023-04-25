@@ -7,7 +7,10 @@
       strategy='timestamp',
       updated_at='updated_time',
       file_format='delta',
-      invalidate_hard_deletes=True
+      invalidate_hard_deletes=True,
+      meta = {
+          'bigquery_load': 'true',
+      }
     )
 }}
 
