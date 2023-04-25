@@ -60,7 +60,9 @@ SELECT _id AS                              order_id,
        element_at(state.statusHistory.subStatus,
                   cast((array_position(state.statusHistory.updatedTimeMs,
                                        array_max(state.statusHistory.updatedTimeMs))) as INTEGER)) as last_order_sub_status,
-        min_manufactured_ts_msk
+       min_manufactured_ts_msk,
+       ARRAY_CONTAINS(tags, "repeated_order") as repeated_order,
+       comissionRate as comission_rate
 FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }} as s
 LEFT JOIN manufactiring AS m ON s._id = order_id
 {% endsnapshot %}
