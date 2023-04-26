@@ -53,8 +53,8 @@ WITH order_data AS (
             ELSE 0
         END AS psp_commission_refund_perc
     FROM
-        onfy_mart.transactions
-        JOIN pharmacy_landing.order
+        {{ source('onfy_mart', 'transactions') }}
+        JOIN {{ source('pharmacy_landing', 'order') }}
             ON pharmacy_landing.order.id = onfy_mart.transactions.order_id
     GROUP BY 
         pharmacy_landing.order.id,
@@ -98,10 +98,35 @@ psp_refund AS (
         gmv_refunds
     WHERE
         refund > 0
+),
+
+transactions_eur AS (
+    SELECT * FROM onfy_mart.transactions 
+        UNION
+    SELECT * FROM psp_initial
+        UNION
+    SELECT * FROM psp_refund
+),
+
+transactions_usd AS (
+    SELECT DISTINCT
+        transactions_eur.type,
+        transactions_eur.order_id,
+        transactions_eur.order_parcel_id,
+        transactions_eur.user_email_hash,
+        transactions_eur.date,
+        transactions_eur.price * eur.rate / usd.rate as price,
+        'USD' as currency
+    FROM
+        transactions_eur
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} eur
+            ON eur.effective_date = DATE_TRUNC('DAY', transactions_eur.date)
+            AND eur.currency_code = 'EUR'
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} usd
+            ON usd.effective_date = DATE_TRUNC('DAY', transactions_eur.date)
+            AND usd.currency_code = 'USD'
 )
 
-SELECT * FROM onfy_mart.transactions 
+SELECT * FROM transactions_eur
     UNION
-SELECT * FROM psp_initial
-    UNION
-SELECT * FROM psp_refund
+SELECT * FROM transactions_usd

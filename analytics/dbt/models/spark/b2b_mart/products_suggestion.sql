@@ -1,9 +1,13 @@
 {{ config(
     schema='b2b_mart',
-    materialized='table',
+    materialized='incremental',
+    partition_by=['partition_date_msk'],
+    incremental_strategy='insert_overwrite',
     file_format='parquet',
     meta = {
-      'bigquery_load': 'true'
+      'team': 'general_analytics',
+      'bigquery_load': 'true',
+      'bigquery_partitioning_date_column': 'partition_date_msk'
     }
 ) }}
 
@@ -48,18 +52,21 @@ expensive as (
 products as
 (    
     select product_id,
-    max(expensive) as expensive
+    avg(not_expensive) as expensive
     from
 (
 select 
   e.product_id,
   case when 
       reject_reason in ('expensive', 'expensive (other options cheaper)',
-            'higherThanMarketPrice', 'higherThanMarketPrice') or expensive
-    then True else False end as expensive
+            'higherThanMarketPrice', 'higherThanMarketPrice') then 0
+    when not expensive then 1 
+    when expensive then 0
+   end as not_expensive
 from {{ ref('rfq_metrics') }} r
 inner join expensive as e on r.product_id = e.product_id
 )
+where not_expensive is not null
 group by product_id)
 
 select 
@@ -68,7 +75,8 @@ origName as name,
 cate_lv1,
 cate_lv2,
 cate_lv3,
-cate_lv4
+cate_lv4,
+date('{{ var("start_date_ymd") }}') as partition_date_msk
 from products p
 left join (
 select distinct _id, 
@@ -79,7 +87,7 @@ select distinct _id,
     level_4_category['name'] as cate_lv4
 from {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
 join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id) c on p.product_id = c._id
-where not expensive and product_id is not null
+where expensive >= 0.7 and product_id is not null
 and product_id in (
-    select distinct product_id from b2b_mart.sat_product_state
+    select distinct product_id from {{ ref('sat_product_state') }}
     where status = 1)

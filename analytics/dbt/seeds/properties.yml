@@ -12,3 +12,11 @@ seeds:
   - name: product_outliers_seed
     config:
       schema: mart
+
+  - name: aws_pricing
+    config:
+      schema: platform
+
+  - name: storage_class_to_usage_type
+    config:
+      schema: platform

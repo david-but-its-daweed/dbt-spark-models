@@ -27,6 +27,7 @@ sources:
       - name: link_device_real_user
       - name: published_products_current
       - name: onfy_babylone_events
+      - name: dim_currency_rate
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
@@ -51,6 +52,7 @@ sources:
       - name: b2b_core_customers_daily_snapshot
       - name: b2b_core_merchant_appendixes_daily_snapshot
       - name: b2b_core_amo_crm_calls_daily_snapshot
+      - name: b2b_core_merchants_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: b2b_core_interactions_daily_snapshot
@@ -114,6 +116,7 @@ sources:
       - name: devices_mart
       - name: ads_spends
       - name: auth_proxy_devices_without_bots
+      - name: transactions
   - name: pharmacy_landing
     tables:
       - name: order
@@ -159,3 +162,7 @@ sources:
     
     
       - name: bot_factors_onfy
+      
+  - name: push
+    tables:
+      - name: sale_dates_v1

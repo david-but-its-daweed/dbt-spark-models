@@ -121,7 +121,6 @@ group by merchant_id, merchant_order_id
  )
 
 SELECT DISTINCT
-       id,
        t.merchant_order_id ,
        TIMESTAMP(created_ts_msk) AS created_ts_msk,
        currency ,
