@@ -53,8 +53,8 @@ WITH order_data AS (
             ELSE 0
         END AS psp_commission_refund_perc
     FROM
-        onfy_mart.transactions
-        JOIN pharmacy_landing.order
+        {{ source('onfy_mart', 'transactions') }}
+        JOIN {{ source('pharmacy_landing', 'order') }}
             ON pharmacy_landing.order.id = onfy_mart.transactions.order_id
     GROUP BY 
         pharmacy_landing.order.id,
@@ -119,10 +119,10 @@ transactions_usd AS (
         'USD' as currency
     FROM
         transactions_eur
-        LEFT JOIN mart.dim_currency_rate eur
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} eur
             ON eur.effective_date = DATE_TRUNC('DAY', transactions_eur.date)
             AND eur.currency_code = 'EUR'
-        LEFT JOIN mart.dim_currency_rate usd
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} usd
             ON usd.effective_date = DATE_TRUNC('DAY', transactions_eur.date)
             AND usd.currency_code = 'USD'
 )
