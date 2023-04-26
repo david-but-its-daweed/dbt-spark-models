@@ -115,6 +115,7 @@ sources:
       - name: devices_mart
       - name: ads_spends
       - name: auth_proxy_devices_without_bots
+      - name: transactions
   - name: pharmacy_landing
     tables:
       - name: order
