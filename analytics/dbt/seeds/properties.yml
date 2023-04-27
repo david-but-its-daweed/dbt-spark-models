@@ -20,3 +20,7 @@ seeds:
   - name: storage_class_to_usage_type
     config:
       schema: platform
+
+  - name: s3_price_coeffs
+    config:
+      schema: platform
