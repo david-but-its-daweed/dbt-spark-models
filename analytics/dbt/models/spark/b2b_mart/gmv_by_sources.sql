@@ -14,29 +14,29 @@ with not_jp_users AS (
   WHERE is_joompro_employee = TRUE
 ),
 
-users_owner as (
-select user_id, day, min(owner_moderator_id) as owner_moderator_id
+order_owner as (
+select order_id, day, min(owner_moderator_id) as owner_moderator_id
 from 
 (
-select user_id, owner_moderator_id,
+select order_id, owner_moderator_id,
 explode(sequence(to_date(date_from), to_date(date_to), interval 1 day)) as day
 from
 (
 select
-user_id, date(event_ts_msk) as date_from, 
-coalesce(date(lead(event_ts_msk) over (partition by user_id order by event_ts_msk)), current_date()) as date_to,
+order_id, date(event_ts_msk) as date_from, 
+coalesce(date(lead(event_ts_msk) over (partition by order_id order by event_ts_msk)), current_date()) as date_to,
 owner_moderator_id
 from
 (
-select user_id, event_ts_msk,
-coalesce(lead(owner_moderator_id) over (partition by user_id order by event_ts_msk), '0') as next_owner,
+select order_id, event_ts_msk,
+coalesce(lead(owner_moderator_id) over (partition by order_id order by event_ts_msk), '0') as next_owner,
 owner_moderator_id
 from {{ ref('fact_order_change') }}
 where owner_moderator_id is not null)
 where owner_moderator_id != next_owner or next_owner is null
 )
 )
-group by user_id, day
+group by order_id, day
 ),
 
 admin AS (
@@ -181,6 +181,6 @@ SELECT
              ELSE 'small client' END as current_client
     FROM after_second_qrt_new_order as a
     left join users on a.user_id = users.user_id and a.t = users.day
-    left join users_owner uo on a.user_id = uo.user_id and a.t = uo.day
-    left join admin ad on uo.owner_moderator_id = ad.admin_id
+    left join order_owner oo on a.user_id = oo.order_id and a.t = oo.day
+    left join admin ad on oo.owner_moderator_id = ad.admin_id
 WHERE gmv_initial > 0
