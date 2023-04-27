@@ -32,7 +32,8 @@ select order_id, event_ts_msk,
 coalesce(lead(owner_moderator_id) over (partition by order_id order by event_ts_msk), '0') as next_owner,
 owner_moderator_id
 from {{ ref('fact_order_change') }}
-where owner_moderator_id is not null)
+where owner_moderator_id is not null
+and date(event_ts_msk) <= current_date())
 where owner_moderator_id != next_owner or next_owner is null
 )
 )
