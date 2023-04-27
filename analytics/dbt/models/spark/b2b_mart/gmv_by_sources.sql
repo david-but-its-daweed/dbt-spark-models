@@ -118,7 +118,7 @@ after_second_qrt_new_order AS
     INNER JOIN order_v2_mongo AS o ON  p.order_id = o.order_id
     LEFT JOIN sources AS s on p.order_id = s.order_id
     LEFT JOIN admin AS a on p.owner_moderator_id = a.admin_id
-    WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547')
+    WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547', '63fe06635ff04955459c3482')
     GROUP BY 
       manufactured_date, 
       p.order_id,
