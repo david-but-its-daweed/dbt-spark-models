@@ -382,7 +382,7 @@ select distinct
         c.company_name, c.grade, c.grade_probability
 from prices p
 join all_orders o on o.order_id = p.order_id
-join users u on u.user_id = o.user_id
+join order_owners u on u.order_id = o.order_id
 left join (
      select distinct company_name, user_id, grade, grade_probability from {{ ref('users_daily_table') }}
      where partition_date_msk = (select max(partition_date_msk) from {{ ref('users_daily_table') }})
