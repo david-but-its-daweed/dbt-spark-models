@@ -8,36 +8,36 @@
 ) }}
 
 
+
 with not_jp_users AS (
   SELECT DISTINCT user_id
   FROM {{ ref('fact_user_request') }}
   WHERE is_joompro_employee = TRUE
 ),
 
-order_owner as (
-select order_id, day, min(owner_moderator_id) as owner_moderator_id
+users_owner as (
+select user_id, day, min(owner_moderator_id) as owner_moderator_id
 from 
 (
-select order_id, owner_moderator_id,
+select user_id, owner_moderator_id,
 explode(sequence(to_date(date_from), to_date(date_to), interval 1 day)) as day
 from
 (
 select
-order_id, date(event_ts_msk) as date_from, 
-coalesce(date(lead(event_ts_msk) over (partition by order_id order by event_ts_msk)), current_date()) as date_to,
+user_id, date(event_ts_msk) as date_from, 
+coalesce(date(lead(event_ts_msk) over (partition by user_id order by event_ts_msk)), current_date()) as date_to,
 owner_moderator_id
 from
 (
-select order_id, event_ts_msk,
-coalesce(lead(owner_moderator_id) over (partition by order_id order by event_ts_msk), '0') as next_owner,
+select user_id, event_ts_msk,
+coalesce(lead(owner_moderator_id) over (partition by user_id order by event_ts_msk), '0') as next_owner,
 owner_moderator_id
-from {{ ref('fact_order_change') }}
-where owner_moderator_id is not null
-and date(event_ts_msk) <= current_date())
+from {{ ref('fact_user_change') }}
+where owner_moderator_id is not null)
 where owner_moderator_id != next_owner or next_owner is null
 )
 )
-group by order_id, day
+group by user_id, day
 ),
 
 admin AS (
@@ -119,7 +119,7 @@ after_second_qrt_new_order AS
     INNER JOIN order_v2_mongo AS o ON  p.order_id = o.order_id
     LEFT JOIN sources AS s on p.order_id = s.order_id
     LEFT JOIN admin AS a on p.owner_moderator_id = a.admin_id
-    WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547', '63fe06635ff04955459c3482')
+    WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547')
     GROUP BY 
       manufactured_date, 
       p.order_id,
@@ -182,6 +182,6 @@ SELECT
              ELSE 'small client' END as current_client
     FROM after_second_qrt_new_order as a
     left join users on a.user_id = users.user_id and a.t = users.day
-    left join order_owner oo on a.user_id = oo.order_id and a.t = oo.day
-    left join admin ad on oo.owner_moderator_id = ad.admin_id
+    left join users_owner uo on a.user_id = uo.user_id and a.t = uo.day
+    left join admin ad on uo.owner_moderator_id = ad.admin_id
 WHERE gmv_initial > 0
