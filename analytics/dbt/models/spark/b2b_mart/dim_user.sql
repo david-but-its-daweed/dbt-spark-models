@@ -30,7 +30,7 @@ SELECT
   invitedByPromo as invited_by_promo,
   isPartner as is_partner,
   coalesce(is_joompro_employee, FALSE) as is_joompro_employee,
-  is_partner or coalesce(is_joompro_employee, FALSE) as fake,
+  isPartner or coalesce(is_joompro_employee, FALSE) as fake,
   TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
   TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_user') }} t
