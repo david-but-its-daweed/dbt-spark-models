@@ -10,7 +10,6 @@
       invalidate_hard_deletes=True,
       meta = {
           'team' : 'merchant',
-          'bigquery_load': 'true',
       }
     )
 }}
