@@ -1,8 +1,4 @@
 slo_id,table_name,table_type
-slo_istaff,models.istaff_pivot_gmv,bq
-slo_istaff,models.jm_business_review_orders,bq
-slo_istaff,models.jm_business_review_delivery_duration,bq
-slo_istaff,models.jm_business_review_delivery_stages,bq
 slo_analytics_base_tables,gold.active_devices,bq
 slo_analytics_base_tables,gold.active_users,bq
 slo_analytics_base_tables,gold.merchant_categories,bq

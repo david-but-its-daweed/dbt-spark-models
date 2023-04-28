@@ -1,5 +1,5 @@
 slo_id,business_name,owner,alert_channels,expected_time_utc_hours_str,description,slo_type,target_sli,technical_alert_channels
-slo_istaff,IStaff reports,@gburg,#slo-monitoring,7,,report,0,
+slo_istaff,iStaff,@gburg,#slo-monitoring,7,,report,0,
 slo_analytics_base_tables,basic analytics tables in BQ,@gburg,#slo-monitoring,7,,mart,0,
 slo_logistics_overview,JL overview reports in Holistics,@gburg,#slo-monitoring,7,,report,0,
 slo_logistics_base_tables,basic JL tables in BQ,@gburg,#slo-monitoring,7,,mart,0,

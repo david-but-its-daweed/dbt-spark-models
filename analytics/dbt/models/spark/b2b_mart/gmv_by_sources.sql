@@ -8,6 +8,7 @@
 ) }}
 
 
+
 with not_jp_users AS (
   SELECT DISTINCT user_id
   FROM {{ ref('fact_user_request') }}
