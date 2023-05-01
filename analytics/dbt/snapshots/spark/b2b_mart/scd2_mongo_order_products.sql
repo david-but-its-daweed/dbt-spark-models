@@ -3,7 +3,7 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='merchant_order_id',
+      unique_key='order_product_id',
 
       strategy='timestamp',
       updated_at='update_ts_msk',
