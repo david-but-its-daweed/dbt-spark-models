@@ -17,6 +17,6 @@ slo_jpro_base_tables,JPro Main Tables,@amitiushkina,#slo-monitoring,7,JoomPro ma
 slo_jpay_base_tables,JPay Main Tables,@psidorov,#slo-monitoring,7,JoomPay main tables,mart,80,
 slo_onfy_base_tables,Only Main Tables,@marksysoev,#slo-monitoring,7,Only main tables,mart,80,
 slo_losses_in_profit_report,Losses in Profit,@espander,#slo-monitoring,7,Data for Losses in Profit report https://secure.holistics.io/dashboards/v3/64762-losses-in-profit,report,80,
-slo_gmv_structure_report_report,GMV Structure,@espander,#slo-monitoring,7,Data for GMV Structure report https://secure.holistics.io/dashboards/v3/63886-gmv-structure,report,80,
+slo_gmv_structure_report,GMV Structure,@espander,#slo-monitoring,7,Data for GMV Structure report https://secure.holistics.io/dashboards/v3/63886-gmv-structure,report,80,
 slo_contribution_profit_report,Contribution Profit,@espander,#slo-monitoring,7,Data for Contribution Profit report https://secure.holistics.io/dashboards/v3/63984-contribution-profit,report,80,
 slo_country_info_report,Country Info,@yatsushko,#slo-monitoring,7,Data for Country Info report https://secure.holistics.io/dashboards/v3/17297-country-info,report,80,
