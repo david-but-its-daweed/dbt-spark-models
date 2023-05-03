@@ -8,6 +8,10 @@
     }
 ) }}
 
+with psi as (
+    select distinct 
+        _id, statusId as status_id from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }}
+)
 
 SELECT order_product_id,
        product_id,
@@ -31,6 +35,7 @@ SELECT order_product_id,
        prices,
        production_dead_line,
        psi_status_id,
+       status_id as psi_status,
        status,
        statuses,
        trademark,
@@ -39,4 +44,5 @@ SELECT order_product_id,
        vat_rate,
        created_ts_msk
 from {{ ref('scd2_mongo_order_products') }} t
+left join psi on psi_status_id = _id
 where TIMESTAMP(dbt_valid_to) IS NULL
