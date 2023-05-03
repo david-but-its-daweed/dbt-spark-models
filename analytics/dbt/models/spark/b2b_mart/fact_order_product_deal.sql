@@ -162,6 +162,7 @@ select distinct
     merchant_order_friendly_id,
     p.product_id,
     psi_status_id,
+    psi_status,
     psi_status > 10 as psi_conducted,
     product_price,
     order_price_usd as merchant_order_price,
@@ -194,8 +195,7 @@ select distinct
     oo.owner_email,
     oo.owner_role,
     deal_name,
-    gmv_initial,
-    rn as order_rn
+    gmv_initial
 from interactions i
 left join orders o on i.order_id = o.order_id
 left join merchant_order mo on mo.order_id = o.order_id
