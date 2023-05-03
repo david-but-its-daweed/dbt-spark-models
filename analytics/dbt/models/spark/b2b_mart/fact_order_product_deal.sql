@@ -103,28 +103,44 @@ admins as (
     from {{ ref('dim_user_admin') }}
 ),
 
-order_owners as (
-    select distinct order_id, owner_id, email as owner_email, role as owner_role
-    from
-    (select distinct 
-        order_id,
-        last_value(owner_moderator_id) over (partition by order_id order by event_ts_msk) as owner_id
-        from {{ ref('fact_order_change') }}
-    ) o
-    left join admins a 
-    on o.owner_id = a.admin_id 
-),
 
-user_owners as (
-    select distinct user_id, owner_id, email as owner_email, role as owner_role
-    from
-    (select distinct 
-        user_id,
-        last_value(owner_moderator_id) over (partition by user_id order by event_ts_msk) as owner_id
-        from {{ ref('fact_user_change') }}
-    ) o
-    left join admins a 
-    on o.owner_id = a.admin_id 
+order_owners as (
+     select distinct o.order_id, user_id, owner_moderator_id as owner_id
+     from
+     (select distinct 
+         order_id,
+         owner_moderator_id,
+         row_number() over (partition by order_id order by event_ts_msk desc) as rn
+         from {{ ref('fact_order_change') }}
+     ) o
+     left join (select distinct user_id, order_id from {{ ref('fact_order') }}
+     where next_effective_ts_msk is null) r on o.order_id = r.order_id
+     where rn = 1
+
+ ),
+
+ user_owners as (
+     select distinct user_id, owner_moderator_id as owner_id
+     from
+     (select distinct 
+         user_id,
+         owner_moderator_id,
+         row_number() over (partition by user_id order by event_ts_msk desc) as rn
+         from {{ ref('fact_user_change') }}
+     ) o
+     where rn = 1
+ ),
+
+owners as (
+  select distinct user_id, order_id, owner_id, email as owner_email, role as owner_role
+  from
+  (
+ select distinct 
+ oo.user_id, oo.order_id, 
+ coalesce(oo.owner_id, uo.owner_id) as owner_id
+ from order_owners oo left join user_owners  uo on oo.user_id = uo.user_id
+) o left join admins a 
+     on o.owner_id = a.admin_id 
 ),
 
 users as (
@@ -173,8 +189,8 @@ select distinct
     website_form,
     estimated_date,
     estimated_gmv,
-    coalesce(oo.owner_email, uo.owner_email) as owner_email,
-    coalesce(oo.owner_role, uo.owner_role) as owner_role,
+    oo.owner_email,
+    oo.owner_role,
     deal_name,
     gmv_initial,
     rn as order_rn
@@ -184,8 +200,7 @@ left join merchant_order mo on mo.order_id = o.order_id
 left join products p on p.merchant_order_id = mo.merchant_order_id
 left join psi on p.merchant_order_id = psi.merchant_order_id and p.product_id = psi.product_id
 left join deals d on p.deal_id = d.deal_id
-left join order_owners oo on o.order_id = oo.order_id
-left join user_owners uo on i.user_id = uo.user_id
+left join owners oo on o.order_id = oo.order_id
 join users u on coalesce(i.user_id, d.user_id) = u.user_id
 where 
     (fake is null or not fake)
