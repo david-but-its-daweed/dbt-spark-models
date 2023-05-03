@@ -32,7 +32,7 @@ with accesses as (
           prefix,
           path_length,
           usage_category,
-          sum (size) / 1024 / 1024 / 1024 / 30 as items,
+          sum (size) / 1024 / 1024 / 1024 as items,
           'Gb' as item_name,
           sum (size / 1024 / 1024 / 1024 / 30 * price / (1 + coalesce (coef, 0))) as cost
       FROM platform.s3_file_usage
