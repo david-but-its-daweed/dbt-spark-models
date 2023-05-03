@@ -197,7 +197,7 @@ left join psi on p.product_id = psi.product_id and p.merchant_order_id = psi.mer
 left join problems pr on pr._id = psi._id
 where psi_status_id is not null and psi.status_id > 0)
 )
-where (lag_status != status_id or lag_status is null) and status_id != 50 and psi_start_time is not null),
+where (lag_status != status_id or lag_status is null) and status_id != 50),
 
 
 status_10 as (
