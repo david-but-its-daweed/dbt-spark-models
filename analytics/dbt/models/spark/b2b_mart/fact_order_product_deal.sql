@@ -93,8 +93,8 @@ products as (
 psi as (select distinct
 product_id,
 merchant_order_id, 
-1 as psi_conducted
-from {{ ref('fact_psi') }}
+psi_status_id
+from {{ ref('fact_order_products') }}
 ),
 
 admins as (
@@ -160,7 +160,8 @@ select distinct
     mo.merchant_order_id,
     merchant_order_friendly_id,
     p.product_id,
-    psi_conducted,
+    psi_status_id,
+    psi_status_id is not null as psi_conducted,
     product_price,
     order_price_usd as merchant_order_price,
     firstmile_channel_id,
