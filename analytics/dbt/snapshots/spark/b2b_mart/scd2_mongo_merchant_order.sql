@@ -3,11 +3,12 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='id',
+      unique_key='merchant_order_id',
 
       strategy='timestamp',
       updated_at='update_ts_msk',
-      file_format='delta'
+      file_format='delta',
+      invalidate_hard_deletes=True,
     )
 }}
 
@@ -24,7 +25,7 @@ WITH products AS
         )
 )
 
-SELECT concat_ws('-', _id, COALESCE(product_id,0), utms) as id,
+SELECT
         _id AS merchant_order_id ,
         millis_to_ts_msk(ctms)  AS created_ts_msk ,
         currency ,
@@ -40,7 +41,6 @@ SELECT concat_ws('-', _id, COALESCE(product_id,0), utms) as id,
         product_id,
         product_type,
         product_vat_rate,
---        typ as package_type,
         millis_to_ts_msk(utms)  AS update_ts_msk ,
         merchant.paymentMethodType AS payment_method_type,
         merchant.paymentMethod._id AS payment_method_id

@@ -7,45 +7,7 @@
     }
 ) }}
 
-
-with 
-products_statuses as (
-select merchant_order_id, product_id, status, event_ts_msk as event_date,
-    row_number() over (partition by merchant_order_id, product_id order by event_ts_msk desc) as status_rn
-    from
-    (select 
-        merchant_order_id,
-        product_id,
-        status,
-        event_ts_msk
-    from {{ ref('statuses_events') }}
-    where entity = 'product'
-    )
- ),
-
-products as
-(select 
-    ps.product_id, 
-    ps.merchant_order_id, 
-    psi_status_id, 
-    type,
-    max(case when status_rn = 1 then status end) as status,
-    min(case when status = 'readyForPsi' then event_date end) as ready_for_psi
-from
-(
-select id as product_id, 
-    merchOrdId as merchant_order_id, 
-    psiStatusID as psi_status_id, 
-    type 
-from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
-) p left join products_statuses ps on p.merchant_order_id = ps.merchant_order_id and p.product_id = ps.product_id
-group by ps.product_id, 
-    ps.merchant_order_id, 
-    psi_status_id, 
-    type
-),
-
-statuses as (
+with statuses as (
     select "waiting" as status, 10 as s_id
     union all 
     select "running" as status, 20 as s_id
@@ -58,22 +20,25 @@ statuses as (
 ),
 
 psi as (
-    select status, statusId as status_id, stms, _id, ctxId as merchant_order_id, scndCtxId as product_id
+select distinct
+    status, status_id, stms as time, _id, merchant_order_id, product_id, lag_status,
+    sum(case when lag_status = 40 or lag_status is null then 1 else 0 end) over (partition by merchant_order_id, product_id order by stms) as psi_number,
+    sum(case when lag_status = 40 or lag_status is null then 1 else 0 end) over (partition by merchant_order_id, product_id) as psis
+from
+(
+select 
+    status, status_id, stms, _id, merchant_order_id, product_id, 
+    lag(status_id) over (partition by merchant_order_id, product_id order by stms) as lag_status
+from 
+(
+    select distinct status, statusId as status_id, stms, _id, ctxId as merchant_order_id, scndCtxId as product_id
     from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} f
     left join statuses s on f.statusId = s.s_id
     where type = 10
+)
+)
+where status_id != lag_status or lag_status is null
 ),
-
-date_of_inspection as (
-    select merchant_order_id, product_id, unix_timestamp(Timestamp(min(col.datePayload.value)))*1000 as date_of_inspection
-from
-    (select statusId as status_id, stms, _id, ctxId as merchant_order_id, scndCtxId as product_id, explode(payloadNew)
-    from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} f
-    where type = 10
-    )
-    where col.type = 'date' and col.name = 'dateOfInspection' and col.datePayload is not null
-group by merchant_order_id, product_id
-    ),
 
 problems as (
     select _id, 
@@ -95,162 +60,121 @@ max(case when name = 'failureProblems' and problem.value = 'other' then 1 else 0
 max(case when name = 'failureProblems' and problem.value = 'other' then problem.comment end) as client_comment
 from(
 select explode(enumPayload.selectedItems) as problem, name, _id from (
-    select col.*, _id from (select explode(payloadNew), _id from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} 
+    select col.*, _id from (select explode(payloadNew), _id 
+    from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }}
           where payloadNew is not Null)
           ) where name in ('problems', 'failureProblems')
           )
           group by _id),
-
-merchant as (
+          
+psi_stat as (
     select 
-        _id as merchant_order_id, 
-        orderId as order_id,
-        merchantId as merchant_id, 
-        manDays as man_days,
-        friendlyId as merchant_order_friendly_id
-from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
-),
-
-not_jp_users AS (
-    SELECT DISTINCT order_id, friendly_id
-    FROM {{ ref('fact_user_request') }} f
-    left join 
-        (select distinct order_id, friendly_id, user_id from {{ ref('fact_order') }}) o on f.user_id = o.user_id
-    WHERE is_joompro_employee != TRUE OR is_joompro_employee IS NULL
-),
-
-table1 as (
-select * from (
-select product_id, 
-    merchant_order_id, 
-    psi_status_id,
-    product_status,
-    type,
-    status,
-    status_id,
-    time,
-    order_id,
-    merchant_id, 
-    merchant_order_friendly_id,
-    friendly_id,
-    man_days,
-    quality,
-    client_quality,
-    customs_and_logistics,
-    client_customs_and_logistics,
-    customs,
-    client_customs,
-    logistics,
-    client_logistics,
-    discrepancy,
-    client_discrepancy,
-    requirements,
-    client_requirements,
-    other,
-    comment,
-    client_other,
-    client_comment,
-    min(case when status_id = 10 then time end) over (partition by product_id, merchant_order_id) as psi_waiting_time,
-    min(case when status_id = 20 then time end) over (partition by product_id, merchant_order_id) as psi_start_time,
-    min(case when status_id = 30 then time end) over (partition by product_id, merchant_order_id) as psi_ready_time,
-    min(case when status_id = 50 then time end) over (partition by product_id, merchant_order_id) as psi_end_time,
-    max(case when current_status = 1 then status_id end) over (partition by product_id, merchant_order_id) as current_status,
-    lag(status_id) over (partition by product_id, merchant_order_id order by time) as lag_status
-from
+        product_id, 
+        merchant_order_id,
+        min(case when status_id = 10 then time end) as psi_waiting_time,
+        min(case when status_id = 20 then time end) as psi_start_time,
+        min(case when status_id = 30 then time end) as psi_ready_time,
+        min(case when status_id = 40 then time end) as psi_failed_time,
+        max(case when status_id = 50 then time end) as psi_end_time
+    from psi
+    group by 
+        product_id, 
+        merchant_order_id
+        ),
+          
+all_psi as (
+select a.*, psi_waiting_time, psi_start_time, psi_ready_time, psi_failed_time, psi_end_time
+from 
 (
-select distinct
-    p.product_id, 
-    p.merchant_order_id, 
-    m.merchant_order_friendly_id,
-    case when psi_status_id = psi._id then 1 else 0 end as current_status, 
-    psi_status_id,
-    p.status as product_status,
-    type,
-    psi.status,
-    psi.status_id,
-    stms as time,
-    m.order_id,
-    m.merchant_id, 
-    n.friendly_id,
-    m.man_days,
-    quality,
-    client_quality,
-    customs_and_logistics,
-    client_customs_and_logistics,
-    customs,
-    client_customs,
-    logistics,
-    client_logistics,
-    discrepancy,
-    client_discrepancy,
-    requirements,
-    client_requirements,
-    other,
-    comment,
-    client_other,
-    client_comment
-from merchant m 
-inner join not_jp_users n on m.order_id = n.order_id
-left join products p on m.merchant_order_id = p.merchant_order_id
-left join psi on p.product_id = psi.product_id and p.merchant_order_id = psi.merchant_order_id
-left join problems pr on pr._id = psi._id
-where psi_status_id is not null and psi.status_id > 0)
-)
-where (lag_status != status_id or lag_status is null) and status_id != 50 and psi_start_time is not null),
-
-
-status_10 as (
 select 
-    coalesce(lead(time) over (partition by product_id, merchant_order_id order by time), unix_timestamp(current_date())*1000) as lead_time,
-    row_number() over (partition by product_id, merchant_order_id order by time) as psi_number,
-    time,
-    product_id, 
-    merchant_order_id,
-    status
-from
-(select distinct
-    product_id, 
-    merchant_order_id,
-    'waiting' as status,
-    psi_start_time as time
-from table1 where status_id = 10
-union all 
-select distinct
-    product_id, 
-    merchant_order_id,
-    'fixing' as status,
-    time
-    from table1 where status_id = 40
-)
-)
+    psi.product_id, 
+    psi.merchant_order_id, 
+    psi_number,
+    psis,
+    min(case when status_id = 10 then time end) as waiting_time,
+    min(case when status_id = 20 then time end) as running_time,
+    min(case when status_id = 30 then time end) as ready_time,
+    min(case when status_id = 40 then time end) as failed_time,
+    max(case when status_id = 50 then time end) as end_time,
+    max(quality) as quality,
+    max(client_quality) as client_quality,
+    max(customs_and_logistics) as customs_and_logistics,
+    max(client_customs_and_logistics) as client_customs_and_logistics,
+    max(customs) as customs,
+    max(client_customs) as client_customs,
+    max(logistics) as logistics,
+    max(client_logistics) as client_logistics,
+    max(discrepancy) as discrepancy,
+    max(client_discrepancy) as client_discrepancy,
+    max(requirements) as requirements,
+    max(client_requirements) as client_requirements,
+    max(other) as other,
+    max(comment) as comment,
+    max(client_other) as client_other,
+    max(client_comment) as client_comment
+from psi 
+left join problems pr on pr._id = psi._id
+group by 
+    psi.product_id, 
+    psi.merchant_order_id, 
+    psi_number,
+    psis
+    ) a 
+    left join psi_stat b on a.product_id = b.product_id and a.merchant_order_id = b.merchant_order_id
+),
 
-
-select distinct product_id, 
+products as (
+    select product_id, 
     merchant_order_id, 
-    psi_status_id,
-    product_status,
-    type,
-    status,
-    current_status,
+    min(case when status = 'readyForPsi' then event_ts_msk end) as ready_for_psi
+    from
+    (select 
+        merchant_order_id,
+        product_id,
+        status,
+        event_ts_msk
+    from {{ ref('statuses_events') }}
+    where entity = 'product'
+    )
+    group by product_id, 
+    merchant_order_id
+ ),
+
+date_of_inspection as (
+    select merchant_order_id, product_id, unix_timestamp(Timestamp(min(col.datePayload.value)))*1000 as date_of_inspection
+from
+    (select statusId as status_id, stms, _id, ctxId as merchant_order_id, scndCtxId as product_id, explode(payloadNew)
+    from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }} f
+    where type = 10
+    )
+    where col.type = 'date' and col.name = 'dateOfInspection' and col.datePayload is not null
+group by merchant_order_id, product_id
+    )
+    
+
+select 
+    t.product_id, 
+    t.merchant_order_id, 
+    a.psi_status_id,
+    statuses.status as current_status,
     date(ready_for_psi) as ready_for_psi,
-    date(from_unixtime(psi_start_time/1000)) as psi_start,
+    date(from_unixtime(date_of_inspection/1000)) as psi_start,
     date(from_unixtime(psi_waiting_time/1000)) as psi_waiting,
     date(from_unixtime(psi_ready_time/1000)) as psi_ready,
+    date(from_unixtime(psi_failed_time/1000)) as psi_failed,
     date(from_unixtime(psi_end_time/1000)) as psi_end_time,
     date(from_unixtime(waiting_time/1000)) as waiting_time,
     date(from_unixtime(running_time/1000)) as running_time,
     date(from_unixtime(ready_time/1000)) as ready_time,
     int((ready_time/1000 - running_time/1000)/86400) as time_checking,
     date(from_unixtime(failed_time/1000)) as failed_time,
-    case when status = 'fixing' then int((running_time/1000 - psi_waiting_time/1000)/86400) end as fixing_time,
-    psis,
-    psis_order,
     psi_number,
+    max(psi_number) over (partition by t.merchant_order_id, t.product_id) as psis,
+    max(psi_number) over (partition by order_id) as psis_order,
     order_id,
+    order_friendly_id,
     merchant_id, 
     merchant_order_friendly_id,
-    friendly_id,
-    man_days,
     quality,
     client_quality,
     customs_and_logistics,
@@ -267,101 +191,8 @@ select distinct product_id,
     comment,
     client_other,
     client_comment
-from
-(
-select 
-    product_id, 
-    merchant_order_id, 
-    psi_status_id,
-    product_status,
-    type,
-    status,
-    status_id,
-    time,
-    current_status,
-    date_of_inspection as psi_start_time,
-    psi_ready_time,
-    psi_waiting_time,
-    psi_end_time,
-    min(status_10_time) over (partition by merchant_order_id, product_id, psi_number) as waiting_time,
-    min(case when status_id = 20 and psi_number = 1 then date_of_inspection when status_id = 20 and psi_number > 1 then time end) 
-        over (partition by merchant_order_id, product_id, psi_number) as running_time,
-    min(case when status_id = 30 then time end) over (partition by merchant_order_id, product_id, psi_number) as ready_time,
-    min(case when status_id = 40 and status_10_time < time then time end) over (partition by merchant_order_id, product_id, psi_number) as failed_time,
-    max(psi_number) over (partition by merchant_order_id, product_id) as psis,
-    max(psi_number) over (partition by order_id) as psis_order,
-    psi_number,
-    order_id,
-    merchant_id, 
-    merchant_order_friendly_id,
-    friendly_id,
-    man_days,
-    max(quality) over (partition by merchant_order_id, product_id, psi_number) as quality,
-    max(client_quality) over (partition by merchant_order_id, product_id, psi_number) as client_quality,
-    
-    max(customs_and_logistics) over (partition by merchant_order_id, product_id, psi_number) as customs_and_logistics,
-    max(client_customs_and_logistics) over (partition by merchant_order_id, product_id, psi_number) as client_customs_and_logistics,
-    
-    max(customs) over (partition by merchant_order_id, product_id, psi_number) as customs,
-    max(client_customs) over (partition by merchant_order_id, product_id, psi_number) as client_customs,
-    
-    max(logistics) over (partition by merchant_order_id, product_id, psi_number) as logistics,
-    max(client_logistics) over (partition by merchant_order_id, product_id, psi_number) as client_logistics,
-    
-    max(discrepancy) over (partition by merchant_order_id, product_id, psi_number) as discrepancy,
-    max(client_discrepancy) over (partition by merchant_order_id, product_id, psi_number) as client_discrepancy,
-    max(requirements) over (partition by merchant_order_id, product_id, psi_number) as requirements,
-    max(client_requirements) over (partition by merchant_order_id, product_id, psi_number) as client_requirements,
-    max(other) over (partition by merchant_order_id, product_id, psi_number) as other,
-    max(comment) over (partition by merchant_order_id, product_id, psi_number) as comment,
-    max(client_other) over (partition by merchant_order_id, product_id, psi_number) as client_other,
-    max(client_comment) over (partition by merchant_order_id, product_id, psi_number) as client_comment,
-    ready_for_psi
-    from
-(
-select 
-    t.product_id, 
-    t.merchant_order_id, 
-    t.psi_status_id,
-    product_status,
-    t.type,
-    s.status,
-    status_id,
-    t.time,
-    current_status,
-    psi_start_time,
-    psi_ready_time,
-    psi_waiting_time,
-    psi_end_time,
-    s.time as status_10_time,
-    date_of_inspection,
-    psi_number,
-    order_id,
-    merchant_id, 
-    merchant_order_friendly_id,
-    friendly_id,
-    man_days,
-    quality,
-    client_quality,
-    customs_and_logistics,
-    client_customs_and_logistics,
-    customs,
-    client_customs,
-    logistics,
-    client_logistics,
-    discrepancy,
-    client_discrepancy,
-    requirements,
-    client_requirements,
-    other,
-    comment,
-    client_other,
-    client_comment,
-    ready_for_psi
-from table1 t
-left join status_10 s on s.merchant_order_id = t.merchant_order_id and s.product_id = t.product_id
+from all_psi t
+left join {{ ref('fact_order_product_deal') }} a on a.merchant_order_id = t.merchant_order_id and a.product_id = t.product_id
+left join statuses on a.psi_status = statuses.s_id
 left join date_of_inspection d on d.merchant_order_id = t.merchant_order_id and d.product_id = t.product_id
 left join products p on p.merchant_order_id = t.merchant_order_id and p.product_id = t.product_id
-where s.time <= t.time and s.lead_time >= t.time
-)
-)

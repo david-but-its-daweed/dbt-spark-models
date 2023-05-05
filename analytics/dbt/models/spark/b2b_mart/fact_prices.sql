@@ -134,12 +134,17 @@ admins as (
     from {{ ref('dim_user_admin') }}
 ),
 
-users as (
-    select distinct user_id, owner_id, email as owner_email from
-    {{ ref('dim_user') }} u
+order_owners as (
+    select distinct order_id, owner_id, email as owner_email 
+    from
+    (select distinct 
+        order_id,
+        first_value(owner_moderator_id) over (partition by order_id order by event_ts_msk) as owner_id
+        from {{ ref('fact_order_change') }}
+        where status = 'manufacturing'
+    ) o
     left join admins a 
-    on u.owner_id = a.admin_id 
-    where next_effective_ts_msk is null
+    on o.owner_id = a.admin_id 
 ),
 
 prices_final as (
@@ -377,9 +382,9 @@ select distinct
         c.company_name, c.grade, c.grade_probability
 from prices p
 join all_orders o on o.order_id = p.order_id
-join users u on u.user_id = o.user_id
-left join gmv g on g.order_id = o.order_id
+join order_owners u on u.order_id = o.order_id
 left join (
-    select distinct company_name, user_id, grade, grade_probability from {{ ref('users_daily_table') }}
-    where partition_date_msk = (select max(partition_date_msk) from {{ ref('users_daily_table') }})
-) c on u.user_id = c.user_id
+     select distinct company_name, user_id, grade, grade_probability from {{ ref('users_daily_table') }}
+     where partition_date_msk = (select max(partition_date_msk) from {{ ref('users_daily_table') }})
+     ) c on o.user_id = c.user_id
+left join gmv g on g.order_id = o.order_id 

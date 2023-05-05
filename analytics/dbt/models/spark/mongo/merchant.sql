@@ -8,5 +8,7 @@ select _id as merchant_id,
        activationTimeMs as activation_time,
        name,
        cast(origin as INTEGER) as origin,
-       enabled
+       enabled,
+       disablingReason,
+       disablingNote
 from {{ source('mongo', 'core_merchants_daily_snapshot') }}

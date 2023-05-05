@@ -59,13 +59,14 @@ where rate is not null
 ),
 
 orders as (
-select product_id, merchant_order_id,
+select product_id, merchant_order_id, deal_id,
 value.priceAmountPerItem as price, 
 currency,
 value.qty
 from
 (select id as product_id, 
     merchOrdId as merchant_order_id, 
+    dealId as deal_id,
     explode(variants),
     currency
 from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
@@ -73,7 +74,7 @@ from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
 )
 
 
-select product_id, merchant_order_id, order_id, 
+select product_id, merchant_order_id, deal_id, order_id, 
 sum(price*qty*company_rate)/1000000 as amount
 from
 (
@@ -87,4 +88,4 @@ order_rates r1 on fm.order_id = r1.order_id and r1.from = currency and r1.to = '
 left join 
 order_rates r2 on fm.order_id = r2.order_id and r2.to = currency and r2.from = 'USD'
 )
-group by product_id, merchant_order_id, order_id
+group by product_id, merchant_order_id, deal_id, order_id

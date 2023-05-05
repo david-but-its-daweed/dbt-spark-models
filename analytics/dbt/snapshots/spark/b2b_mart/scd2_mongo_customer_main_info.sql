@@ -21,6 +21,11 @@ SELECT _id AS                              customer_id,
        monthlyTurnover.to              AS monthly_turnover_to,
        ownBrand                        AS own_brand,
        purchaseVolumePerMonth          AS purchase_volume_per_month,
-       yearsOfExperience               AS years_of_experience
+       yearsOfExperience               AS years_of_experience,
+       invitedByPromo                  AS invited_by_promo,
+       invitedTime                     AS invited_time,
+       isPartner                       AS is_partner,
+       gradeInfo.grade                 AS grade,
+       gradeInfo.prob                  AS grade_probability
 FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
 {% endsnapshot %}
