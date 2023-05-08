@@ -3,6 +3,7 @@
     materialized='view'
 ) }}
 
+
 with accesses as (
     select
       date,
