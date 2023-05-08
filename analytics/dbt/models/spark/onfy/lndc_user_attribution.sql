@@ -175,7 +175,7 @@ users_corrected as (
         end as campaign_corrected
     from 
         last_not_unknown_devices_partners
-    left join pharmacy.utm_campaigns_corrected
+    left join {{ref("utm_campaigns_corrected")}}
         on coalesce(lower(pharmacy.utm_campaigns_corrected.utm_campaign), '') = coalesce(lower(last_not_unknown_devices_partners.utm_campaign), '') 
         and coalesce(lower(pharmacy.utm_campaigns_corrected.utm_source), '') = coalesce(lower(last_not_unknown_devices_partners.source), '') 
 )
