@@ -24,3 +24,11 @@ seeds:
   - name: s3_price_coeffs
     config:
       schema: platform
+      
+  - name: utm_campaigns_corrected
+    config:
+      schema: pharmacy
+      
+  - name: spends_campaign_corrected
+    config:
+      schema: pharmacy
