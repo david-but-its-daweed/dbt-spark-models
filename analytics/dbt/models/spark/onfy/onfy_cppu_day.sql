@@ -116,7 +116,7 @@ ads_spends_corrected as
         sum(clicks) as clicks
     from 
         {{ source('onfy_mart', 'ads_spends') }} as united_spends
-    left join {{ref("spends_campaigns_corrected")}} as spends_campaigns_corrected
+    left join {{ref("spends_campaign_corrected")}} as spends_campaigns_corrected
         on lower(united_spends.campaign_name) = lower(spends_campaigns_corrected.campaign_name)
         and lower(united_spends.source) = lower(spends_campaigns_corrected.source)
     group by 
