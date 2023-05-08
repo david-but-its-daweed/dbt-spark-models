@@ -21,7 +21,6 @@ seeds:
     config:
       schema: platform
 
-
   - name: s3_price_coeffs
     config:
       schema: platform
