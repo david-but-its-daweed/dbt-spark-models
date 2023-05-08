@@ -165,19 +165,19 @@ users_corrected as (
         if(user_email_hash is not null, 1, 0) as is_buyer,
         lower(case 
             when last_not_unknown_devices_partners.partner = 'onfy' 
-            then coalesce(pharmacy.utm_campaigns_corrected.source_corrected, last_not_unknown_devices_partners.source)
+            then coalesce(utm_campaigns_corrected.source_corrected, last_not_unknown_devices_partners.source)
             else last_not_unknown_devices_partners.partner
         end) as source_corrected,
         case 
             when last_not_unknown_devices_partners.partner = 'onfy' 
-            then coalesce(pharmacy.utm_campaigns_corrected.campaign_corrected, last_not_unknown_devices_partners.utm_campaign)
+            then coalesce(utm_campaigns_corrected.campaign_corrected, last_not_unknown_devices_partners.utm_campaign)
             else last_not_unknown_devices_partners.partner
         end as campaign_corrected
     from 
         last_not_unknown_devices_partners
-    left join {{ref("utm_campaigns_corrected")}}
-        on coalesce(lower(pharmacy.utm_campaigns_corrected.utm_campaign), '') = coalesce(lower(last_not_unknown_devices_partners.utm_campaign), '') 
-        and coalesce(lower(pharmacy.utm_campaigns_corrected.utm_source), '') = coalesce(lower(last_not_unknown_devices_partners.source), '') 
+    left join {{ref("utm_campaigns_corrected")}} as utm_campaigns_corrected
+        on coalesce(lower(utm_campaigns_corrected.utm_campaign), '') = coalesce(lower(last_not_unknown_devices_partners.utm_campaign), '') 
+        and coalesce(lower(utm_campaigns_corrected.utm_source), '') = coalesce(lower(last_not_unknown_devices_partners.source), '') 
 )
 
 select *
