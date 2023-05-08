@@ -27,8 +27,8 @@ seeds:
       
   - name: utm_campaigns_corrected
     config:
-      schema: pharmacy
+      schema: onfy
       
   - name: spends_campaign_corrected
     config:
-      schema: pharmacy
+      schema: onfy
