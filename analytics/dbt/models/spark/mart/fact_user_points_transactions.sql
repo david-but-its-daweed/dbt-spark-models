@@ -20,4 +20,4 @@ SELECT _id                                                                      
        badOrderId                                                                             as bad_order_id,
        index,
        pending
-FROM mongo.user_points_transactions_daily_snapshot
+FROM {{ source('mongo', 'user_points_transactions_daily_snapshot') }}
