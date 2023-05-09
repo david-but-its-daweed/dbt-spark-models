@@ -21,3 +21,4 @@ SELECT _id                                                                      
        index,
        pending
 FROM {{ source('mongo', 'user_points_transactions_daily_snapshot') }}
+
