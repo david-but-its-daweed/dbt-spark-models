@@ -21,4 +21,5 @@ SELECT _id                                                                      
        index,
        pending
 FROM {{ source('mongo', 'user_points_transactions_daily_snapshot') }}
+where to_date(cast(cast(conv(substring(_id, 0, 8), 16, 10) as bigint) + 10800 as timestamp)) < to_date(NOW())
 
