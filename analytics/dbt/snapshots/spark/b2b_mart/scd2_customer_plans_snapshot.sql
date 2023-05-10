@@ -3,7 +3,7 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='_id',
+      unique_key='uid',
 
       strategy='timestamp',
       updated_at='utms',
