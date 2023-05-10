@@ -5,9 +5,9 @@
        target_schema='b2b_mart',
        unique_key='_id',
 
-       strategy='timestamp',
-       updated_at='utms',
        file_format='delta'
+       strategy='check',
+       check_cols='all',
      )
  }}
 
