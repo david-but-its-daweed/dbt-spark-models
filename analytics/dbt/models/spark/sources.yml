@@ -79,6 +79,7 @@ sources:
       - name: b2b_core_issues_daily_snapshot
       - name: b2b_core_customer_plans_daily_snapshot
       - name: babylone_joom_agents_daily_snapshot
+      - name: user_points_transactions_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance

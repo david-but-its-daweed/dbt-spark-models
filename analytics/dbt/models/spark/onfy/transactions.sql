@@ -14,7 +14,7 @@ WITH numbered_purchases AS (
         pharmacy_landing.order.id as order_id, 
         rank() over (partition by pharmacy_landing.order.user_email_hash order by pharmacy_landing.order.created asc) as purchase_num
     from 
-        pharmacy_landing.order
+        {{ source('pharmacy_landing', 'order') }}
 ),
 
 order_data AS (
@@ -79,14 +79,14 @@ order_data AS (
             ELSE 0
         END AS psp_commission_refund_perc
     FROM
-        onfy_mart.transactions
-        JOIN pharmacy_landing.order
+        {{ source('onfy_mart', 'transactions') }}
+        JOIN {{ source('pharmacy_landing', 'order') }}
             ON pharmacy_landing.order.id = onfy_mart.transactions.order_id
         JOIN numbered_purchases
             ON numbered_purchases.order_id = pharmacy_landing.order.id
-        LEFT JOIN pharmacy_landing.device
+        LEFT JOIN {{ source('pharmacy_landing', 'device') }}
             ON pharmacy_landing.device.id = pharmacy_landing.order.device_id
-        LEFT JOIN onfy.lndc_user_attribution
+        LEFT JOIN {{ source('onfy', 'lndc_user_attribution') }}
             ON onfy.lndc_user_attribution.user_email_hash = onfy_mart.transactions.user_email_hash
     GROUP BY 
         pharmacy_landing.order.id,
@@ -173,12 +173,12 @@ transactions_eur AS (
         onfy_mart.transactions.price,
         onfy_mart.transactions.currency
     FROM 
-        onfy_mart.transactions 
+        {{ source('onfy_mart', 'transactions') }}
         LEFT JOIN order_data
             ON order_data.order_id = onfy_mart.transactions.order_id
-        LEFT JOIN pharmacy_landing.order_parcel
+        LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }}
             ON onfy_mart.transactions.order_parcel_id = pharmacy_landing.order_parcel.id
-        LEFT JOIN pharmacy_landing.store
+        LEFT JOIN {{ source('pharmacy_landing', 'store') }}
             ON pharmacy_landing.store.id = pharmacy_landing.order_parcel.store_id
         UNION
     SELECT * FROM psp_initial
@@ -205,10 +205,10 @@ transactions_usd AS (
         'USD' as currency
     FROM
         transactions_eur
-        LEFT JOIN mart.dim_currency_rate eur
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} eur
             ON eur.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
             AND eur.currency_code = 'EUR'
-        LEFT JOIN mart.dim_currency_rate usd
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} usd
             ON usd.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
             AND usd.currency_code = 'USD'
 )
