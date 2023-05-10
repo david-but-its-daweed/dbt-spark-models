@@ -1,4 +1,4 @@
-{% snapshot scd2_amo_calls %}
+{% snapshot scd2_mongo_amo_calls %}
 
 {{
     config(
