@@ -7,7 +7,8 @@
 
       strategy='timestamp',
       updated_at='utms',
-      file_format='delta'
+      file_format='delta',
+      invalidate_hard_deletes=True,
     )
 }}
 
