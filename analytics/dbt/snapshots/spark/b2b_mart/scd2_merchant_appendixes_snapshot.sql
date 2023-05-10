@@ -8,6 +8,7 @@
        file_format='delta',
        strategy='check',
        check_cols='all',
+       invalidate_hard_deletes=True,
      )
  }}
 
