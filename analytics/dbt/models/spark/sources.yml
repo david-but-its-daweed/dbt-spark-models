@@ -132,6 +132,8 @@ sources:
     tables:
       - name: lndc_user_attribution
         description: Last paid source for a user / device
+      - name: sources
+        description: Traffic sources by device and session date
   - name: merchant
     tables:
       - name: dim_merchant_payment_channel
