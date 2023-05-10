@@ -1,4 +1,4 @@
-{% snapshot scd2_admin_users_snapshot %}
+{% snapshot scd2_orders_v2_snapshot %}
 
 {{
     config(
@@ -14,5 +14,5 @@
 
 
 SELECT *
-FROM {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
 {% endsnapshot %}

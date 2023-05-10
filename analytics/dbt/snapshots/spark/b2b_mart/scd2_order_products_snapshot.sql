@@ -1,18 +1,18 @@
-{% snapshot scd2_admin_users_snapshot %}
+{% snapshot scd2_order_products_snapshot %}
 
 {{
     config(
       target_schema='b2b_mart',
       unique_key='_id',
 
-      strategy='timestamp',
-      updated_at='utms',
       file_format='delta',
+      strategy='check',
+      check_cols='all',
       invalidate_hard_deletes=True,
     )
 }}
 
 
 SELECT *
-FROM {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
 {% endsnapshot %}
