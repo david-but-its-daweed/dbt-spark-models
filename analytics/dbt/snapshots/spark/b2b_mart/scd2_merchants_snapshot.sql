@@ -6,7 +6,7 @@
          unique_key='_id',
 
          strategy='timestamp',
-         updated_at='utms',
+         updated_at='updatedTimeMs',
          file_format='delta'
        )
    }}
