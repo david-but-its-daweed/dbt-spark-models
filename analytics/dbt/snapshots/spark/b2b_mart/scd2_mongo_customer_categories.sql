@@ -1,26 +1,30 @@
-{% snapshot scd2_mongo_customer_categories %}
+{{ config(
+    schema='b2b_mart',
+    materialized='view',
+    meta = {
+      'team': 'general_analytics',
+      'bigquery_load': 'true'
+    }
+) }}
 
-{{
-    config(
-      target_schema='b2b_mart',
-      unique_key='id',
-
-      strategy='timestamp',
-      updated_at='update_ts_msk',
-      file_format='delta'
-    )
-}}
 
 SELECT concat_ws('-', customer_id, COALESCE(category_id,0), utms) as id,
     customer_id,
     update_ts_msk,
-    category_id
+    category_id,
+    dbt_scd_id,
+    dbt_updated_at,
+    dbt_valid_from,
+    dbt_valid_to
 FROM (
     SELECT
        _id                              AS customer_id,
        utms,
        millis_to_ts_msk(utms)           AS update_ts_msk,
-        explode(catIds)                 AS category_id
-    FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
+        explode(catIds)                 AS category_id,
+        dbt_scd_id,
+        dbt_updated_at,
+        dbt_valid_from,
+        dbt_valid_to
+    FROM {{ ref('scd2_customers_snapshot') }}
  )
-    {% endsnapshot %}
