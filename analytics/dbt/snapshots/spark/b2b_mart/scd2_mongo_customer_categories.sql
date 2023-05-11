@@ -1,11 +1,12 @@
 {{ config(
     schema='b2b_mart',
-    materialized='view',
+    materialized='table',
+    file_format='parquet',
     meta = {
-      'team': 'general_analytics',
-      'bigquery_load': 'true'
+      'bigquery_load': 'false'
     }
 ) }}
+
 
 
 SELECT concat_ws('-', customer_id, COALESCE(category_id,0), utms) as id,
