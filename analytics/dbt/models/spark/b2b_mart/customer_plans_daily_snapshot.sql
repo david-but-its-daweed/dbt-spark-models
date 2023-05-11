@@ -17,4 +17,5 @@ distinct
             egmv.amount/1000000 as plan,
             uid as user_id,
             date('{{ var("start_date_ymd") }}') as partition_date_msk
-from {{ source('mongo', 'b2b_core_customer_plans_daily_snapshot') }}
+from {{ ref('scd2_customer_plans_snapshot') }}
+where dbt_valid_to is null
