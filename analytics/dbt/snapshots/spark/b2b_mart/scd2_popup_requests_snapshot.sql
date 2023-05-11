@@ -3,7 +3,7 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='callId',
+      unique_key='_id',
 
       file_format='delta',
       strategy='check',
