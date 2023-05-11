@@ -69,9 +69,9 @@ sources as
         {{ source('onfy', 'lndc_user_attribution') }} as sources
     join first_second_purchases 
         on first_second_purchases.user_email_hash = sources.user_email_hash
-    left join pharmacy_landing.device as first_purchase_device
+    left join {{ source('pharmacy_landing', 'device') }} as first_purchase_device
         on first_purchase_device.id = first_second_purchases.first_purchase_device_id
-    left join pharmacy_landing.device as second_purchase_device
+    left join {{ source('pharmacy_landing', 'device') }} as second_purchase_device
         on second_purchase_device.id = first_second_purchases.second_purchase_device_id
 ),
 
@@ -100,14 +100,14 @@ ads_spends_corrected as
         lower(united_spends.campaign_platform) as campaign_platform,
         case 
             when united_spends.partner = 'onfy' 
-            then lower(coalesce(pharmacy.spends_campaigns_corrected.source, united_spends.source, 'Not_from_dict'))
+            then lower(coalesce(spends_campaigns_corrected.source, united_spends.source, 'Not_from_dict'))
             when lower(united_spends.partner) like 'ohm%' or lower(united_spends.source) like 'ohm%' then 'ohm'
             when united_spends.partner like '%adcha%' then 'adchampagne'
             else united_spends.partner
         end as source_corrected,
         case 
             when united_spends.partner = 'onfy' 
-            then coalesce (pharmacy.spends_campaigns_corrected.campaign_corrected, united_spends.campaign_name, 'Not_from_dict')
+            then coalesce (spends_campaigns_corrected.campaign_corrected, united_spends.campaign_name, 'Not_from_dict')
             when lower(united_spends.partner) like 'ohm%' or lower(united_spends.source) like 'ohm%' then 'ohm'
             when united_spends.partner like '%adcha%' then 'adchampagne'
             else united_spends.partner
@@ -116,9 +116,9 @@ ads_spends_corrected as
         sum(clicks) as clicks
     from 
         {{ source('onfy_mart', 'ads_spends') }} as united_spends
-    left join pharmacy.spends_campaigns_corrected
-        on lower(united_spends.campaign_name) = lower(pharmacy.spends_campaigns_corrected.campaign_name)
-        and lower(united_spends.source) = lower(pharmacy.spends_campaigns_corrected.source)
+    left join {{ref("spends_campaign_corrected")}} as spends_campaigns_corrected
+        on lower(united_spends.campaign_name) = lower(spends_campaigns_corrected.campaign_name)
+        and lower(united_spends.source) = lower(spends_campaigns_corrected.source)
     group by 
         united_spends.campaign_date_utc,
         united_spends.partner,

@@ -12,7 +12,7 @@ WITH first_call AS (
     SELECT 
         lead_id,
         MIN(call_ts_msk) AS first_call_ts_msk
-    FROM {{ ref('scd2_amo_calls') }}
+    FROM {{ ref('scd2_mongo_amo_crm_calls') }}
     GROUP BY lead_id
 )
 
@@ -32,5 +32,5 @@ SELECT
   skorozvon_id,
   TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
   TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
-FROM {{ ref('scd2_amo_calls') }} t
+FROM {{ ref('scd2_mongo_amo_crm_calls') }} t
 LEFT JOIN first_call f ON t.lead_id = f.lead_id
