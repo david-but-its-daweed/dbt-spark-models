@@ -7,7 +7,7 @@
 
        file_format='delta',
        strategy='check',
-       check_cols='selectedPaymentMethod',
+       check_cols=['selectedPaymentMethod'],
        invalidate_hard_deletes=True,
      )
  }}
