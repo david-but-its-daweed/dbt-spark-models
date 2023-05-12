@@ -6,7 +6,7 @@
       unique_key='_id',
 
       file_format='delta',
-      strategy='check',
+      strategy=['brand', 'cstmzbl', 'isFocused', 'reducedDuty', 'supplierLink', 'supplierProductLink', 'trMrk'],
       check_cols='all',
       invalidate_hard_deletes=True,
     )
