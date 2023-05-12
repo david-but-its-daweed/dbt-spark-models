@@ -6,8 +6,8 @@
       unique_key='_id',
 
       file_format='delta',
-      strategy=['brand', 'cstmzbl', 'isFocused', 'reducedDuty', 'supplierLink', 'supplierProductLink', 'trMrk'],
-      check_cols='all',
+      strategy='check',
+      check_cols=['brand', 'cstmzbl', 'isFocused', 'reducedDuty', 'supplierLink', 'supplierProductLink', 'trMrk'],
       invalidate_hard_deletes=True,
     )
 }}
