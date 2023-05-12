@@ -20,10 +20,10 @@ customer_plans AS (
         then CAST(plan AS INT) ELSE 0 END) AS plan,
         MAX(case when DATE(quarter) = DATE(DATE_TRUNC('QUARTER', partition_date_msk) - INTERVAL 3 MONTH)
         then CAST(plan AS INT) ELSE 0 END) AS plan_last_quarter
-    FROM {{ source('b2b_mart', 'customer_plans_daily_snapshot') }}
+    FROM {{ ref('customer_plans_daily_snapshot') }}
     WHERE
         partition_date_msk = (
-            SELECT MAX(partition_date_msk) FROM {{ source('b2b_mart', 'customer_plans_daily_snapshot') }}
+            SELECT MAX(partition_date_msk) FROM {{ ref('customer_plans_daily_snapshot') }}
         )
 ),
 
@@ -34,10 +34,10 @@ user_admin_plans AS (
         then CAST(plan AS INT) ELSE 0 END) AS plan,
         MAX(case when DATE(quarter) = DATE(DATE_TRUNC('QUARTER', partition_date_msk) - INTERVAL 3 MONTH)
         then CAST(plan AS INT) ELSE 0 END) AS plan_last_quarter
-    FROM {{ source('b2b_mart', 'user_admin_plans') }}
+    FROM {{ ref('user_admin_plans') }}
     WHERE
         partition_date_msk = (
-            SELECT MAX(partition_date_msk) FROM {{ source('b2b_mart', 'customer_plans_daily_snapshot') }}
+            SELECT MAX(partition_date_msk) FROM {{ ref('customer_plans_daily_snapshot') }}
         )
 ),
 
@@ -55,10 +55,10 @@ customers AS (
         grade_probability,
         MAX(gmv_year) AS gmv_year,
         MAX(gmv_quarter) AS gmv_quarter
-    FROM {{ source('b2b_mart', 'users_daily_table') }}
+    FROM {{ ref('users_daily_table') }}
     WHERE
         partition_date_msk = (
-            SELECT MAX(partition_date_msk) FROM {{ source('b2b_mart', 'users_daily_table') }}
+            SELECT MAX(partition_date_msk) FROM {{ ref('users_daily_table') }}
         )
         AND owner_email IS NOT NULL AND admin_status = 'current admin'
     GROUP BY
@@ -82,10 +82,10 @@ gmv AS (
         COALESCE(grade, 'unknown') AS grade,
         SUM(CASE WHEN date_payed >= DATE(DATE_TRUNC('QUARTER', partition_date_msk)) THEN gmv_user_admin ELSE 0 END) AS gmv_fact,
         SUM(CASE WHEN date_payed >= DATE(DATE_TRUNC('QUARTER', partition_date_msk) - INTERVAL 3 MONTH) THEN gmv_user_admin ELSE 0 END) AS gmv_fact_last_quarter
-    FROM {{ source('b2b_mart', 'users_daily_table') }}
+    FROM {{ ref('users_daily_table') }}
     WHERE
         partition_date_msk = (
-            SELECT MAX(partition_date_msk) FROM {{ source('b2b_mart', 'users_daily_table') }}
+            SELECT MAX(partition_date_msk) FROM {{ ref('users_daily_table') }}
         )
         AND owner_email IS NOT NULL
     GROUP BY
@@ -108,8 +108,8 @@ deals AS (
         case when status_int >= 10 and status_int <= 50 then 'Upsale'
         when status_int >= 60 and status_int <= 70 then 'Forecast'
         when status_int = 80 then 'Commited' end as status
-    FROM {{ source('b2b_mart', 'fact_deals') }}
-    WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM {{ source('b2b_mart', 'fact_deals') }})
+    FROM {{ ref('fact_deals') }}
+    WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM {{ ref('fact_deals') }})
 ),
 
 
@@ -222,7 +222,6 @@ final_kam AS (
 
     FROM forecast_kam AS c
     LEFT JOIN fact_kam AS f ON f.owner_email = c.owner_email and c.predicted = f.predicted
-    WHERE n.deal_id IS NULL AND n.user_id IS NULL AND n.user_grade IS NULL
 )
 
 
