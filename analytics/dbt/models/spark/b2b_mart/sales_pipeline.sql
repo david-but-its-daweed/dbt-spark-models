@@ -144,7 +144,7 @@ final_users AS (
         d.commited,
         g.gmv_fact AS fact,
         COALESCE(cp.plan, 0) AS plan,
-        plan > 0 as predicted,
+        COALESCE(cp.plan, 0) > 0 as predicted,
         'clients' AS type
     FROM customers AS c
     LEFT JOIN gmv AS g ON c.user_id = g.user_id AND c.owner_email = g.owner_email
@@ -217,11 +217,11 @@ final_kam AS (
         c.commited,
         f.fact AS fact,
         COALESCE(f.plan, 0) AS plan,
-        plan > 0 as predicted,
+        COALESCE(f.predicted, false) as predicted,
         'KAM' AS type
 
     FROM forecast_kam AS c
-    LEFT JOIN fact_kam AS f ON f.owner_email = c.owner_email and c.predicted = f.predicted
+    LEFT JOIN fact_kam AS f ON f.owner_email = c.owner_email and COALESCE(c.predicted, false) = COALESCE(f.predicted, false)
 )
 
 
