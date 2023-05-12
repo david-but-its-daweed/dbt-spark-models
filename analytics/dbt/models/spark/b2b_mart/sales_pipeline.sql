@@ -82,7 +82,8 @@ gmv AS (
         owner_role,
         COALESCE(grade, 'unknown') AS grade,
         SUM(CASE WHEN date_payed >= DATE(DATE_TRUNC('QUARTER', partition_date_msk)) THEN gmv_user_admin ELSE 0 END) AS gmv_fact,
-        SUM(CASE WHEN date_payed >= DATE(DATE_TRUNC('QUARTER', partition_date_msk) - INTERVAL 3 MONTH) THEN gmv_user_admin ELSE 0 END) AS gmv_fact_last_quarter
+        SUM(CASE WHEN date_payed >= DATE(DATE_TRUNC('QUARTER', partition_date_msk) - INTERVAL 3 MONTH)
+            AND date_payed < DATE(DATE_TRUNC('QUARTER', partition_date_msk)) THEN gmv_user_admin ELSE 0 END) AS gmv_fact_last_quarter
     FROM {{ ref('users_daily_table') }}
     WHERE
         partition_date_msk = (
