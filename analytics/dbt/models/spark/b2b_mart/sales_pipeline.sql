@@ -11,7 +11,6 @@
     }
 ) }}
 
-
 WITH 
 customer_plans AS (
     SELECT
@@ -25,6 +24,7 @@ customer_plans AS (
         partition_date_msk = (
             SELECT MAX(partition_date_msk) FROM {{ ref('customer_plans_daily_snapshot') }}
         )
+        GROUP by user_id
 ),
 
 user_admin_plans AS (
@@ -39,6 +39,7 @@ user_admin_plans AS (
         partition_date_msk = (
             SELECT MAX(partition_date_msk) FROM {{ ref('customer_plans_daily_snapshot') }}
         )
+     GROUP by moderator_id
 ),
 
 customers AS (
@@ -149,7 +150,6 @@ final_users AS (
     LEFT JOIN gmv AS g ON c.user_id = g.user_id AND c.owner_email = g.owner_email
     LEFT JOIN forecast_user AS d ON c.user_id = d.user_id
     LEFT JOIN customer_plans AS cp ON c.user_id = cp.user_id
-    WHERE n.deal_id IS NULL
 ),
 
 owners AS (
@@ -163,9 +163,9 @@ forecast_kam AS (
     SELECT
         owner_email,
         owner_role,
-        sum(case when status = 'Upsale' then estimated_gmv else 0 end) as upsale,
-        sum(case when status = 'Forecast' then estimated_gmv else 0 end) as forecast,
-        sum(case when status = 'Commited' then estimated_gmv else 0 end) as commited,
+        sum(upsale) as upsale,
+        sum(forecast) as forecast,
+        sum(commited) as commited,
         plan > 0 as predicted
     FROM final_users
     GROUP BY
@@ -210,12 +210,12 @@ final_kam AS (
         NULL AS gmv_quarter,
         '' AS validation_status,
         '' AS reject_reason,
-        f.gmv_fact_last_quarter AS fact_last_quarter,
+        f.fact_last_quarter AS fact_last_quarter,
         COALESCE(f.plan_last_quarter, 0) AS plan_last_quarter,
-        d.upsale,
-        d.forecast,
-        d.commited,
-        f.gmv_fact AS fact,
+        c.upsale,
+        c.forecast,
+        c.commited,
+        f.fact AS fact,
         COALESCE(f.plan, 0) AS plan,
         plan > 0 as predicted,
         'KAM' AS type
