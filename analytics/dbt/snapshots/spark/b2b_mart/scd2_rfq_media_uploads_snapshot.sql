@@ -7,7 +7,7 @@
 
        file_format='delta',
        strategy='check',
-       check_cols='all',
+       check_cols=['createdTimeMs'],
        invalidate_hard_deletes=True,
      )
  }}
