@@ -20,7 +20,8 @@
                 from {{source('platform', 'table_locations')}})
 
 select usage.*,
-       full_table_name,
+       db,
+       table_name,
        usage.prefix_parts  as usage_parts,
        tables.prefix_parts as tables_parts
 from usage
