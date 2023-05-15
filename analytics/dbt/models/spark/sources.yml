@@ -108,6 +108,8 @@ sources:
   - name: platform
     tables:
       - name: aws_service_costs
+      - name: s3_file_usage
+      - name: table_locations
       - name: s3_costs
   - name: pharmacy
     tables:
