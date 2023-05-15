@@ -1,15 +1,15 @@
 slo_id,business_name,owner,alert_channels,expected_time_utc_hours_str,description,slo_type,target_sli,technical_alert_channels
 slo_analytics_reports,Time reports at analytics.joom.ai,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Time report in analytics.joom.ai,platform,80,#analytics-achtung
 slo_jl_external_cube,JL External Cube,@yushkov,#jl-etl-monitoring,7,it is in the report which is viewed by our team every morning,mart,0,
-slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Overview report in analytics.joom.ai for Marketplace columns,platform,80,#analytics-achtung
-slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Overview report in analytics.joom.ai for B2B columns,platform,0,#analytics-achtung
-slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Overview report in analytics.joom.ai for Onfy columns,platform,0,#analytics-achtung
-slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Overview report in analytics.joom.ai for Pro columns,platform,0,#analytics-achtung
-slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,platform,0,#analytics-achtung
-slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,6,used in Overview report in analytics.joom.ai for Joompay columns,platform,0,#analytics-achtung
+slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Marketplace columns,platform,80,#analytics-achtung
+slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for B2B columns,platform,0,#analytics-achtung
+slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Onfy columns,platform,0,#analytics-achtung
+slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Pro columns,platform,0,#analytics-achtung
+slo_overview_yappi,Yappi columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Payments Yappi columns,platform,0,#analytics-achtung
+slo_overview_joompay,Joompay columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Joompay columns,platform,0,#analytics-achtung
 slo_pnl,PnL report,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,9,PnL report data https://analytics.joom.ai/pnl/profit_by_day,platform,80,#analytics-achtung
 slo_pivots,Pivot tables,@leonid.enov,#category-analytics-alerts,8,Data for pivot tables,report,0,#category-analytics-alerts
-slo_istaff_report,Staff,@espander @gusev @gburg,#slo-monitoring,7,Data for Staff report https://secure.holistics.io/dashboards/v3/54269-istaff,report,80,
+slo_istaff_report,iStaff,@espander @gusev @gburg,#slo-monitoring,7,Data for iStaff report https://secure.holistics.io/dashboards/v3/54269-istaff,report,80,
 slo_gold,Gold,@gusev,#slo-monitoring,7,Gold-dataset,mart,80,
 slo_jm_base_tables,JM Main Tables,@gburg,#slo-monitoring,7,Joom Marketplace main tables,mart,80,
 slo_jl_base_tables,JL Main Tables,@e.kotsegubov,#slo-monitoring,7,Joom Logistics main tables,mart,80,
