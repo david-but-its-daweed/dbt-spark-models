@@ -26,7 +26,8 @@ select usage.*,
        tables.prefix_parts as tables_parts
 from usage
          left join tables
-                   on tables.bucket = usage.bucket and tables.prefix_parts[1] = usage.prefix_parts[1]
+                   on tables.bucket = usage.bucket and tables.prefix_parts[0] = usage.prefix_parts[0]
+                       and (tables.prefix_parts[1] = usage.prefix_parts[1] or tables.prefix_parts[1] is null)
                        and (tables.prefix_parts[2] = usage.prefix_parts[2] or tables.prefix_parts[2] is null)
                        and (tables.prefix_parts[3] = usage.prefix_parts[3] or tables.prefix_parts[3] is null)
                        and (tables.prefix_parts[4] = usage.prefix_parts[4] or tables.prefix_parts[4] is null)
