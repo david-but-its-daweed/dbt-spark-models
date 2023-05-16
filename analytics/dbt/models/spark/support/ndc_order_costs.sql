@@ -23,9 +23,9 @@ SELECT
     CASE WHEN t.costs.merchantRevenueInitial.ccy = 'EUR' THEN t.costs.merchantRevenueInitial.amount * (b.rate / a.rate)
         ELSE t.costs.merchantRevenueInitial.amount END AS revenue_initial
 from {{ source('mongo', 'finance_order_costs_daily_snapshot') }} AS t
-LEFT JOIN {{ source('support', 'cbr_currency_rate') }} AS a ON CURRENT_DATE() = a.partition_date
+LEFT JOIN support.cbr_currency_rate AS a ON CURRENT_DATE() = a.partition_date
     AND a.to = 'USD'
-LEFT JOIN {{ source('support', 'cbr_currency_rate') }} AS b ON CURRENT_DATE() = b.partition_date
+LEFT JOIN support.cbr_currency_rate AS b ON CURRENT_DATE() = b.partition_date
     AND b.to = 'EUR'
 LEFT JOIN mart.dim_merchant AS c ON t.merchantId = c.merchant_id
 WHERE
