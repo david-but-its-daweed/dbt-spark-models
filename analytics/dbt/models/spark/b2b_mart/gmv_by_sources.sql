@@ -138,6 +138,12 @@ after_second_qrt_new_order AS
       a.owner_role
 ),
 
+country as (
+    select distinct user_id, coalesce(country, "RU") as country
+    from {{ ref('dim_user') }}
+    where next_effective_ts_msk is null
+),
+
 users as (
     select distinct user_id, day, client
     from 
@@ -170,6 +176,7 @@ SELECT
     a.type,
     a.campaign,
     a.user_id, 
+    c.country,
     ad.email as owner_email,
     ad.owner_role as owner_role,
     a.first_order,
@@ -184,4 +191,5 @@ SELECT
     left join users on a.user_id = users.user_id and a.t = users.day
     left join users_owner uo on a.user_id = uo.user_id and a.t = uo.day
     left join admin ad on uo.owner_moderator_id = ad.admin_id
+    left join country c on a.user_id = c.user_id
 WHERE gmv_initial > 0
