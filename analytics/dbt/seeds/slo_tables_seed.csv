@@ -10,8 +10,6 @@ slo_overview_marketplace,cube.time_orders_additional_cube_2_days,spark
 slo_overview_logistics,cube.jl_external_cube_v10_days,spark
 slo_overview_onfy,cube.onfy_order_cube_v5_days,spark
 slo_overview_pro,cube.pro_order_cube_v6_days,spark
-slo_overview_yappi,cube.yappi_payment_orders_cube_days,spark
-slo_overview_joompay,cube.joompay_overview_v1_days,spark
 slo_pnl,cube.profit,spark
 slo_pivots,odbc.orders_sheet,bq
 slo_pivots,odbc.products_current_sheet,bq
