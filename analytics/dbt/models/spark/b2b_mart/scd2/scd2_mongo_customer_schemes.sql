@@ -21,7 +21,7 @@ FROM (
         _id                          AS customer_id,
        utms,
        millis_to_ts_msk(utms)       AS update_ts_msk,
-       explode(schemes)             AS schema_id
+       explode(schemes)             AS schema_id,
        dbt_scd_id,
        dbt_updated_at,
        dbt_valid_from,
