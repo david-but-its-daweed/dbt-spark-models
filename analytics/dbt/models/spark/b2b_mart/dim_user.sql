@@ -28,7 +28,7 @@ SELECT
   amo_crm_id,
   amo_id,
   invited_by_promo,
-  isPartner as is_partner,
+  is_partner as is_partner,
   first_name,
   last_name,
   middle_name,
