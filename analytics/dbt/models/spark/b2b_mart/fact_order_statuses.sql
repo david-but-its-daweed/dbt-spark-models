@@ -8,10 +8,11 @@
 ) }}
 
 select distinct 
-order_id,
-event_ts_msk, 
+    order_id,
+    event_ts_msk, 
     subStatus as sub_status, 
-    status
+    status,
+    row_number() over (partition by order_id order by event_ts_msk desc) = 1 as current_status
     from
 (select order_id, 
     event_ts_msk, 
