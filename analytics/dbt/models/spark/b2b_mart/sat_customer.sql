@@ -26,6 +26,11 @@ SELECT customer_id,
        own_brand,
        purchase_volume_per_month,
        years_of_experience,
+       invited_by_promo,
+       invited_time,
+       is_partner,
+       grade,
+       grade_probability,
        TIMESTAMP(dbt_valid_from) as effective_ts_msk,
        TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
 FROM {{ ref('scd2_mongo_customer_main_info') }} t

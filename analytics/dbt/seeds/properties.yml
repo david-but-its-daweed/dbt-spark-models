@@ -8,3 +8,27 @@ seeds:
   - name: slo_details_seed
     config:
       schema: platform
+  
+  - name: product_outliers_seed
+    config:
+      schema: mart
+
+  - name: aws_pricing
+    config:
+      schema: platform
+
+  - name: storage_class_to_usage_type
+    config:
+      schema: platform
+
+  - name: s3_price_coeffs
+    config:
+      schema: platform
+      
+  - name: utm_campaigns_corrected
+    config:
+      schema: onfy
+      
+  - name: spends_campaign_corrected
+    config:
+      schema: onfy

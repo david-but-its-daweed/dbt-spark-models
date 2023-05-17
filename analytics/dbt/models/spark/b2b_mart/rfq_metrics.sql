@@ -21,7 +21,8 @@ orders AS (
         o.order_id,
         o.created_ts_msk,
         o.friendly_id,
-        o.user_id
+        o.user_id,
+        o.min_manufactured_ts_msk
     FROM {{ ref('fact_order') }} AS o
     LEFT JOIN requests AS r ON o.request_id = r.request_id
     WHERE TRUE
@@ -31,12 +32,45 @@ orders AS (
 ),
 
 internal_products as (
+    select product_id, order_id, product_type, merchant_id, user_id,
+        row_number() over (partition by user_id, product_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
+                as user_product_number,
+        rank() over (partition by user_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
+                as user_order_number,
+        rank() over (partition by user_id, merchant_id order by min_manufactured_ts_msk is null, min_manufactured_ts_msk) 
+                as user_merchant_number
+        from
+    (
+    select distinct * 
+    from 
+    (SELECT DISTINCT
+        product_id, 
+        mo.order_id, 
+        o.user_id, 
+        mo.merchant_id,
+        max(type) over (partition by product_id) as product_type,
+        o.min_manufactured_ts_msk
+    FROM (
+        select order_id, merchant_order_id, merchant_id
+        from {{ ref('fact_merchant_order') }}
+        ) mo
+    LEFT JOIN (
+        select _id as product_id, type, merchOrdId as merchant_order_id
+        from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
+        ) op on mo.merchant_order_id = op.merchant_order_id
+    LEFT JOIN orders o on o.order_id = mo.order_id
+    union all 
     SELECT DISTINCT
-        product_id, mo.order_id, max(product_type) over (partition by product_id) as product_type,
-         row_number() over (partition by o.user_id, mo.product_id order by mo.min_manufactured_ts_msk is null, mo.min_manufactured_ts_msk) as user_product_number
+        product_id, mo.order_id, o.user_id, 
+        merchant_id,
+        max(product_type) over (partition by product_id) as product_type,
+        o.min_manufactured_ts_msk
     FROM {{ ref('fact_merchant_order') }} mo
     LEFT JOIN orders o on o.order_id = mo.order_id
-    WHERE next_effective_ts_msk IS NULL
+    WHERE next_effective_ts_msk IS NULL and product_id is not null
+    )
+)
+    
 ),
 
 
@@ -110,6 +144,7 @@ rfq as (SELECT
     product_id
 FROM rfq_requests AS rq
 LEFT JOIN response AS rp ON rq.rfq_request_id = rp.rfq_request_id
+       and months_between(rp.response_created_ts_msk, rq.request_sent_ts_msk) <= 3
 ),
 
 price as (
@@ -202,6 +237,13 @@ orders_hist AS (
         current_status,
         current_sub_status,
         owner_role
+),
+
+merchants AS (
+select distinct _id as merchant_id, companyName as company_name, name, 
+    DATE(TIMESTAMP_MILLIS(createdTimeMs)) as created_time
+    from {{ source('b2b_mart', 'dim_merchant') }} m
+    where next_effective_ts >= '3030-01-01' 
 )
 
 
@@ -225,13 +267,16 @@ select
     rfq_response_ts_msk,
     manufacturing_ts_msk,
     cancelled_ts_msk,
+    order_product,
+    rfq_product,
     owner_role,
     converted,
     rfq_converted_products,
     order_products,
     rfq_products,
     documents_attached,
-    merchant_id,
+    rfq.merchant_id,
+    m.created_time as merchant_created_date,
     top_rfq,
     category_id,
     category_name,
@@ -239,7 +284,7 @@ select
     (unix_timestamp(substring(rfq_response_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss")-unix_timestamp(substring(rfq_sent_ts_msk, 0, 19) ,"yyyy-MM-dd HH:mm:ss"))/(3600) as time_rfq_response,
     RANK() OVER (PARTITION BY rfq.order_id ORDER by (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as order_rn,
     RANK() OVER (PARTITION BY rfq.order_id, rfq_request_id ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_rn,
-    RANK() OVER (PARTITION BY rfq.order_id, rfq_request_id, merchant_id  ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
+    RANK() OVER (PARTITION BY rfq.order_id, rfq_request_id, rfq.merchant_id  ORDER BY (rfq_response_ts_msk = "" or order_rfq_response_id is null), rfq_response_ts_msk, order_rfq_response_id) as rfq_merchant_rn,
     MAX(order_rfq_response_id) OVER (PARTITION BY rfq.order_id, rfq_request_id) as max_response,
     CASE WHEN cancelled_ts_msk = '' THEN ''
         WHEN manufacturing_ts_msk != '' THEN 'manufacturing'
@@ -256,7 +301,9 @@ select
         END as cancelled_after,
     amount,
     product_type,
-    user_product_number
+    user_product_number,
+    user_order_number,
+    user_merchant_number
 FROM
 (
 select distinct
@@ -295,10 +342,15 @@ top_rfq,
 opp.amount
 from orders_hist oh
 left join order_products op on oh.order_id = op.order_id
-left join rfq on oh.order_id = rfq.order_id
+left join rfq on oh.order_id = rfq.order_id and (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
 left join products p on oh.order_id = p.order_id
 left join expensive e on rfq.order_rfq_response_id = e.id
 left join {{ ref('order_product_prices') }} opp on opp.order_id = oh.order_id and op.product_id = opp.product_id
-where (op.product_id = rfq.product_id or op.product_id is null or rfq.product_id is null)
 ) rfq
-left join internal_products ip on ip.product_id = rfq.product_id and rfq.order_id = ip.order_id
+left join (select distinct order_id, product_id, product_type, user_product_number from internal_products) ip 
+    on ip.product_id = rfq.product_id and rfq.order_id = ip.order_id
+left join (select distinct order_id, user_id, user_order_number from internal_products) ip1
+on rfq.order_id = ip1.order_id
+left join (select distinct order_id, merchant_id, user_merchant_number from internal_products) ip2
+on rfq.order_id = ip2.order_id and ip2.merchant_id = rfq.merchant_id
+left join merchants m on m.merchant_id = rfq.merchant_id

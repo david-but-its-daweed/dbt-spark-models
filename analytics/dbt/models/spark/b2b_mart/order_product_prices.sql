@@ -48,7 +48,8 @@ select * from
 select order_id, 
 case when from = to then 1 else rates[currency]['exchangeRate'] end as rate, 
 case when from = to then 0 else rates[currency]['markupRate'] end as markup_rate, 
-case when from = to then 1 else company_rates[currency]['exchangeRate'] end as company_rate,
+case when from = to then 1 else coalesce(company_rates[currency]['exchangeRate'],
+                                       rates[currency]['exchangeRate'])  end as company_rate,
 from, to
 from currencies t1 
 left join currencies_list t2 on t1.for_join = t2.for_join
@@ -58,21 +59,22 @@ where rate is not null
 ),
 
 orders as (
-select product_id, merchant_order_id,
-value.priceAmountPerItem, 
-value.pricePerItem.amount as price, 
-value.pricePerItem.ccy as currency,
+select product_id, merchant_order_id, deal_id,
+value.priceAmountPerItem as price, 
+currency,
 value.qty
 from
 (select id as product_id, 
     merchOrdId as merchant_order_id, 
-    explode(variants)
+    dealId as deal_id,
+    explode(variants),
+    currency
 from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
 )
 )
 
 
-select product_id, merchant_order_id, order_id, 
+select product_id, merchant_order_id, deal_id, order_id, 
 sum(price*qty*company_rate)/1000000 as amount
 from
 (
@@ -86,4 +88,4 @@ order_rates r1 on fm.order_id = r1.order_id and r1.from = currency and r1.to = '
 left join 
 order_rates r2 on fm.order_id = r2.order_id and r2.to = currency and r2.from = 'USD'
 )
-group by product_id, merchant_order_id, order_id
+group by product_id, merchant_order_id, deal_id, order_id

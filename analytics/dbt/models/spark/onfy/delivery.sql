@@ -4,7 +4,8 @@
     incremental_strategy='insert_overwrite',
     meta = {
       'team': 'onfy',
-      'bigquery_load': 'true'
+      'bigquery_load': 'true',
+      'alerts_channel': 'onfy-etl-monitoring'
     }
 ) }}
 

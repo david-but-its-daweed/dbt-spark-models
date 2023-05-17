@@ -12,5 +12,5 @@ SELECT task_id,
        min(end_date)   as end_date,
        min(duration)   as duration
 FROM platform.airflow_task_instance
-where start_date > NOW() - interval 2 month
+where start_date > NOW() - interval 91 days
 group by task_id, dag_id, run_id
