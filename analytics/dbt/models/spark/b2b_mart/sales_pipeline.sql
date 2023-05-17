@@ -202,7 +202,7 @@ final_kam AS (
 
 SELECT
     *,
-    CURRENT_DATE() AS partition_date_msk
+    date'{{ var("start_date_ymd") }}' AS partition_date_msk
 FROM (
     SELECT *
     FROM final_users
