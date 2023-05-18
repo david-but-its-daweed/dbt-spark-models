@@ -51,10 +51,15 @@ with sources as
             then onfy_mart.device_events.payload.params.utm_campaign
             else onfy_mart.device_events.payload.utm_campaign 
         end as utm_campaign,
-            case 
+        case 
+            when onfy_mart.device_events.type = 'externalLink' 
+            then onfy_mart.device_events.payload.params.utm_medium
+            else onfy_mart.device_events.payload.traffic_medium 
+        end as utm_medium,
+        case 
             when 
                 lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%adchampaign%'
-                or lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign))like '%adchampagn%' 
+                or lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%adchampagn%' 
                 then 'adchampagne'
                 when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%rocket%' then 'rocket10'
                 when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%whiteleads%' then 'whiteleads'
