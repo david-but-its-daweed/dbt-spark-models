@@ -22,5 +22,9 @@ SELECT _id AS order_rfq_response_id,
     rfqid AS rfq_request_id,
     sent,
     status,
-    millis_to_ts_msk(utms) AS update_ts_msk
+    millis_to_ts_msk(utms) AS update_ts_msk,
+    dbt_scd_id,
+    dbt_updated_at,
+    dbt_valid_from,
+    dbt_valid_to
 FROM {{ ref('scd2_rfq_response_snapshot') }}
