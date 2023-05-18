@@ -22,7 +22,11 @@ SELECT _id AS rfq_request_id,
     coalesce(isTop, FALSE) as top_rfq,
     millis_to_ts_msk(utms) AS update_ts_msk,
     rfq.categories[0] as category_id,
-    category_name
+    category_name,
+    dbt_scd_id,
+    dbt_updated_at,
+    dbt_valid_from,
+    dbt_valid_to
 FROM {{ ref('scd2_rfq_request_snapshot') }} rfq
 left join 
 (
