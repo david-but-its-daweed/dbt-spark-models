@@ -8,6 +8,21 @@
     }
 ) }}
 
+with statuses as (
+  select 'WaitingForConfirmation' as status, 2 as value
+  union all 
+  select 'Requested' as status, 5 as value
+  union all 
+  select 'Approved' as status, 10 as value
+  union all 
+  select 'PickedUp' as status, 13 as value
+  union all 
+  select 'Arrived' as status, 16 as value
+  union all 
+  select 'Shipped' as status, 20 as value
+  union all 
+  select 'Suspended' as status, 30 as value
+  )
 
 select 
   pickup_id,
