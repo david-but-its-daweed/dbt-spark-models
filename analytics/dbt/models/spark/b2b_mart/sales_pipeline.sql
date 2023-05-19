@@ -156,8 +156,7 @@ fact_kam AS (
         SUM(case when g.plan = 0 OR g.plan_last_quarter IS NULL then g.fact_last_quarter else 0 end) AS fact_last_quarter,
         MAX(case when g.plan = 0 OR g.plan_last_quarter IS NULL then aup.plan_last_quarter else 0 end) AS plan_last_quarter,
         SUM(case when g.plan = 0 OR g.plan IS NULL then g.fact else 0 end) AS fact,
-        GREATEST(MAX(case when g.plan = 0 OR g.plan IS NULL then aup.plan else 0 end) - 
-            SUM(case when g.plan > 0 then g.plan else 0 end), 0) AS plan,
+        MAX(case when g.plan = 0 OR g.plan IS NULL then aup.plan else 0 end) AS plan,
         false as predicted
     FROM final_users AS g
     left join owners as o on g.owner_email = o.email
