@@ -1,9 +1,9 @@
-{% snapshot scd2_admin_users_snapshot %}
+{% snapshot scd2_admin_user_plans_snapshot %}
 
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='_id',
+      unique_key='mid',
 
       strategy='timestamp',
       updated_at='update_ts_msk',
@@ -14,5 +14,5 @@
 
 
 SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
-FROM {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_core_admin_user_plans_daily_snapshot') }}
 {% endsnapshot %}

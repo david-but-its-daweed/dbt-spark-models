@@ -1,4 +1,4 @@
-{% snapshot scd2_interactions_snapshot %}
+{% snapshot scd2_pick_up_orders_snapshot %}
 
  {{
      config(
@@ -14,5 +14,5 @@
 
 
  SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
- FROM {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }}
+ FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }}
  {% endsnapshot %}

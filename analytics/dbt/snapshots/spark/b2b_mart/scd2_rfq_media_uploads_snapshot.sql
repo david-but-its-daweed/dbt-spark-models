@@ -3,16 +3,16 @@
  {{
      config(
        target_schema='b2b_mart',
-       unique_key='imageId',
+       unique_key='_id',
 
        file_format='delta',
        strategy='check',
-       check_cols='all',
+       check_cols=['createdTimeMs'],
        invalidate_hard_deletes=True,
      )
  }}
 
 
- SELECT *
+ SELECT *, imageId||rfqId||createdTimeMs as _id
  FROM {{ source('mongo', 'b2b_core_rfq_media_uploads_daily_snapshot') }}
  {% endsnapshot %}

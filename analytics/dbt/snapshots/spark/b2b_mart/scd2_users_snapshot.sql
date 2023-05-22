@@ -6,13 +6,16 @@
       unique_key='_id',
 
       strategy='timestamp',
-      updated_at='utms',
+      updated_at='update_ts_msk',
       file_format='delta',
       invalidate_hard_deletes=True,
     )
 }}
 
 
-SELECT *
+SELECT 
+*, 
+roleSet.roles.owner.moderatorId as moderator_id,
+millis_to_ts_msk(utms+1)  AS update_ts_msk
 FROM {{ source('mongo', 'b2b_core_users_daily_snapshot') }}
 {% endsnapshot %}
