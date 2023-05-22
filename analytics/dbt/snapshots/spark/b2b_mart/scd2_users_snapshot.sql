@@ -13,6 +13,9 @@
 }}
 
 
-SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
+SELECT 
+*, 
+roleSet.roles.owner.moderatorId as moderator_id,
+millis_to_ts_msk(utms+1)  AS update_ts_msk
 FROM {{ source('mongo', 'b2b_core_users_daily_snapshot') }}
 {% endsnapshot %}
