@@ -70,7 +70,7 @@ deals AS (
         when status_int >= 60 and status_int <= 70 then 'Forecast'
         when status_int = 80 then 'Commited' end as status
     FROM {{ ref('fact_deals') }}
-    WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM b2b_mart.fact_deals)
+    WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM {{ ref('fact_deals') }})
 ),
 
 
