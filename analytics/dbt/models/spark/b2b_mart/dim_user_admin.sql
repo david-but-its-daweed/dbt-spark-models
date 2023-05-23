@@ -8,13 +8,18 @@
     }
 ) }}
 
-select _id as admin_id,
+select 
+    _id as admin_id,
     a.email,
+    fn,
+    ln,
+    language,
+    fn||' '||ln as name,
     coalesce(s.role, case when a.email like "%support.com" then "support"
          when a.email like "%joom.com" then "employee"
          else "unknown" end) as role,
-    s.name as owner_name,
     timestamp(millis_to_ts_msk(ctms)) as created_ts_msk
-from {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }} a
+from {{ ref('scd2_admin_users_snapshot') }} a
 LEFT JOIN {{ ref('support_roles') }} s on a.email = s.email
+where dbt_valid_to is null
 

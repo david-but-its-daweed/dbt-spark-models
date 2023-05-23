@@ -56,6 +56,7 @@ sources:
       - name: b2b_core_rfq_media_uploads_daily_snapshot
       - name: b2b_core_stores_daily_snapshot
       - name: b2b_core_admin_user_plans_daily_snapshot
+      - name: b2b_core_pick_up_orders_v2_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: b2b_core_interactions_daily_snapshot
@@ -83,6 +84,7 @@ sources:
       - name: b2b_core_customer_plans_daily_snapshot
       - name: babylone_joom_agents_daily_snapshot
       - name: user_points_transactions_daily_snapshot
+      - name: finance_order_costs_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -108,6 +110,8 @@ sources:
   - name: platform
     tables:
       - name: aws_service_costs
+      - name: s3_file_usage
+      - name: table_locations
       - name: s3_costs
   - name: pharmacy
     tables:
@@ -131,6 +135,7 @@ sources:
       - name: order_parcel_item
       - name: refund
       - name: billing_operation
+      - name: medicine
   - name: onfy
     tables:
       - name: lndc_user_attribution
@@ -164,11 +169,7 @@ sources:
       - name: shiftbase_rosters_snapshot_2023
       - name: shiftbase_users
       - name: shiftbase_teams
-      - name: cbr_currency_rate
-    
-    
-      - name: bot_factors_onfy
-      
+      - name: cbr_currency_rate 
   - name: push
     tables:
       - name: sale_dates_v1

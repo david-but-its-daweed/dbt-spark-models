@@ -1,17 +1,15 @@
-{% snapshot scd2_mongo_customer_main_info %}
+{{ config(
+    schema='b2b_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'bigquery_load': 'false'
+    }
+) }}
 
-{{
-    config(
-      target_schema='b2b_mart',
-      unique_key='customer_id',
 
-      strategy='timestamp',
-      updated_at='update_ts_msk',
-      file_format='delta'
-    )
-}}
-
-SELECT _id AS                              customer_id,
+SELECT
+       _id AS                              customer_id,
        millis_to_ts_msk(utms)          AS update_ts_msk,
        companyName                     AS company_name,
        est                             AS year_of_establishment,
@@ -26,6 +24,10 @@ SELECT _id AS                              customer_id,
        invitedTime                     AS invited_time,
        isPartner                       AS is_partner,
        gradeInfo.grade                 AS grade,
-       gradeInfo.prob                  AS grade_probability
-FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
-{% endsnapshot %}
+       gradeInfo.prob                  AS grade_probability,
+       tracked,
+       dbt_scd_id,
+       dbt_updated_at,
+       dbt_valid_from,
+       dbt_valid_to
+    FROM {{ ref('scd2_customers_snapshot') }}

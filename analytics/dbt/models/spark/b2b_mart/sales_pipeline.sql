@@ -10,7 +10,6 @@
       'bigquery_partitioning_date_column': 'partition_date_msk'
     }
 ) }}
-
 WITH 
 customer_plans AS (
     SELECT
@@ -37,64 +36,24 @@ user_admin_plans AS (
     FROM {{ ref('user_admin_plans') }}
     WHERE
         partition_date_msk = (
-            SELECT MAX(partition_date_msk) FROM {{ ref('customer_plans_daily_snapshot') }}
+            SELECT MAX(partition_date_msk) FROM {{ ref('user_admin_plans') }}
         )
      GROUP by moderator_id
 ),
 
 customers AS (
-    SELECT
-        user_id,
-        validation_status,
-        reject_reason,
-        owner_email,
-        owner_role,
-        company_name,
-        volume_from,
-        volume_to,
-        grade,
-        grade_probability,
-        MAX(gmv_year) AS gmv_year,
-        MAX(gmv_quarter) AS gmv_quarter
-    FROM {{ ref('users_daily_table') }}
-    WHERE
-        partition_date_msk = (
-            SELECT MAX(partition_date_msk) FROM {{ ref('users_daily_table') }}
-        )
-        AND owner_email IS NOT NULL AND admin_status = 'current admin'
-    GROUP BY
-        user_id,
-        validation_status,
-        reject_reason,
-        owner_email,
-        owner_role,
-        company_name,
-        volume_from,
-        volume_to,
-        grade,
-        grade_probability
+    SELECT * from {{ ref('fact_customers') }}
 ),
 
 gmv AS (
     SELECT
         user_id,
-        owner_email,
-        owner_role,
-        COALESCE(grade, 'unknown') AS grade,
-        SUM(CASE WHEN date_payed >= DATE(DATE_TRUNC('QUARTER', partition_date_msk)) THEN gmv_user_admin ELSE 0 END) AS gmv_fact,
-        SUM(CASE WHEN date_payed >= DATE(DATE_TRUNC('QUARTER', partition_date_msk) - INTERVAL 3 MONTH)
-            AND date_payed < DATE(DATE_TRUNC('QUARTER', partition_date_msk)) THEN gmv_user_admin ELSE 0 END) AS gmv_fact_last_quarter
-    FROM {{ ref('users_daily_table') }}
-    WHERE
-        partition_date_msk = (
-            SELECT MAX(partition_date_msk) FROM {{ ref('users_daily_table') }}
-        )
-        AND owner_email IS NOT NULL
+        SUM(CASE WHEN t >= DATE(DATE_TRUNC('QUARTER', CURRENT_DATE())) THEN gmv_initial ELSE 0 END) AS gmv_fact,
+        SUM(CASE WHEN t >= DATE(DATE_TRUNC('QUARTER', CURRENT_DATE()) - INTERVAL 3 MONTH)
+            AND t < DATE(DATE_TRUNC('QUARTER', CURRENT_DATE())) THEN gmv_initial ELSE 0 END) AS gmv_fact_last_quarter
+    FROM {{ ref('gmv_by_sources') }}
     GROUP BY
-        user_id,
-        owner_email,
-        owner_role,
-        COALESCE(grade, 'unknown')
+        user_id
 ),
 
 deals AS (
@@ -107,7 +66,7 @@ deals AS (
         owner_email,
         deal_name,
         gmv_initial,
-        case when status_int >= 10 and status_int <= 50 then 'Upsale'
+        case when status_int >= 10 and status_int <= 50 then 'Upside'
         when status_int >= 60 and status_int <= 70 then 'Forecast'
         when status_int = 80 then 'Commited' end as status
     FROM {{ ref('fact_deals') }}
@@ -118,37 +77,43 @@ deals AS (
 forecast_user AS (
     SELECT
         user_id,
-        owner_email,
-        sum(case when status = 'Upsale' then estimated_gmv else 0 end) as upsale,
+        sum(case when status = 'Upside' then estimated_gmv else 0 end) as upside,
         sum(case when status = 'Forecast' then estimated_gmv else 0 end) as forecast,
         sum(case when status = 'Commited' then estimated_gmv else 0 end) as commited
     FROM deals
-    GROUP BY user_id, owner_email
+    GROUP BY user_id
 ),
 
 final_users AS (
     SELECT
-        c.owner_email,
-        c.owner_role,
+        owner_email,
+        owner_role,
         c.user_id,
-        c.company_name,
-        c.grade,
-        c.grade_probability,
-        c.gmv_year,
-        c.gmv_quarter,
-        c.validation_status,
-        c.reject_reason,
+        country,
+        conversion_status,
+        coalesce(tracked, false) as tracked,
+        validation_status,
+        reject_reason,
+        last_name,
+        first_name,
+        company_name,
+        volume_from,
+        volume_to,
+        grade,
+        grade_probability,
+        gmv_year,
+        gmv_quarter,
         g.gmv_fact_last_quarter AS fact_last_quarter,
         COALESCE(cp.plan_last_quarter, 0) AS plan_last_quarter,
-        d.upsale,
-        d.forecast,
-        d.commited,
-        g.gmv_fact AS fact,
+        coalesce(d.upside, 0) as upside,
+        coalesce(d.forecast, 0) as forecast,
+        coalesce(d.commited, 0) as commited,
+        coalesce(g.gmv_fact, 0) AS fact,
         COALESCE(cp.plan, 0) AS plan,
         COALESCE(cp.plan, 0) > 0 as predicted,
         'clients' AS type
     FROM customers AS c
-    LEFT JOIN gmv AS g ON c.user_id = g.user_id AND c.owner_email = g.owner_email
+    LEFT JOIN gmv AS g ON c.user_id = g.user_id
     LEFT JOIN forecast_user AS d ON c.user_id = d.user_id
     LEFT JOIN customer_plans AS cp ON c.user_id = cp.user_id
 ),
@@ -164,7 +129,7 @@ forecast_kam AS (
     SELECT
         owner_email,
         owner_role,
-        sum(upsale) as upsale,
+        sum(upside) as upside,
         sum(forecast) as forecast,
         sum(commited) as commited,
         plan > 0 as predicted
@@ -178,8 +143,8 @@ forecast_kam AS (
 fact_kam AS (
     SELECT
         g.owner_email,
-        SUM(case when plan_last_quarter > 0 then fact_last_quarter else 0 end) AS fact_last_quarter,
-        SUM(case when plan_last_quarter > 0 then plan_last_quarter else 0 end) AS plan_last_quarter,
+        SUM(case when plan > 0 then fact_last_quarter else 0 end) AS fact_last_quarter,
+        SUM(case when plan > 0 then plan_last_quarter else 0 end) AS plan_last_quarter,
         SUM(case when plan > 0 then fact else 0 end) AS fact,
         SUM(case when plan > 0 then plan else 0 end) AS plan,
         true as predicted
@@ -188,8 +153,8 @@ fact_kam AS (
     UNION ALL
         SELECT
         g.owner_email,
-        SUM(case when g.plan_last_quarter = 0 OR g.plan_last_quarter IS NULL then g.fact_last_quarter else 0 end) AS fact_last_quarter,
-        MAX(case when g.plan_last_quarter = 0 OR g.plan_last_quarter IS NULL then aup.plan_last_quarter else 0 end) AS plan_last_quarter,
+        SUM(case when g.plan = 0 OR g.plan_last_quarter IS NULL then g.fact_last_quarter else 0 end) AS fact_last_quarter,
+        MAX(case when g.plan = 0 OR g.plan_last_quarter IS NULL then aup.plan_last_quarter else 0 end) AS plan_last_quarter,
         SUM(case when g.plan = 0 OR g.plan IS NULL then g.fact else 0 end) AS fact,
         MAX(case when g.plan = 0 OR g.plan IS NULL then aup.plan else 0 end) AS plan,
         false as predicted
@@ -203,32 +168,40 @@ final_kam AS (
     SELECT
         c.owner_email,
         c.owner_role,
-        '' AS user_id,
-        '' AS company_name,
-        '' AS grade,
-        '' AS grade_probability,
-        NULL AS gmv_year,
-        NULL AS gmv_quarter,
-        '' AS validation_status,
-        '' AS reject_reason,
+        '' as user_id,
+        '' as country,
+        '' as conversion_status,
+        true as tracked,
+        '' as validation_status,
+        '' as reject_reason,
+        '' as last_name,
+        '' as first_name,
+        '' as company_name,
+        '' as volume_from,
+        '' as volume_to,
+        '' as grade,
+        '' as grade_probability,
+        0 as gmv_year,
+        0 as gmv_quarter,
         f.fact_last_quarter AS fact_last_quarter,
         COALESCE(f.plan_last_quarter, 0) AS plan_last_quarter,
-        c.upsale,
+        c.upside,
         c.forecast,
         c.commited,
-        f.fact AS fact,
+        coalesce(f.fact, 0) AS fact,
         COALESCE(f.plan, 0) AS plan,
         COALESCE(f.predicted, false) as predicted,
         'KAM' AS type
 
     FROM forecast_kam AS c
-    LEFT JOIN fact_kam AS f ON f.owner_email = c.owner_email and COALESCE(c.predicted, false) = COALESCE(f.predicted, false)
+    LEFT JOIN fact_kam AS f ON f.owner_email = c.owner_email 
+        and COALESCE(c.predicted, false) = COALESCE(f.predicted, false)
 )
 
 
 SELECT
     *,
-    CURRENT_DATE() AS partition_date_msk
+    date'{{ var("start_date_ymd") }}' AS partition_date_msk
 FROM (
     SELECT *
     FROM final_users

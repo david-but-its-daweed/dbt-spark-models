@@ -1,16 +1,13 @@
-{% snapshot scd2_mongo_order %}
+{{ config(
+    schema='b2b_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'bigquery_load': 'false'
+    }
+) }}
 
-{{
-    config(
-      target_schema='b2b_mart',
-      unique_key='order_id',
 
-      strategy='timestamp',
-      updated_at='update_ts_msk',
-      file_format='delta',
-      invalidate_hard_deletes=True
-    )
-}}
 
 WITH manufactiring AS
 (
@@ -31,7 +28,7 @@ WITH manufactiring AS
             (
                 SELECT _id AS order_id,
                 explode(arrays_zip(state.statusHistory.status, state.statusHistory.subStatus,  state.statusHistory.updatedTimeMs))
-                FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
+                FROM {{ ref('scd2_orders_v2_snapshot') }}
             
             )
             where  col.`0` = 20
@@ -54,6 +51,11 @@ SELECT _id AS                              order_id,
        csmr.deviceId                    as device_id,
        csmr.Id                          as user_id,
        state.rejectreason               as reject_reason,
+       roleSet.roles.`owner`.moderatorId as owner_id,
+       roleSet.roles.`customs`.moderatorId as customs_id,
+       roleSet.roles.`logistician`.moderatorId as logistician_id,
+       roleSet.roles.`bizDev`.moderatorId as biz_dev_id,
+       roleSet.roles.`lawyer`.moderatorId as lawyer_id,
        element_at(state.statusHistory.status,
                   cast((array_position(state.statusHistory.updatedTimeMs,
                                        array_max(state.statusHistory.updatedTimeMs))) as INTEGER)) as last_order_status,
@@ -62,7 +64,10 @@ SELECT _id AS                              order_id,
                                        array_max(state.statusHistory.updatedTimeMs))) as INTEGER)) as last_order_sub_status,
        min_manufactured_ts_msk,
        ARRAY_CONTAINS(tags, "repeated_order") as repeated_order,
-       comissionRate as comission_rate
-FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }} as s
+       comissionRate as comission_rate,
+       dbt_scd_id,
+       dbt_updated_at,
+       dbt_valid_from,
+       dbt_valid_to
+FROM {{ ref('scd2_orders_v2_snapshot') }} as s
 LEFT JOIN manufactiring AS m ON s._id = order_id
-{% endsnapshot %}
