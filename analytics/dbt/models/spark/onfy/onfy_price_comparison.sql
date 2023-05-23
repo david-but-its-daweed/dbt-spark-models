@@ -137,7 +137,7 @@ price_dynamics as
         table_prep.*,
         
         coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price) as price_to_compare,
-        table_prep.avg_product_price / coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price) - 1 as price_comparison,
+        round(table_prep.avg_product_price / coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price) - 1, 6) as price_comparison,
         coalesce(previous_day.sum_quantity, month.sum_quantity, quarter.sum_quantity, year.sum_quantity) as quantity_comparison
     from 
         table_prep 
