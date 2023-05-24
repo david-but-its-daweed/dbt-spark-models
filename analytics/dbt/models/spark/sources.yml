@@ -136,6 +136,7 @@ sources:
       - name: refund
       - name: billing_operation
       - name: medicine
+      - name: manufacturer
   - name: onfy
     tables:
       - name: lndc_user_attribution
