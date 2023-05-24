@@ -1,4 +1,5 @@
 slo_id,table_name,table_type
+slo_ads,ads.advertising_costs_v3,spark
 slo_analytics_reports,cube.time_refunds_days,spark
 slo_analytics_reports,cube.time_orders_costs_cube_10_days,spark
 slo_analytics_reports,pharmacy.etl_pharmacy.order_cube,spark
