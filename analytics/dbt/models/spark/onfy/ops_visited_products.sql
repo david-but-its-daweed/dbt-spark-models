@@ -16,7 +16,7 @@ with products as
         product.name as product_name,
         medicine.quantity,
         medicine.unit
-    from { source('pharmacy_landing', 'product') }} as product
+    from {{ source('pharmacy_landing', 'product') }} as product
     join {{ source('pharmacy_landing', 'manufacturer') }} as manufacturer
         on product.manufacturer_id = manufacturer.id
     left join {{ source('pharmacy_landing', 'medicine') }} as medicine
