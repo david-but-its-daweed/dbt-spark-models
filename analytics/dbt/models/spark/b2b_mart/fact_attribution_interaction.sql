@@ -33,7 +33,8 @@ users AS (
       reject_reason,
       owner_id,
       first_name,
-      last_name
+      last_name,
+      created_ts_msk as user_created_time
   FROM {{ ref('dim_user') }} du
   left join conversion c on du.conversion_status = c.status_int
   WHERE (not fake or fake is null)
@@ -58,6 +59,7 @@ user_interaction as
     createdAutomatically as created_automatically,
     interactionType as interaction_type,
     conversion_status,
+    user_created_time,
     country,
     validation_status,
     reject_reason,
@@ -149,6 +151,7 @@ select
     created_automatically,
     interaction_type,
     conversion_status,
+    user_created_time,
     country,
     validation_status,
     reject_reason,
@@ -189,6 +192,7 @@ t2 as (
         t2.created_automatically,
         t2.interaction_type,
         conversion_status,
+        user_created_time,
         country,
         validation_status,
         reject_reason,
@@ -247,6 +251,7 @@ t3 as (
         t2.created_automatically,
         t2.interaction_type,
         conversion_status,
+        user_created_time,
         country,
         validation_status,
         reject_reason,
