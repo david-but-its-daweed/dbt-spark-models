@@ -102,7 +102,8 @@ orders as (
             gmv_initial,
             initial_gross_profit,
             final_gross_profit,
-            1 as orders_payed
+            1 as orders_payed,
+            t as date_payed
         from {{ ref('fact_order') }} o
         left join {{ ref('gmv_by_sources') }} g on o.order_id = g.order_id
         left join user_interaction ui on o.request_id = ui.request_id
@@ -122,7 +123,8 @@ select
     gmv_initial,
     initial_gross_profit,
     final_gross_profit,
-    orders_payed
+    orders_payed,
+    date_payed
 from deals d
 full join orders o on d.interaction_id = o.interaction_id
 left join
@@ -169,6 +171,7 @@ select
     coalesce(initial_gross_profit, 0) as initial_gross_profit,
     coalesce(final_gross_profit, 0) as final_gross_profit,
     coalesce(orders_payed, 0) as orders_payed,
+    date_payed,
     first_interaction_type,
     last_interaction_type
 from user_interaction ui
@@ -210,6 +213,7 @@ t2 as (
         coalesce(initial_gross_profit, 0) as initial_gross_profit,
         coalesce(final_gross_profit, 0) as final_gross_profit,
         coalesce(orders_payed, 0) as orders_payed,
+        date_payed,
         true as first_interaction_type,
         true as last_interaction_type
     from t1 
@@ -269,6 +273,7 @@ t3 as (
         coalesce(initial_gross_profit, 0) as initial_gross_profit,
         coalesce(final_gross_profit, 0) as final_gross_profit,
         coalesce(orders_payed, 0) as orders_payed,
+        date_payed,
         true as first_interaction_type,
         true as last_interaction_type
     from t1 
