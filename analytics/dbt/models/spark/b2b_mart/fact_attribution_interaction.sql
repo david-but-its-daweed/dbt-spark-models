@@ -67,8 +67,7 @@ user_interaction as
     first_name,
     last_name,
     row_number() over (partition by user_id order by interactionType, ctms) = 1 as first_interaction_type,
-    row_number() over (partition by user_id, interactionType order by interactionType, ctms desc) = 1 
-        as last_interaction_type
+    row_number() over (partition by user_id order by interactionType, ctms desc) = 1 as last_interaction_type
 from {{ ref('scd2_interactions_snapshot') }} m
 inner join users n on n.user_id = m.uid
     where dbt_valid_to is null
@@ -218,7 +217,7 @@ t2 as (
         true as last_interaction_type
     from t1 
     left join (
-        select 
+        select distinct
             user_id, 
             interaction_id,
             interaction_create_date,
@@ -278,7 +277,7 @@ t3 as (
         true as last_interaction_type
     from t1 
     left join (
-        select 
+        select distinct
             user_id, 
             interaction_id,
             interaction_create_date,
