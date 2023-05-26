@@ -130,8 +130,8 @@ left join
 (select distinct deal_id, order_id
 from {{ ref('fact_order_product_deal') }}
 where order_id is not null
-and deal_id is not null) do on d.deal_id = do.deal_id and o.order_id = do.order_id
-where (d.deal_id is null or o.order_id is null or do.order_id is not null)
+and deal_id is not null) do on d.deal_id = do.deal_id
+where (do.order_id is null or do.order_id = o.order_id)
 and coalesce(d.interaction_id, o.interaction_id) is not null
 ),
 
