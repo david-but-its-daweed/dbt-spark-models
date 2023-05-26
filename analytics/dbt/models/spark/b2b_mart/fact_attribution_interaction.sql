@@ -72,6 +72,7 @@ from {{ ref('scd2_interactions_snapshot') }} m
 inner join users n on n.user_id = m.uid
     where dbt_valid_to is null
     and (incorrectAttribution is null or not incorrectAttribution)
+    and _id is not null and interactionType is not null
 ),
 
 deals as (
