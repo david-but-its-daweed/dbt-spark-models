@@ -49,7 +49,8 @@ du.amo_id,
 du.conversion_status,
 invited_by_promo, 
 du.last_name, 
-du.first_name
+du.first_name,
+created_ts_msk
 from {{ ref('dim_user') }} du
 left join {{ ref('key_validation_status') }} on key_validation_status.id = validation_status
 left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = du.reject_reason
@@ -93,11 +94,13 @@ customers as (
 
 select distinct
     u.user_id,
+    created_ts_msk,
     country,
     conversion_status,
     tracked,
     u.validation_status,
     u.reject_reason,
+    u.owner_id,
     a.email as owner_email,
     a.owner_role,
     last_name, 
