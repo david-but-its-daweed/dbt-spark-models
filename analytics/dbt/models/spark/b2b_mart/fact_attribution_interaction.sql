@@ -85,9 +85,11 @@ inner join users n on n.user_id = m.uid
 
 
 paied as (
-    select min(t) as min_date_payed, user_id
-    from b2b_mart.gmv_by_sources
-    group by user_id
+    SELECT
+        fo.user_id,
+        MIN(DATE(fo.min_manufactured_ts_msk)) AS min_date_payed
+    FROM {{ ref('fact_order') }} AS fo
+    group by fo.user_id
 )
 
 select 
