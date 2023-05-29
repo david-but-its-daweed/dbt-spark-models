@@ -31,14 +31,15 @@ users AS (
       coalesce(country, "RU") as country,
       validation_status,
       reject_reason,
-      owner_id,
+      owner_email,
       first_name,
       last_name,
+      owner_role,
+      company_name,
+      grade,
       created_ts_msk as user_created_time
-  FROM {{ ref('dim_user') }} du
+  FROM {{ ref('fact_customers') }} du
   left join conversion c on du.conversion_status = c.status_int
-  WHERE (not fake or fake is null)
-      and next_effective_ts_msk is null
 ),
 
 user_interaction as 
@@ -63,91 +64,40 @@ user_interaction as
     country,
     validation_status,
     reject_reason,
-    owner_id,
+    owner_email,
+    owner_role,
     first_name,
     last_name,
+    company_name,
+    grade,
     row_number() over (partition by user_id order by interactionType, ctms) = 1 as first_interaction_type,
-    row_number() over (partition by user_id order by interactionType, ctms desc) = 1 as last_interaction_type
+    row_number() over (partition by user_id, interactionType order by interactionType, ctms desc) = 1 
+        as last_interaction_type
 from {{ ref('scd2_interactions_snapshot') }} m
 inner join users n on n.user_id = m.uid
     where dbt_valid_to is null
     and (incorrectAttribution is null or not incorrectAttribution)
-    and _id is not null and interactionType is not null
 ),
 
-deals as (
-(
+
+paied as (
+    select min(t) as min_date_payed, user_id
+    from b2b_mart.gmv_by_sources
+    group by user_id
+)
+
 select 
-    min_date as deal_start_date, 
-    deal_id,
-    deal_type,
-    estimated_gmv,
-    interaction_id,
-    owner_email, 
-    owner_role,
-    status as deal_status,
-    status_int as deal_status_int
-from
-{{ ref('fact_deals') }}
-    where partition_date_msk = (
-        select max(partition_date_msk) from {{ ref('fact_deals') }}
-        )
-    )
-),
-
-orders as (
-   select distinct
-            interaction_id,
-            o.order_id,
-            gmv_initial,
-            initial_gross_profit,
-            final_gross_profit,
-            1 as orders_payed,
-            t as date_payed
-        from {{ ref('fact_order') }} o
-        left join {{ ref('gmv_by_sources') }} g on o.order_id = g.order_id
-        left join user_interaction ui on o.request_id = ui.request_id
-        where o.next_effective_ts_msk is null
-),
-
-order_deal as (
-select 
-    coalesce(d.interaction_id, o.interaction_id) as interaction_id,
-    deal_start_date, 
-    d.deal_id,
-    deal_type,
-    estimated_gmv,
-    deal_status,
-    deal_status_int,
-    o.order_id,
-    gmv_initial,
-    initial_gross_profit,
-    final_gross_profit,
-    orders_payed,
-    date_payed
-from deals d
-full join orders o on d.interaction_id = o.interaction_id
-left join
-(select distinct deal_id, order_id
-from {{ ref('fact_order_product_deal') }}
-where order_id is not null
-and deal_id is not null) do on d.deal_id = do.deal_id
-where (do.order_id is null or do.order_id = o.order_id)
-and coalesce(d.interaction_id, o.interaction_id) is not null
-),
-
-t1 as (
-select 
-    ui.interaction_id, 
+    interaction_id, 
     interaction_create_date,
-    user_id, 
+    u.user_id, 
+    request_id,
     description,
     interaction_friendly_id,
     utm_campaign,
     utm_source,
     utm_medium,
     source, 
-    type as type,
+    type,
     campaign,
     website_form,
     created_automatically,
@@ -157,150 +107,16 @@ select
     country,
     validation_status,
     reject_reason,
-    owner_id,
+    owner_email,
+    owner_role,
     first_name,
     last_name,
-    deal_start_date, 
-    deal_id,
-    deal_type,
-    coalesce(estimated_gmv, 0) as estimated_gmv,
-    deal_status,
-    deal_status_int,
-    order_id,
-    coalesce(gmv_initial, 0) as gmv_initial,
-    coalesce(initial_gross_profit, 0) as initial_gross_profit,
-    coalesce(final_gross_profit, 0) as final_gross_profit,
-    coalesce(orders_payed, 0) as orders_payed,
-    date_payed,
-    first_interaction_type,
-    last_interaction_type
-from user_interaction ui
-left join order_deal od on ui.interaction_id = od.interaction_id
-),
-
-t2 as (
-    select distinct
-        t2.interaction_id, 
-        t2.interaction_create_date,
-        t2.user_id, 
-        t2.description,
-        t2.interaction_friendly_id,
-        t2.utm_campaign,
-        t2.utm_source,
-        t2.utm_medium,
-        t2.source, 
-        t2.type,
-        t2.campaign,
-        t2.website_form,
-        t2.created_automatically,
-        t2.interaction_type,
-        conversion_status,
-        user_created_time,
-        country,
-        validation_status,
-        reject_reason,
-        owner_id,
-        first_name,
-        last_name,
-        deal_start_date, 
-        deal_id,
-        deal_type,
-        coalesce(estimated_gmv, 0) as estimated_gmv,
-        deal_status,
-        deal_status_int,
-        order_id,
-        coalesce(gmv_initial, 0) as gmv_initial,
-        coalesce(initial_gross_profit, 0) as initial_gross_profit,
-        coalesce(final_gross_profit, 0) as final_gross_profit,
-        coalesce(orders_payed, 0) as orders_payed,
-        date_payed,
-        true as first_interaction_type,
-        true as last_interaction_type
-    from t1 
-    left join (
-        select distinct
-            user_id, 
-            interaction_id,
-            interaction_create_date,
-            description,
-            interaction_friendly_id,
-            utm_campaign,
-            utm_source,
-            utm_medium,
-            source, 
-            type,
-            campaign,
-            website_form,
-            created_automatically,
-            interaction_type
-        from user_interaction
-            where first_interaction_type and interaction_type in (0, 10)
-    ) t2 on t1.user_id = t2.user_id
-),
-
-t3 as (
-    select distinct
-        t2.interaction_id, 
-        t2.interaction_create_date,
-        t2.user_id, 
-        t2.description,
-        t2.interaction_friendly_id,
-        t2.utm_campaign,
-        t2.utm_source,
-        t2.utm_medium,
-        t2.source, 
-        t2.type,
-        t2.campaign,
-        t2.website_form,
-        t2.created_automatically,
-        t2.interaction_type,
-        conversion_status,
-        user_created_time,
-        country,
-        validation_status,
-        reject_reason,
-        owner_id,
-        first_name,
-        last_name,
-        deal_start_date, 
-        deal_id,
-        deal_type,
-        coalesce(estimated_gmv, 0) as estimated_gmv,
-        deal_status,
-        deal_status_int,
-        order_id,
-        coalesce(gmv_initial, 0) as gmv_initial,
-        coalesce(initial_gross_profit, 0) as initial_gross_profit,
-        coalesce(final_gross_profit, 0) as final_gross_profit,
-        coalesce(orders_payed, 0) as orders_payed,
-        date_payed,
-        true as first_interaction_type,
-        true as last_interaction_type
-    from t1 
-    left join (
-        select distinct
-            user_id, 
-            interaction_id,
-            interaction_create_date,
-            description,
-            interaction_friendly_id,
-            utm_campaign,
-            utm_source,
-            utm_medium,
-            source, 
-            type,
-            campaign,
-            website_form,
-            created_automatically,
-            interaction_type
-        from user_interaction
-            where last_interaction_type and interaction_type in (0, 10)
-    ) t2 on t1.user_id = t2.user_id
-)
-
-
-select distinct *, 'all' as dim from t1
-union all 
-select distinct *, 'first attribution' as dim from t2
-union all
-select distinct *, 'last attribution' as dim from t3
+    company_name,
+    grade,
+    case when interaction_type = 0 then first_interaction_type else FALSE end as first_interaction_type,
+    case when interaction_type = 0 then last_interaction_type else FALSE end as last_interaction_type,
+    min_date_payed,
+    case when interaction_create_date >= min_date_payed then TRUE ELSE FALSE END AS retention
+    from user_interaction as u
+    left join paied as p on u.user_id = p.user_id
+    
