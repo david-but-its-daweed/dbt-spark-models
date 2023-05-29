@@ -1,3 +1,13 @@
+{{ config(
+    schema='onfy',
+    materialized='table',
+    meta = {
+      'team': 'onfy',
+      'bigquery_load': 'true',
+      'alerts_channel': 'onfy-etl-monitoring'
+    }
+) }}
+
 -- calculating orders per day
 with products_day as
 (
@@ -126,9 +136,9 @@ price_dynamics as
     select 
         table_prep.*,
         
-        coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price) as price_to_compare,
-        table_prep.avg_product_price / coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price) - 1 as price_comparison,
-        coalesce(previous_day.sum_quantity, month.sum_quantity, quarter.sum_quantity, year.sum_quantity) as quantity_comparison
+        round(coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price), 2) as price_to_compare,
+        round(table_prep.avg_product_price / coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price) - 1, 4) as price_comparison,
+        round(coalesce(previous_day.sum_quantity, month.sum_quantity, quarter.sum_quantity, year.sum_quantity), 2) as quantity_comparison
     from 
         table_prep 
         left join products_day as previous_day

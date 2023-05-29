@@ -7,27 +7,7 @@
     }
 ) }}
 
-with gmv as (
-    select distinct
-        t as date_payed, 
-        g.order_id,
-        g.gmv_initial,
-        g.initial_gross_profit,
-        g.final_gross_profit,
-        g.owner_email,
-        g.owner_role,
-        user_id
-    FROM {{ ref('gmv_by_sources') }} g
-),
-
-gmv_user as (
-    select user_id,
-    sum(gmv_initial) as gmv_year,
-    sum(case when date_payed >= date('{{ var("start_date_ymd") }}') - interval 3 month then gmv_initial else 0 end) as gmv_quarter
-    from gmv 
-    where date_payed >= date('{{ var("start_date_ymd") }}') - interval 1 year
-    group by user_id
-),
+with 
 
 admin as (
     SELECT
@@ -49,7 +29,8 @@ du.amo_id,
 du.conversion_status,
 invited_by_promo, 
 du.last_name, 
-du.first_name
+du.first_name,
+created_ts_msk
 from {{ ref('dim_user') }} du
 left join {{ ref('key_validation_status') }} on key_validation_status.id = validation_status
 left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = du.reject_reason
@@ -93,11 +74,13 @@ customers as (
 
 select distinct
     u.user_id,
+    created_ts_msk,
     country,
     conversion_status,
     tracked,
     u.validation_status,
     u.reject_reason,
+    u.owner_id,
     a.email as owner_email,
     a.owner_role,
     last_name, 
@@ -107,12 +90,9 @@ select distinct
     volume_to,
     coalesce(grade, "unknown") as grade,
     coalesce(grade_probability, "unknown") as grade_probability,
-    gmv_year,
-    gmv_quarter,
     amo_crm_id, 
     amo_id, 
     invited_by_promo
     from users as u
     left join admin as a on u.owner_id = a.admin_id
     left join customers as c on u.user_id = c.user_id
-    left join gmv_user gu on gu.user_id = u.user_id
