@@ -17,6 +17,6 @@ select distinct
     fn||' '||ln as name,
     one_role as role,
     created_ts_msk
-from {{ ref('scd2_admin_users_snapshot') }} a
+from {{ ref('scd2_mongo_admin_users') }} a
 where dbt_valid_to is null
 
