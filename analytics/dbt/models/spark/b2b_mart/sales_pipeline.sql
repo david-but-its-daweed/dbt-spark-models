@@ -71,7 +71,7 @@ customers AS (
     c.validation_status,
     c.reject_reason,
     c.owner_id,
-    c.email as owner_email,
+    c.owner_email,
     c.owner_role,
     c.last_name, 
     c.first_name,
