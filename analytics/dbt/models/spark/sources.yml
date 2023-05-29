@@ -135,6 +135,9 @@ sources:
       - name: order_parcel_item
       - name: refund
       - name: billing_operation
+      - name: medicine
+      - name: manufacturer
+      - name: product
   - name: onfy
     tables:
       - name: lndc_user_attribution
