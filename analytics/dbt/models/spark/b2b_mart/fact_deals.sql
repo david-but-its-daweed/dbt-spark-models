@@ -146,10 +146,22 @@ gmv as (
     interaction_id
     FROM {{ ref('gmv_by_sources') }} g
     left join {{ ref('fact_interactions') }} i on g.order_id = i.order_id
-)
+),
+
+source as
+(select 
+        user_id,
+        source, 
+        type,
+        campaign,
+        min_date_payed
+    from {{ ref('fact_attribution_interaction') }}
+    where last_interaction_type
+ )
 
 select distinct d.*,
-ds.status, ds.status_int, ds.current_date, ds.min_date
+ds.status, ds.status_int, ds.current_date, ds.min_date,
+case when min_date_payed >= min_date or min_date_payed is null then FALSE ELSE TRUE end as retention
 from
 (
 select 
@@ -163,6 +175,10 @@ gmv.owner_role,
 deal_name,
 updated_date,
 user_id,
+source, 
+type,
+campaign,
+min_date_payed,
 sum(gmv_initial) as gmv_initial,
 sum(initial_gross_profit) as initial_gross_profit,
 sum(final_gross_profit) as final_gross_profit,
@@ -177,8 +193,13 @@ interactionId as interaction_id,
 name as deal_name,
 updated_date,
 userId as user_id,
+source, 
+type,
+campaign,
+min_date_payed,
 date('{{ var("start_date_ymd") }}') as partition_date_msk
 from deals
+left join source on deals.userId = source.user_id
 where rn = 1
 ) d left join gmv on d.interaction_id = gmv.interaction_id
 group by deal_id, 
@@ -191,5 +212,9 @@ gmv.owner_role,
 deal_name,
 updated_date,
 user_id,
+source, 
+type,
+campaign,
+min_date_payed,
 partition_date_msk
 ) d left join deal_status ds on d.deal_id = ds.deal_id
