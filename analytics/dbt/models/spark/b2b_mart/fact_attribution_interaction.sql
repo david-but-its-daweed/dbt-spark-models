@@ -75,7 +75,8 @@ user_interaction as
     row_number() over (partition by user_id order by case when incorrectAttribution
         then 1 else 0 end, interactionType, ctms desc) = 1 
         as last_interaction_type,
-    coalesce(incorrectAttribution, FALSE) as incorrect_attr
+    coalesce(incorrectAttribution, FALSE) as incorrect_attr,
+    coalesce(incorrectUtm, FALSE) as incorrect_utm
 from {{ ref('scd2_interactions_snapshot') }} m
 inner join users n on n.user_id = m.uid
     where dbt_valid_to is null
@@ -120,6 +121,7 @@ select
     case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end as last_interaction_type,
     min_date_payed,
     incorrect_attr,
+    incorrect_utm,
     case when interaction_create_date >= min_date_payed then TRUE ELSE FALSE END AS retention
     from user_interaction as u
     left join paied as p on u.user_id = p.user_id
