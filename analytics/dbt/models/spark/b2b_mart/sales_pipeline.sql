@@ -41,8 +41,52 @@ user_admin_plans AS (
      GROUP by moderator_id
 ),
 
+gmv_user as (
+    select user_id,
+    sum(gmv_initial) as gmv_year,
+    sum(case when date_payed >= date('{{ var("start_date_ymd") }}') - interval 3 month then gmv_initial else 0 end) as gmv_quarter
+    from (
+        select distinct
+            t as date_payed, 
+            g.order_id,
+            g.gmv_initial,
+            g.initial_gross_profit,
+            g.final_gross_profit,
+            g.owner_email,
+            g.owner_role,
+            user_id
+        FROM {{ ref('gmv_by_sources') }} g
+        )
+    where date_payed >= date('{{ var("start_date_ymd") }}') - interval 1 year
+    group by user_id
+),
+
 customers AS (
-    SELECT * from {{ ref('fact_customers') }}
+    select distinct
+    c.user_id,
+    c.created_ts_msk,
+    c.country,
+    c.conversion_status,
+    c.tracked,
+    c.validation_status,
+    c.reject_reason,
+    c.owner_id,
+    c.email as owner_email,
+    c.owner_role,
+    c.last_name, 
+    c.first_name,
+    c.company_name,
+    c.volume_from,
+    c.volume_to,
+    coalesce(c.grade, "unknown") as grade,
+    coalesce(c.grade_probability, "unknown") as grade_probability,
+    gu.gmv_year,
+    gu.gmv_quarter,
+    c.amo_crm_id, 
+    c.amo_id, 
+    c.invited_by_promo
+    from {{ ref('fact_customers') }} as c on u.user_id = c.user_id
+    left join gmv_user gu on gu.user_id = u.user_id
 ),
 
 gmv AS (
