@@ -10,18 +10,10 @@
 
 with 
 not_jp_users AS (
-  SELECT DISTINCT u.user_id
-  FROM {{ ref('fact_user_request') }} f
-  LEFT JOIN {{ ref('fact_order') }} u ON f.user_id = u.user_id
-  WHERE is_joompro_employee = TRUE
+  SELECT DISTINCT user_id as uid
+  FROM {{ ref('dim_user') }}
+  WHERE not fake or fake is null
 ),
-
-tags as
-(
-select distinct explode(tags) as tag, 
-    _id as request_id 
-    from  {{ source('mongo', 'b2b_core_popup_requests_daily_snapshot') }}
-    ),
 
 user_interaction as 
 (select 
@@ -30,33 +22,31 @@ user_interaction as
     interaction_create_date, 
     date(interaction_create_date) as partition_date_msk,
     date(interaction_create_date) - WEEKDAY( date(interaction_create_date)) AS created_week,
-    case when row_number() over(partition by user_id order by interaction_create_date) = 1 then 1 else 0 end as first_interaction,
+    case when first_interaction_type then 1 else 0 end as first_interaction,
     utm_campaign,
     utm_source,
     utm_medium,
     source, 
     type,
     campaign,
-    website_form,
     repeated_order
     from (
         select 
-            _id as interaction_id, 
-            uid as user_id, 
-            max(case when tag = 'repeated_order' then 1 else 0 end) as repeated_order,
-            min(from_unixtime(ctms/1000 + 10800)) as interaction_create_date,
-            max(map_from_entries(utmLabels)["utm_campaign"]) as utm_campaign,
-            max(map_from_entries(utmLabels)["utm_source"]) as utm_source,
-            max(map_from_entries(utmLabels)["utm_medium"]) as utm_medium,
-            max(source) as source, 
-            max(type) as type,
-            max(campaign) as campaign,
-            max(websiteForm) as website_form
-        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} m
-        left join not_jp_users n on n.user_id = m.uid
-        left join tags t on t.request_id = m.popupRequestID
-        where n.user_id is null
-        group by _id, uid
+            interaction_id, 
+            user_id, 
+            case when retention then 1 else 0 end as repeated_order,
+            last_interaction_type,
+            first_interaction_type,
+            interaction_create_date,
+            max(case when last_interaction_type then utm_campaign end) over (partition by user_id) as utm_campaign,
+            max(case when last_interaction_type then utm_source end) over (partition by user_id) as utm_source,
+            max(case when last_interaction_type then utm_medium end) over (partition by user_id) as utm_medium,
+            max(case when last_interaction_type then source end) over (partition by user_id) as source, 
+            max(case when last_interaction_type then type end) over (partition by user_id) as type,
+            max(case when last_interaction_type then campaign end) over (partition by user_id) as campaign
+        from {{ ref('fact_attribution_interaction') }} m
+        join not_jp_users n on n.uid = m.user_id
+        
     )
 )
 ,
@@ -324,7 +314,6 @@ interaction_id,
     FIRST_VALUE(source) over (partition by user_id order by order_id is null, partition_date_msk) as source,
     FIRST_VALUE(type) over (partition by user_id order by order_id is null, partition_date_msk) as type,
     FIRST_VALUE(campaign) over (partition by user_id order by order_id is null, partition_date_msk) as campaign,
-    FIRST_VALUE(website_form) over (partition by user_id order by order_id is null, partition_date_msk) as website_form,
     repeated_order,
     user_id,
     validation_status, 
@@ -357,7 +346,6 @@ interaction_id,
         utm_medium as current_utm_medium,
         type as current_type,
         campaign as current_campaign,
-        website_form as current_website_form,
         rank(interaction_id) over (partition by user_id, interaction_min_time is not null order by interaction_min_time) as sucessfull_interaction_number,
         rank(interaction_id) over (partition by user_id order by 
                                    case when partition_date_msk <= order_min_time or order_min_time is null then 0 else 1 end) as sucessfull_order_number
@@ -373,7 +361,6 @@ select
     source, 
     type,
     campaign,
-    website_form,
     repeated_order,
     user_id,
     validation_status, 
@@ -412,7 +399,6 @@ select
         source, 
         type,
         campaign,
-        website_form,
         repeated_order,
         in.user_id,
         validation_status, 
@@ -455,7 +441,6 @@ select
         source, 
         type,
         campaign,
-        website_form,
         repeated_order,
         in.user_id,
         validation_status, 
