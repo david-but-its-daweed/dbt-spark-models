@@ -24,23 +24,81 @@ conversion as (
 ),
 
 
-users AS (
-  SELECT DISTINCT 
-      user_id, 
-      c.status as conversion_status,
-      coalesce(country, "RU") as country,
-      validation_status,
-      reject_reason,
-      owner_email,
-      first_name,
-      last_name,
-      owner_role,
-      company_name,
-      grade,
-      created_ts_msk as user_created_time
-  FROM {{ ref('fact_customers') }} du
-  left join conversion c on du.conversion_status = c.status_int
+users1 as (
+select 
+user_id,
+key_validation_status.status as validation_status,
+reject_reason.reason as reject_reason,
+owner_id,
+country,
+du.amo_crm_id, 
+du.amo_id, 
+du.conversion_status,
+invited_by_promo, 
+du.last_name, 
+du.first_name,
+created_ts_msk
+from {{ ref('dim_user') }} du
+left join {{ ref('key_validation_status') }} on key_validation_status.id = validation_status
+left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = du.reject_reason
+where next_effective_ts_msk is null and (not is_partner or is_partner is null)
 ),
+
+grades as (
+  select "unknown" as grade, 0 as value
+  union all 
+  select "a" as grade, 1 as value
+  union all 
+  select "b" as grade, 2 as value
+  union all 
+  select "c" as grade, 3 as value
+),
+
+grades_prob as (
+  select "unknown" as grade_prob, 0 as value
+  union all 
+  select "low" as grade_prob, 1 as value
+  union all 
+  select "medium" as grade_prob, 2 as value
+  union all 
+  select "high" as grade_prob, 3 as value
+),
+
+customers as (
+    select distinct
+    customer_id as user_id,
+    company_name,
+    monthly_turnover_from as volume_from,
+    monthly_turnover_to as volume_to,
+    tracked,
+    grades.grade,
+    grades_prob.grade_prob as grade_probability
+    from {{ ref('scd2_mongo_customer_main_info') }} m
+    left join grades on coalesce(m.grade, 0) = grades.value
+    left join grades_prob on coalesce(m.grade_probability, 0) = grades_prob.value
+    where TIMESTAMP(dbt_valid_to) is null
+),
+
+users as (
+select distinct
+      u.user_id, 
+      co.status as conversion_status,
+      coalesce(u.country, "RU") as country,
+      u.validation_status,
+      u.reject_reason,
+      a.owner_email,
+      u.owner_id,
+      u.first_name,
+      u.last_name,
+      a.owner_role,
+      c.company_name,
+      c.grade,
+      u.created_ts_msk as user_created_time
+    from users1 as u
+    left join admin as a on u.owner_id = a.admin_id
+    left join customers as c on u.user_id = c.user_id
+    left join conversion co on du.conversion_status = c.status_int
+ ),
 
 user_interaction as 
 (select 
