@@ -86,7 +86,7 @@ customers AS (
     c.amo_id, 
     c.invited_by_promo
     from {{ ref('fact_customers') }} as c
-    left join gmv_user gu on gu.user_id = u.user_id
+    left join gmv_user gu on gu.user_id = c.user_id
 ),
 
 gmv AS (
