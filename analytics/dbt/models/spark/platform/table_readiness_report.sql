@@ -13,8 +13,8 @@ select source_id,
         else coalesce(ready_time_human, 999)
     end as ready_time,
     round(median_end_time - 0.5) + round((median_end_time - round(median_end_time - 0.5))* 60)/100 as median_ready_time,
-    (ready_time_hours - coalesce(effective_start_hours, 0)) / p50_effective_duration as slowness_ratio,
-    (ready_time_hours - coalesce(effective_start_hours, 0) - p50_effective_duration) * 60 as slowdown_minutes,
+    (ready_time_hours - coalesce(effective_start_hours, 0)) / coalesce(p50_effective_duration, median_end_time) as slowness_ratio,
+    (ready_time_hours - coalesce(effective_start_hours, 0) - coalesce(p50_effective_duration, median_end_time)) * 60 as slowdown_minutes,
     state,
     input_rank,
     dag_id,
@@ -24,7 +24,7 @@ select source_id,
     round(coalesce(effective_start_hours, 0) - 0.5) + round((coalesce(effective_start_hours, 0) - round(coalesce(effective_start_hours, 0) - 0.5))* 60)/100 as effective_start_human,
     ready_time_hours,
     (ready_time_hours - coalesce(effective_start_hours, 0)) * 60 as effective_duration_minutes,
-    p50_effective_duration * 60 as p50_effective_duration_minutes,
+    coalesce(p50_effective_duration, median_end_time) * 60 as p50_effective_duration_minutes,
     p80_effective_duration * 60 as p80_effective_duration_minutes
 from {{ref("data_readiness")}}
     left join {{ref("task_end_stats")}} using (dag_id, task_id)
