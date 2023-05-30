@@ -10,7 +10,8 @@
 
 with deals as (select distinct
 interaction_id, user_id, deal_id, estimated_gmv, deal_type,
-               status, status_int, current_date
+               status, status_int, current_date, owner_email,
+               owner_role
 from {{ ref('fact_deals') }} where partition_date_msk = 
 (select max(partition_date_msk) from {{ ref('fact_deals') }})
 ),
@@ -189,6 +190,8 @@ MAX(d.status_int > 100 and t1.status_int = 100 and prev_status_int is null) OVER
 THEN "fast_rejected" ELSE "normal" end as deal_normality,
 d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 d.status as current_status, d.status_int as current_status_int, d.current_date as current_status_date,
+d.owner_email,
+d.owner_role,
 i.source, i.type, i.campaign,
 i.current_source, i.current_type, i.current_campaign,
 grade, grade_probability
