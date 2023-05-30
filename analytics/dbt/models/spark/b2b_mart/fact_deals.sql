@@ -160,9 +160,32 @@ source as
     where last_interaction_type
  )
 
-select distinct d.*,
-ds.status, ds.status_int, ds.current_date, ds.min_date,
-case when min_date_payed >= min_date or min_date_payed is null then FALSE ELSE TRUE end as retention
+select distinct 
+d.deal_id,
+d.deal_type,
+d.estimated_date,
+d.estimated_gmv,
+d.interaction_id,
+d.owner_email,
+d.owner_role,
+d.deal_name,
+d.updated_date,
+d.user_id,
+d.source,
+d.type,
+d.campaign,
+d.min_date_payed,
+d.gmv_initial,
+d.initial_gross_profit,
+d.final_gross_profit,
+ds.status,
+ds.status_int,
+ds.current_date,
+ds.min_date,
+case when min_date_payed >= min_date or min_date_payed is null then FALSE ELSE TRUE end as retention,
+d.grade,
+d.country,
+d.partition_date_msk
 from
 (
 select 
