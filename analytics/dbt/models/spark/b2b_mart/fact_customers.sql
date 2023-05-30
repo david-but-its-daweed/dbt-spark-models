@@ -70,11 +70,21 @@ customers as (
     left join grades on coalesce(m.grade, 0) = grades.value
     left join grades_prob on coalesce(m.grade_probability, 0) = grades_prob.value
     where TIMESTAMP(dbt_valid_to) is null
+),
+
+users_hist as (
+  select
+    user_id,
+    min(partition_date_msk) as validated_date
+    from {{ ref('fact_user_change') }}
+    where validation_status = 'validated'
+    group by user_id
 )
 
 select distinct
     u.user_id,
     created_ts_msk,
+    validated_date,
     country,
     conversion_status,
     tracked,
@@ -96,3 +106,4 @@ select distinct
     from users as u
     left join admin as a on u.owner_id = a.admin_id
     left join customers as c on u.user_id = c.user_id
+    left join users_hist as uh on u.user_id = uh.user_id
