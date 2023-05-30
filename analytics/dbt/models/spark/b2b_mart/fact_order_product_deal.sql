@@ -50,7 +50,6 @@ interactions as (
         current_utm_medium as utm_medium,
         current_type as type,
         current_campaign as campaign,
-        current_website_form as website_form,
         rn
     from {{ ref('fact_interactions') }}
 ),
@@ -189,7 +188,6 @@ select distinct
     utm_campaign,
     utm_source,
     utm_medium,
-    website_form,
     estimated_date,
     estimated_gmv,
     oo.owner_email,
