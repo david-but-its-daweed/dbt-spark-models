@@ -113,6 +113,9 @@ sources:
       - name: s3_file_usage
       - name: table_locations
       - name: s3_costs
+      - name: s3_accesses_with_tables
+      - name: s3_inventory_with_tables
+      - name: context_product_counters_v5
   - name: pharmacy
     tables:
       - name: google_campaign_insights
