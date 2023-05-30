@@ -7,7 +7,7 @@
 
       file_format='delta',
       strategy='check',
-      check_cols='all',
+      check_cols=['brand', 'cstmzbl', 'isFocused', 'reducedDuty', 'supplierLink', 'supplierProductLink', 'trMrk'],
       invalidate_hard_deletes=True,
     )
 }}

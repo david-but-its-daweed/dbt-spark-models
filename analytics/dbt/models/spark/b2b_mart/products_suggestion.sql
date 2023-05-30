@@ -14,7 +14,8 @@
 
 
 with price as (
-    select min(least(prc[0], prc[1], prc[2])) as price, _id as product_id
+    select min(least(prc[0], prc[1], prc[2])) as price, _id as product_id,
+    case when max(least(prc[0], prc[1], prc[2]))/min(least(prc[0], prc[1], prc[2])) >= 2 then true else false end as suspicious
     from
     (select _id, prcQtyDis from {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
     where prcQtyDis[0] is not null) a
@@ -27,17 +28,18 @@ with price as (
 expensive as (
     select
     product_id,
-    max(price > price_standart) as expensive
+    max(price > price_standart) as expensive,
+    max(suspicious) as suspicious
     from
     (
     select avg(price) over (partition by order_id, rfq_request_id) as price_standart,
     min(price) over (partition by order_id, rfq_request_id) as price_min,
     max(price) over (partition by order_id, rfq_request_id) as price_max,
     count(case when reject_reason is not null or response_status is not null then product_id end) over (partition by order_id, rfq_request_id) as reasons,
-    price, order_id, rfq_request_id, order_rfq_response_id, product_id
+    price, suspicious, order_id, rfq_request_id, order_rfq_response_id, product_id
     from
     (select distinct 
-    order_id, reject_reason, response_status, rfq_request_id, order_rfq_response_id, price, p.product_id
+    order_id, reject_reason, response_status, rfq_request_id, order_rfq_response_id, price, suspicious, p.product_id
     from {{ ref('rfq_metrics') }} r
     inner join price p on r.product_id = p.product_id
     where reject_reason not in (
@@ -52,7 +54,8 @@ expensive as (
 products as
 (    
     select product_id,
-    avg(not_expensive) as expensive
+    avg(not_expensive) as expensive,
+    max(suspicious) as suspicious
     from
 (
 select 
@@ -62,7 +65,8 @@ select
             'higherThanMarketPrice', 'higherThanMarketPrice') then 0
     when not expensive then 1 
     when expensive then 0
-   end as not_expensive
+   end as not_expensive,
+   suspicious
 from {{ ref('rfq_metrics') }} r
 inner join expensive as e on r.product_id = e.product_id
 )
@@ -87,7 +91,7 @@ select distinct _id,
     level_4_category['name'] as cate_lv4
 from {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
 join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id) c on p.product_id = c._id
-where expensive >= 0.7 and product_id is not null
+where expensive >= 0.7 and product_id is not null and not suspicious
 and product_id in (
     select distinct product_id from {{ ref('sat_product_state') }}
     where status = 1)
