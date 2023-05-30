@@ -35,12 +35,12 @@ session_precalc as
     select 
         type,
         device_id,
-        event_ts_cet,
-        lead(event_ts_cet) over (partition by device_id order by event_ts_cet) as next_event,
-        lag(event_ts_cet) over (partition by device_id order by event_ts_cet) as previous_event,
+        source_dt,
+        lead(source_dt) over (partition by device_id order by source_dt) as next_event,
+        lag(source_dt) over (partition by device_id order by source_dt) as previous_event,
         if(
-            to_unix_timestamp(event_ts_cet) - to_unix_timestamp(lag(event_ts_cet) over (partition by device_id order by event_ts_cet)) <= 60*60*24
-            and to_unix_timestamp(lag(event_ts_cet) over (partition by device_id order by event_ts_cet)) is not null,
+            to_unix_timestamp(source_dt) - to_unix_timestamp(lag(source_dt) over (partition by device_id order by source_dt)) <= 60*60*24
+            and to_unix_timestamp(lag(source_dt) over (partition by device_id order by source_dt)) is not null,
             0, 1
         ) as new_session_group,
         if(source_corrected in ('unknown', 'unmarked_facebook_or_instagram', 'social'), 0, 1) as significant_source,
@@ -57,12 +57,12 @@ sessions_window as
         source_corrected,
         campaign_corrected,
         device_id,
-        event_ts_cet,
+        source_dt,
         next_event,
         previous_event,
-        sum(significant_source) over (partition by device_id order by event_ts_cet) as significant_source_window,
-        sum(new_session_group) over (partition by device_id order by event_ts_cet) as timeout_source_window,
-        sum(new_session_group * significant_source) over (partition by device_id order by event_ts_cet) as ultimate_window
+        sum(significant_source) over (partition by device_id order by source_dt) as significant_source_window,
+        sum(new_session_group) over (partition by device_id order by source_dt) as timeout_source_window,
+        sum(new_session_group * significant_source) over (partition by device_id order by source_dt) as ultimate_window
     from session_precalc
 ),
 
@@ -70,11 +70,11 @@ sessions as
 (
     select 
         *,
-        first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window order by event_ts_cet) as source,
-        first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window order by event_ts_cet) as campaign,
-        first_value(sessions_window.source_corrected) over (partition by device_id, significant_source_window order by event_ts_cet) as source_significant,
-        first_value(sessions_window.campaign_corrected) over (partition by device_id, significant_source_window order by event_ts_cet) as campaign_significant,
-        rank() over (partition by device_id, ultimate_window order by event_ts_cet) as session_num
+        first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window order by source_dt) as source,
+        first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window order by source_dt) as campaign,
+        first_value(sessions_window.source_corrected) over (partition by device_id, significant_source_window order by source_dt) as source_significant,
+        first_value(sessions_window.campaign_corrected) over (partition by device_id, significant_source_window order by source_dt) as campaign_significant,
+        rank() over (partition by device_id, ultimate_window order by source_dt) as session_num
     from sessions_window
 ),
 
@@ -120,9 +120,9 @@ order_data AS
 data_combined as
 (
     select 
-      event_ts_cet as session_dt,
-      date_trunc('month', coalesce(event_ts_cet, order_created_time_cet)) as report_month,
-      coalesce(event_ts_cet, order_created_time_cet) as report_dt,
+      source_dt as session_dt,
+      date_trunc('month', coalesce(source_dt, order_created_time_cet)) as report_month,
+      coalesce(source_dt, order_created_time_cet) as report_dt,
       coalesce(sessions.source, 'direct') as source,
       sessions.source_significant,
       sessions.campaign,
@@ -142,7 +142,7 @@ data_combined as
     from sessions
     full join order_data 
       on order_data.device_id = sessions.device_id 
-      and order_data.order_created_time_cet between sessions.event_ts_cet and coalesce(sessions.next_event, sessions.event_ts_cet + interval 5 hours)
+      and order_data.order_created_time_cet between sessions.source_dt and coalesce(sessions.next_event, sessions.source_dt + interval 5 hours)
     join uid 
         on coalesce(sessions.device_id, order_data.device_id) = uid.device_id
 )
