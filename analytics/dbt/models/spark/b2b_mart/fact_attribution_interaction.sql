@@ -36,7 +36,8 @@ users AS (
       owner_role,
       company_name,
       grade,
-      created_ts_msk as user_created_time
+      created_ts_msk as user_created_time,
+      validated_date
   FROM {{ ref('fact_customers') }} du
   left join conversion c on du.conversion_status = c.status_int
 ),
@@ -61,6 +62,7 @@ user_interaction as
     conversion_status,
     user_created_time,
     country,
+    validated_date,
     validation_status,
     reject_reason,
     owner_email,
@@ -110,6 +112,7 @@ select
     conversion_status,
     user_created_time,
     country,
+    validated_date,
     validation_status,
     reject_reason,
     owner_email,
