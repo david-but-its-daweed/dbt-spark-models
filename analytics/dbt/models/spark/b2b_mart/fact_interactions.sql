@@ -283,6 +283,8 @@ select
                 source, 
                 type,
                 campaign,
+                country,
+                grade,
                 repeated_order,
                 user_id,
                 validation_status, 
