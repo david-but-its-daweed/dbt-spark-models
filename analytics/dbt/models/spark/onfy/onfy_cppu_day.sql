@@ -45,6 +45,7 @@ sources as
         sources.source_event_type,
         sources.source,
         sources.utm_campaign,
+        if(lower(sources.source_corrected) = 'facebook', sources.medium, '') as medium,
         first_second_purchases.first_purchase_date_ts_cet,
         to_utc_timestamp(first_second_purchases.first_purchase_date_ts_cet, 'Europe/Berlin') as first_purchase_date_ts_utc,
         first_second_purchases.first_purchase_device_id,
@@ -80,15 +81,17 @@ installs as
     select 
         source_corrected,
         campaign_corrected,
+        if(lower(sources.source_corrected) = 'facebook', sources.medium, '') as medium,
         date_trunc('day', source_ts_utc) as source_day, 
         if(source_app_device_type like '%web%', 'web', source_app_device_type) as source_app_device_type,
         cast(count(distinct if(source_event_type in ('adjustInstall', 'adjustReinstall'), combined_id, null)) as bigint) as installs,
         cast(count(distinct if (source_event_type in ('externalLink'), combined_id, null)) as bigint) as visits
     from 
-        {{ source('onfy', 'lndc_user_attribution') }}
+        {{ source('onfy', 'lndc_user_attribution') }} as sources
     group by 
         source_corrected,
         campaign_corrected,
+        if(lower(sources.source_corrected) = 'facebook', sources.medium, ''),
         date_trunc('day', source_ts_utc), 
         if(source_app_device_type like '%web%', 'web', source_app_device_type)
 ),
@@ -112,6 +115,7 @@ ads_spends_corrected as
             when united_spends.partner like '%adcha%' then 'adchampagne'
             else united_spends.partner
         end as campaign_corrected,
+        if(united_spends.source = 'facebook', medium, '') as medium,
         sum(spend) as spend,
         sum(clicks) as clicks
     from 
@@ -126,7 +130,8 @@ ads_spends_corrected as
         campaign_corrected,
         united_spends.source,
         united_spends.campaign_name,
-        united_spends.campaign_platform
+        united_spends.campaign_platform,
+        if(united_spends.source = 'facebook', medium, '')
 ),
 
 users_spends_campaigns as 
@@ -142,6 +147,7 @@ users_spends_campaigns as
         sources.source_ts_cet,
         sources.source_ts_utc,
         sources.source,   
+        sources.medium,
         sources.source_event_type,
         sources.utm_campaign,
         sources.partner,
@@ -157,6 +163,7 @@ users_spends_campaigns as
     left join ads_spends_corrected
         on lower(ads_spends_corrected.campaign_corrected) = lower(sources.campaign_corrected)
         and lower(ads_spends_corrected.source_corrected) = lower(sources.source_corrected)
+        and lower(ads_spends_corrected.medium) = lower(sources.medium)
         and ads_spends_corrected.partition_date <= date_trunc('day', sources.source_ts_utc)
     group by
         sources.user_email_hash,
@@ -168,7 +175,8 @@ users_spends_campaigns as
         sources.second_purchase_device_id,
         sources.source_ts_cet,
         sources.source_ts_utc,
-        sources.source,      
+        sources.source,    
+        sources.medium,  
         sources.source_event_type,
         sources.utm_campaign,
         sources.partner,
@@ -186,6 +194,7 @@ users_by_day as
         users_spends_campaigns.first_purchase_app_device_type,
         users_spends_campaigns.source_corrected,
         users_spends_campaigns.campaign_corrected,
+        users_spends_campaigns.medium,
         count(distinct users_spends_campaigns.user_email_hash) as first_purchases,
         count(distinct    
             case 
@@ -199,6 +208,7 @@ users_by_day as
         users_spends_campaigns.first_purchase_date,
         users_spends_campaigns.source_corrected,
         users_spends_campaigns.campaign_corrected,
+        users_spends_campaigns.medium,
         users_spends_campaigns.first_purchase_app_device_type
 ),
 
@@ -208,6 +218,7 @@ ads_spends_corrected_day as
         date_trunc('day', partition_date) as spend_day,
         campaign_platform,
         source_corrected,
+        medium,
         campaign_corrected,
         sum(spend) as spend,
         sum(clicks) as clicks
@@ -217,13 +228,15 @@ ads_spends_corrected_day as
         date_trunc('day', partition_date),
         source_corrected,
         campaign_corrected,
+        medium,
         campaign_platform
 )
 
 select distinct
     coalesce(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date, install.source_day) as partition_date, 
     coalesce(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected, install.source_corrected) as source,
-    coalesce(ads_spends_corrected_day.campaign_corrected, users_by_day.campaign_corrected) as campaign,
+    coalesce(ads_spends_corrected_day.campaign_corrected, users_by_day.campaign_corrected, install.campaign_corrected) as campaign,
+    coalesce(ads_spends_corrected_day.medium, users_by_day.medium, install.medium) as medium,
     coalesce(ads_spends_corrected_day.campaign_platform, users_by_day.first_purchase_app_device_type, install.source_app_device_type) as platform,
     coalesce(users_by_day.first_purchases, 0) as first_purchases,
     coalesce(users_by_day.second_purchases, 0) as second_purchases, 
@@ -237,9 +250,11 @@ full join users_by_day
     on ads_spends_corrected_day.spend_day = users_by_day.first_purchase_date
     and lower(ads_spends_corrected_day.campaign_corrected) = lower(users_by_day.campaign_corrected)
     and lower(ads_spends_corrected_day.source_corrected) = lower(users_by_day.source_corrected)
+    and lower(ads_spends_corrected_day.medium) = lower(users_by_day.medium)
     and lower(ads_spends_corrected_day.campaign_platform) = lower(users_by_day.first_purchase_app_device_type)
 full join installs as install
     on ads_spends_corrected_day.spend_day = install.source_day
     and lower(ads_spends_corrected_day.campaign_corrected) = lower(install.campaign_corrected)
     and lower(ads_spends_corrected_day.source_corrected) = lower(install.source_corrected)
+    and lower(ads_spends_corrected_day.medium) = lower(install.medium)
     and lower(ads_spends_corrected_day.campaign_platform) = lower(install.source_app_device_type)
