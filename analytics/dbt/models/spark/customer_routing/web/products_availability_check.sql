@@ -23,7 +23,7 @@ SELECT DISTINCT
 FROM {{ source('mart', 'device_events') }}
 WHERE
     `type` IN ('productOpenServer')
-    AND device.os_type LIKE "%web%"
+ --   AND device.os_type LIKE "%web%"
     {% if is_incremental() %}
         AND partition_date >= date'{{ var("start_date_ymd") }}'
         AND partition_date < date'{{ var("end_date_ymd") }}'
