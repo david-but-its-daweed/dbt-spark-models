@@ -154,7 +154,8 @@ source as
         type,
         campaign,
         min_date_payed,
-        country
+        country,
+        grade, grade_probability
     from {{ ref('fact_attribution_interaction') }}
     where last_interaction_type
  )
@@ -179,6 +180,7 @@ source,
 type,
 campaign,
 country,
+grade, grade_probability,
 min_date_payed,
 sum(gmv_initial) as gmv_initial,
 sum(initial_gross_profit) as initial_gross_profit,
@@ -197,6 +199,7 @@ userId as user_id,
 source, 
 type,
 campaign,
+ grade, grade_probability,
 country,
 min_date_payed,
 date('{{ var("start_date_ymd") }}') as partition_date_msk
@@ -218,6 +221,7 @@ source,
 type,
 campaign,
 country,
+grade, grade_probability,
 min_date_payed,
 partition_date_msk
 ) d left join deal_status ds on d.deal_id = ds.deal_id
