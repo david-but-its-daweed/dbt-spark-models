@@ -128,7 +128,7 @@ from
 admin AS (
     SELECT
         admin_id,
-        a.email,
+        a.email as owner_email,
         a.role as owner_role
     FROM {{ ref('dim_user_admin') }} a
 ),
@@ -144,7 +144,7 @@ gmv as (
     g.owner_role,
     interaction_id
     FROM {{ ref('gmv_by_sources') }} g
-    left join {{ ref('fact_interactions') }} i on g.order_id = i.order_id
+    left join {{ ref('fact_attribution_interaction') }} i on g.order_id = i.order_id
 ),
 
 source as
@@ -194,8 +194,8 @@ deal_type,
 estimated_date,
 estimated_gmv,
 d.interaction_id,
-gmv.owner_email,
-gmv.owner_role,
+admin.owner_email,
+admin.owner_role,
 deal_name,
 updated_date,
 user_id,
@@ -218,6 +218,7 @@ amount as estimated_gmv,
 interactionId as interaction_id,
 name as deal_name,
 updated_date,
+moderatorId as moderator_id,
 userId as user_id,
 source, 
 type,
@@ -230,6 +231,7 @@ from deals
 left join source on deals.userId = source.user_id
 where rn = 1
 ) d left join gmv on d.interaction_id = gmv.interaction_id
+left join admin on d.moderator_id = admin.admin_id
 group by deal_id, 
 deal_type, 
 estimated_date,
