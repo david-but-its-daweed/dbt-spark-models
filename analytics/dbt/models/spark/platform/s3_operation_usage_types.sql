@@ -1,7 +1,6 @@
 -- We don't have consistent way to map operation to request tier, so we rely on adhoc rules based on
 -- https://docs.aws.amazon.com/AmazonS3/latest/userguide/aws-usage-report-understand.html 
 -- and https://support.console.aws.amazon.com/support/home?region=eu-central-1#/case/?displayId=12544738091&language=en
-
 {{ config(
     schema='platform',
     materialized='table'
@@ -23,4 +22,4 @@ select distinct
         WHEN operation like 'REST.HEAD.OBJECT' then 'EUC1-Requests-Tier2'
         ELSE 'undefined'
         end as usage_type
-FROM platform.s3_accesses_usage
+FROM {{ ref("s3_file_access_v2")}}
