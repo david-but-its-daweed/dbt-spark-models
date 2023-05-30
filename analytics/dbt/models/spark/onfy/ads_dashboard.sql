@@ -15,7 +15,7 @@ with uid as
         device_id,
         app_device_type,
         min_by(user_email_hash, min_purchase_date) as user_email_hash
-    from {{ source('onfy_mart', 'devices_mart')}}
+    from {{source('onfy_mart', 'devices_mart')}}
     where 1=1
         and is_bot = False
     group by 
@@ -23,72 +23,11 @@ with uid as
         app_device_type
 ),
 
-sources as 
-(
-    select distinct
-        device_id,
-        type,
-        event_ts_cet,
-        coalesce(
-            case 
-                when onfy_mart.device_events.type = 'externalLink'
-                then
-                    case
-                        when lower(onfy_mart.device_events.payload.params.utm_source) like '%google%' 
-                        then 'google' 
-                        when onfy_mart.device_events.payload.params.utm_source is not null
-                        then onfy_mart.device_events.payload.params.utm_source
-                        when 
-                            (onfy_mart.device_events.payload.referrer like '%/www.google%') 
-                            or (onfy_mart.device_events.payload.referrer like '%/www.bing%')
-                            or (onfy_mart.device_events.payload.referrer like '%/search.yahoo.com%')
-                            or (onfy_mart.device_events.payload.referrer like '%/duckduckgo.com%')
-                        then 'Organic'
-                        when
-                            (onfy_mart.device_events.payload.referrer like '%facebook.com%') 
-                            or (onfy_mart.device_events.payload.referrer like '%instagram.com%')             
-                        then 'UNMARKED_facebook_or_instagram'      
-                    end
-                when onfy_mart.device_events.type in ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
-                then
-                    case
-                        when onfy_mart.device_events.payload.utm_source = 'Unattributed' then 'Facebook'
-                        when onfy_mart.device_events.payload.utm_source is null then 'Unknown'
-                        when onfy_mart.device_events.payload.utm_source = 'Google Organic Search' then 'Organic'
-                        else onfy_mart.device_events.payload.utm_source
-                    end
-            end
-        , 'Unknown') AS utm_source,
-        case 
-            when onfy_mart.device_events.type = 'externalLink' 
-            then onfy_mart.device_events.payload.params.utm_campaign
-            else onfy_mart.device_events.payload.utm_campaign 
-        end as utm_campaign,
-            case 
-            when 
-                lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%adchampaign%'
-                or lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign))like '%adchampagn%' 
-                then 'adchampagne'
-                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%rocket%' then 'rocket10'
-                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%whiteleads%' then 'whiteleads'
-                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%ohm%' then 'ohm'
-                else 'onfy'
-            end as partner
-    from {{ source('onfy_mart', 'device_events')}}
-    where 1=1
-        and type in ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
-),
-
 corrected_sources as 
 (
-    select
-        sources.*,
-        lower(coalesce(utm.source_corrected, sources.utm_source)) as source_corrected,
-        lower(coalesce(utm.campaign_corrected, sources.utm_campaign)) as campaign_corrected
-    from sources
-    left join {{ref("utm_campaigns_corrected")}} as utm
-        on coalesce(lower(utm.utm_campaign), '') = coalesce(lower(sources.utm_campaign), '') 
-        and coalesce(lower(utm.utm_source), '') = coalesce(lower(sources.utm_source), '') 
+    select *
+    from 
+        {{source('onfy', 'sources')}}
 ),
 
 session_precalc as 
@@ -104,7 +43,7 @@ session_precalc as
             and to_unix_timestamp(lag(event_ts_cet) over (partition by device_id order by event_ts_cet)) is not null,
             0, 1
         ) as new_session_group,
-        if(source_corrected in ('unknown', 'unmarked_facebook_or_instagram'), 0, 1) as significant_source,
+        if(source_corrected in ('unknown', 'unmarked_facebook_or_instagram', 'social'), 0, 1) as significant_source,
         source_corrected,
         campaign_corrected
     from corrected_sources
@@ -133,6 +72,8 @@ sessions as
         *,
         first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window order by event_ts_cet) as source,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window order by event_ts_cet) as campaign,
+        first_value(sessions_window.source_corrected) over (partition by device_id, significant_source_window order by event_ts_cet) as source_significant,
+        first_value(sessions_window.campaign_corrected) over (partition by device_id, significant_source_window order by event_ts_cet) as campaign_significant,
         rank() over (partition by device_id, ultimate_window order by event_ts_cet) as session_num
     from sessions_window
 ),
@@ -182,8 +123,13 @@ data_combined as
       event_ts_cet as session_dt,
       date_trunc('month', coalesce(event_ts_cet, order_created_time_cet)) as report_month,
       coalesce(event_ts_cet, order_created_time_cet) as report_dt,
-      coalesce(sessions.source, 'no source found') as source,
+      coalesce(sessions.source, 'direct') as source,
+      sessions.source_significant,
       sessions.campaign,
+      sessions.campaign_significant,
+      sessions.ultimate_window,
+      sessions.significant_source_window,
+      sessions.timeout_source_window,
       coalesce(sessions.device_id, order_data.device_id) as device_id,
       coalesce(order_data.user_email_hash, sessions.device_id) as combined_id,
       promocode_discount,
