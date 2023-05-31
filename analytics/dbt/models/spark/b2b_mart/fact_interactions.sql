@@ -23,7 +23,9 @@ user_interaction as
     interaction_create_date, 
     date(interaction_create_date) as partition_date_msk,
     date(interaction_create_date) - WEEKDAY( date(interaction_create_date)) AS created_week,
-    case when first_interaction_type then 1 else 0 end as first_interaction,
+    case when first_interaction_type then 1 
+        when rn = 1 and is_attr = 0 then 1 
+        else 0 end as first_interaction,
     utm_campaign,
     utm_source,
     utm_medium,
@@ -51,6 +53,8 @@ user_interaction as
             reject_reason,
             user_created_time,
             validated_date,
+            sum(case when first_interaction_type then 1 else 0 end) over (partition by user_id) as is_attr,
+            row_number() over (partition by user_id order by interaction_create_date) as rn,
             max(case when last_interaction_type then utm_campaign end) over (partition by user_id) as utm_campaign,
             max(case when last_interaction_type then utm_source end) over (partition by user_id) as utm_source,
             max(case when last_interaction_type then utm_medium end) over (partition by user_id) as utm_medium,
