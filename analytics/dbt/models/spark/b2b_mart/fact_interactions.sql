@@ -26,12 +26,12 @@ user_interaction as
     case when first_interaction_type then 1 
         when rn = 1 and is_attr = 0 then 1 
         else 0 end as first_interaction,
-    utm_campaign,
-    utm_source,
-    utm_medium,
-    source, 
-    type,
-    campaign,
+    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then utm_campaign end) over (partition by user_id) as utm_campaign,
+    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then utm_source end) over (partition by user_id) as utm_source,
+    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then utm_medium end) over (partition by user_id) as utm_medium,
+    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then source end) over (partition by user_id) as source, 
+    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then type end) over (partition by user_id) as type,
+    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then campaign end) over (partition by user_id) as campaign
     country,
     grade,
     validation_status,
@@ -55,12 +55,12 @@ user_interaction as
             validated_date,
             sum(case when first_interaction_type then 1 else 0 end) over (partition by user_id) as is_attr,
             row_number() over (partition by user_id order by interaction_create_date) as rn,
-            max(case when last_interaction_type then utm_campaign end) over (partition by user_id) as utm_campaign,
-            max(case when last_interaction_type then utm_source end) over (partition by user_id) as utm_source,
-            max(case when last_interaction_type then utm_medium end) over (partition by user_id) as utm_medium,
-            max(case when last_interaction_type then source end) over (partition by user_id) as source, 
-            max(case when last_interaction_type then type end) over (partition by user_id) as type,
-            max(case when last_interaction_type then campaign end) over (partition by user_id) as campaign
+            utm_campaign,
+            utm_source,
+            utm_medium,
+            source, 
+            type,
+            campaign
         from {{ ref('fact_attribution_interaction') }} m
         join not_jp_users n on n.uid = m.user_id
         
