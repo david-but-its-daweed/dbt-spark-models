@@ -50,7 +50,7 @@ interactions as (
         current_type as type,
         current_campaign as campaign,
         rn
-    from {{ ref('fact_attribution_interactions') }}
+    from {{ ref('fact_interactions') }}
 ),
 
 orders as (
