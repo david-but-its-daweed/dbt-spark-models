@@ -17,7 +17,7 @@ dealType,
 date(FROM_UNIXTIME(estimatedEndDate/1000)) as estimated_date,
 estimatedGmv.* ,
 interactionId,
-moderatorId,
+max(moderatorId) over (partition by dealId order by moderatorId is null, updatedTime desc) as moderatorId,
 name,
 date(FROM_UNIXTIME(updatedTime/1000)) as updated_date,
 userId,
@@ -140,12 +140,16 @@ source as
         source, 
         type,
         campaign,
-        min_date_payed,
-        country,
-        grade
+        min_date_payed
     from {{ ref('fact_attribution_interaction') }}
     where last_interaction_type
- )
+ ),
+ 
+ 
+users as (
+ select distinct 
+ user_id, country, grade, company_name
+ from {{ ref('fact_customers') }})
 
 select distinct 
 d.deal_id,
@@ -204,12 +208,13 @@ userId as user_id,
 source, 
 type,
 campaign,
- grade,
+grade,
 country,
 min_date_payed,
 date('{{ var("start_date_ymd") }}') as partition_date_msk
 from deals
 left join source on deals.userId = source.user_id
+left join users on deals.userId = users.user_id
 where rn = 1
 ) d 
 left join admin on d.moderator_id = admin.admin_id
