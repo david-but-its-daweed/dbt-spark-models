@@ -31,7 +31,7 @@ user_interaction as
     max(case when last_interaction_type or (rn = 1 and is_attr = 0) then utm_medium end) over (partition by user_id) as utm_medium,
     max(case when last_interaction_type or (rn = 1 and is_attr = 0) then source end) over (partition by user_id) as source, 
     max(case when last_interaction_type or (rn = 1 and is_attr = 0) then type end) over (partition by user_id) as type,
-    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then campaign end) over (partition by user_id) as campaign
+    max(case when last_interaction_type or (rn = 1 and is_attr = 0) then campaign end) over (partition by user_id) as campaign,
     country,
     grade,
     validation_status,
