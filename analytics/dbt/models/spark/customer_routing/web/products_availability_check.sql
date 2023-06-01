@@ -7,7 +7,6 @@
     meta = {
       'team': 'clan',
       'bigquery_load': 'true',
-      'alerts_channel': "#olc_dbt_alerts",
       'bigquery_partitioning_date_column': 'partition_date_msk',
       'bigquery_fail_on_missing_partitions': 'false'
     }
