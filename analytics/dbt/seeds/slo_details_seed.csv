@@ -8,14 +8,13 @@ slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6
 slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,6,used in Overview report in analytics.joom.ai for Pro columns,platform,0,#analytics-achtung
 slo_pnl,PnL report,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,9,PnL report data https://analytics.joom.ai/pnl/profit_by_day,platform,80,#analytics-achtung
 slo_pivots,Pivot tables,@leonid.enov,#category-analytics-alerts,8,Data for pivot tables,report,0,#category-analytics-alerts
-slo_istaff_report,iStaff,,#slo-monitoring,7,Data for iStaff report https://secure.holistics.io/dashboards/v3/54269-istaff,report,80,
+slo_istaff_report,iStaff,@gusev,#analytics-diagnostics,7,Data for iStaff report https://secure.holistics.io/dashboards/v3/54269-istaff,report,80,#analytics-diagnostics
 slo_gold,Gold,@gusev,#slo-monitoring,7,Gold-dataset,mart,80,
 slo_jm_base_tables,JM Main Tables,@gburg,#slo-monitoring,7,Joom Marketplace main tables,mart,80,
 slo_jl_base_tables,JL Main Tables,@e.kotsegubov,#slo-monitoring,7,Joom Logistics main tables,mart,80,
 slo_jpro_base_tables,JPro Main Tables,@amitiushkina,#slo-monitoring,7,JoomPro main tables,mart,80,
-slo_jpay_base_tables,JPay Main Tables,@psidorov,#slo-monitoring,7,JoomPay main tables,mart,80,
-slo_onfy_base_tables,Only Main Tables,@marksysoev,#slo-monitoring,7,Only main tables,mart,80,
-slo_losses_in_profit_report,Losses in Profit,@espander,#slo-monitoring,7,Data for Losses in Profit report https://secure.holistics.io/dashboards/v3/64762-losses-in-profit,report,80,
+slo_onfy_base_tables,Onfy Main Tables,@marksysoev,#slo-monitoring,7,Onfy main tables,mart,80,
+slo_losses_in_profit_report,Losses in Profit,@espander,,7,Data for Losses in Profit report https://secure.holistics.io/dashboards/v3/64762-losses-in-profit,report,80,
 slo_gmv_structure_report,GMV Structure,@espander,#slo-monitoring,7,Data for GMV Structure report https://secure.holistics.io/dashboards/v3/63886-gmv-structure,report,80,
-slo_contribution_profit_report,Contribution Profit,@espander,#slo-monitoring,7,Data for Contribution Profit report https://secure.holistics.io/dashboards/v3/63984-contribution-profit,report,80,
-slo_country_info_report,Country Info,@yatsushko,#slo-monitoring,7,Data for Country Info report https://secure.holistics.io/dashboards/v3/17297-country-info,report,80,
+slo_contribution_profit_report,Contribution Profit,@espander,,7,Data for Contribution Profit report https://secure.holistics.io/dashboards/v3/63984-contribution-profit,report,80,
+slo_country_info_report,Country Info,@yatsushko,,7,Data for Country Info report https://secure.holistics.io/dashboards/v3/17297-country-info,report,80,
