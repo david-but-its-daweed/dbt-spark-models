@@ -29,22 +29,24 @@ users as (
 
 orders as (
     select distinct * from
-    (select user_id, fo.order_id,
+    (
+     select user_id, fo.order_id,
         fo.created_ts_msk as partition_date_msk,
         first_value(status) over (partition by user_id, fo.order_id order by event_ts_msk desc) as current_status,
         first_value(sub_status) over (partition by user_id, fo.order_id order by event_ts_msk desc) as current_sub_status,
         date(min(case when sub_status = "priceEstimation" or (status = 'selling' and sub_status != 'new') then event_ts_msk end) 
             over (partition by user_id, fo.order_id)) as min_price_estimation_time,
         min_manufactured_ts_msk as min_manufacturing_time,
-        date(lead(case when status not in ('cancelled', 'closed', 'claimed') then event_ts_msk end) over (partition by user_id order by event_ts_msk)) as next_total_time,
         date(max(case when status not in ('cancelled', 'closed', 'claimed') then event_ts_msk end) over (partition by user_id)) as max_total_time,
         date(lag(case when status not in ('cancelled', 'closed', 'claimed') then event_ts_msk end) over (partition by user_id, fo.order_id order by event_ts_msk)) as current_status_time,
         lag(fos.status) over (partition by user_id, fo.order_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk) as last_status,
-        lag(fos.sub_status) over (partition by user_id, fo.order_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk) as last_sub_status
+        lag(fos.sub_status) over (partition by user_id, fo.order_id order by case when status != 'cancelled' then 0 else 1 end, event_ts_msk) as last_sub_status,
+      row_number() over (partition by user_id, fo.order_id order by event_ts_msk desc) as rn
     from {{ ref('fact_order') }} fo
     left join
         {{ ref('fact_order_statuses') }} fos on fo.order_id = fos.order_id 
     )
+    where rn = 1
 )
     
 select distinct 
@@ -62,7 +64,6 @@ min_manufacturing_time,
 current_status_time,
 last_status,
 last_sub_status,
-next_total_time,
 max_total_time,
 sum(case when min_manufacturing_time is not null then 1 else 0 end) over (partition by u.user_id) as orders
 from users u 
