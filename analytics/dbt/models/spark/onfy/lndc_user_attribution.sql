@@ -25,51 +25,12 @@ with first_purchases as
 
 sources as (
     select distinct
-        device_events.device_id,
-        device_events.type,
-        device_events.payload.link,
-        device_events.event_ts_cet,
-        device_events.payload.referrer,
-        coalesce(
-            case 
-                when device_events.type = 'externalLink'
-                then
-                    case
-                        when device_events.payload.params.utm_source is not null
-                        then device_events.payload.params.utm_source
-                        when 
-                            (device_events.payload.referrer like '%/www.google%') 
-                            or (device_events.payload.referrer like '%/www.bing%')
-                            or (device_events.payload.referrer like '%/search.yahoo.com%')
-                            or (device_events.payload.referrer like '%/duckduckgo.com%')
-                        then 'Organic'
-                        when
-                            (device_events.payload.referrer like '%facebook.com%') 
-                            or (device_events.payload.referrer like '%instagram.com%')             
-                        then 'UNMARKED_facebook_or_instagram'      
-                    end
-                when device_events.type in ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
-                then
-                    case
-                        when device_events.payload.utm_source = 'Unattributed' then 'Facebook'
-                        when device_events.payload.utm_source is null then 'Unknown'
-                        when device_events.payload.utm_source = 'Google Organic Search' then 'Organic'
-                        else device_events.payload.utm_source
-                    end
-            end
-        , 'Unknown') as source,
-        case 
-            when device_events.type = 'externalLink' 
-            then device_events.payload.params.utm_campaign
-            else device_events.payload.utm_campaign 
-        end as utm_campaign,
+        sources.*,
         order.user_email_hash
     from 
-        {{ source('onfy_mart', 'device_events') }} as device_events
-    left join  {{ source('pharmacy_landing', 'order') }} as order
-        on device_events.device_id = order.device_id
-    where 
-        device_events.type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
+        {{ source('onfy', 'sources') }} as sources
+    left join {{ source('pharmacy_landing', 'order') }}
+        on sources.device_id = order.device_id
 ),
        
 last_not_unknown as (
@@ -79,46 +40,64 @@ last_not_unknown as (
         first_purchases.first_purchase_date_ts_cet,
         to_utc_timestamp(first_purchases.first_purchase_date_ts_cet, 'Europe/Berlin') as first_purchase_date_ts_utc,
         first_purchases.first_purchase_device_id,
-        coalesce(max(paid_sources.event_ts_cet), max(organic_sources.event_ts_cet), max(all_sources.event_ts_cet)) as source_ts_cet,
+        coalesce(max(paid_sources.source_dt), max(organic_sources.source_dt), max(all_sources.source_dt)) as source_ts_cet,
         coalesce(
-            to_utc_timestamp(max(paid_sources.event_ts_cet), 'Europe/Berlin'), 
-            to_utc_timestamp(max(organic_sources.event_ts_cet), 'Europe/Berlin'), 
-            to_utc_timestamp(max(all_sources.event_ts_cet), 'Europe/Berlin')
+            to_utc_timestamp(max(paid_sources.source_dt), 'Europe/Berlin'), 
+            to_utc_timestamp(max(organic_sources.source_dt), 'Europe/Berlin'), 
+            to_utc_timestamp(max(all_sources.source_dt), 'Europe/Berlin')
         ) as source_ts_utc,
         coalesce(
-            max_by(paid_sources.source, paid_sources.event_ts_cet), 
-            max_by(organic_sources.source, organic_sources.event_ts_cet),
-            max_by(all_sources.source, all_sources.event_ts_cet),
+            max_by(paid_sources.source_corrected, paid_sources.source_dt), 
+            max_by(organic_sources.source_corrected, organic_sources.source_dt),
+            max_by(all_sources.source_corrected, all_sources.source_dt),
+            'Unknown'
+        ) as _source_corrected,
+        coalesce(
+            max_by(paid_sources.utm_source, paid_sources.source_dt), 
+            max_by(organic_sources.utm_source, organic_sources.source_dt),
+            max_by(all_sources.utm_source, all_sources.source_dt),
             'Unknown'
         ) as source,
         coalesce(
-            max_by(paid_sources.device_id, paid_sources.event_ts_cet),
-            max_by(organic_sources.device_id, organic_sources.event_ts_cet),
-            max_by(all_sources.device_id, all_sources.event_ts_cet)
+            max_by(paid_sources.utm_medium, paid_sources.source_dt), 
+            max_by(organic_sources.utm_medium, organic_sources.source_dt),
+            max_by(all_sources.utm_medium, all_sources.source_dt),
+            'Unknown'
+        ) as medium,
+        coalesce(
+            max_by(paid_sources.device_id, paid_sources.source_dt),
+            max_by(organic_sources.device_id, organic_sources.source_dt),
+            max_by(all_sources.device_id, all_sources.source_dt)
         ) as source_device_id,       
         coalesce(
-            max_by(paid_sources.type, paid_sources.event_ts_cet),
-            max_by(organic_sources.type, organic_sources.event_ts_cet),
-            max_by(all_sources.type, all_sources.event_ts_cet)
+            max_by(paid_sources.type, paid_sources.source_dt),
+            max_by(organic_sources.type, organic_sources.source_dt),
+            max_by(all_sources.type, all_sources.source_dt)
         ) as source_event_type,
         coalesce(
-            max_by(paid_sources.utm_campaign, paid_sources.event_ts_cet), 
-            max_by(organic_sources.utm_campaign, organic_sources.event_ts_cet),
-            max_by(all_sources.utm_campaign, all_sources.event_ts_cet)
-        ) as utm_campaign
+            max_by(paid_sources.campaign_corrected, paid_sources.source_dt), 
+            max_by(organic_sources.campaign_corrected, organic_sources.source_dt),
+            max_by(all_sources.campaign_corrected, all_sources.source_dt)
+        ) as utm_campaign,
+        coalesce(
+            max_by(paid_sources.campaign_corrected, paid_sources.source_dt), 
+            max_by(organic_sources.campaign_corrected, organic_sources.source_dt),
+            max_by(all_sources.campaign_corrected, all_sources.source_dt),
+            'Unknown'
+        ) as _campaign_corrected
     from 
         first_purchases
     full join sources as paid_sources
         on paid_sources.user_email_hash = first_purchases.user_email_hash
-        and paid_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
-        and paid_sources.source not in ('Unknown', 'Organic', 'UNMARKED_facebook_or_instagram', 'social', 'email', 'newsletter')
+        and paid_sources.source_dt <= first_purchases.first_purchase_date_ts_cet
+        and lower(paid_sources.source_corrected) not in ('unknown', 'organic', 'unmarked_facebook_or_instagram', 'social', 'email', 'newsletter')
     full join sources as organic_sources
         on organic_sources.user_email_hash = first_purchases.user_email_hash
-        and organic_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
-        and organic_sources.source <> 'Unknown'
+        and organic_sources.source_dt <= first_purchases.first_purchase_date_ts_cet
+        and lower(organic_sources.source_corrected) <> lower('Unknown')
     full join sources as all_sources
         on all_sources.user_email_hash = first_purchases.user_email_hash
-        and all_sources.event_ts_cet <= first_purchases.first_purchase_date_ts_cet
+        and all_sources.source_dt <= first_purchases.first_purchase_date_ts_cet
     group by 
         first_purchases.user_email_hash,
         first_purchases.first_purchase_date_ts_cet,
@@ -164,20 +143,17 @@ users_corrected as (
         last_not_unknown_devices_partners.*,
         if(user_email_hash is not null, 1, 0) as is_buyer,
         lower(case 
-            when last_not_unknown_devices_partners.partner = 'onfy' 
-            then coalesce(pharmacy.utm_campaigns_corrected.source_corrected, last_not_unknown_devices_partners.source)
-            else last_not_unknown_devices_partners.partner
+            when partner = 'onfy' 
+            then coalesce(_source_corrected, source)
+            else partner
         end) as source_corrected,
         case 
-            when last_not_unknown_devices_partners.partner = 'onfy' 
-            then coalesce(pharmacy.utm_campaigns_corrected.campaign_corrected, last_not_unknown_devices_partners.utm_campaign)
-            else last_not_unknown_devices_partners.partner
+            when partner = 'onfy' 
+            then coalesce(_campaign_corrected, utm_campaign)
+            else partner
         end as campaign_corrected
     from 
         last_not_unknown_devices_partners
-    left join pharmacy.utm_campaigns_corrected
-        on coalesce(lower(pharmacy.utm_campaigns_corrected.utm_campaign), '') = coalesce(lower(last_not_unknown_devices_partners.utm_campaign), '') 
-        and coalesce(lower(pharmacy.utm_campaigns_corrected.utm_source), '') = coalesce(lower(last_not_unknown_devices_partners.source), '') 
 )
 
 select *

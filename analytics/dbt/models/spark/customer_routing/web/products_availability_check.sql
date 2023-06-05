@@ -7,7 +7,6 @@
     meta = {
       'team': 'clan',
       'bigquery_load': 'true',
-      'alerts_channel': "#olc_dbt_alerts",
       'bigquery_partitioning_date_column': 'partition_date_msk',
       'bigquery_fail_on_missing_partitions': 'false'
     }
@@ -23,7 +22,7 @@ SELECT DISTINCT
 FROM {{ source('mart', 'device_events') }}
 WHERE
     `type` IN ('productOpenServer')
-    AND device.os_type LIKE "%web%"
+ --   AND device.os_type LIKE "%web%"
     {% if is_incremental() %}
         AND partition_date >= date'{{ var("start_date_ymd") }}'
         AND partition_date < date'{{ var("end_date_ymd") }}'

@@ -1,0 +1,18 @@
+bucket,usage_type,coef
+joom-analytics-ads,EUC1-TimedStorage-ByteHrs, -0.11
+joom-analytics-adtech,EUC1-TimedStorage-ByteHrs,-0.20
+joom-analytics-cache,EUC1-TimedStorage-ByteHrs,0.20
+joom-analytics-experiments,EUC1-TimedStorage-ByteHrs,-0.20
+joom-analytics-landing,EUC1-TimedStorage-ByteHrs,-0.11
+joom-analytics-logistics,EUC1-TimedStorage-ByteHrs,-0.11
+joom-analytics-mart,EUC1-TimedStorage-ByteHrs,-0.16
+joom-analytics-recom,EUC1-TimedStorage-ByteHrs,-0.20
+joom-analytics-search,EUC1-TimedStorage-ByteHrs,-0.19
+joom-analytics-users,EUC1-TimedStorage-ByteHrs,-0.16
+joom-analytics-vault,EUC1-TimedStorage-ByteHrs,-0.03
+joom-analytics-landing,EUC1-TimedStorage-GlacierByteHrs,-0.11
+joom-analytics-mart,EUC1-TimedStorage-GlacierByteHrs,-0.11
+joom-analytics-users,EUC1-TimedStorage-GlacierByteHrs,-0.11
+joom-analytics-vault,EUC1-TimedStorage-GlacierByteHrs,-0.11
+joom-analytics-mart,EUC1-TimedStorage-INT-AIA-ByteHrs,1.04
+joom-analytics-landing,EUC1-TimedStorage-SIA-ByteHrs,-0.20

@@ -8,10 +8,11 @@
 ) }}
 
 
+
 with not_jp_users AS (
   SELECT DISTINCT user_id
-  FROM {{ ref('fact_user_request') }}
-  WHERE is_joompro_employee = TRUE
+  FROM {{ ref('dim_user') }}
+  WHERE not fake or fake is null
 ),
 
 users_owner as (
@@ -52,12 +53,12 @@ order_v2_mongo AS
 (
     SELECT fo.order_id AS order_id,
         fo.user_id,
+        DATE(fo.created_ts_msk) as created_ts_msk,
         DATE(fo.min_manufactured_ts_msk) AS manufactured_date,
         MIN(DATE(fo.min_manufactured_ts_msk)) OVER (PARTITION BY fo.user_id) AS min_manufactured_date
     FROM {{ ref('fact_order') }} AS fo
-    LEFT JOIN not_jp_users AS u ON fo.user_id = u.user_id
+    JOIN not_jp_users AS u ON fo.user_id = u.user_id
     WHERE fo.last_order_status < 60
-        AND u.user_id IS NULL
         AND fo.last_order_status >= 10
         AND fo.next_effective_ts_msk IS NULL
         AND fo.min_manufactured_ts_msk IS NOT NULL
@@ -82,17 +83,19 @@ order_v2_mongo AS
     WHERE rn = 1
 ),
 
-sources AS (
-  select distinct
-        utm_campaign,
-        utm_source,
-        utm_medium,
-        source, 
-        type,
-        campaign,
-        order_id
-    FROM {{ ref('fact_interactions') }}
-),
+source as
+ (select 
+         user_id,
+         source, 
+         type,
+         campaign,
+         utm_campaign,
+         utm_source,
+         utm_medium,
+         min_date_payed
+     from {{ ref('fact_attribution_interaction') }}
+     where last_interaction_type
+  ),
 
 after_second_qrt_new_order AS
 (
@@ -107,16 +110,17 @@ after_second_qrt_new_order AS
         source, 
         type,
         campaign,
-        user_id,
+        o.user_id,
         a.email as owner_email,
         a.owner_role,
+        CASE WHEN min_date_payed is null or DATE(min_date_payed) >= created_ts_msk THEN FALSE ELSE TRUE END as retention,
         CASE WHEN
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
         END AS first_order
     FROM order_v2 AS p
     INNER JOIN order_v2_mongo AS o ON  p.order_id = o.order_id
-    LEFT JOIN sources AS s on p.order_id = s.order_id
+    LEFT JOIN source AS s on o.user_id = s.user_id
     LEFT JOIN admin AS a on p.owner_moderator_id = a.admin_id
     WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547')
     GROUP BY 
@@ -128,13 +132,20 @@ after_second_qrt_new_order AS
       source, 
       type,
       campaign,
+      CASE WHEN min_date_payed is null or DATE(min_date_payed) >= created_ts_msk THEN FALSE ELSE TRUE END,
       CASE WHEN
             o.min_manufactured_date < o.manufactured_date THEN 'first order'
             ELSE 'repeated order'
       END,
-      user_id,
+      o.user_id,
       a.email,
       a.owner_role
+),
+
+country as (
+    select distinct user_id, coalesce(country, "RU") as country
+    from {{ ref('dim_user') }}
+    where next_effective_ts_msk is null
 ),
 
 users as (
@@ -168,7 +179,9 @@ SELECT
     a.source,
     a.type,
     a.campaign,
+    a.retention,
     a.user_id, 
+    c.country,
     ad.email as owner_email,
     ad.owner_role as owner_role,
     a.first_order,
@@ -183,4 +196,5 @@ SELECT
     left join users on a.user_id = users.user_id and a.t = users.day
     left join users_owner uo on a.user_id = uo.user_id and a.t = uo.day
     left join admin ad on uo.owner_moderator_id = ad.admin_id
+    left join country c on a.user_id = c.user_id
 WHERE gmv_initial > 0
