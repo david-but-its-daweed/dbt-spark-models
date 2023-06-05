@@ -57,6 +57,7 @@ sources:
       - name: b2b_core_stores_daily_snapshot
       - name: b2b_core_admin_user_plans_daily_snapshot
       - name: b2b_core_pick_up_orders_v2_daily_snapshot
+      - name: b2b_core_customer_rfq_request_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: b2b_core_interactions_daily_snapshot
@@ -113,6 +114,9 @@ sources:
       - name: s3_file_usage
       - name: table_locations
       - name: s3_costs
+      - name: s3_accesses_with_tables
+      - name: s3_inventory_with_tables
+      - name: context_product_counters_v5
   - name: pharmacy
     tables:
       - name: google_campaign_insights

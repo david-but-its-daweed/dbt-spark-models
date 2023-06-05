@@ -17,7 +17,7 @@ dealType,
 date(FROM_UNIXTIME(estimatedEndDate/1000)) as estimated_date,
 estimatedGmv.* ,
 interactionId,
-moderatorId,
+max(moderatorId) over (partition by dealId order by moderatorId is null, updatedTime desc) as moderatorId,
 name,
 date(FROM_UNIXTIME(updatedTime/1000)) as updated_date,
 userId,
@@ -128,25 +128,11 @@ from
 admin AS (
     SELECT
         admin_id,
-        a.email,
-        s.role as owner_role
+        a.email as owner_email,
+        a.role as owner_role
     FROM {{ ref('dim_user_admin') }} a
-    LEFT JOIN {{ ref('support_roles') }} s on a.email = s.email
 ),
 
-gmv as (
-    select distinct
-    t as date_payed, 
-    g.order_id,
-    g.gmv_initial,
-    g.initial_gross_profit,
-    g.final_gross_profit,
-    g.owner_email,
-    g.owner_role,
-    interaction_id
-    FROM {{ ref('gmv_by_sources') }} g
-    left join {{ ref('fact_interactions') }} i on g.order_id = i.order_id
-),
 
 source as
 (select 
@@ -157,11 +143,37 @@ source as
         min_date_payed
     from {{ ref('fact_attribution_interaction') }}
     where last_interaction_type
- )
+ ),
+ 
+ 
+users as (
+ select distinct 
+ user_id, country, grade, company_name
+ from {{ ref('fact_customers') }})
 
-select distinct d.*,
-ds.status, ds.status_int, ds.current_date, ds.min_date,
-case when min_date_payed >= min_date or min_date_payed is null then FALSE ELSE TRUE end as retention
+select distinct 
+d.deal_id,
+d.deal_type,
+d.estimated_date,
+d.estimated_gmv,
+d.interaction_id,
+d.owner_email,
+d.owner_role,
+d.deal_name,
+d.updated_date,
+d.user_id,
+d.source,
+d.type,
+d.campaign,
+d.min_date_payed,
+ds.status,
+ds.status_int,
+ds.current_date,
+ds.min_date,
+case when min_date_payed >= min_date or min_date_payed is null then FALSE ELSE TRUE end as retention,
+d.grade,
+d.country,
+d.partition_date_msk
 from
 (
 select 
@@ -170,18 +182,17 @@ deal_type,
 estimated_date,
 estimated_gmv,
 d.interaction_id,
-gmv.owner_email,
-gmv.owner_role,
+admin.owner_email,
+admin.owner_role,
 deal_name,
 updated_date,
 user_id,
 source, 
 type,
 campaign,
+country,
+grade, 
 min_date_payed,
-sum(gmv_initial) as gmv_initial,
-sum(initial_gross_profit) as initial_gross_profit,
-sum(final_gross_profit) as final_gross_profit,
 partition_date_msk
 from
 (select 
@@ -192,29 +203,36 @@ amount as estimated_gmv,
 interactionId as interaction_id,
 name as deal_name,
 updated_date,
+moderatorId as moderator_id,
 userId as user_id,
 source, 
 type,
 campaign,
+grade,
+country,
 min_date_payed,
 date('{{ var("start_date_ymd") }}') as partition_date_msk
 from deals
 left join source on deals.userId = source.user_id
+left join users on deals.userId = users.user_id
 where rn = 1
-) d left join gmv on d.interaction_id = gmv.interaction_id
+) d 
+left join admin on d.moderator_id = admin.admin_id
 group by deal_id, 
 deal_type, 
 estimated_date,
 estimated_gmv,
+admin.owner_email,
+admin.owner_role,
 d.interaction_id,
-gmv.owner_email,
-gmv.owner_role,
 deal_name,
 updated_date,
 user_id,
 source, 
 type,
 campaign,
+country,
+grade, 
 min_date_payed,
 partition_date_msk
 ) d left join deal_status ds on d.deal_id = ds.deal_id

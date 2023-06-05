@@ -9,25 +9,15 @@
 ) }}
 
 with deals as (select distinct
-interaction_id, user_id, deal_id, estimated_gmv, deal_type,
-               status, status_int, current_date
+              interaction_id, user_id, deal_id, estimated_gmv, deal_type,
+               status, status_int, current_date, owner_email,
+               owner_role, country,
+               source, type, campaign,
+               grade
 from {{ ref('fact_deals') }} where partition_date_msk = 
 (select max(partition_date_msk) from {{ ref('fact_deals') }})
 ),
 
-interactions as (
-    select distinct interaction_id, source, type, campaign,
-    current_source, current_type, current_campaign
-    from {{ ref('fact_interactions') }}
-),
-
-users as (
-select distinct user_id, grade, grade_probability
-from {{ ref('users_daily_table') }}
-    where partition_date_msk = (
-    select max(partition_date_msk) from {{ ref('users_daily_table') }}
-    )
-),
 
 
 t as (select distinct 
@@ -189,9 +179,10 @@ MAX(d.status_int > 100 and t1.status_int = 100 and prev_status_int is null) OVER
 THEN "fast_rejected" ELSE "normal" end as deal_normality,
 d.interaction_id, d.user_id, d.estimated_gmv, d.deal_type,
 d.status as current_status, d.status_int as current_status_int, d.current_date as current_status_date,
-i.source, i.type, i.campaign,
-i.current_source, i.current_type, i.current_campaign,
-grade, grade_probability
+d.owner_email,
+d.owner_role,
+d.source, d.type, d.campaign,
+d.grade, d.country
 from (
     select * from t1
     where week <= current_date()
@@ -200,6 +191,4 @@ from (
     where week <= current_date()
 ) t1
 left join deals d on t1.deal_id = d.deal_id
-left join interactions i on i.interaction_id = d.interaction_id
-left join users u on d.user_id = u.user_id
 )
