@@ -320,24 +320,21 @@ first_entries AS
          FROM responses_to_support AS t
          LEFT JOIN responses_to_customer AS a ON a.ticket_id = t.ticket_id
          ),    
-        csat_prebase AS
-             (
-              SELECT
-                  t.payload.ticketId AS ticket_id,
-                  LAST_VALUE(t.payload.selectedOptionsIds[0]) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
-              FROM {{ source('mart', 'babylone_events') }} AS t
-              WHERE t.`type` = 'babyloneWidgetAction'
+        csat AS (
+        SELECT
+             ticket_id,
+             csat
+        FROM (
+              SELECT t.payload.ticketId AS ticket_id,
+                     t.payload.selectedOptionsIds[0] AS csat,
+                     ROW_NUMBER() OVER (PARTITION BY t.payload.ticketId ORDER BY  t.event_ts_msk DESC) AS rn
+               FROM {{ source('mart', 'babylone_events') }} AS t
+               WHERE t.`type` = 'babyloneWidgetAction'
                     AND t.payload.widgetType = 'did_we_help'
                     AND t.payload.selectedOptionsIds[0] IS NOT NULL
-             ),
-        csat AS
-             (
-              SELECT
-                  t.ticket_id AS ticket_id,
-                  MIN(t.csat) AS csat
-              FROM csat_prebase AS t
-              GROUP BY 1
-             ),
+             )
+        WHERE rn = 1
+        ),
         csat_was_triggered AS
              (
               SELECT DISTINCT
