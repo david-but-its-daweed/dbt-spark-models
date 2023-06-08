@@ -1,6 +1,6 @@
 {{ config(
     schema='holistics',
-    materialized='view'
+    materialized='view',
     meta = {
       'bigquery_load': 'true'
     },
