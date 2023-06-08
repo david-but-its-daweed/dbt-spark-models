@@ -1,6 +1,9 @@
 {{ config(
     schema='holistics',
     materialized='view'
+    meta = {
+      'bigquery_load': 'true'
+    },
 ) }}
 
 SELECT
