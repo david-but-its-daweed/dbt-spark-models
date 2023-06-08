@@ -26,12 +26,12 @@ SELECT
     sources.gbq_dataset AS gbq_dataset,
     sources.gbq_table AS gbq_table,
     sources.table_type as table_type
-FROM `holistics.dashboards` AS dashboards
-         LEFT JOIN `holistics.dashboards_widgets` AS dashboards_widgets ON dashboards_widgets.dashboard_id = dashboards.dashboard_id
-         LEFT JOIN `holistics.widgets` AS widgets ON widgets.widget_id = dashboards_widgets.widget_id
-         LEFT JOIN `holistics.widgets_datasets` AS widgets_datasets ON widgets_datasets.widget_id = dashboards_widgets.widget_id
-         LEFT JOIN `holistics.datasets` AS datasets ON datasets.dataset_id = widgets_datasets.dataset_id
-         LEFT JOIN `holistics.users` AS users ON users.user_id = datasets.dataset_owner_id
-         LEFT JOIN `holistics.widgets_datamodels` AS widgets_datamodels ON widgets_datamodels.widget_id = dashboards_widgets.widget_id
-         LEFT JOIN `holistics.datamodels` AS datamodels ON datamodels.datamodel_id = widgets_datamodels.datamodel_id
-         LEFT JOIN `holistics.datamodel_sources` AS sources ON sources.holistics_data_model = datamodels.datamodel_title
+FROM holistics.dashboards AS dashboards
+         LEFT JOIN holistics.dashboards_widgets AS dashboards_widgets ON dashboards_widgets.dashboard_id = dashboards.dashboard_id
+         LEFT JOIN holistics.widgets AS widgets ON widgets.widget_id = dashboards_widgets.widget_id
+         LEFT JOIN holistics.widgets_datasets AS widgets_datasets ON widgets_datasets.widget_id = dashboards_widgets.widget_id
+         LEFT JOIN holistics.datasets AS datasets ON datasets.dataset_id = widgets_datasets.dataset_id
+         LEFT JOIN holistics.users AS users ON users.user_id = datasets.dataset_owner_id
+         LEFT JOIN holistics.widgets_datamodels AS widgets_datamodels ON widgets_datamodels.widget_id = dashboards_widgets.widget_id
+         LEFT JOIN holistics.datamodels AS datamodels ON datamodels.datamodel_id = widgets_datamodels.datamodel_id
+         LEFT JOIN holistics.datamodel_sources AS sources ON sources.holistics_data_model = datamodels.datamodel_title
