@@ -72,9 +72,9 @@ user_interaction as
     company_name,
     grade,
     row_number() over (partition by user_id order by case when incorrectAttribution
-        then 1 else 0 end, interactionType, ctms) = 1 as first_interaction_type,
+        then 1 else 0 end, coalesce(interactionType, 100), ctms) = 1 as first_interaction_type,
     row_number() over (partition by user_id order by case when incorrectAttribution
-        then 1 else 0 end, interactionType, ctms desc) = 1 
+        then 1 else 0 end, coalesce(interactionType, 100), ctms desc) = 1 
         as last_interaction_type,
     coalesce(incorrectAttribution, FALSE) as incorrect_attr,
     coalesce(incorrectUtm, FALSE) as incorrect_utm
