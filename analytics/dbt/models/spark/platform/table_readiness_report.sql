@@ -1,12 +1,7 @@
 {{ config(
     schema='platform',
     materialized='view',
-    tags=['data_readiness'],
-    meta = {
-      'bigquery_load': 'true',
-      'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_upload_horizon_days': '30',
-    },
+    tags=['data_readiness']
 ) }}
 
 select source_id,
