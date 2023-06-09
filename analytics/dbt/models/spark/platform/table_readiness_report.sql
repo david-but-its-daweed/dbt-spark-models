@@ -3,7 +3,9 @@
     materialized='view',
     tags=['data_readiness'],
     meta = {
-      'bigquery_load': 'true'
+      'bigquery_load': 'true',
+      'bigquery_partitioning_date_column': 'partition_date',
+      'bigquery_upload_horizon_days': '30',
     },
 ) }}
 
