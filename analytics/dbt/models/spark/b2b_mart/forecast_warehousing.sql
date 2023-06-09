@@ -126,7 +126,7 @@ orders as (
         min_manufactured_ts_msk as min_manufacturing_time,
         channel_type
     from {{ ref('fact_order') }} fo
-    left join b2b_mart.linehaul_channels on linehaul_channel_id = id
+    left join {{ ref('linehaul_channels') }} on linehaul_channel_id = id
     where next_effective_ts_msk is null
 ),
 
@@ -351,7 +351,7 @@ pickup_statuses as
         select distinct 
         _id as pickup_id,
         explode(state.statusHistory)
-        from {{ ref('b2b_mart', 'scd2_pick_up_orders_snapshot') }}
+        from {{ ref('scd2_pick_up_orders_snapshot') }}
         where dbt_valid_to is null
         )
         )
