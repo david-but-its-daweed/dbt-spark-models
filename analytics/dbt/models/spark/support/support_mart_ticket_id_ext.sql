@@ -408,7 +408,7 @@ LEFT JOIN all_parcels AS g ON g.ticket_id = t.ticket_id
 LEFT JOIN all_orders AS h ON h.ticket_id = t.ticket_id
 LEFT JOIN all_agents AS i ON i.ticket_id = t.ticket_id
 LEFT JOIN responses AS k ON k.ticket_id = t.ticket_id
-LEFT JOIN csat AS l ON l.ticket_id = t.ticket_id AND l.event_ts_msk >= b.resolution_ticket_ts_msk
+LEFT JOIN csat AS l ON l.ticket_id = t.ticket_id
 LEFT JOIN ttfr_author_type AS m ON m.ticket_id = t.ticket_id
 LEFT JOIN button_place AS n ON n.ticket_id = t.ticket_id
 LEFT JOIN csat_was_triggered AS o ON o.ticket_id = t.ticket_id
