@@ -35,6 +35,7 @@ SELECT
     t.language,
     t.country,
     t.is_hidden,
+    t.partition_date,
     t.ts_created AS event_ts_creation,
     a.event_ts_msk AS event_ts_transfer_to_queue,
     b.name AS queue
@@ -45,4 +46,4 @@ JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS b
 WHERE a.`type` = 'ticketChangeJoom'
       AND a.partition_date >= '2022-01-01'
       AND a.payload.stateOwner = 'Queue'
-ORDER BY 1, 6
+ORDER BY 1, 7
