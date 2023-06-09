@@ -1,7 +1,10 @@
 {{ config(
     schema='platform',
     materialized='view',
-    tags=['data_readiness']
+    tags=['data_readiness'],
+    meta = {
+      'bigquery_load': 'true'
+    },
 ) }}
 
 select source_id,
