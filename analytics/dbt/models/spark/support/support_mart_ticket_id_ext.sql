@@ -323,11 +323,9 @@ first_entries AS
         csat AS (
         SELECT
              ticket_id,
-             event_ts_msk,
              csat
         FROM (
               SELECT t.payload.ticketId AS ticket_id,
-                     t.event_ts_msk,
                      t.payload.selectedOptionsIds[0] AS csat,
                      ROW_NUMBER() OVER (PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk DESC) AS rn
                FROM {{ source('mart', 'babylone_events') }} AS t
