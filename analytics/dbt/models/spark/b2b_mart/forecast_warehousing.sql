@@ -114,7 +114,7 @@ pickups as
         date(millis_to_ts_msk(pickUpDate)) as pickup_date,
         date(millis_to_ts_msk(plannedDate)) as planned_date,
         date(millis_to_ts_msk(shippedDate)) as shipped_date
-    from {{ source('b2b_mart','scd2_pick_up_orders_snapshot') }}
+    from {{ ref('scd2_pick_up_orders_snapshot') }}
     where dbt_valid_to is null
     )
 ),
