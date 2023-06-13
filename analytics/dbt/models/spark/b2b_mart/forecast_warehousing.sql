@@ -251,7 +251,7 @@ from
     )
     ) o
     join dict d on o.order_id = d.order_id
-    where status is not null
+    where status is not null and date_status is not null
 ),
 
 merchant_order_statuses as (
@@ -287,7 +287,7 @@ merchant_order_statuses as (
             payload.status
     )
     ) o join dict d on o.merchant_order_id = d.merchant_order_id
-    where status is not null
+    where status is not null and date_status is not null
 ),
 
 product_statuses as (
@@ -319,7 +319,7 @@ select distinct
         product_id, status
     )
 ) o join dict d on o.merchant_order_id = d.merchant_order_id and o.product_id = d.product_id
-    where status is not null
+    where status is not null and date_status is not null
 ),
 
 pickup_statuses as 
@@ -370,7 +370,7 @@ pickup_statuses as
         pickup_id
     from pickups
 ) o join dict d on o.pickup_id = d.pickup_id 
-    where status is not null
+    where status is not null and date_status is not null
 ),
 
 psi as (
@@ -394,7 +394,7 @@ select
         merchant_order_id
     ) o 
     join dict d on o.merchant_order_id = d.merchant_order_id and o.product_id = d.product_id
-    where status is not null
+    where status is not null and date_status is not null
 ),
 
 all as (
