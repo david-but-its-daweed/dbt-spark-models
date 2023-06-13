@@ -473,7 +473,7 @@ select distinct
     qty,
     qty_per_box,
     measures,
-    sum(days) over (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box),
+    sum(days) over (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as day_diff,
     date('{{ var("start_date_ymd") }}') as partition_date_msk
 from 
 (
