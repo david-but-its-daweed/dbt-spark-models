@@ -239,11 +239,11 @@ from
         from {{ ref('fact_order_statuses') }}
         where (
          status in (
-            'manufacturing',
+            'manufacturing'
             )
         and sub_status in (
             'client2BrokerPaymentSent',
-            'joomSIAPaymentReceived',
+            'joomSIAPaymentReceived'
             )
         )
         or status = 'shipping'
