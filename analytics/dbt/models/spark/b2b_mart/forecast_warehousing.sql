@@ -220,13 +220,15 @@ from
         when sub_status = 'pickupRequestSentToLogisticians' then 'pickupRequestSentToLogisticians'
         when sub_status = 'pickedUpByLogisticians' then 'pickedUpByLogisticians'
         when sub_status = 'arrivedAtLogisticsWarehouse' then 'arrivedAtLogisticsWarehouse'
-        when sub_status = 'departedFromLogisticsWarehouse' then 'departedFromLogisticsWarehouse' end as status,
+        when sub_status = 'departedFromLogisticsWarehouse' then 'departedFromLogisticsWarehouse' 
+        when status = 'shipping' then sub_status end as status,
         
         case when sub_status = 'client2BrokerPaymentSent' then 1001
         when sub_status = 'pickupRequestSentToLogisticians' then 3001
         when sub_status = 'pickedUpByLogisticians' then 3010
         when sub_status = 'arrivedAtLogisticsWarehouse' then 4001
-        when sub_status = 'departedFromLogisticsWarehouse' then 5001 end as status_int
+        when sub_status = 'departedFromLogisticsWarehouse' then 5001 
+        when status = 'shipping' then 5002 end as status_int
         from
     (
         select distinct
@@ -426,7 +428,7 @@ select
 from
 (
 select * , 
-row_number() over (partition by order_id, merchant_order_id, product_id, pickup_id order by status_int desc, priority desc) as rn
+row_number() over (partition by order_id, merchant_order_id, product_id, pickup_id order by status_int desc, priority desc, date_status desc) as rn
 from
 (
 select * from 
