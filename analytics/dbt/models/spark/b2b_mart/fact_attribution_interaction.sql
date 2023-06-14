@@ -172,5 +172,5 @@ select distinct
         {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
         left join {{ ref('key_amo_status') }} st on amo.status = st.status_id
         where st.status_name in ('решение отложено', 'закрыто и не реализовано')
-    )
+    ) cl on u.amo_id = cl.leadId
     left join orders o on u.user_id = o.user_id
