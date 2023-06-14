@@ -103,7 +103,7 @@ orders as (
     group by fo.user_id
 )
 
-select 
+select distinct 
     interaction_id, 
     interaction_create_date,
     u.user_id, 
