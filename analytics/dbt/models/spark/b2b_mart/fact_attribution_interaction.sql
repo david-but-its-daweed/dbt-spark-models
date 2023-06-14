@@ -47,6 +47,7 @@ user_interaction as
 (select 
     _id as interaction_id, 
     date(from_unixtime(ctms/1000 + 10800)) as interaction_create_date,
+    from_unixtime(ctms/1000 + 10800) as interaction_create_time,
     uid as user_id, 
     popupRequestID as request_id,
     description,
@@ -106,6 +107,7 @@ orders as (
 select distinct 
     interaction_id, 
     interaction_create_date,
+    interaction_create_time,
     u.user_id, 
     request_id,
     description,
