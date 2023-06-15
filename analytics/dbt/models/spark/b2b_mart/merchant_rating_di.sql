@@ -442,7 +442,8 @@ retention AS (
     GROUP BY merchant_id
 )
 
-select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
+select distinct
+    coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
     rfq_recieved,
     rfq_answers,
