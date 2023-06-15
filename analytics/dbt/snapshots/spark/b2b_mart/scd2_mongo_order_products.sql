@@ -43,6 +43,6 @@ SELECT _id AS                              order_product_id,
        vatRate AS vat_rate,
        millis_to_ts_msk(ctms)  AS created_ts_msk ,
        CURRENT_TIMESTAMP()  AS update_ts_msk
-from mongo.b2b_core_order_products_daily_snapshot
+from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
 
 {% endsnapshot %}

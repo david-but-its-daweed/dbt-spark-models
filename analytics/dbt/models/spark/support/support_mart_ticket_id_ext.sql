@@ -327,7 +327,7 @@ first_entries AS
         FROM (
               SELECT t.payload.ticketId AS ticket_id,
                      t.payload.selectedOptionsIds[0] AS csat,
-                     ROW_NUMBER() OVER (PARTITION BY t.payload.ticketId ORDER BY  t.event_ts_msk DESC) AS rn
+                     ROW_NUMBER() OVER (PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk DESC) AS rn
                FROM {{ source('mart', 'babylone_events') }} AS t
                WHERE t.`type` = 'babyloneWidgetAction'
                     AND t.payload.widgetType = 'did_we_help'
