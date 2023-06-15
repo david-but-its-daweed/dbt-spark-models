@@ -253,7 +253,7 @@ select p.order_id,
 
 subsidy as (
 select p.order_id, 
-        round(SUM(IF(tag in ('grant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub
+        round(SUM(IF(type in  ('grant', 'dapGrant') or tag in ('grant', 'dapGrant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub
         from all_prices p
         left join 
         (
