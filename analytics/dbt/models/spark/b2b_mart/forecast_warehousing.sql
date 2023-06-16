@@ -450,7 +450,38 @@ where rn = 1
 left join boxes b on a.merchant_order_id = b.merchant_order_id and a.product_id = b.product_id
 )
 
+select
+    order_id,
+    order_friendly_id,
+    channel_type,
+    order_created_time,
+    min_manufacturing_time,
+    merchant_order_id,
+    merchant_order_friendly_id,
+    manufacturing_days,
+    product_id,
+    pickup_id,
+    pickup_friendly_id,
+    status,
+    status_int,
+    date_status,
+    length,
+    width,
+    hight, 
+    weight,
+    qty,
+    qty_per_box,
+    measures,
+    day_diff,
+    max(case when rn = 1 then status end) over (partition by order_id) as status_order,
+    max(case when rn = 1 then status_int end) over (partition by order_id) as status_int_order,
+    max(case when rn = 1 then date_status end) over (partition by order_id) as date_status_order,
+    max(case when rn = 1 then day_diff end) over (partition by order_id) as day_diff_order,
+    max(case when rn = 1 then date_add(date_status, int(day_diff)) end) over (partition by order_id) as predicted_date_order,
+    date('{{ var("start_date_ymd") }}') as partition_date_msk
 
+from
+(
 select distinct
     order_id,
     order_friendly_id,
@@ -474,7 +505,7 @@ select distinct
     qty_per_box,
     measures,
     sum(days) over (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as day_diff,
-    date('{{ var("start_date_ymd") }}') as partition_date_msk
+    row_number() over (partition by order_id order by status_int) as rn
 from 
 (
 select distinct
@@ -484,4 +515,5 @@ select distinct
     when all.status_int >= 4001 then 0
     else days end as days
 from all left join days on all.channel_type = days.linehaul_channel and all.status_int <= days.status_int
+)
 )
