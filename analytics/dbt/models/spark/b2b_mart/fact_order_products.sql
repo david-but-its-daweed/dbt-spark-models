@@ -45,4 +45,3 @@ SELECT order_product_id,
        created_ts_msk
 from {{ ref('scd2_mongo_order_products') }} t
 left join psi on psi_status_id = _id
-where TIMESTAMP(dbt_valid_to) IS NULL
