@@ -25,14 +25,14 @@ ticket_create_events AS
     (
      SELECT
          t.payload.ticketId AS ticket_id,
-         MAX(t.event_ts_msk) AS ts_created,
-         MAX(t.partition_date) AS partition_date,
-         MAX(t.payload.deviceId) AS device_id,
-         MAX(t.payload.customerExternalId) AS user_id,
-         MAX(t.payload.lang) AS language,
-         MAX(t.payload.country) AS country,
-         MAX(t.payload.messageSource) AS os,
-         MAX(t.payload.isHidden) AS is_hidden
+         MIN(t.event_ts_msk) AS ts_created,
+         MIN(t.partition_date) AS partition_date,
+         MIN(t.payload.deviceId) AS device_id,
+         MIN(t.payload.customerExternalId) AS user_id,
+         MIN(t.payload.lang) AS language,
+         MIN(t.payload.country) AS country,
+         MIN(t.payload.messageSource) AS os,
+         MIN(t.payload.isHidden) AS is_hidden
      FROM {{ source('mart', 'babylone_events') }} AS t
      WHERE t.`type` IN ('ticketCreateJoom', 'ticketCreate')
      GROUP BY 1
