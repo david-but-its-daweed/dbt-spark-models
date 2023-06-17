@@ -32,3 +32,7 @@ seeds:
   - name: spends_campaign_corrected
     config:
       schema: onfy
+
+  - name: manual_tables_seed
+    config:
+      schema: platform
