@@ -10,34 +10,10 @@
 
 
 with not_jp_users AS (
-  SELECT DISTINCT user_id
+  SELECT DISTINCT user_id, owner_id as owner_moderator_id
   FROM {{ ref('dim_user') }}
-  WHERE not fake or fake is null
-),
-
-users_owner as (
-select user_id, day, min(owner_moderator_id) as owner_moderator_id
-from 
-(
-select user_id, owner_moderator_id,
-explode(sequence(to_date(date_from), to_date(date_to), interval 1 day)) as day
-from
-(
-select
-user_id, date(event_ts_msk) as date_from, 
-coalesce(date(lead(event_ts_msk) over (partition by user_id order by event_ts_msk)), current_date()) as date_to,
-owner_moderator_id
-from
-(
-select user_id, event_ts_msk,
-coalesce(lead(owner_moderator_id) over (partition by user_id order by event_ts_msk), '0') as next_owner,
-owner_moderator_id
-from {{ ref('fact_user_change') }}
-where owner_moderator_id is not null)
-where owner_moderator_id != next_owner or next_owner is null
-)
-)
-group by user_id, day
+  WHERE (not fake or fake is null)
+    and select next_effective_ts_msk is null
 ),
 
 admin AS (
@@ -54,7 +30,8 @@ order_v2_mongo AS
         fo.user_id,
         DATE(fo.created_ts_msk) as created_ts_msk,
         DATE(fo.min_manufactured_ts_msk) AS manufactured_date,
-        MIN(DATE(fo.min_manufactured_ts_msk)) OVER (PARTITION BY fo.user_id) AS min_manufactured_date
+        MIN(DATE(fo.min_manufactured_ts_msk)) OVER (PARTITION BY fo.user_id) AS min_manufactured_date,
+        u.owner_moderator_id
     FROM {{ ref('fact_order') }} AS fo
     JOIN not_jp_users AS u ON fo.user_id = u.user_id
     WHERE fo.last_order_status < 60
@@ -120,7 +97,7 @@ after_second_qrt_new_order AS
     FROM order_v2 AS p
     INNER JOIN order_v2_mongo AS o ON  p.order_id = o.order_id
     LEFT JOIN source AS s on o.user_id = s.user_id
-    LEFT JOIN admin AS a on p.owner_moderator_id = a.admin_id
+    LEFT JOIN admin AS a on o.owner_moderator_id = a.admin_id
     WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547', '64466aad3519d01068153f0b')
     GROUP BY 
       manufactured_date, 
@@ -181,8 +158,8 @@ SELECT
     a.retention,
     a.user_id, 
     c.country,
-    ad.email as owner_email,
-    ad.owner_role as owner_role,
+    a.owner_email,
+    a.owner_role,
     a.first_order,
     client, CASE WHEN SUM(CASE WHEN t > add_months(current_date(), -6)
                 AND t <= current_date()
@@ -193,7 +170,5 @@ SELECT
              ELSE 'small client' END as current_client
     FROM after_second_qrt_new_order as a
     left join users on a.user_id = users.user_id and a.t = users.day
-    left join users_owner uo on a.user_id = uo.user_id and a.t = uo.day
-    left join admin ad on uo.owner_moderator_id = ad.admin_id
     left join country c on a.user_id = c.user_id
 WHERE gmv_initial > 0
