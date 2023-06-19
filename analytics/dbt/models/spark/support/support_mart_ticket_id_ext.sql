@@ -112,7 +112,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue
       FROM {{ source('mart', 'babylone_events') }} AS t
-      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+      JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChangeJoom'
             AND t.payload.stateQueueId IS NOT NULL 
@@ -124,7 +124,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue_not_limbo
       FROM {{ source('mart', 'babylone_events') }} AS t
-      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+      JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
            ON t.payload.stateQueueId = a._id
               AND a._id != 'limbo'
       WHERE t.`type` = 'ticketChangeJoom'
@@ -137,7 +137,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           LAST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS current_queue
       FROM {{ source('mart', 'babylone_events') }} AS t
-      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+      JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChangeJoom'
             AND t.payload.stateQueueId IS NOT NULL 
@@ -160,7 +160,7 @@ first_entries AS
                 t.event_ts_msk,
                 a.name AS queue
             FROM {{ source('mart', 'babylone_events') }} AS t
-            JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+            JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
                  ON t.payload.stateQueueId = a._id
             WHERE t.`type` = 'ticketChangeJoom'
                   AND t.payload.stateQueueId IS NOT NULL
@@ -191,7 +191,7 @@ first_entries AS
                  t.ticket_id AS ticket_id,
                  a.name AS tag
              FROM t AS t
-             JOIN {{ source('mongo', 'babylone_joom_tags_daily_snapshot') }} AS a ON t.tag = a._id
+             JOIN mongo.babylone_joom_tags_daily_snapshot AS a ON t.tag = a._id
             )
         SELECT
             t.ticket_id AS ticket_id,
