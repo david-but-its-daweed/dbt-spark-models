@@ -57,7 +57,6 @@ sources:
       - name: b2b_core_stores_daily_snapshot
       - name: b2b_core_admin_user_plans_daily_snapshot
       - name: b2b_core_pick_up_orders_v2_daily_snapshot
-      - name: b2b_core_customer_rfq_request_daily_snapshot
       - name: b2b_core_amo_crm_raw_leads_daily_snapshot
       - name: b2b_core_enumregistry_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
