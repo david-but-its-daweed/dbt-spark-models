@@ -278,13 +278,16 @@ merchant_order_statuses as (
         from
     (
     select payload.id as merchant_order_id,
-            payload.status,
+            case when payload.status = 'advancePaymentAcquired' then 'manufacturingAndQcInProgress'
+                else  payload.status end as statis,
             min(TIMESTAMP(millis_to_ts_msk(payload.updatedTime))) as day
             from {{ source('b2b_mart', 'operational_events') }}
             WHERE type  ='merchantOrderChanged'
-            and payload.status in ('advancePaymentRequested', 'manufacturingAndQcInProgress', 'remainingPaymentRequested')
+            and payload.status in ('advancePaymentRequested', 'advancePaymentAcquired', 
+                'manufacturingAndQcInProgress', 'remainingPaymentRequested')
             group by payload.id,
-            payload.status
+            case when payload.status = 'advancePaymentAcquired' then 'manufacturingAndQcInProgress'
+                else  payload.status end
     )
     ) o join dict d on o.merchant_order_id = d.merchant_order_id
     where status is not null and date_status is not null
