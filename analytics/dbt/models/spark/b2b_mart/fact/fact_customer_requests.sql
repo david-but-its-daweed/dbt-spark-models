@@ -27,10 +27,10 @@ status,
 userId as user_id,
 millis_to_ts_msk(utms) as updated_time
 
-from {{ ref('scd2_customer_rfq_request_snapshot') }} rfq
+from {{ ref('scd2_customer_requests_snapshot') }} rfq
 left join 
 (
 select category_id, name as category_name
     from {{ source('mart', 'category_levels') }}
-) cat on rfq.categories[0] = cat.category_id
+) cat on rfq.categoryId = cat.category_id
 where dbt_valid_to is null
