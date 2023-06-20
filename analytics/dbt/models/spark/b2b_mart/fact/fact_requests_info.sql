@@ -23,3 +23,4 @@ questionnaire.customisation.logoTyped.type as logo_type,
 questionnaire.customisation.packingDesign.type as packing_design,
 questionnaire.customisation.packingType.type as packing_type
 from {{ ref('scd2_customer_requests_snapshot') }}
+where dbt_valid_to is null
