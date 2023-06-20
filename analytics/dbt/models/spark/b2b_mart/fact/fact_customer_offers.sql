@@ -19,7 +19,7 @@ offerType as offer_type,
 orderId as order_id,
 status,
 userId as user_id,
-brokerProps.link as brocker_link,
+brokerProps.link as broker_link,
 millis_to_ts_msk(ctms) as created_time,
 millis_to_ts_msk(utms) as updated_time
 from {{ ref('scd2_customer_offers_snapshot') }}
