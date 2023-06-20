@@ -3,7 +3,7 @@
     materialized='table',
     file_format='parquet',
     meta = {
-      'bigquery_load': 'false'
+      'bigquery_load': 'true'
     }
 ) }}
 
