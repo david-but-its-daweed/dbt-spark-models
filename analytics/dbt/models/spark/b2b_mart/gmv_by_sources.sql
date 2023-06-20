@@ -13,7 +13,7 @@ with not_jp_users AS (
   SELECT DISTINCT user_id, owner_id as owner_moderator_id
   FROM {{ ref('dim_user') }}
   WHERE (not fake or fake is null)
-    and select next_effective_ts_msk is null
+    and next_effective_ts_msk is null
 ),
 
 admin AS (

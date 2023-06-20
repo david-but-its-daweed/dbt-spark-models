@@ -201,7 +201,7 @@ all_queues AS (
       a.name AS queue
     FROM
       {{ source('mart', 'babylone_events') }} AS t
-      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
+      JOIN mongo.babylone_joom_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
     WHERE
       t.`type` = 'ticketChangeJoom'
       AND t.payload.stateQueueId IS NOT NULL
@@ -225,7 +225,7 @@ current_queue AS (
     ) AS current_queue
   FROM
     {{ source('mart', 'babylone_events') }} AS t
-    JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a ON t.payload.stateQueueId = a._id
+    JOIN mongo.babylone_joom_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
   WHERE
     t.`type` = 'ticketChangeJoom'
     AND t.payload.stateQueueId IS NOT NULL
@@ -255,7 +255,7 @@ all_tags AS (
     a.name AS tag
   FROM
     t
-    JOIN {{ source('mongo', 'babylone_joom_tags_daily_snapshot') }} AS a ON t.tag = a._id
+    JOIN mongo.babylone_joom_tags_daily_snapshot AS a ON t.tag = a._id
 ),
 all_markers AS (
   SELECT
