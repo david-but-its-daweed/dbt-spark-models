@@ -512,7 +512,7 @@ select distinct
     all.*,
     case when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days)
     when all.status_int = 1020 and all.status_int = days.status_int then greatest(datediff(current_date, date_status), manufacturing_days)
-    when all.status_int >= 4001 then 0
+    when days.status_int >= 4001 then 0
     else days end as days
 from all left join days on all.channel_type = days.linehaul_channel and all.status_int <= days.status_int
 )
