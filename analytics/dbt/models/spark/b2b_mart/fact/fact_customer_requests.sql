@@ -22,7 +22,7 @@ pricePerItem.ccy as currency,
 priceType as price_type,
 productName as product_name,
 questionnaire,
-rejectReason,
+rejectReason as reject_reason,
 status,
 userId as user_id,
 millis_to_ts_msk(utms) as updated_time
