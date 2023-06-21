@@ -279,7 +279,7 @@ merchant_order_statuses as (
     (
     select payload.id as merchant_order_id,
             case when payload.status = 'advancePaymentAcquired' then 'manufacturingAndQcInProgress'
-                else  payload.status end as statis,
+                else  payload.status end as status,
             min(TIMESTAMP(millis_to_ts_msk(payload.updatedTime))) as day
             from {{ source('b2b_mart', 'operational_events') }}
             WHERE type  ='merchantOrderChanged'
