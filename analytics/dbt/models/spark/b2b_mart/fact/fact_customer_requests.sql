@@ -12,7 +12,7 @@ select
 _id as customer_request_id,
 categoryId as category_id,
 millis_to_ts_msk(ctms) as created_time,
-dealId as dead_id,
+dealId as deal_id,
 desc,
 expectedQuantity as expected_quantity,
 link,
