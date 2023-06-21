@@ -82,3 +82,4 @@ left join {{ ref('fact_customer_rfq_response') }} rp on rr.rfq_request_id = rp.r
 left join offers co on rr.customer_request_id = co.customer_request_id and rp.product_id = co.product_id
 left join {{ ref('fact_customer_requests') }} cr on rr.customer_request_id = cr.customer_request_id
 left join {{ ref('fact_deals') }} d on cr.deal_id = d.deal_id
+where d.partition_date_msk = (select max(partition_date_msk) from {{ ref('fact_deals') }})
