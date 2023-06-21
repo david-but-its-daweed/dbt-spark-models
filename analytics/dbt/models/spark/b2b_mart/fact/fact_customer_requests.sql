@@ -11,6 +11,7 @@
 select 
 _id as customer_request_id,
 categoryId as category_id,
+category_name,
 millis_to_ts_msk(ctms) as created_time,
 dealId as deal_id,
 desc,
