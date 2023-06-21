@@ -20,7 +20,7 @@ link,
 model,
 pricePerItem.amount as price_per_item,
 pricePerItem.ccy as currency,
-priceType as price_type,
+c.type as price_type,
 productName as product_name,
 questionnaire,
 rejectReason as reject_reason,
@@ -35,4 +35,5 @@ select category_id, name as category_name
     from {{ source('mart', 'category_levels') }}
 ) cat on rfq.categoryId = cat.category_id
 left join {{ ref('key_customer_request_status') }} k on rfq.status = cast(k.id as int)
+left join {{ ref('key_calc_price_types') }} c on rfq.priceType = cast(c.id as int)
 where dbt_valid_to is null
