@@ -3,10 +3,10 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='_id',
+      unique_key='offer_product_id',
 
-      strategy='timestamp',
-      updated_at='update_ts_msk',
+      strategy='check',
+      check_cols=['created_time_msk', 'product_id', 'offer_id', 'disabled', 'type'],
       file_format='delta',
       invalidate_hard_deletes=True,
     )
@@ -25,7 +25,6 @@ nameInv as name_inv,
 type,
 disabled,
 link,
-millis_to_ts_msk(ctms) as created_time_msk,
-current_timestamp()  AS update_ts_msk
+millis_to_ts_msk(ctms) as created_time_msk
 from {{ source('mongo', 'b2b_core_offer_products_daily_snapshot') }}
 {% endsnapshot %}
