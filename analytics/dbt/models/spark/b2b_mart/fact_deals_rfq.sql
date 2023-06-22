@@ -42,7 +42,7 @@ deals as (
         merchant_order_friendly_id,
         product_id,
         product_price,
-        order_price_usd as merchant_order_price,
+        merchant_order_price,
         final_gmv,
         owner_email,
         owner_role
