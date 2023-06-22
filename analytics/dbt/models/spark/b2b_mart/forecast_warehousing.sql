@@ -203,9 +203,9 @@ select
     ),
 
 boxes as (
-select * from boxes_pickup
+select distinct * from boxes_pickup
 union all 
-select * from boxes_order
+select distinct * from boxes_order
 where merchant_order_id||product_id not in (
     select distinct merchant_order_id||product_id from boxes_pickup
     )
