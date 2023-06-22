@@ -139,9 +139,8 @@ merchant_orders as (
     from {{ ref('fact_merchant_order') }}
     where next_effective_ts_msk is null
 ),
-    
 
-boxes as (
+boxes_order as (
 select merchant_order_id,
     product_id,
     length,
@@ -177,6 +176,44 @@ from
     ) a
 lateral view posexplode(value.l) n as n, length
 )
+),
+
+boxes_pickup as (
+select 
+merchant_order_id,
+boxes.operationalProductId as product_id,
+boxes.l as length,
+boxes.w as width,
+boxes.h as hight,
+boxes.weight,
+boxes.qty,
+boxes.qtyPerBox as qty_per_box,
+boxes.l*boxes.w*boxes.h/1000000 as measures
+from
+(
+select
+    explode(boxes) as boxes,
+        _id as pickup_id,
+        friendlyId as pickup_friendly_id,
+        orderId as order_id,
+        merchOrdId as merchant_order_id,
+        date(millis_to_ts_msk(arrivedDate)) as arrived_date,
+        date(millis_to_ts_msk(pickUpDate)) as pickup_date,
+        date(millis_to_ts_msk(plannedDate)) as planned_date,
+        date(millis_to_ts_msk(shippedDate)) as shipped_date
+    from {{ ref('scd2_pick_up_orders_snapshot') }}
+    where dbt_valid_to is null
+    and merchOrdId = '646b416c7b18bf8d8da02648'
+    )
+    ),
+
+boxes as (
+select * from boxes_pickup
+union all 
+select * from boxes_order
+where merchant_order_id||product_id not in (
+    select distinct merchant_order_id||product_id from boxes_pickup
+    )
 ),
 
 
