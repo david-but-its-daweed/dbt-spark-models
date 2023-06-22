@@ -31,6 +31,22 @@ with offers as (
     from {{ ref('scd2_offer_products_snapshot') }} op
     left join {{ ref('fact_customer_offers') }} co on op.offer_id = co.offer_id
     where dbt_valid_to is null
+),
+
+deals as (
+    select 
+        deal_id,
+        order_id,
+        order_friendly_id,
+        merchant_order_id,
+        merchant_order_friendly_id,
+        product_id,
+        product_price,
+        order_price_usd as merchant_order_price,
+        final_gmv,
+        owner_email,
+        owner_role
+    from {{ ref('fact_order_product_deal') }}
 )
 
 select distinct
@@ -66,20 +82,29 @@ select distinct
     d.estimated_gmv as deal_estimated_gmv,
     d.interaction_id,
     d.owner_email,
-    owner_role,
-    deal_name,
+    d.owner_role,
+    d.deal_name,
     d.source,
     d.type,
     d.campaign,
     d.min_date_payed,
     d.status as deal_status,
     d.min_date as deal_created_time,
-    retention,
-    grade,
-    country
+    d.retention,
+    d.grade,
+    d.country,
+    de.order_id,
+    de.order_friendly_id,
+    de.merchant_order_id,
+    de.merchant_order_friendly_id,
+    de.product_id,
+    de.product_price,
+    de.merchant_order_price,
+    de.final_gmv
 from {{ ref('fact_customer_rfq_request') }} rr 
 left join {{ ref('fact_customer_rfq_response') }} rp on rr.rfq_request_id = rp.rfq_request_id
 left join offers co on rr.customer_request_id = co.customer_request_id and rp.product_id = co.product_id
 left join {{ ref('fact_customer_requests') }} cr on rr.customer_request_id = cr.customer_request_id
 left join {{ ref('fact_deals') }} d on cr.deal_id = d.deal_id
+left join deals de on de.deal_id = d.deal_id and de.product_id = rp.product_id
 where d.partition_date_msk = (select max(partition_date_msk) from {{ ref('fact_deals') }})
