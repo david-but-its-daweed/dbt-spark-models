@@ -97,7 +97,6 @@ select distinct
     de.order_friendly_id,
     de.merchant_order_id,
     de.merchant_order_friendly_id,
-    de.product_id,
     de.product_price,
     de.merchant_order_price,
     de.final_gmv
