@@ -146,6 +146,29 @@ users as (
     select distinct user_id, fake
     from {{ ref('dim_user') }}
     where next_effective_ts_msk is null
+),
+
+offers as (
+    select 
+        op.offer_product_id,
+        op.product_id,
+        op.offer_id,
+        op.trademark,
+        op.hs_code,
+        op.manufacturer_id,
+        op.type as product_type,
+        op.disabled,
+        op.created_time_msk as order_product_created_time,
+        co.customer_request_id,
+        co.deal_id,
+        co.offer_type,
+        co.order_id,
+        co.status as offer_status,
+        co.user_id,
+        co.created_time as offer_created_time
+    from {{ ref('scd2_offer_products_snapshot') }} op
+    left join {{ ref('fact_customer_offers') }} co on op.offer_id = co.offer_id
+    where dbt_valid_to is null
 )
 
 select distinct
@@ -191,7 +214,13 @@ select distinct
     estimated_gmv,
     oo.owner_email,
     oo.owner_role,
-    deal_name
+    deal_name,
+    off.offer_product_id,
+    off.offer_id,
+    off.product_type,
+    off.offer_type,
+    off.status as offer_status,
+    off.customer_request_id
 from interactions i
 left join orders o on i.order_id = o.order_id
 left join merchant_order mo on mo.order_id = o.order_id
@@ -199,6 +228,7 @@ left join products p on p.merchant_order_id = mo.merchant_order_id
 left join psi on p.merchant_order_id = psi.merchant_order_id and p.product_id = psi.product_id
 left join deals d on p.deal_id = d.deal_id
 left join owners oo on o.order_id = oo.order_id
+left join offers off on off.deal_id = p.deal_id and off.product_id = p.product_id
 join users u on coalesce(i.user_id, d.user_id) = u.user_id
 where 
     (fake is null or not fake)
