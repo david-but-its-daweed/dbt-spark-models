@@ -219,7 +219,7 @@ select distinct
     off.offer_id,
     off.product_type,
     off.offer_type,
-    off.status as offer_status,
+    off.offer_status,
     off.customer_request_id
 from interactions i
 left join orders o on i.order_id = o.order_id
