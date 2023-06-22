@@ -196,14 +196,9 @@ select
         _id as pickup_id,
         friendlyId as pickup_friendly_id,
         orderId as order_id,
-        merchOrdId as merchant_order_id,
-        date(millis_to_ts_msk(arrivedDate)) as arrived_date,
-        date(millis_to_ts_msk(pickUpDate)) as pickup_date,
-        date(millis_to_ts_msk(plannedDate)) as planned_date,
-        date(millis_to_ts_msk(shippedDate)) as shipped_date
+        merchOrdId as merchant_order_id
     from {{ ref('scd2_pick_up_orders_snapshot') }}
     where dbt_valid_to is null
-    and merchOrdId = '646b416c7b18bf8d8da02648'
     )
     ),
 
