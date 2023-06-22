@@ -1,7 +1,14 @@
 {{ config(
     schema='platform',
     materialized='view',
-    tags=['data_readiness']
+    tags=['data_readiness'],
+    meta = {
+      'bigquery_load': 'true',
+      'bigquery_partitioning_date_column': 'partition_date',
+      'bigquery_upload_horizon_days': '2',
+      'bigquery_fail_on_missing_partitions': 'false',
+      'bigquery_check_counts': 'false',
+    },
 ) }}
 
 select source_id,
@@ -29,3 +36,4 @@ select source_id,
 from {{ref("data_readiness")}}
     left join {{ref("task_end_stats")}} using (dag_id, task_id)
     left join {{ref("effective_start_dates")}} using (dag_id, task_id, date)
+where date >= NOW() - INTERVAL 2 MONTH

@@ -109,10 +109,9 @@ deals AS (
         estimated_gmv,
         owner_email,
         deal_name,
-        gmv_initial,
         case when status_int >= 10 and status_int <= 50 then 'Upside'
-        when status_int >= 60 and status_int <= 70 then 'Forecast'
-        when status_int = 80 then 'Commited' end as status
+        when status_int = 60 then 'Forecast'
+        when status_int >= 70 and status_int <= 80 then 'Commited' end as status
     FROM {{ ref('fact_deals') }}
     WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM {{ ref('fact_deals') }})
 ),

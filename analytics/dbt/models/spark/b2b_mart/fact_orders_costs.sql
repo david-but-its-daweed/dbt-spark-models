@@ -253,7 +253,7 @@ select p.order_id,
 
 subsidy as (
 select p.order_id, 
-        round(SUM(IF(tag in ('grant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub
+        round(SUM(IF(type in  ('grant', 'dapGrant') or tag in ('grant', 'dapGrant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub
         from all_prices p
         left join 
         (
@@ -269,7 +269,7 @@ select p.order_id,
         from order_rates
         group by order_id
         ) r on p.order_id = r.order_id
-        where fee_rub is not null and stage = 'confirmed'
+        where fee_rub is not null and stage in ('confirmed', 'grant')
         group by p.order_id
 ),
 

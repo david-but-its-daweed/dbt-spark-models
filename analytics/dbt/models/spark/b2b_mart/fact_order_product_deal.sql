@@ -19,8 +19,7 @@ deals AS (
         interaction_id,
         estimated_gmv,
         owner_email,
-        deal_name,
-        gmv_initial
+        deal_name
     FROM {{ ref('fact_deals') }}
     WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM {{ ref('fact_deals') }})
 ),
@@ -192,8 +191,7 @@ select distinct
     estimated_gmv,
     oo.owner_email,
     oo.owner_role,
-    deal_name,
-    gmv_initial
+    deal_name
 from interactions i
 left join orders o on i.order_id = o.order_id
 left join merchant_order mo on mo.order_id = o.order_id

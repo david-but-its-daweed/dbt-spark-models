@@ -36,6 +36,7 @@ users AS (
       owner_role,
       company_name,
       grade,
+      amo_id,
       created_ts_msk as user_created_time,
       validated_date
   FROM {{ ref('fact_customers') }} du
@@ -46,6 +47,7 @@ user_interaction as
 (select 
     _id as interaction_id, 
     date(from_unixtime(ctms/1000 + 10800)) as interaction_create_date,
+    from_unixtime(ctms/1000 + 10800) as interaction_create_time,
     uid as user_id, 
     popupRequestID as request_id,
     description,
@@ -71,10 +73,11 @@ user_interaction as
     last_name,
     company_name,
     grade,
+    amo_id,
     row_number() over (partition by user_id order by case when incorrectAttribution
-        then 1 else 0 end, interactionType, ctms) = 1 as first_interaction_type,
+        then 1 else 0 end, coalesce(interactionType, 100), ctms) = 1 as first_interaction_type,
     row_number() over (partition by user_id order by case when incorrectAttribution
-        then 1 else 0 end, interactionType, ctms desc) = 1 
+        then 1 else 0 end, coalesce(interactionType, 100), ctms desc) = 1 
         as last_interaction_type,
     coalesce(incorrectAttribution, FALSE) as incorrect_attr,
     coalesce(incorrectUtm, FALSE) as incorrect_utm
@@ -91,11 +94,20 @@ paied as (
         MIN(DATE(fo.min_manufactured_ts_msk)) AS min_date_payed
     FROM {{ ref('fact_order') }} AS fo
     group by fo.user_id
+),
+    
+orders as (
+    SELECT
+        fo.user_id,
+        count(distinct fo.order_id) as orders
+    FROM {{ ref('fact_order') }} AS fo
+    group by fo.user_id
 )
 
-select 
+select distinct 
     interaction_id, 
     interaction_create_date,
+    interaction_create_time,
     u.user_id, 
     request_id,
     description,
@@ -109,6 +121,24 @@ select
     website_form,
     created_automatically,
     interaction_type,
+    case when 
+        amo_id is not null 
+        and admin is null 
+        and closed is not null 
+        and orders > 0
+    then 'ConversionFailed' 
+    when 
+        amo_id is not null 
+        and admin is null 
+        and closed is not null 
+        and orders > 0
+    then 'Converting'
+    when 
+        amo_id is not null 
+        and admin is null 
+        and orders = 0
+    then 'NoConversionAttempt'
+    else conversion_status end as 
     conversion_status,
     user_created_time,
     country,
@@ -121,6 +151,8 @@ select
     last_name,
     company_name,
     grade,
+    amo_id,
+    case when admin is not null or amo_id is null then true else false end as admin,
     case when interaction_type = 0 and not incorrect_attr then first_interaction_type else FALSE end as first_interaction_type,
     case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end as last_interaction_type,
     min_date_payed,
@@ -129,4 +161,18 @@ select
     case when interaction_create_date >= min_date_payed then TRUE ELSE FALSE END AS retention
     from user_interaction as u
     left join paied as p on u.user_id = p.user_id
-    
+    left join (
+            select distinct leadId, true as admin
+            from
+            {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
+            where lossReasons[0].name in ('Передали КАМам', 'Передали Sales')
+        ) amo on u.amo_id = amo.leadId
+    left join (
+        select distinct 
+        leadId, true as closed
+        from
+        {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
+        left join {{ ref('key_amo_status') }} st on amo.status = st.status_id
+        where st.status_name in ('решение отложено', 'закрыто и не реализовано')
+    ) cl on u.amo_id = cl.leadId
+    left join orders o on u.user_id = o.user_id

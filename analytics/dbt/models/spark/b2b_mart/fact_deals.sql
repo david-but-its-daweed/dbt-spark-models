@@ -17,7 +17,7 @@ dealType,
 date(FROM_UNIXTIME(estimatedEndDate/1000)) as estimated_date,
 estimatedGmv.* ,
 interactionId,
-moderatorId,
+max(moderatorId) over (partition by dealId order by moderatorId is null, updatedTime desc) as moderatorId,
 name,
 date(FROM_UNIXTIME(updatedTime/1000)) as updated_date,
 userId,
@@ -133,19 +133,6 @@ admin AS (
     FROM {{ ref('dim_user_admin') }} a
 ),
 
-gmv as (
-    select distinct
-    t as date_payed, 
-    g.order_id,
-    g.gmv_initial,
-    g.initial_gross_profit,
-    g.final_gross_profit,
-    g.owner_email,
-    g.owner_role,
-    interaction_id
-    FROM {{ ref('gmv_by_sources') }} g
-    left join {{ ref('fact_attribution_interaction') }} i on g.order_id = i.order_id
-),
 
 source as
 (select 
@@ -153,12 +140,16 @@ source as
         source, 
         type,
         campaign,
-        min_date_payed,
-        country,
-        grade
+        min_date_payed
     from {{ ref('fact_attribution_interaction') }}
     where last_interaction_type
- )
+ ),
+ 
+ 
+users as (
+ select distinct 
+ user_id, country, grade, company_name
+ from {{ ref('fact_customers') }})
 
 select distinct 
 d.deal_id,
@@ -175,9 +166,6 @@ d.source,
 d.type,
 d.campaign,
 d.min_date_payed,
-d.gmv_initial,
-d.initial_gross_profit,
-d.final_gross_profit,
 ds.status,
 ds.status_int,
 ds.current_date,
@@ -205,9 +193,6 @@ campaign,
 country,
 grade, 
 min_date_payed,
-sum(gmv_initial) as gmv_initial,
-sum(initial_gross_profit) as initial_gross_profit,
-sum(final_gross_profit) as final_gross_profit,
 partition_date_msk
 from
 (select 
@@ -223,22 +208,23 @@ userId as user_id,
 source, 
 type,
 campaign,
- grade,
+grade,
 country,
 min_date_payed,
 date('{{ var("start_date_ymd") }}') as partition_date_msk
 from deals
 left join source on deals.userId = source.user_id
+left join users on deals.userId = users.user_id
 where rn = 1
-) d left join gmv on d.interaction_id = gmv.interaction_id
+) d 
 left join admin on d.moderator_id = admin.admin_id
 group by deal_id, 
 deal_type, 
 estimated_date,
 estimated_gmv,
+admin.owner_email,
+admin.owner_role,
 d.interaction_id,
-gmv.owner_email,
-gmv.owner_role,
 deal_name,
 updated_date,
 user_id,
