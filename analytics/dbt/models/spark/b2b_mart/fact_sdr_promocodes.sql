@@ -56,5 +56,5 @@ from {{ ref('scd2_promocodes_snapshot') }}
 ) p
 left join customers c on p.ownerId = c.user_id
 left join attr a on a.user_id = p.ownerId
-where millis_to_ts_msk(ctms) <= day and 
-day >= dbt_valid_from and (day < dbt_valid_to or dbt_valid_to is null)
+where date(millis_to_ts_msk(ctms)) <= day and 
+day >=  date(dbt_valid_from) and (day < date(dbt_valid_to) or dbt_valid_to is null)
