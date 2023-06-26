@@ -124,21 +124,21 @@ select distinct
     created_automatically,
     interaction_type,
     case when 
+        conversion_status = 'Converted'
+    then conversion_status
+    when
         amo_id is not null 
         and admin is null 
         and closed is not null 
-        and orders > 0
     then 'ConversionFailed' 
     when 
         amo_id is not null 
         and admin is null 
-        and closed is not null 
-        and orders > 0
+        and closed is null 
     then 'Converting'
     when 
         amo_id is not null 
         and admin is null 
-        and orders = 0
     then 'NoConversionAttempt'
     else conversion_status end as 
     conversion_status,
