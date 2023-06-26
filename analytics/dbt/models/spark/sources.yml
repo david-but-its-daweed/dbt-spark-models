@@ -185,3 +185,7 @@ sources:
   - name: push
     tables:
       - name: sale_dates_v1
+  - name: experiments
+    tables:
+      - name: experiments_setup
+      - name: rollout_group

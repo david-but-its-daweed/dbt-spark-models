@@ -49,5 +49,5 @@ SELECT
     r.rollout_group,
     r.rollout_date
 FROM exp_decisions AS d
-LEFT JOIN experiments.authors_manual AS a USING(author_id) -- authors_manual is not updated regularly, thus no {{ source() }}
+LEFT JOIN experiments.authors_manual AS a USING(author_id) -- authors_manual is not updated regularly, thus no source
 LEFT JOIN rollout_group AS r USING(experiment_id)
