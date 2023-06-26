@@ -291,7 +291,7 @@ from
         when s.sub_status = 'departedFromLogisticsWarehouse' then 'departedFromLogisticsWarehouse' 
         when status = 'shipping' then s.sub_status end as status,
 
-        id as status_int
+        cast(id as int) as status_int
         from
     (
         select distinct
