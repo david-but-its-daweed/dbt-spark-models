@@ -162,7 +162,7 @@ WHERE 1=1 AND
     ((t.previous_author_type = 'customer' OR t.previous_author_type IS NULL) AND t.author_id != '000000000000050001000001')
     OR (t.previous_author_type = 'agent' AND t.author_type = 'agent' AND t.previous_author_id != t.author_id AND t.previous_author_id != '000000000000050001000001' AND t.author_id != '000000000000050001000001')
     OR (t.previous_author_type = 'agent' AND t.author_type = 'agent' AND t.previous_author_id != t.author_id AND t.previous_author_id = '000000000000050001000001' AND t.previous_text LIKE '%escalate to agen%')
-    OR (t.previous_author_type = 'agent' AND t.author_type = 'agent' AND t.previous_author_id = t.author_id AND (TIMESTAMP_DIFF(TIMESTAMP(t.event_ts_msk), TIMESTAMP(t.previous_event_ts_msk), MINUTE) > 30)  AND t.author_id != '000000000000050001000001')
+    OR (t.previous_author_type = 'agent' AND t.author_type = 'agent' AND t.previous_author_id = t.author_id AND ((UNIX_TIMESTAMP(t.event_ts_msk) - UNIX_TIMESTAMP(t.previous_event_ts_msk)) / 60 > 30)  AND t.author_id != '000000000000050001000001')
     OR (t.author_type = 'Resolved' AND t.previous_author_type = 'agent' AND t.previous_author_id != t.author_id AND t.author_id != '000000000000050001000001' AND t.previous_author_id != '000000000000050001000001')
     OR (t.author_type = 'Resolved' AND t.previous_author_type = 'agent' AND t.previous_author_id != t.author_id AND t.author_id != '000000000000050001000001' AND t.previous_author_id = '000000000000050001000001'
         AND t.previous_text LIKE '%escalate to agen%')
