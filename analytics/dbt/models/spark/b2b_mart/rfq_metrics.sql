@@ -91,10 +91,9 @@ order_owner AS (
     (SELECT
         o.order_id,
         FIRST_VALUE(ao.email) OVER (partition by o.order_id order by event_ts_msk desc) AS owner_moderator_email,
-        FIRST_VALUE(s.role) OVER (partition by o.order_id order by event_ts_msk desc) AS owner_role
+        FIRST_VALUE(ao.role) OVER (partition by o.order_id order by event_ts_msk desc) AS owner_role
     FROM {{ ref('fact_order_change') }} AS o
     LEFT JOIN admin AS ao ON o.owner_moderator_id = ao.admin_id
-    LEFT JOIN {{ ref('support_roles') }} AS s ON ao.email = s.email
     )
 ),
 

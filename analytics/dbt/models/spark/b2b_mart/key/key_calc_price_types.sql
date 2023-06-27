@@ -8,10 +8,10 @@
     }
 ) }}
 
-
-select key as id, value as reason
+select key as id, value as status
 from (
     select explode(values)
     from {{ source('mongo', 'b2b_core_enumregistry_daily_snapshot') }}
-    where key = 'user.rejectReason'
+    where key = 'calcprice.types'
     )
+    

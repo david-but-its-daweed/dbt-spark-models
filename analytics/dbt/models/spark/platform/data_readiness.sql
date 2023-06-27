@@ -9,7 +9,12 @@ with deps as (SELECT output.tableName       as output_name,
                      input.table.tableType  as input_type,
                      input.input_path       as input_path,
                      size(input.input_path) as input_rank
-              FROM platform.table_dependencies_v2),
+              FROM platform.table_dependencies_v2
+              WHERE (input.table.tableName, input.table.tableType)
+                    not in (
+                        SELECT full_table_name, type
+                        from platform.manual_tables)
+    ),
 
      slo_tables as (SELECT collect_list(slo_id) as slo_ids,
                            table_name,
@@ -115,8 +120,9 @@ from dependencies
                 and dates.id = data.partition_date
 )
 
-SELECT
-       *, 
-       round(ready_time_hours - 0.5) + round((ready_time_hours - round(ready_time_hours - 0.5))* 60)/100 as ready_time_human, 
-       round(start_time_hours - 0.5) + round((start_time_hours - round(start_time_hours - 0.5))* 60)/100 as start_time_human
+SELECT *,
+       round(ready_time_hours - 0.5) +
+       round((ready_time_hours - round(ready_time_hours - 0.5)) * 60) / 100                                 as ready_time_human,
+       round(start_time_hours - 0.5) + round((start_time_hours - round(start_time_hours - 0.5)) * 60) /
+                                       100                                                                  as start_time_human
 FROM final_data

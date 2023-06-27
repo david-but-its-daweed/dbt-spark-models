@@ -15,78 +15,114 @@
 with 
 days as (
 
-select 'Auto' as linehaul_channel, 'clientPaymentSent' as status, 1001 as status_int, 4 as days
+select 'Auto' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
 union all 
-select 'Auto' as linehaul_channel, 'advancePaymentRequested' as status, 1010 as status_int, 4 as days
+select 'Auto' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
 union all 
-select 'Auto' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 1020 as status_int, 0 as days
+select 'Auto' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
 union all 
-select 'Auto' as linehaul_channel, 'PSI' as status, 2010 as status_int, 6 as days
+select 'Auto' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
 union all 
-select 'Auto' as linehaul_channel, 'remainingPaymentRequested' as status, 2030 as status_int, 4 as days
+select 'Auto' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
 union all 
-select 'Auto' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3001 as status_int, 2 as days
+select 'Auto' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 2 as days
 union all 
-select 'Auto' as linehaul_channel, 'pickedUpByLogisticians' as status, 3010 as status_int, 7 as days
+select 'Auto' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 7 as days
 union all 
-select 'Auto' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 4001 as status_int, 7 as days
+select 'Auto' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 7 as days
 union all 
-select 'Auto' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 5001 as status_int, 5 as days
+select 'Auto' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 5 as days
 union all 
-select 'Aero' as linehaul_channel, 'clientPaymentSent' as status, 1001 as status_int, 4 as days
+select 'Auto' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 1 as days
 union all 
-select 'Aero' as linehaul_channel, 'advancePaymentRequested' as status, 1010 as status_int, 4 as days
+select 'Auto' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
 union all 
-select 'Aero' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 1020 as status_int, 0 as days
+select 'Auto' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 2 as days
 union all 
-select 'Aero' as linehaul_channel, 'PSI' as status, 2010 as status_int, 6 as days
-union all 
-select 'Aero' as linehaul_channel, 'remainingPaymentRequested' as status, 2030 as status_int, 4 as days
-union all 
-select 'Aero' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3001 as status_int, 2 as days
-union all 
-select 'Aero' as linehaul_channel, 'pickedUpByLogisticians' as status, 3010 as status_int, 7 as days
-union all 
-select 'Aero' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 4001 as status_int, 6 as days
-union all 
-select 'Aero' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 5001 as status_int, 2 as days
-union all 
-select 'Sea' as linehaul_channel, 'clientPaymentSent' as status, 1001 as status_int, 4 as days
-union all 
-select 'Sea' as linehaul_channel, 'advancePaymentRequested' as status, 1010 as status_int, 4 as days
-union all 
-select 'Sea' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 1020 as status_int, 0 as days
-union all 
-select 'Sea' as linehaul_channel, 'PSI' as status, 2010 as status_int, 6 as days
-union all 
-select 'Sea' as linehaul_channel, 'remainingPaymentRequested' as status, 2030 as status_int, 4 as days
-union all 
-select 'Sea' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3001 as status_int, 5 as days
-union all 
-select 'Sea' as linehaul_channel, 'pickedUpByLogisticians' as status, 3010 as status_int, 5 as days
-union all 
-select 'Sea' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 4001 as status_int, 10 as days
-union all 
-select 'Sea' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 5001 as status_int, 21 as days
-union all 
-select 'Rail' as linehaul_channel, 'clientPaymentSent' as status, 1001 as status_int, 4 as days
-union all 
-select 'Rail' as linehaul_channel, 'advancePaymentRequested' as status, 1010 as status_int, 4 as days
-union all 
-select 'Rail' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 1020 as status_int, 0 as days
-union all 
-select 'Rail' as linehaul_channel, 'PSI' as status, 2010 as status_int, 6 as days
-union all 
-select 'Rail' as linehaul_channel, 'remainingPaymentRequested' as status, 2030 as status_int, 4 as days
-union all 
-select 'Rail' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3001 as status_int, 2 as days
-union all 
-select 'Rail' as linehaul_channel, 'pickedUpByLogisticians' as status, 3010 as status_int, 7 as days
-union all 
-select 'Rail' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 4001 as status_int, 13 as days
-union all 
-select 'Rail' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 5001 as status_int, 23 as days
+select 'Auto' as linehaul_channel, 'delivering' as status, 3097 as status_int, 15 as days
 
+
+
+union all 
+select 'Aero' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
+union all 
+select 'Aero' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
+union all 
+select 'Aero' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
+union all 
+select 'Aero' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
+union all 
+select 'Aero' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
+union all 
+select 'Aero' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 2 as days
+union all 
+select 'Aero' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 7 as days
+union all 
+select 'Aero' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 6 as days
+union all 
+select 'Aero' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 2 as days
+union all 
+select 'Aero' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 1 as days
+union all 
+select 'Aero' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
+union all 
+select 'Aero' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 1 as days
+union all 
+select 'Aero' as linehaul_channel, 'delivering' as status, 3097 as status_int, 5 as days
+
+union all 
+select 'Sea' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
+union all 
+select 'Sea' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
+union all 
+select 'Sea' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
+union all 
+select 'Sea' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
+union all 
+select 'Sea' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
+union all 
+select 'Sea' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 5 as days
+union all 
+select 'Sea' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 5 as days
+union all 
+select 'Sea' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 10 as days
+union all 
+select 'Sea' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 21 as days
+union all 
+select 'Sea' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 3 as days
+union all 
+select 'Sea' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
+union all 
+select 'Sea' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 10 as days
+union all 
+select 'Sea' as linehaul_channel, 'delivering' as status, 3097 as status_int, 15 as days
+
+union all 
+select 'Rail' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
+union all 
+select 'Rail' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
+union all 
+select 'Rail' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
+union all 
+select 'Rail' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
+union all 
+select 'Rail' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
+union all 
+select 'Rail' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 2 as days
+union all 
+select 'Rail' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 7 as days
+union all 
+select 'Rail' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 13 as days
+union all 
+select 'Rail' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 23 as days
+union all 
+select 'Rail' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 3 as days
+union all 
+select 'Rail' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
+union all 
+select 'Rail' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 1 as days
+union all 
+select 'Rail' as linehaul_channel, 'delivering' as status, 3097 as status_int, 5 as days
 ),
 
 
@@ -139,9 +175,8 @@ merchant_orders as (
     from {{ ref('fact_merchant_order') }}
     where next_effective_ts_msk is null
 ),
-    
 
-boxes as (
+boxes_order as (
 select merchant_order_id,
     product_id,
     length,
@@ -177,6 +212,39 @@ from
     ) a
 lateral view posexplode(value.l) n as n, length
 )
+),
+
+boxes_pickup as (
+select 
+merchant_order_id,
+boxes.operationalProductId as product_id,
+boxes.l as length,
+boxes.w as width,
+boxes.h as hight,
+boxes.weight,
+boxes.qty,
+boxes.qtyPerBox as qty_per_box,
+boxes.l*boxes.w*boxes.h/1000000 as measures
+from
+(
+select
+    explode(boxes) as boxes,
+        _id as pickup_id,
+        friendlyId as pickup_friendly_id,
+        orderId as order_id,
+        merchOrdId as merchant_order_id
+    from {{ ref('scd2_pick_up_orders_snapshot') }}
+    where dbt_valid_to is null
+    )
+    ),
+
+boxes as (
+select distinct * from boxes_pickup
+union all 
+select distinct * from boxes_order
+where merchant_order_id||product_id not in (
+    select distinct merchant_order_id||product_id from boxes_pickup
+    )
 ),
 
 
@@ -216,19 +284,14 @@ from
         
         date_status,
         
-        case when sub_status = 'client2BrokerPaymentSent' then 'clientPaymentSent'
-        when sub_status = 'pickupRequestSentToLogisticians' then 'pickupRequestSentToLogisticians'
-        when sub_status = 'pickedUpByLogisticians' then 'pickedUpByLogisticians'
-        when sub_status = 'arrivedAtLogisticsWarehouse' then 'arrivedAtLogisticsWarehouse'
-        when sub_status = 'departedFromLogisticsWarehouse' then 'departedFromLogisticsWarehouse' 
-        when status = 'shipping' then sub_status end as status,
-        
-        case when sub_status = 'client2BrokerPaymentSent' then 1001
-        when sub_status = 'pickupRequestSentToLogisticians' then 3001
-        when sub_status = 'pickedUpByLogisticians' then 3010
-        when sub_status = 'arrivedAtLogisticsWarehouse' then 4001
-        when sub_status = 'departedFromLogisticsWarehouse' then 5001 
-        when status = 'shipping' then 5002 end as status_int
+        case when s.sub_status = 'client2BrokerPaymentSent' then 'clientPaymentSent'
+        when s.sub_status = 'pickupRequestSentToLogisticians' then 'pickupRequestSentToLogisticians'
+        when s.sub_status = 'pickedUpByLogisticians' then 'pickedUpByLogisticians'
+        when s.sub_status = 'arrivedAtLogisticsWarehouse' then 'arrivedAtLogisticsWarehouse'
+        when s.sub_status = 'departedFromLogisticsWarehouse' then 'departedFromLogisticsWarehouse' 
+        when status = 'shipping' then s.sub_status end as status,
+
+        cast(id as int) as status_int
         from
     (
         select distinct
@@ -248,7 +311,8 @@ from
         )
         or status = 'shipping'
         order by status
-    )
+    ) s
+    left join b2b_mart.key_order_substatus k on s.sub_status = k.sub_status
     ) o
     join dict d on o.order_id = d.order_id
     where status is not null and date_status is not null
@@ -272,19 +336,22 @@ merchant_order_statuses as (
         when status = 'manufacturingAndQcInProgress' then 'manufacturingAndQcInProgress'
         when status = 'remainingPaymentRequested' then 'remainingPaymentRequested' end as status,
         
-        case when status = 'advancePaymentRequested' then 1010
-        when status = 'manufacturingAndQcInProgress' then 1020
-        when status = 'remainingPaymentRequested' then 2030 end as status_int
+        case when status = 'advancePaymentRequested' then 2010
+        when status = 'manufacturingAndQcInProgress' then 2050
+        when status = 'remainingPaymentRequested' then 2080 end as status_int
         from
     (
     select payload.id as merchant_order_id,
-            payload.status,
+            case when payload.status = 'advancePaymentAcquired' then 'manufacturingAndQcInProgress'
+                else  payload.status end as status,
             min(TIMESTAMP(millis_to_ts_msk(payload.updatedTime))) as day
             from {{ source('b2b_mart', 'operational_events') }}
             WHERE type  ='merchantOrderChanged'
-            and payload.status in ('advancePaymentRequested', 'manufacturingAndQcInProgress', 'remainingPaymentRequested')
+            and payload.status in ('advancePaymentRequested', 'advancePaymentAcquired', 
+                'manufacturingAndQcInProgress', 'remainingPaymentRequested')
             group by payload.id,
-            payload.status
+            case when payload.status = 'advancePaymentAcquired' then 'manufacturingAndQcInProgress'
+                else  payload.status end
     )
     ) o join dict d on o.merchant_order_id = d.merchant_order_id
     where status is not null and date_status is not null
@@ -306,9 +373,9 @@ select distinct
     case when status = 'readyForPsi' then 'PSI'
         when status = 'pickupRequested' then 'pickupRequestSentToLogisticians'
         when status = 'pickupCompleted' then 'pickedUpByLogisticians' end as status,
-    case when status = 'readyForPsi' then 2010
-        when status = 'pickupRequested' then 3001
-        when status = 'pickupCompleted' then 3010 end as status_int
+    case when status = 'readyForPsi' then 2070
+        when status = 'pickupRequested' then 3010
+        when status = 'pickupCompleted' then 3020 end as status_int
     from
     (
       select merchant_order_id,
@@ -335,8 +402,8 @@ pickup_statuses as
     case when status = 'WaitingForConfirmation' then 'pickupRequestSentToLogisticians'
         when status = 'Requested' then 'pickupRequestSentToLogisticians'
         end as status,
-    case when status = 'WaitingForConfirmation' then 3001
-        when status = 'Requested' then 3002
+    case when status = 'WaitingForConfirmation' then 3010
+        when status = 'Requested' then 3010
         end as status_int,
         time as date_status,
         pickup_id
@@ -358,14 +425,14 @@ pickup_statuses as
     union all
     select 
         'pickupCompleted' as status,
-        3010 as status_int,
+        3020 as status_int,
         planned_date as date_status,
         pickup_id
     from pickups
     union all 
     select 
         'pickupCompleted' as status,
-        3011 as status_int,
+        3020 as status_int,
         shipped_date as date_status,
         pickup_id
     from pickups
@@ -385,7 +452,7 @@ select
     select  
         max(psi_start) as date_status,
         'PSI' as status,
-        2010 as status_int,
+        2070 as status_int,
         product_id,
         merchant_order_id
     from {{ ref('fact_psi') }}
@@ -450,7 +517,40 @@ where rn = 1
 left join boxes b on a.merchant_order_id = b.merchant_order_id and a.product_id = b.product_id
 )
 
+select
+    order_id,
+    order_friendly_id,
+    channel_type,
+    order_created_time,
+    min_manufacturing_time,
+    merchant_order_id,
+    merchant_order_friendly_id,
+    manufacturing_days,
+    product_id,
+    pickup_id,
+    pickup_friendly_id,
+    status,
+    status_int,
+    date_status,
+    length,
+    width,
+    hight, 
+    weight,
+    qty,
+    qty_per_box,
+    measures,
+    day_diff,
+    max(case when rn = 1 then status end) over (partition by order_id) as status_order,
+    max(case when rn = 1 then status_int end) over (partition by order_id) as status_int_order,
+    max(case when rn = 1 then date_status end) over (partition by order_id) as date_status_order,
+    max(case when rn = 1 then day_diff end) over (partition by order_id) as day_diff_order,
+    max(case when rn = 1 then date_add(date_status, int(day_diff)) end) over (partition by order_id) as predicted_date_order,
+    max(case when rn = 1 then current_status_days end) over (partition by order_id) as current_status_days,
+    max(case when rn = 1 then current_status_declared_days end) over (partition by order_id) as current_status_declared_days,
+    date('{{ var("start_date_ymd") }}') as partition_date_msk
 
+from
+(
 select distinct
     order_id,
     order_friendly_id,
@@ -473,15 +573,25 @@ select distinct
     qty,
     qty_per_box,
     measures,
-    sum(days) over (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as day_diff,
-    date('{{ var("start_date_ymd") }}') as partition_date_msk
+    max(total_time_spent + current_status) over 
+        (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as current_status_days,
+    sum(case when past then days end) over 
+        (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as current_status_declared_days,
+    sum(case when future then days end) over 
+        (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as day_diff,
+    row_number() over (partition by order_id order by status_int) as rn
 from 
 (
 select distinct
     all.*,
+    datediff(date_status, min_manufacturing_time) as total_time_spent,
+    case when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days) else 0 end as current_status,
     case when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days)
-    when all.status_int = 1020 and all.status_int = days.status_int then greatest(datediff(current_date, date_status), manufacturing_days)
-    when all.status_int >= 4001 then 0
-    else days end as days
-from all left join days on all.channel_type = days.linehaul_channel and all.status_int <= days.status_int
+        when all.status_int = 2050 and all.status_int = days.status_int then greatest(datediff(current_date, date_status), manufacturing_days)
+        when days.status_int = 2050 then manufacturing_days
+    else days end as days,
+    all.status_int <= days.status_int and days.status_int < 3030 as future,
+    all.status_int >= days.status_int as past
+from all left join days on all.channel_type = days.linehaul_channel
+)
 )
