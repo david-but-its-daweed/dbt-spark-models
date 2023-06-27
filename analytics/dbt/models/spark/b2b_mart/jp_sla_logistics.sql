@@ -222,8 +222,8 @@ SELECT DISTINCT
     oh.upload_to_temporary_warehouse,
     oh.delivering,
     oh.delivered,
-    current_status_days,
-    current_status_declared_days
+    curr.current_status_days,
+    curr.current_status_declared_days
 FROM orders AS o
 INNER JOIN orders_hist AS oh ON o.order_id = oh.order_id
 LEFT JOIN linehaul AS l ON o.linehaul_channel_id = l.id
@@ -237,5 +237,5 @@ LEFT JOIN (
      WHERE partition_date_msk = (
          SELECT MAX(partition_date_msk)
          FROM {{ ref('forecast_warehousing') }})
-)
+) curr on curr.order_id = o.order_id
 WHERE oh.manufacturing IS NOT NULL
