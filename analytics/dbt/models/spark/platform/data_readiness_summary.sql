@@ -8,8 +8,12 @@
 ) }}
 
 SELECT DISTINCT
+    source_id,
     input_name,
     input_type,
+    input_rank,
+    dag_id,
+    task_id,
     date,
     ready_time_human,
     (ready_time_hours - effective_start_hours ) * 60 effective_duration_minutes

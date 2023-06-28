@@ -7,7 +7,7 @@
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',
-      'bigquery_known_gaps': ['2023-01-27']
+      'bigquery_known_gaps': ['2023-01-27', '2023-06-14']
     }
 ) }}
 
@@ -442,7 +442,8 @@ retention AS (
     GROUP BY merchant_id
 )
 
-select coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
+select distinct
+    coalesce(rfq_metrics.merchant_id, production_metrics.merchant_id, dim.merchant_id) as merchant_id,
     coalesce(valid_merchant, FALSE) as valid_merchant,
     rfq_recieved,
     rfq_answers,

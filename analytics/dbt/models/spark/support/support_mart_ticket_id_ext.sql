@@ -25,14 +25,14 @@ ticket_create_events AS
     (
      SELECT
          t.payload.ticketId AS ticket_id,
-         MAX(t.event_ts_msk) AS ts_created,
-         MAX(t.partition_date) AS partition_date,
-         MAX(t.payload.deviceId) AS device_id,
-         MAX(t.payload.customerExternalId) AS user_id,
-         MAX(t.payload.lang) AS language,
-         MAX(t.payload.country) AS country,
-         MAX(t.payload.messageSource) AS os,
-         MAX(t.payload.isHidden) AS is_hidden
+         MIN(t.event_ts_msk) AS ts_created,
+         MIN(t.partition_date) AS partition_date,
+         MIN(t.payload.deviceId) AS device_id,
+         MIN(t.payload.customerExternalId) AS user_id,
+         MIN(t.payload.lang) AS language,
+         MIN(t.payload.country) AS country,
+         MIN(t.payload.messageSource) AS os,
+         MIN(t.payload.isHidden) AS is_hidden
      FROM {{ source('mart', 'babylone_events') }} AS t
      WHERE t.`type` IN ('ticketCreateJoom', 'ticketCreate')
      GROUP BY 1
@@ -112,7 +112,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue
       FROM {{ source('mart', 'babylone_events') }} AS t
-      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+      JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChangeJoom'
             AND t.payload.stateQueueId IS NOT NULL 
@@ -124,7 +124,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           FIRST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS first_queue_not_limbo
       FROM {{ source('mart', 'babylone_events') }} AS t
-      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+      JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
            ON t.payload.stateQueueId = a._id
               AND a._id != 'limbo'
       WHERE t.`type` = 'ticketChangeJoom'
@@ -137,7 +137,7 @@ first_entries AS
           t.payload.ticketId AS ticket_id,
           LAST_VALUE(a.name) OVER(PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS current_queue
       FROM {{ source('mart', 'babylone_events') }} AS t
-      JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+      JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
            ON t.payload.stateQueueId = a._id
       WHERE t.`type` = 'ticketChangeJoom'
             AND t.payload.stateQueueId IS NOT NULL 
@@ -160,7 +160,7 @@ first_entries AS
                 t.event_ts_msk,
                 a.name AS queue
             FROM {{ source('mart', 'babylone_events') }} AS t
-            JOIN {{ source('mongo', 'babylone_joom_queues_daily_snapshot') }} AS a 
+            JOIN mongo.babylone_joom_queues_daily_snapshot AS a 
                  ON t.payload.stateQueueId = a._id
             WHERE t.`type` = 'ticketChangeJoom'
                   AND t.payload.stateQueueId IS NOT NULL
@@ -191,7 +191,7 @@ first_entries AS
                  t.ticket_id AS ticket_id,
                  a.name AS tag
              FROM t AS t
-             JOIN {{ source('mongo', 'babylone_joom_tags_daily_snapshot') }} AS a ON t.tag = a._id
+             JOIN mongo.babylone_joom_tags_daily_snapshot AS a ON t.tag = a._id
             )
         SELECT
             t.ticket_id AS ticket_id,

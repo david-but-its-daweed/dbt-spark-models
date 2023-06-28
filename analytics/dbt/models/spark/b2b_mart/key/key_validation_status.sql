@@ -8,23 +8,9 @@
     }
 ) }}
 
-
-SELECT
-    10 AS id,
-    'initial' AS status
-UNION ALL
-SELECT
-    20 AS id,
-    'needsValidation' AS status
-UNION ALL
-SELECT
-    25 AS id,
-    'onHold' AS status
-UNION ALL
-SELECT
-    30 AS id,
-    'validated' AS status
-UNION ALL
-SELECT
-    40 AS id,
-    'rejected' AS status
+select key as id, value as status
+from (
+    select explode(values)
+    from {{ source('mongo', 'b2b_core_enumregistry_daily_snapshot') }}
+    where key = 'user.validationStatus'
+    )

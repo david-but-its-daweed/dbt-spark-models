@@ -1,4 +1,4 @@
-{% snapshot scd2_customers_snapshot %}
+{% snapshot scd2_customer_offers_snapshot %}
 
 {{
     config(
@@ -13,6 +13,6 @@
 }}
 
 
-SELECT *, millis_to_ts_msk(utms+1)  AS update_ts_msk
-FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
+SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
+FROM {{ source('mongo', 'b2b_core_customer_offers_daily_snapshot') }}
 {% endsnapshot %}

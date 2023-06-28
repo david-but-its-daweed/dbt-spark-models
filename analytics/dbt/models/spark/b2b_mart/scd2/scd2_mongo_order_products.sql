@@ -1,17 +1,11 @@
-{% snapshot scd2_mongo_order_products %}
-
-{{
-    config(
-      target_schema='b2b_mart',
-      unique_key='order_product_id',
-
-      strategy='timestamp',
-      updated_at='update_ts_msk',
-      file_format='delta',
-      invalidate_hard_deletes=True,
-    )
-}}
-
+{{ config(
+    schema='b2b_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'bigquery_load': 'false'
+    }
+) }}
 
 SELECT _id AS                              order_product_id,
         id AS product_id,
@@ -41,8 +35,5 @@ SELECT _id AS                              order_product_id,
        type,
        variants,
        vatRate AS vat_rate,
-       millis_to_ts_msk(ctms)  AS created_ts_msk ,
-       CURRENT_TIMESTAMP()  AS update_ts_msk
+       millis_to_ts_msk(ctms)  AS created_ts_msk
 from {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
-
-{% endsnapshot %}

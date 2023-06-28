@@ -6,11 +6,12 @@
     file_format='parquet',
     meta = {
       'team': 'ads',
+      'model_owner': '@abracadabrik',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
       'bigquery_fail_on_missing_partitions': 'false',
       'bigquery_upload_horizon_days': '241',
-    }
+    },
 ) }}
 
 WITH installs AS (
