@@ -3,7 +3,7 @@
 {{
     config(
       target_schema='b2b_mart',
-      unique_key='uid'||'tp',
+      unique_key='unique_key',
 
       strategy='timestamp',
       updated_at='update_ts_msk',
@@ -13,6 +13,6 @@
 }}
 
 
-SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
+SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk, uid||tp as unique_key
 FROM {{ source('mongo', 'b2b_core_customer_plans_daily_snapshot') }}
 {% endsnapshot %}
