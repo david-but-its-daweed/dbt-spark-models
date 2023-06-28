@@ -30,7 +30,9 @@ du.conversion_status,
 invited_by_promo, 
 du.last_name, 
 du.first_name,
-created_ts_msk
+created_ts_msk,
+funnel_status,
+funnel_reject_reason
 from {{ ref('dim_user') }} du
 left join {{ ref('key_validation_status') }} on key_validation_status.id = validation_status
 left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = du.reject_reason
@@ -90,6 +92,8 @@ select distinct
     tracked,
     u.validation_status,
     u.reject_reason,
+    funnel_status,
+    funnel_reject_reason,
     u.owner_id,
     a.email as owner_email,
     a.owner_role,
