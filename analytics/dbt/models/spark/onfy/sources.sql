@@ -51,7 +51,8 @@ with sources as
         , 'Unknown') AS utm_source,
         case 
             when onfy_mart.device_events.type = 'externalLink' then onfy_mart.device_events.payload.params.utm_campaign
-            when onfy_mart.device_events.type <> 'externalLink' and lower(onfy_mart.device_events.payload.utm_source) like '%tiktok%' then split(onfy_mart.device_events.payload.utm_campaign, " ")[0]
+            when lower(coalesce(onfy_mart.device_events.payload.utm_source, onfy_mart.device_events.payload.params.utm_source)) like '%tiktok%' 
+                then regexp_replace(coalesce(onfy_mart.device_events.payload.params.utm_campaign, onfy_mart.device_events.payload.utm_campaign), ' \\\\((\\\\d+)\\\\)$', '')
             else onfy_mart.device_events.payload.utm_campaign 
         end as utm_campaign,
         case 
