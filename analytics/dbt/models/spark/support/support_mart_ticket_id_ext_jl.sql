@@ -28,6 +28,7 @@ ticket_create_events AS
          t.event_ts_msk AS ts_created,
          t.partition_date AS partition_date,
          t.payload.ticketId AS ticket_id,
+         r.payload.authorType AS author_of_ticket,
          t.payload.deviceId AS device_id,
          t.payload.customerExternalId AS user_id,
          t.payload.lang AS language,
@@ -372,6 +373,7 @@ first_entries AS
 SELECT
     t.partition_date AS partition_date,
     t.ts_created AS creation_ticket_ts_msk,
+    t.author_of_ticket, 
     t.device_id AS device_id,
     t.ticket_id AS ticket_id,
     t.user_id AS user_id,
