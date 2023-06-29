@@ -28,7 +28,7 @@ ticket_create_events AS
          t.event_ts_msk AS ts_created,
          t.partition_date AS partition_date,
          t.payload.ticketId AS ticket_id,
-         r.payload.authorType AS author_of_ticket,
+         t.payload.authorType AS author_of_ticket,
          t.payload.deviceId AS device_id,
          t.payload.customerExternalId AS user_id,
          t.payload.lang AS language,
