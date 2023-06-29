@@ -49,17 +49,8 @@ with sources as
                     end
             end
         , 'Unknown') AS utm_source,
-        case 
-            when onfy_mart.device_events.type = 'externalLink' then onfy_mart.device_events.payload.params.utm_campaign
-            when lower(coalesce(onfy_mart.device_events.payload.utm_source, onfy_mart.device_events.payload.params.utm_source)) like '%tiktok%' 
-                then regexp_replace(coalesce(onfy_mart.device_events.payload.params.utm_campaign, onfy_mart.device_events.payload.utm_campaign), ' \\((\\d+)\\)$', '')
-            else onfy_mart.device_events.payload.utm_campaign 
-        end as utm_campaign,
-        case 
-            when onfy_mart.device_events.type = 'externalLink' 
-            then onfy_mart.device_events.payload.params.utm_medium
-            else onfy_mart.device_events.payload.traffic_medium 
-        end as utm_medium,
+        regexp_replace(coalesce(onfy_mart.device_events.payload.params.utm_campaign, onfy_mart.device_events.payload.utm_campaign), ' \\((\\d+)\\)$', '') as utm_campaign,
+        coalesce(onfy_mart.device_events.payload.params.utm_medium, onfy_mart.device_events.payload.traffic_medium) as utm_medium,
         case 
             when 
                 lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%adchampaign%'
@@ -81,8 +72,8 @@ corrected_sources as
 (
     select
         sources.*,
-        lower(coalesce(utm.source_corrected, sources.utm_source)) as source_corrected,
-        lower(coalesce(utm.campaign_corrected, sources.utm_campaign)) as campaign_corrected
+        coalesce(utm.source_corrected, sources.utm_source) as source_corrected,
+        coalesce(utm.campaign_corrected, sources.utm_campaign) as campaign_corrected
     from sources
     left join pharmacy.utm_campaigns_corrected as utm
         on coalesce(lower(utm.utm_campaign), '') = coalesce(lower(sources.utm_campaign), '') 
