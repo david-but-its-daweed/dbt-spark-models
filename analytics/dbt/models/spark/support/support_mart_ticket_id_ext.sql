@@ -28,6 +28,7 @@ ticket_create_events AS
          MIN(t.event_ts_msk) AS ts_created,
          MIN(t.partition_date) AS partition_date,
          MIN(t.payload.authorType) AS author_of_ticket,
+         MIN(t.payload.authorId) AS author_id,
          MIN(t.payload.deviceId) AS device_id,
          MIN(t.payload.customerExternalId) AS user_id,
          MIN(t.payload.lang) AS language,
@@ -368,7 +369,8 @@ first_entries AS
 SELECT
     t.partition_date AS partition_date,
     t.ts_created AS creation_ticket_ts_msk,
-    t.author_of_ticket, 
+    t.author_of_ticket,
+    y.email AS author_email, 
     t.device_id AS device_id,
     t.ticket_id AS ticket_id,
     t.user_id AS user_id,
@@ -416,4 +418,5 @@ LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
 LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
 LEFT JOIN first_queue AS r ON r.ticket_id = t.ticket_id
 LEFT JOIN first_queue_not_limbo AS s ON s.ticket_id = t.ticket_id
+LEFT JOIN {{ source('mongo', 'babylone_joom_agents_daily_snapshot') }} AS y ON t.author_id = y._id
 

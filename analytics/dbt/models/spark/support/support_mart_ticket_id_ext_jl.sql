@@ -29,6 +29,7 @@ ticket_create_events AS
          t.partition_date AS partition_date,
          t.payload.ticketId AS ticket_id,
          t.payload.authorType AS author_of_ticket,
+         t.payload.authorId AS author_id,
          t.payload.deviceId AS device_id,
          t.payload.customerExternalId AS user_id,
          t.payload.lang AS language,
@@ -373,7 +374,8 @@ first_entries AS
 SELECT
     t.partition_date AS partition_date,
     t.ts_created AS creation_ticket_ts_msk,
-    t.author_of_ticket, 
+    t.author_of_ticket,
+    y.email AS author_email, 
     t.device_id AS device_id,
     t.ticket_id AS ticket_id,
     t.user_id AS user_id,
@@ -421,4 +423,5 @@ LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
 LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
 LEFT JOIN first_queue AS r ON r.ticket_id = t.ticket_id
 LEFT JOIN first_queue_not_limbo AS s ON s.ticket_id = t.ticket_id
+LEFT JOIN {{ source('mongo', 'babylone_logistics_agents_daily_snapshot') }} AS y AS y._id = t.author_id
 

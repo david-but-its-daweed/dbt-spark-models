@@ -92,6 +92,10 @@ sources:
       - name: babylone_joom_agents_daily_snapshot
       - name: user_points_transactions_daily_snapshot
       - name: finance_order_costs_daily_snapshot
+      - name: babylone_joompay_agents_daily_snapshot
+      - name: babylone_logistics_agents_daily_snapshot
+      - name: babylone_narwhal_agents_daily_snapshot
+      - name: babylone_onfy_agents_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
