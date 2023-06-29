@@ -41,6 +41,6 @@ SELECT
   TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_user') }} t
 left join requests as r on t.user_id = r.user_id
-left join {{ ref('key_funnel_status') }} fs on funnel_state.st = fs.id
+left join {{ ref('key_funnel_status') }} fs on coalesce(cast(funnel_state.st as int), 0) = coalesce(cast(fs.id as int), 0)
 left join {{ ref('key_validation_reject_reason') }} rr on funnel_state.rjRsn = rr.id
 where not is_test_user or is_test_user is null
