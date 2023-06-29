@@ -423,5 +423,5 @@ LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
 LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
 LEFT JOIN first_queue AS r ON r.ticket_id = t.ticket_id
 LEFT JOIN first_queue_not_limbo AS s ON s.ticket_id = t.ticket_id
-LEFT JOIN {{ source('mongo', 'babylone_logistics_agents_daily_snapshot') }} AS y AS y._id = t.author_id
+LEFT JOIN {{ source('mongo', 'babylone_logistics_agents_daily_snapshot') }} AS y ON y._id = t.author_id
 
