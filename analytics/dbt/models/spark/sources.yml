@@ -28,6 +28,9 @@ sources:
       - name: published_products_current
       - name: onfy_babylone_events
       - name: dim_currency_rate
+  - name: cube
+    tables:
+      - name: event_counts_country_os_days
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
