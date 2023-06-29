@@ -1,0 +1,10 @@
+{
+  "git.enableSmartCommit": true,
+  "editor.formatOnSave": true,
+  "git.fetchOnPull": true,
+  "git.pruneOnFetch": true,
+  "git.autofetch": true,
+  "[sql]": {
+    "editor.defaultFormatter": "dorzey.vscode-sqlfluff"
+  }
+}

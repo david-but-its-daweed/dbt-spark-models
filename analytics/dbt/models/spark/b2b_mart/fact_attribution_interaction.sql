@@ -74,6 +74,7 @@ user_interaction as
     company_name,
     grade,
     amo_id,
+    promocodeId as promocode_id,
     row_number() over (partition by user_id order by case when incorrectAttribution
         then 1 else 0 end, coalesce(interactionType, 100), ctms) = 1 as first_interaction_type,
     row_number() over (partition by user_id order by case when incorrectAttribution
@@ -119,24 +120,25 @@ select distinct
     type,
     campaign,
     website_form,
+    promocode_id,
     created_automatically,
     interaction_type,
     case when 
+        conversion_status = 'Converted'
+    then conversion_status
+    when
         amo_id is not null 
         and admin is null 
         and closed is not null 
-        and orders > 0
     then 'ConversionFailed' 
     when 
         amo_id is not null 
         and admin is null 
-        and closed is not null 
-        and orders > 0
+        and closed is null 
     then 'Converting'
     when 
         amo_id is not null 
         and admin is null 
-        and orders = 0
     then 'NoConversionAttempt'
     else conversion_status end as 
     conversion_status,

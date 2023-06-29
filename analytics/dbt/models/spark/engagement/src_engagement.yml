@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: user_segments
+    description: Пользовательские сегменты. Первичный ключ таблицы `real_user_id` + `effective_ts`. В таблице есть только те пользователи, которые делали покупки. При джойне на активность несджойнившимся пользователям стоит проставлять сегмент Non-buyers
+    columns:
+      - name: real_user_id
+        description: user_id from link_device_real_user after user merge
+      - name: user_segment
+        description: the name of the segment. Possible values - Non-buyers - no orders for the last 3 months, Occasional buyers - 1 or 2 months with orders for the last 3 months, Regular buyers - 3/3 last months with orders or 4+/6, Constant buyers - 10+/12 last months with orders
+      - name: effective_ts
+        description: date the segment is effective from. The first date is the date of creation of real_user_id
+      - name: next_effective_ts
+        description: date the segment is effective to. The last date for every real_user_id is 9999-12-31

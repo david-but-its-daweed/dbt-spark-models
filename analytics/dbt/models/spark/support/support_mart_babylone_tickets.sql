@@ -24,7 +24,7 @@ WITH creations_marketplace AS (
   FROM
     {{ source('mart', 'babylone_events') }}
   WHERE
-    `type` = 'ticketCreateJoom'
+    `type` IN ('ticketCreateJoom', 'ticketCreate')
     AND event_ts_msk IS NOT NULL
   GROUP BY
     1,
