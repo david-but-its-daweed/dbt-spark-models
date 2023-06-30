@@ -23,6 +23,7 @@ select
     partition_date_msk,
     event_count
 from {{ source('cube', 'event_counts_country_os_days') }}
+left anti join {{ source('platform', 'fact_removed_device_event') }} using (event_type)
 where
     time_unit = 'd'
     and (device_country = 'all' or event_type = 'all')
