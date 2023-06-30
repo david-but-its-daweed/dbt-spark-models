@@ -9,16 +9,9 @@
 ) }}
 
 
-select '00' as id, 'NeedValidation' as status
-union all
-select '20' as id, 'Rejected' as status
-union all
-select '30' as id, 'ValidatedNoConversionAttempt' as status
-union all
-select '40' as id, 'ConversionFailed' as status
-union all
-select '50' as id, 'Converting' as status
-union all
-select '60' as id, 'Converted' as status
-union all
-select '70' as id, 'Lost' as status
+select key as id, initcap(value) as status
+from (
+    select explode(values)
+    from {{ source('mongo', 'b2b_core_enumregistry_daily_snapshot') }}
+    where key = 'user.funnelStatus'
+    )
