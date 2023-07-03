@@ -39,7 +39,7 @@ partner_source
 from {{ ref('dim_user') }} du
 left join {{ ref('key_validation_status') }} on key_validation_status.id = validation_status
 left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = du.reject_reason
-where next_effective_ts_msk is null and (not is_partner or is_partner is null)
+where next_effective_ts_msk is null
 ),
 
 grades as (
