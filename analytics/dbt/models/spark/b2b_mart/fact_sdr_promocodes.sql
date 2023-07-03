@@ -18,7 +18,9 @@ select
     fc.last_name,
     fc.first_name,
     fc.company_name,
-    du.is_partner
+    du.is_partner,
+    fc.partner_type,
+    fc.partner_source
 from {{ ref('fact_customers') }} fc
 left join {{ ref('dim_user') }} du on fc.user_id = du.user_id
 where du.next_effective_ts_msk is null
@@ -47,6 +49,8 @@ last_name,
 first_name,
 company_name,
 is_partner,
+partner_type,
+partner_source,
 type, source, campaign,
 day
 from
