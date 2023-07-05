@@ -1,3 +1,13 @@
+{{ config(
+    schema='onfy',
+    materialized='table',
+    meta = {
+      'team': 'onfy',
+      'bigquery_load': 'true',
+      'alerts_channel': 'onfy-etl-monitoring'
+    }
+) }}
+
 with promo_applications as 
 (
     select distinct
