@@ -136,6 +136,7 @@ sources:
       - name: google_campaign_insights
       - name: fbads_adset_country_insights
       - name: partners_insights
+      - name: checkout_promocode
   - name: onfy_mart
     tables:
       - name: device_events
@@ -156,6 +157,8 @@ sources:
       - name: medicine
       - name: manufacturer
       - name: product
+      - name: promocode
+      - name: admin_user
   - name: onfy
     tables:
       - name: lndc_user_attribution
