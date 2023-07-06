@@ -73,5 +73,5 @@ left join (
 left join (
     select distinct admin_id, email, role
     from {{ ref('dim_user_admin') }}
-) as reporter on issues.assignee_id = assignee.admin_id
+) as reporter on issues.assignee_id = reporter.admin_id
 where rn = 1
