@@ -32,11 +32,14 @@ du.last_name,
 du.first_name,
 created_ts_msk,
 funnel_status,
-funnel_reject_reason
+funnel_reject_reason,
+is_partner,
+partner_type,
+partner_source
 from {{ ref('dim_user') }} du
 left join {{ ref('key_validation_status') }} on key_validation_status.id = validation_status
 left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = du.reject_reason
-where next_effective_ts_msk is null and (not is_partner or is_partner is null)
+where next_effective_ts_msk is null
 ),
 
 grades as (
@@ -106,7 +109,10 @@ select distinct
     coalesce(grade_probability, "unknown") as grade_probability,
     amo_crm_id, 
     amo_id, 
-    invited_by_promo
+    invited_by_promo,
+    u.is_partner,
+    u.partner_type,
+    u.partner_source
     from users as u
     left join admin as a on u.owner_id = a.admin_id
     left join customers as c on u.user_id = c.user_id

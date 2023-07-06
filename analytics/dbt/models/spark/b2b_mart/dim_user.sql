@@ -37,10 +37,13 @@ SELECT
   is_partner or coalesce(is_test_user, FALSE) as fake,
   fs.status as funnel_status,
   rr.reason as funnel_reject_reason,
+  pt.type as partner_type,
+  partner_source,
   TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
   TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_user') }} t
 left join requests as r on t.user_id = r.user_id
-left join {{ ref('key_funnel_status') }} fs on funnel_state.st = fs.id
-left join {{ ref('key_validation_reject_reason') }} rr on funnel_state.rjRsn = rr.id
+left join {{ ref('key_funnel_status') }} fs on coalesce(cast(funnel_state.st as int), 0) = coalesce(cast(fs.id as int), 0)
+left join {{ ref('key_validation_reject_reason') }} rr on cast(funnel_state.rjRsn as int) = cast(rr.id as int)
+left join {{ ref('key_partner_type') }} pt on cast(t.partner_type as int) = cast(pt.id as int)
 where not is_test_user or is_test_user is null

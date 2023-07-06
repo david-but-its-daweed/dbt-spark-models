@@ -40,7 +40,10 @@ users AS (
       created_ts_msk as user_created_time,
       validated_date,
       funnel_status,
-      funnel_reject_reason
+      funnel_reject_reason,
+      is_partner,
+      partner_type,
+      partner_source
   FROM {{ ref('fact_customers') }} du
   left join conversion c on du.conversion_status = c.status_int
 ),
@@ -79,6 +82,9 @@ user_interaction as
     promocodeId as promocode_id,
     funnel_status,
     funnel_reject_reason,
+    is_partner,
+    partner_type,
+    partner_source,
     row_number() over (partition by user_id order by case when incorrectAttribution
         then 1 else 0 end, coalesce(interactionType, 100), ctms) = 1 as first_interaction_type,
     row_number() over (partition by user_id order by case when incorrectAttribution
@@ -188,6 +194,9 @@ select distinct
     else funnel_status end as 
     funnel_status,
     funnel_reject_reason,
+    is_partner,
+    partner_type,
+    partner_source,
     case when admin is not null or amo_id is null then true else false end as admin,
     case when interaction_type = 0 and not incorrect_attr then first_interaction_type else FALSE end as first_interaction_type,
     case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end as last_interaction_type,
