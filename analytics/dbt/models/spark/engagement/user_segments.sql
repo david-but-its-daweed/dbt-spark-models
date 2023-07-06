@@ -106,7 +106,7 @@ user_segments_process AS (
         active_window_dt AS day_msk,
         IF(
             stat_12m > 10,
-            "Constant buyers",
+            "Frequent buyers",
             IF(
                 stat_3m = 3 OR stat_6m >= 4,
                 "Regular buyers",
