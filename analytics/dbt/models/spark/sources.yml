@@ -28,6 +28,9 @@ sources:
       - name: published_products_current
       - name: onfy_babylone_events
       - name: dim_currency_rate
+  - name: cube
+    tables:
+      - name: event_counts_country_os_days
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
@@ -92,6 +95,10 @@ sources:
       - name: babylone_joom_agents_daily_snapshot
       - name: user_points_transactions_daily_snapshot
       - name: finance_order_costs_daily_snapshot
+      - name: babylone_joompay_agents_daily_snapshot
+      - name: babylone_logistics_agents_daily_snapshot
+      - name: babylone_narwhal_agents_daily_snapshot
+      - name: babylone_onfy_agents_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -123,11 +130,13 @@ sources:
       - name: s3_accesses_with_tables
       - name: s3_inventory_with_tables
       - name: context_product_counters_v5
+      - name: fact_removed_device_event
   - name: pharmacy
     tables:
       - name: google_campaign_insights
       - name: fbads_adset_country_insights
       - name: partners_insights
+      - name: checkout_promocode
   - name: onfy_mart
     tables:
       - name: device_events
@@ -148,6 +157,8 @@ sources:
       - name: medicine
       - name: manufacturer
       - name: product
+      - name: promocode
+      - name: admin_user
   - name: onfy
     tables:
       - name: lndc_user_attribution

@@ -574,12 +574,15 @@ select distinct
     qty_per_box,
     measures,
     max(total_time_spent + current_status) over 
-        (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as current_status_days,
+        (partition by order_id, merchant_order_id, product_id, pickup_id, length,
+        width, hight, weight, qty_per_box) as current_status_days,
     sum(case when past then days end) over 
-        (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as current_status_declared_days,
+        (partition by order_id, merchant_order_id, product_id, pickup_id, length,
+        width, hight, weight, qty_per_box) as current_status_declared_days,
     sum(case when future then days end) over 
-        (partition by order_id, merchant_order_id, product_id, pickup_id, measures, qty_per_box) as day_diff,
-    row_number() over (partition by order_id order by status_int) as rn
+         (partition by order_id, merchant_order_id, product_id, pickup_id, length,
+        width, hight, weight, qty_per_box) as day_diff,
+    rank() over (partition by order_id order by status_int) as rn
 from 
 (
 select distinct

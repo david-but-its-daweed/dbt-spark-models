@@ -22,8 +22,8 @@ WITH manufactiring AS
         (
             SELECT 
                 order_id,
-                coalesce(col.`1`, col.`0`) AS sub_status,
-                col.`2` AS ts_msk
+                coalesce(col.`subStatus`, col.`status`) AS sub_status,
+                col.`updatedTimeMs` AS ts_msk
             FROM 
             (
                 SELECT _id AS order_id,
@@ -31,7 +31,7 @@ WITH manufactiring AS
                 FROM {{ ref('scd2_orders_v2_snapshot') }}
             
             )
-            where  col.`0` = 20
+            where  col.`status` = 20
         )
     )
     where min_sub_status= sub_status
