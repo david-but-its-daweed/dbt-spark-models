@@ -9,7 +9,14 @@
 ) }}
   
 with 
-orders as (select o.order_id, merchant_order_id, id as product_id, dealId as deal_id, _id as order_product_id, user_id
+orders as (
+    select
+        o.order_id,
+        mo.merchant_order_id,
+        product_id,
+        deal_id,
+        order_product_id,
+        user_id
     from (
         select distinct order_id, user_id
         from {{ ref('fact_order') }}
@@ -20,8 +27,7 @@ orders as (select o.order_id, merchant_order_id, id as product_id, dealId as dea
         where next_effective_ts_msk is null
     ) mo 
     on o.order_id = mo.order_id
-    full join {{ ref('scd2_order_products_snapshot') }} op on op.merchOrdId = mo.merchant_order_id
-    where op.dbt_valid_to is null
+    full join {{ ref('fact_order_products') }} op on op.merchant_order_id = mo.merchant_order_id
     ),
 
 offer_product as (
