@@ -47,7 +47,7 @@ select distinct
     left join (select distinct status, id from {{ ref('key_order_status') }}) k2 on current_status = k2.status
     left join (select distinct sub_status, id from {{ ref('key_order_substatus') }}) k3 on status.statuses.subStatus = k3.sub_status
     left join (select distinct sub_status, id from {{ ref('key_order_substatus') }}) k4 on current_sub_status = k4.sub_status
-    where k1.id <= k2.id and k3.id <= k4.id
+    where k1.id <= k2.id and coalesce(k3.id, k1.id*100) <= coalesce(k4.id, k2.id*100)
     group by 
         order_id, 
         TIMESTAMP(millis_to_ts_msk(statuses.updatedTime)), 
