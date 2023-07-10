@@ -18,6 +18,7 @@ WITH purchases AS (
         AS partition_date_set
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE partition_date >= '2018-01-01'
+        AND real_user_id IS NOT NULL
 ),
 
 calculation_dates AS (
@@ -105,7 +106,7 @@ user_segments_process AS (
         t1.*,
         active_window_dt AS day_msk,
         IF(
-            stat_12m > 10,
+            stat_12m >= 10,
             "Frequent buyers",
             IF(
                 stat_3m = 3 OR stat_6m >= 4,
@@ -168,8 +169,8 @@ user_segments_agg AS (
         real_user_id,
         user_segment,
         user_segment_change_cnt,
-        MIN(effective_ts) AS effective_ts,
-        MAX(next_effective_ts) AS next_effective_ts
+        MIN(TIMESTAMP(effective_ts)) AS effective_ts,
+        MAX(TIMESTAMP(next_effective_ts)) AS next_effective_ts
     FROM user_segments_end
     GROUP BY 1, 2, 3
 )
