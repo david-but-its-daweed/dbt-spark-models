@@ -70,7 +70,7 @@ left join (
 left join order_product op on o.order_id = op.order_id and rr.pId = op.product_id
 left join (select distinct order_id, 1 as converted from {{ ref('gmv_by_sources') }}) g on o.order_id = g.order_id
 left join (select distinct order_id, product_id from {{ ref('order_product_prices') }}) opp on opp.order_id = g.order_id and opp.product_id = rr.pId
-where created_time >= date('2023-01-01')
+where created_time >= date('2022-06-01')
 order by created_time desc
 ),
 
@@ -148,7 +148,7 @@ left join (
 left join offer_product op on o.customer_request_id = op.customer_request_id and rr.product_id = op.product_id
 left join orders or on or.deal_id = o.deal_id and rr.product_id = or.product_id
 left join (select distinct order_id, 1 as converted from {{ ref('gmv_by_sources') }}) g on or.order_id = g.order_id
-where created_time >= date('2023-01-01')
+where created_time >= date('2022-06-01')
 order by created_time desc
 )
 
