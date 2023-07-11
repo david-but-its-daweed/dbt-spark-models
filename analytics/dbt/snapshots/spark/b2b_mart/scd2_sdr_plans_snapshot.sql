@@ -1,4 +1,4 @@
-{% snapshot scd2_customer_plans_snapshot %}
+{% snapshot scd2_sdr_plans_snapshot %}
 
 {{
     config(
