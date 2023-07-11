@@ -13,6 +13,6 @@
 }}
 
 
-SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk, uid||tp as unique_key
+SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk, mid||hn||tp as unique_key
 FROM {{ source('mongo', 'b2b_core_admin_user_sdr_plans_daily_snapshot') }}
 {% endsnapshot %}
