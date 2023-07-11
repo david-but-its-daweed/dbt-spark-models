@@ -29,7 +29,7 @@ select distinct
   owner_role,
   amount as price,
   coalesce(rfq.offer_type, offer.offer_type) as offer_type,
-  row_number() over (partition by order_id order by price desc) as order_rn,
+  row_number() over (partition by d.order_id order by amount desc) as order_rn,
   g.t as date_payed
 from {{ ref('dim_deal_products') }} d
 join {{ ref('gmv_by_sources') }}  g on d.order_id = g.order_id
