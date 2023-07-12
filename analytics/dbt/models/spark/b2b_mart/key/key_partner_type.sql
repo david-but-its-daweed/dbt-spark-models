@@ -9,9 +9,9 @@
 ) }}
 
 
-select key as id, upper(substr(value, 0, 1))||(substr(value, 2, length(value) - 1 )) as status
+select key as id, upper(substr(value, 0, 1))||(substr(value, 2, length(value) - 1 )) as type
 from (
     select explode(values)
     from {{ source('mongo', 'b2b_core_enumregistry_daily_snapshot') }}
-    where key = 'user.funnelStatus'
+    where key = 'user.partnerType'
     )

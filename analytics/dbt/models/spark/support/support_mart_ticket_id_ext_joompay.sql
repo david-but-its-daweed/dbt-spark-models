@@ -26,6 +26,8 @@ ticket_create_events AS
      SELECT
          t.event_ts_msk AS ts_created,
          t.partition_date AS partition_date,
+         t.payload.authorType AS author_of_ticket,
+         t.payload.authorId AS author_id,
          t.payload.ticketId AS ticket_id,
          t.payload.deviceId AS device_id,
          t.payload.customerExternalId AS user_id,
@@ -369,6 +371,8 @@ first_entries AS
 SELECT
     t.partition_date AS partition_date,
     t.ts_created AS creation_ticket_ts_msk,
+    t.author_of_ticket AS author_of_ticket,
+    y.email AS author_email,
     t.device_id AS device_id,
     t.ticket_id AS ticket_id,
     t.user_id AS user_id,
@@ -416,3 +420,4 @@ LEFT JOIN current_queue AS p ON p.ticket_id = t.ticket_id
 LEFT JOIN first_queue AS r ON r.ticket_id = t.ticket_id
 LEFT JOIN first_queue_not_limbo AS s ON s.ticket_id = t.ticket_id
 LEFT JOIN last_agent AS q ON q.ticket_id = t.ticket_id
+LEFT JOIN {{ source('mongo', 'babylone_narwhal_agents_daily_snapshot') }} AS y ON y._id = t.author_id

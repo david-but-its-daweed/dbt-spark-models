@@ -158,7 +158,12 @@ select
     a.psi_status_id,
     statuses.status as current_status,
     date(ready_for_psi) as ready_for_psi,
-    date(from_unixtime(date_of_inspection/1000)) as psi_start,
+    date(coalesce(
+        from_unixtime(date_of_inspection/1000),
+        from_unixtime(psi_ready_time/1000),
+        from_unixtime(psi_start_time/1000)
+            )
+    ) as psi_start,
     date(from_unixtime(psi_waiting_time/1000)) as psi_waiting,
     date(from_unixtime(psi_ready_time/1000)) as psi_ready,
     date(from_unixtime(psi_failed_time/1000)) as psi_failed,

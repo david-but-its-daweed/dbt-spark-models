@@ -18,7 +18,9 @@ select
     fc.last_name,
     fc.first_name,
     fc.company_name,
-    du.is_partner
+    du.is_partner,
+    fc.partner_type,
+    fc.partner_source
 from {{ ref('fact_customers') }} fc
 left join {{ ref('dim_user') }} du on fc.user_id = du.user_id
 where du.next_effective_ts_msk is null
@@ -47,14 +49,16 @@ last_name,
 first_name,
 company_name,
 is_partner,
+partner_type,
+partner_source,
 type, source, campaign,
 day
-from
+from customers c
+left join
 (
 select *, explode(sequence(to_date('2022-03-01'), to_date(CURRENT_DATE()), interval 1 day)) as day 
 from {{ ref('scd2_promocodes_snapshot') }}
-) p
-left join customers c on p.ownerId = c.user_id
+) p on p.ownerId = c.user_id
 left join attr a on a.user_id = p.ownerId
 where date(millis_to_ts_msk(ctms)) <= day and 
 day >=  date(dbt_valid_from) and (day < date(dbt_valid_to) or dbt_valid_to is null)
