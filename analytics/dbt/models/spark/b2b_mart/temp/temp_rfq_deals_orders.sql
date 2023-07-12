@@ -54,6 +54,7 @@ o.deal_id,
 o.user_id,
 rr._id as rfq_response_id,
 status,
+mId as merchant_id,
 pId as product_id,
 coalesce(order_product, 0) as order_product,
 null as offer_product,
@@ -124,6 +125,7 @@ o.deal_id,
 o.user_id,
 order_rfq_response_id as rfq_response_id,
 status,
+rr.merchant_id,
 rr.product_id,
 case when g.order_id is not null then 1 else 0 end as order_product,
 coalesce(order_product, 0) as offer_product,
@@ -145,6 +147,7 @@ order by created_time desc
 
 select 
 r.*,
+merchant_name,
 owner_id,
 owner_email,
 owner_role
@@ -171,3 +174,10 @@ left join (
     from {{ ref('fact_customers') }}
 
 ) c on r.user_id = c.user_id
+left join (
+    select distinct merchant_id,
+    coalesce(companyName, name) as merchant_name
+    from b2b_mart.dim_merchant
+    where next_effective_ts is null
+    
+) m on r.merchant_id = m.merchant_id
