@@ -26,7 +26,7 @@ isTop as is_top,
 oid as order_id,
 explode(productVariants) as variants
 from
-{{ ref('mongo', 'b2b_core_rfq_request_daily_snapshot') }} r
+{{ source('mongo', 'b2b_core_rfq_request_daily_snapshot') }} r
 ) r
 left join (
     select distinct user_id, order_id from {{ ref('fact_order') }} where next_effective_ts_msk is null
