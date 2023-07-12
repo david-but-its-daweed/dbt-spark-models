@@ -177,7 +177,7 @@ left join (
 left join (
     select distinct _id as merchant_id,
     coalesce(companyName, name) as merchant_name
-    from {{ ref('dim_merchant') }}
+    from {{ source('b2b_mart', 'dim_merchant') }}
     where next_effective_ts is null
     
 ) m on r.merchant_id = m.merchant_id
