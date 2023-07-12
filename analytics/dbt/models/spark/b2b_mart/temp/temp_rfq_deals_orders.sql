@@ -9,7 +9,6 @@
     }
 ) }}
 
-
 with rfq_sent as (
 select 
 null as deal_id,
@@ -27,14 +26,14 @@ isTop as is_top,
 oid as order_id,
 explode(productVariants) as variants
 from
-{{ source('mongo', 'b2b_core_rfq_request_daily_snapshot') }} r
+{{ ref('mongo', 'b2b_core_rfq_request_daily_snapshot') }} r
 ) r
 left join (
     select distinct user_id, order_id from {{ ref('fact_order') }} where next_effective_ts_msk is null
     ) o on r.order_id = o.order_id
 group by 1, 2, 3, 4, 5, 6),
 
-order_product as (select order_id, product_id, deal_id, 1 as order_product
+order_product as (select order_id, customer_request_id, offer_id, product_id, deal_id, 1 as order_product
     from {{ ref('dim_deal_products') }}
     where order_id is not null and product_id is not null
     ),
@@ -49,7 +48,8 @@ date(created_time) as created_date,
 sum_price,
 is_top,
 o.order_id,
-null as offer_id,
+op.customer_request_id,
+op.offer_id,
 o.deal_id,
 o.user_id,
 rr._id as rfq_response_id,
@@ -73,11 +73,6 @@ left join (select distinct order_id, product_id from {{ ref('order_product_price
 where created_time >= date('2022-06-01')
 order by created_time desc
 ),
-
-orders as (select order_id, product_id, deal_id, 1 as offer_product
-    from {{ ref('dim_deal_products') }}
-    where deal_id is not null
-    ),
 
 rfq_sent_deals as (
 select 
@@ -106,13 +101,9 @@ group by 1, 2, 3, 4, 5, 6),
 
 offer_product as (
 select distinct
-        customer_request_id, o.offer_id, product_id, 1 as offer_product, 0 as rfq_product
-    FROM {{ ref('scd2_offer_products_snapshot') }} as o
-    JOIN 
-        (
-        select customer_request_id, offer_id from {{ ref('fact_customer_offers') }}
-        ) m ON m.offer_id = o.offer_id
-        where o.dbt_valid_to is null
+        order_id, product_id, deal_id, customer_request_id, offer_id, product_id, 1 as offer_product, 0 as rfq_product
+    from {{ ref('dim_deal_products') }}
+    where deal_id is not null
     ),
 
 
@@ -126,7 +117,8 @@ o.rfq_request_id,
 date(created_time) as created_date,
 sum_price,
 is_top,
-or.order_id,
+op.order_id,
+o.customer_request_id,
 offer_id,
 o.deal_id,
 o.user_id,
@@ -146,8 +138,7 @@ left join (
     from {{ ref('fact_attribution_interaction') }}
     where last_interaction_type) a on o.user_id = a.user_id
 left join offer_product op on o.customer_request_id = op.customer_request_id and rr.product_id = op.product_id
-left join orders or on or.deal_id = o.deal_id and rr.product_id = or.product_id
-left join (select distinct order_id, 1 as converted from {{ ref('gmv_by_sources') }}) g on or.order_id = g.order_id
+left join (select distinct order_id, 1 as converted from {{ ref('gmv_by_sources') }}) g on op.order_id = g.order_id
 where created_time >= date('2022-06-01')
 order by created_time desc
 )
