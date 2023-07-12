@@ -178,6 +178,6 @@ left join (
     select distinct _id as merchant_id,
     coalesce(companyName, name) as merchant_name
     from {{ source('b2b_mart', 'dim_merchant') }}
-    where next_effective_ts is null
+    where next_effective_ts >= current_timestamp()
     
 ) m on r.merchant_id = m.merchant_id
