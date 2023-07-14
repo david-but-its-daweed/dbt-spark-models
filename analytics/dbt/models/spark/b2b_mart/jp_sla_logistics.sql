@@ -85,15 +85,15 @@ stg2 AS (
         current_sub_status,
         certified,
         IF(lead_sub_status != sub_status OR lead_status != status OR lead_status IS NULL, TRUE, FALSE) AS flg,
-        COALESCE(lead_sub_status_ts, CURRENT_TIMESTAMP()) AS lead_sub_status_ts,
-        COALESCE(
+        date(COALESCE(lead_sub_status_ts, CURRENT_TIMESTAMP())) AS lead_sub_status_ts,
+        date(COALESCE(
             FIRST_VALUE(CASE WHEN lead_status != status THEN lead_sub_status_ts END)
             OVER (PARTITION BY order_id, status ORDER BY lead_status != status, lead_sub_status_ts),
-            CURRENT_TIMESTAMP()) AS lead_status_ts,
-        FIRST_VALUE(event_ts_msk) OVER (PARTITION BY order_id, status, sub_status
-            ORDER BY event_ts_msk) AS first_substatus_event_msk,
-        FIRST_VALUE(event_ts_msk) OVER (PARTITION BY order_id, status
-            ORDER BY event_ts_msk) AS first_status_event_msk
+            CURRENT_TIMESTAMP())) AS lead_status_ts,
+        date(FIRST_VALUE(event_ts_msk) OVER (PARTITION BY order_id, status, sub_status
+            ORDER BY event_ts_msk)) AS first_substatus_event_msk,
+        date(FIRST_VALUE(event_ts_msk) OVER (PARTITION BY order_id, status
+            ORDER BY event_ts_msk)) AS first_status_event_msk
     FROM stg1
     WHERE (lead_sub_status != sub_status OR lead_status != status OR lead_status IS NULL)
         OR (lag_sub_status != sub_status OR lag_status != status OR lag_status IS NULL)
@@ -221,21 +221,9 @@ SELECT DISTINCT
     oh.customs_declaration_released,
     oh.upload_to_temporary_warehouse,
     oh.delivering,
-    oh.delivered,
-    curr.current_status_days,
-    curr.current_status_declared_days
+    oh.delivered
 FROM orders AS o
 INNER JOIN orders_hist AS oh ON o.order_id = oh.order_id
 LEFT JOIN linehaul AS l ON o.linehaul_channel_id = l.id
 LEFT JOIN merchant_order AS mo ON o.order_id = mo.order_id
-LEFT JOIN (
-    SELECT DISTINCT
-        order_id,
-        current_status_days,
-        current_status_declared_days
-     FROM {{ ref('forecast_warehousing') }}
-     WHERE partition_date_msk = (
-         SELECT MAX(partition_date_msk)
-         FROM {{ ref('forecast_warehousing') }})
-) curr on curr.order_id = o.order_id
 WHERE oh.manufacturing IS NOT NULL
