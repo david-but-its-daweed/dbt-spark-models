@@ -116,9 +116,9 @@ select distinct
     u.is_partner,
     u.partner_type,
     u.partner_source,
-    first_deal_planning_volume,
+    first_deal_planning_volume/1000000 as first_deal_planning_volume,
     first_deal_planning_currency,
-    first_deal_planning_volume_usd
+    first_deal_planning_volume_usd/1000000 as first_deal_planning_volume_usd
     from users as u
     left join admin as a on u.owner_id = a.admin_id
     left join customers as c on u.user_id = c.user_id
