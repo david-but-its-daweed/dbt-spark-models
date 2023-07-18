@@ -39,5 +39,3 @@ slo_jm_base_tables,models.device_interactions,bq
 slo_jl_base_tables,jl_models.jl_external_clients_orders,bq
 slo_jpro_base_tables,b2b_mart.user_request_order,bq
 slo_jpay_base_tables,cube.joompay_overview_v1_days,bq
-slo_onfy_base_tables,models.onfy_orders,bq
-slo_onfy_base_tables,models.onfy_devices,bq
