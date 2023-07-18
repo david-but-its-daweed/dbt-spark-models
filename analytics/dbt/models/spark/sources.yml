@@ -59,6 +59,7 @@ sources:
       - name: b2b_core_rfq_media_uploads_daily_snapshot
       - name: b2b_core_stores_daily_snapshot
       - name: b2b_core_admin_user_plans_daily_snapshot
+      - name: b2b_core_admin_user_sdr_plans_daily_snapshot
       - name: b2b_core_pick_up_orders_v2_daily_snapshot
       - name: b2b_core_amo_crm_raw_leads_daily_snapshot
       - name: b2b_core_enumregistry_daily_snapshot
