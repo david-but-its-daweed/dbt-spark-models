@@ -59,16 +59,16 @@ stg1 AS (
         o.event_ts_msk,
         c.certified,
         FIRST_VALUE(ao.email) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS owner_moderator_email,
-        FIRST_VALUE(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_status,
-        FIRST_VALUE(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk DESC) AS current_sub_status,
+        FIRST_VALUE(o.status) OVER (PARTITION BY o.order_id ORDER BY o.status_id DESC, o.event_ts_msk DESC) AS current_status,
+        FIRST_VALUE(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.status_id DESC, o.sub_status_id DESC, o.event_ts_msk DESC) AS current_sub_status,
         MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, o.status, o.sub_status) AS min_sub_status_ts,
         MIN(o.event_ts_msk) OVER (PARTITION BY o.order_id, o.status, o.sub_status) AS min_status_ts,
-        LEAD(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status_ts,
-        LEAD(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_status,
-        LEAD(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lead_sub_status,
-        LAG(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_sub_status_ts,
-        LAG(o.status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_status,
-        LAG(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.event_ts_msk) AS lag_sub_status
+        LEAD(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id, o.event_ts_msk) AS lead_sub_status_ts,
+        LEAD(o.status) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id, o.event_ts_msk) AS lead_status,
+        LEAD(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id, o.event_ts_msk) AS lead_sub_status,
+        LAG(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id, o.event_ts_msk) AS lag_sub_status_ts,
+        LAG(o.status) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id,o.event_ts_msk) AS lag_status,
+        LAG(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id, o.event_ts_msk) AS lag_sub_status
     FROM {{ ref('fact_order_statuses') }} AS o
     LEFT JOIN certified AS c ON o.order_id = c.order_id
     LEFT JOIN admin AS ao ON c.owner_moderator_id = ao.admin_id
