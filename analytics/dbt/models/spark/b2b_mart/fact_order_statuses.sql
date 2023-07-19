@@ -12,7 +12,7 @@ select distinct
     fos.event_ts_msk, 
     fos.subStatus as sub_status, 
     fos.status,
-    coalesce(fos.current_status = fos.status and fos.current_sub_status = fos.sub_status, false)  as current_status,
+    coalesce(fos.current_status = fos.status and fos.current_sub_status = fos.subStatus, false)  as current_status,
     cast(ks.id as int) as status_id,
     coalesce(cast(kss.id as int), cast(ks.id as int)*100) as sub_status_id
     from
