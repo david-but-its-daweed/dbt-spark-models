@@ -43,7 +43,10 @@ users AS (
       funnel_reject_reason,
       is_partner,
       partner_type,
-      partner_source
+      partner_source,
+        first_deal_planning_volume,
+        first_deal_planning_currency,
+        first_deal_planning_volume_usd
   FROM {{ ref('fact_customers') }} du
   left join conversion c on du.conversion_status = c.status_int
 ),
@@ -85,6 +88,9 @@ user_interaction as
     is_partner,
     partner_type,
     partner_source,
+    first_deal_planning_volume,
+    first_deal_planning_currency,
+    first_deal_planning_volume_usd,
     row_number() over (partition by user_id order by case when incorrectAttribution
         then 1 else 0 end, coalesce(interactionType, 100), ctms) = 1 as first_interaction_type,
     row_number() over (partition by user_id order by case when incorrectAttribution
@@ -197,6 +203,9 @@ select distinct
     is_partner,
     partner_type,
     partner_source,
+    first_deal_planning_volume,
+    first_deal_planning_currency,
+    first_deal_planning_volume_usd,
     case when admin is not null or amo_id is null then true else false end as admin,
     case when interaction_type = 0 and not incorrect_attr then first_interaction_type else FALSE end as first_interaction_type,
     case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end as last_interaction_type,
