@@ -17,6 +17,7 @@ created_time,
 is_top,
 o.order_id,
 o.user_id,
+sent_status,
 sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
@@ -24,14 +25,15 @@ r._id as rfq_request_id,
 millis_to_ts_msk(r.ctms) as created_time,
 isTop as is_top,
 oid as order_id,
-explode(productVariants) as variants
+explode(productVariants) as variants,
+status as sent_status
 from
 {{ source('mongo', 'b2b_core_rfq_request_daily_snapshot') }} r
 ) r
 left join (
     select distinct user_id, order_id from {{ ref('fact_order') }} where next_effective_ts_msk is null
     ) o on r.order_id = o.order_id
-group by 1, 2, 3, 4, 5, 6),
+group by 1, 2, 3, 4, 5, 6, 7),
 
 order_product as (select order_id, customer_request_id, offer_id, product_id, deal_id, 1 as order_product
     from {{ ref('dim_deal_products') }}
@@ -60,7 +62,8 @@ coalesce(order_product, 0) as order_product,
 null as offer_product,
 case when converted = 1 and order_product = 1 and opp.product_id is not null then 1 else 0 end as converted,
 rejectReason as reject_reason,
-rejectReasonGroup as reject_reason_group
+rejectReasonGroup as reject_reason_group,
+sent_status
 from
 rfq_sent o
 left join {{ source('mongo', 'b2b_core_rfq_response_daily_snapshot') }} rr on o.rfq_request_id = rr.rfqid
@@ -83,6 +86,7 @@ is_top,
 d.deal_id,
 d.customer_request_id,
 d.user_id,
+    sent_status,
 sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
@@ -90,7 +94,8 @@ r._id as rfq_request_id,
 millis_to_ts_msk(r.ctms) as created_time,
 isTop as is_top,
 crid as customer_request_id,
-explode(productVariants) as variants
+explode(productVariants) as variants,
+status as sent_status
 from
 {{ source('mongo', 'b2b_core_customer_rfq_request_daily_snapshot') }} r
 ) r
@@ -98,7 +103,7 @@ left join (
     select customer_request_id, deal_id, user_id
     from {{ ref('fact_customer_requests') }}
 ) d on r.customer_request_id = d.customer_request_id
-group by 1, 2, 3, 4, 5, 6),
+group by 1, 2, 3, 4, 5, 6, 7),
 
 offer_product as (
 select distinct
@@ -131,7 +136,8 @@ case when g.order_id is not null then 1 else 0 end as order_product,
 coalesce(order_product, 0) as offer_product,
 coalesce(converted, 0) as converted,
 reject_reason as reject_reason,
-reject_reason_group as reject_reason_group
+reject_reason_group as reject_reason_group,
+sent_status
 from
 rfq_sent_deals o
 left join {{ ref('fact_customer_rfq_response') }} rr on o.rfq_request_id = rr.rfq_request_id
