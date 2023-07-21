@@ -118,8 +118,8 @@ customers AS (
         c.companyName,
         c.estimatedPurchaseVolume.from as volume_from,
         c.estimatedPurchaseVolume.to as volume_to,
-        c.grades.grade as grade,
-        c.grades_prob.grade_prob as grade_probability
+        grades.grade as grade,
+        grades_prob.grade_prob as grade_probability
     FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }} AS c
     LEFT JOIN grades ON c.gradeInfo.grade = grades.value
     LEFT JOIN grades_prob ON c.gradeInfo.prob = grades_prob.value
