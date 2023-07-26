@@ -60,7 +60,6 @@ cross join (
         from {{ ref('scd2_rfq_request_snapshot') }}
     )
     )
-where (variant_number = 0 or size(productVariants) >= variant_number + 1)
 order by ctms, rfq_request_id
 )
 left join (
@@ -147,7 +146,6 @@ left join (
 select category_id, name as category_3
     from {{ source('mart', 'category_levels') }}
 ) cat3 on cat3 = cat3.category_id
-where  greatest(size(images), size(variant.images)) > 0
 )
 
 
