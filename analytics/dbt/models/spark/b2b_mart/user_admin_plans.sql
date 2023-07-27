@@ -11,11 +11,10 @@
     }
 ) }}
 
-select 
-distinct 
-            date(concat(cast(substr(tp, 0, 4) as int),'-',cast(substr(tp, 7, 7) as int)*3 - 2,'-01')) as quarter,
-            egmv.amount/1000000 as plan,
-            mid as moderator_id,
-            date('{{ var("start_date_ymd") }}') as partition_date_msk
-from {{ ref('scd2_admin_user_plans_snapshot') }}
-where dbt_valid_to is null
+SELECT DISTINCT
+    DATE(CONCAT(CAST(SUBSTR(tp, 0, 4) AS INT), '-', CAST(SUBSTR(tp, 7, 7) AS INT) * 3 - 2, '-01')) AS quarter,
+    egmv.amount / 1000000 AS plan,
+    mid AS moderator_id,
+    DATE('{{ var("start_date_ymd") }}') AS partition_date_msk
+FROM {{ ref('scd2_admin_user_plans_snapshot') }}
+WHERE dbt_valid_to IS NULL

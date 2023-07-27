@@ -8,11 +8,11 @@
 ) }}
 
 select distinct 
-    order_id,
-    event_ts_msk, 
-    subStatus as sub_status, 
-    status,
-    coalesce(current_status = status and current_sub_status = sub_status, false)  as current_status,
+    fos.order_id,
+    fos.event_ts_msk, 
+    fos.subStatus as sub_status, 
+    fos.status,
+    coalesce(fos.current_status = fos.status and fos.current_sub_status = fos.subStatus, false)  as current_status,
     cast(ks.id as int) as status_id,
     coalesce(cast(kss.id as int), cast(ks.id as int)*100) as sub_status_id
     from
@@ -60,5 +60,5 @@ select distinct
 )
 ) fos
 left join {{ ref('key_order_status') }} ks on fos.status = ks.status
-left join {{ ref('key_order_substatus') }} kss on fos.sub_status = kss.sub_status
+left join {{ ref('key_order_substatus') }} kss on fos.subStatus = kss.sub_status
 where rn = 1

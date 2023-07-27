@@ -12,8 +12,6 @@ slo_overview_logistics,cube.jl_external_cube_v10_days,spark
 slo_overview_onfy,cube.onfy_order_cube_v5_days,spark
 slo_overview_pro,cube.pro_order_cube_v6_days,spark
 slo_pnl,cube.profit,spark
-slo_pivots,odbc.orders_sheet,bq
-slo_pivots,odbc.products_current_sheet,bq
 slo_gold,gold.active_devices,bq
 slo_gold,gold.active_devices_with_ephemeral,bq
 slo_gold,gold.active_users,bq

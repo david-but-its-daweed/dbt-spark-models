@@ -24,9 +24,10 @@ parentId as issue_parent_id,
 priority,
 reporterId as reporter_id,
 statusHistory as status_history,
+assigneeHistory as assignee_history,
 type,
 millis_to_ts_msk(ctms) AS created_ts_msk,
-millis_to_ts_msk(utms) AS update_ts_msk
+millis_to_ts_msk(utms+1) AS update_ts_msk
 
 from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
 
