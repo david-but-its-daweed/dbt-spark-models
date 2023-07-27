@@ -114,6 +114,7 @@ order_products AS (
         min_status_manufacturing_ts_msk,
         min_status_shipping_ts_msk,
         min_status_cancelled_ts_msk,
+        declared_manufacturing_days,
         owner_email,
         owner_role
     FROM {{ ref('fact_order_product_deal') }}
@@ -184,6 +185,7 @@ SELECT DISTINCT
     op.product_price,
     op.merchant_id,
     op.merchant_type,
+    op.declared_manufacturing_days,
     op.owner_email,
     op.owner_role,
     bd.biz_dev_id,
