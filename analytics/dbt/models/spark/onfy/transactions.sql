@@ -221,7 +221,7 @@ transactions_usd AS (
         transactions_eur.gmv_initial * eur.rate / usd.rate as gmv_initial,
         transactions_eur.gmv_final * eur.rate / usd.rate as gmv_final,
         transactions_eur.gross_profit_initial * eur.rate / usd.rate as gross_profit_initial,
-        transactions_eur.gross_profit_final * eur.rate / usd.rate as gross_profit_final
+        transactions_eur.gross_profit_final * eur.rate / usd.rate as gross_profit_final,
         'USD' as currency
     FROM
         transactions_eur
