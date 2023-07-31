@@ -25,7 +25,8 @@ WITH customers AS (
         fc.company_name,
         du.is_partner,
         fc.partner_type,
-        fc.partner_source
+        fc.partner_source,
+        fc.created_ts_msk as user_created_ts_msk
     FROM {{ ref('fact_customers') }} AS fc
     LEFT JOIN {{ ref('dim_user') }} AS du ON fc.user_id = du.user_id
     WHERE du.next_effective_ts_msk IS NULL
@@ -61,8 +62,9 @@ SELECT DISTINCT
     type,
     source,
     campaign,
-    to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS partition_date_msk,
-    to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS day
+    to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS day,
+    user_created_ts_msk,
+    to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS partition_date_msk
 FROM customers AS c
 LEFT JOIN
 (
