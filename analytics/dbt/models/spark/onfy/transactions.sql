@@ -5,7 +5,8 @@
     meta = {
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': 'onfy-etl-monitoring'
+      'alerts_channel': 'onfy-etl-monitoring',
+      'priority_weight': '150'
     }
 ) }}
 
@@ -155,7 +156,7 @@ psp_refund AS (
         refund > 0
 ),
 
-transactions_eur AS (
+transactions_psp AS (
     SELECT DISTINCT
         onfy_mart.transactions.type,
         onfy_mart.transactions.order_id,
@@ -171,22 +172,6 @@ transactions_eur AS (
         order_data.order_created_time_cet,
         onfy_mart.transactions.date as transaction_date,
         onfy_mart.transactions.price,
-        CASE WHEN onfy_mart.transactions.type IN ('PAYMENT', 'SERVICE_FEE', 'ORDER_SHIPMENT', 'DELIVERY_SURCHARGE') THEN onfy_mart.transactions.price ELSE 0 END as gmv_initial,
-        CASE 
-            WHEN onfy_mart.transactions.type IN ('PAYMENT', 'SERVICE_FEE', 'ORDER_SHIPMENT', 'DELIVERY_SURCHARGE') THEN onfy_mart.transactions.price 
-            WHEN onfy_mart.transactions.type IN ('ORDER_REVERSAL', 'SERVICE_FEE_REVERSAL', 'ORDER_SHIPMENT_REV', 'DELIVERY_SURCHARGE_REVERSAL') THEN -onfy_mart.transactions.price 
-            ELSE 0 
-        END as gmv_final,
-        CASE 
-            WHEN onfy_mart.transactions.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'MEDIA_REVENUE') THEN onfy_mart.transactions.price 
-            WHEN onfy_mart.transactions.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'PSP_COMMISSION') THEN -onfy_mart.transactions.price 
-            ELSE 0 
-        END as gross_profit_initial,
-        CASE 
-            WHEN onfy_mart.transactions.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'COMMISSION_REVERSAL_VAT', 'SERVICE_FEE_REVERSAL_VAT', 'DELIVERY_SURCHARGE_REVERSAL_VAT', 'MEDIA_REVENUE') THEN onfy_mart.transactions.price 
-            WHEN onfy_mart.transactions.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'PSP_COMMISSION', 'PSP_COMMISSION_REVERSAL', 'COMMISSION_REVERSAL', 'SERVICE_FEE_REVERSAL', 'DELIVERY_SURCHARGE_REVERSAL') THEN -onfy_mart.transactions.price 
-            ELSE 0 
-        END as gross_profit_final,
         onfy_mart.transactions.currency
     FROM 
         {{ source('onfy_mart', 'transactions') }}
@@ -200,6 +185,43 @@ transactions_eur AS (
     SELECT * FROM psp_initial
         UNION
     SELECT * FROM psp_refund
+),
+
+transactions_eur AS (
+    SELECT 
+        transactions_psp.type,
+        transactions_psp.order_id,
+        transactions_psp.purchase_num,
+        transactions_psp.device_id,
+        transactions_psp.app_device_type,
+        transactions_psp.platform_type,
+        transactions_psp.order_parcel_id,
+        transactions_psp.store_name,
+        transactions_psp.user_email_hash,
+        transactions_psp.source,
+        transactions_psp.campaign,
+        transactions_psp.order_created_time_cet,
+        transactions_psp.transaction_date,
+        transactions_psp.price,
+        transactions_psp.currency,
+        CASE WHEN transactions_psp.type IN ('PAYMENT', 'SERVICE_FEE', 'ORDER_SHIPMENT', 'DELIVERY_SURCHARGE') THEN transactions_psp.price ELSE 0 END as gmv_initial,
+        CASE 
+            WHEN transactions_psp.type IN ('PAYMENT', 'SERVICE_FEE', 'ORDER_SHIPMENT', 'DELIVERY_SURCHARGE') THEN transactions_psp.price
+            WHEN transactions_psp.type IN ('ORDER_REVERSAL', 'SERVICE_FEE_REVERSAL', 'ORDER_SHIPMENT_REV', 'DELIVERY_SURCHARGE_REVERSAL') THEN -transactions_psp.price
+            ELSE 0 
+        END as gmv_final,
+        CASE 
+            WHEN transactions_psp.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'MEDIA_REVENUE') THEN transactions_psp.price
+            WHEN transactions_psp.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'PSP_COMMISSION') THEN -transactions_psp.price
+            ELSE 0 
+        END as gross_profit_initial,
+        CASE 
+            WHEN transactions_psp.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'COMMISSION_REVERSAL_VAT', 'SERVICE_FEE_REVERSAL_VAT', 'DELIVERY_SURCHARGE_REVERSAL_VAT', 'MEDIA_REVENUE') THEN transactions_psp.price
+            WHEN transactions_psp.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'PSP_COMMISSION', 'PSP_COMMISSION_REVERSAL', 'COMMISSION_REVERSAL', 'SERVICE_FEE_REVERSAL', 'DELIVERY_SURCHARGE_REVERSAL') THEN -transactions_psp.price
+            ELSE 0 
+        END as gross_profit_final
+    FROM 
+        transactions_psp
 ),
 
 transactions_usd AS (
@@ -218,11 +240,11 @@ transactions_usd AS (
         transactions_eur.order_created_time_cet,
         transactions_eur.transaction_date,
         transactions_eur.price * eur.rate / usd.rate as price,
+        'USD' as currency,
         transactions_eur.gmv_initial * eur.rate / usd.rate as gmv_initial,
         transactions_eur.gmv_final * eur.rate / usd.rate as gmv_final,
         transactions_eur.gross_profit_initial * eur.rate / usd.rate as gross_profit_initial,
-        transactions_eur.gross_profit_final * eur.rate / usd.rate as gross_profit_final,
-        'USD' as currency
+        transactions_eur.gross_profit_final * eur.rate / usd.rate as gross_profit_final
     FROM
         transactions_eur
         LEFT JOIN {{ source('mart', 'dim_currency_rate') }} eur
