@@ -63,7 +63,7 @@ SELECT DISTINCT
     source,
     campaign,
     to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS day,
-    user_created_ts_msk,
+    user_created_ts_msk as user_created_ts,
     to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS partition_date_msk
 FROM customers AS c
 LEFT JOIN
