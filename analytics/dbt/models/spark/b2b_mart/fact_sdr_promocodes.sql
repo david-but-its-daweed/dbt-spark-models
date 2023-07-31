@@ -47,7 +47,7 @@ SELECT DISTINCT
     code,
     millis_to_ts_msk(ctms) AS created_time_msk,
     isActive AS is_active,
-    ownerId AS promocode_owner_id,
+    c.user_id AS promocode_owner_id,
     country,
     owner_id,
     owner_email,
@@ -70,7 +70,7 @@ select *,
     to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS partition_date_msk
 from {{ ref('scd2_promocodes_snapshot') }}
 ) p on p.ownerId = c.user_id
-left join attr a on a.user_id = p.ownerId
+left join attr a on a.user_id = c.user_id
 where partition_date_msk is null or (
     date(millis_to_ts_msk(ctms)) <= partition_date_msk and 
     partition_date_msk >=  date(dbt_valid_from) and (partition_date_msk < date(dbt_valid_to) or dbt_valid_to is null)
