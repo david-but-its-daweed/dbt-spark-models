@@ -53,7 +53,7 @@ admins AS (
     FROM {{ ref('dim_user_admin') }}
 )
 
-SELECT 
+SELECT DISTINCT
     issues.issue_id,
     issues.type,
     issues.type_id,
