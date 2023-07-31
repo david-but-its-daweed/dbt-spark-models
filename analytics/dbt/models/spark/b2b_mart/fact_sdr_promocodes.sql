@@ -61,19 +61,17 @@ SELECT DISTINCT
     type,
     source,
     campaign,
-    partition_date_msk,
-    partition_date_msk AS day
+    to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS partition_date_msk,
+    to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS day
 FROM customers AS c
 LEFT JOIN
 (
 select *, 
-{% if is_incremental() %}
-       to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS partition_date_msk
-     {% else %}
-       explode(sequence(to_date('2022-03-01'), to_date(CURRENT_DATE()) - interval 1 day, interval 1 day)) as partition_date_msk 
-     {% endif %}
+    to_date(CURRENT_DATE()) - INTERVAL 1 DAY AS partition_date_msk
 from {{ ref('scd2_promocodes_snapshot') }}
 ) p on p.ownerId = c.user_id
 left join attr a on a.user_id = p.ownerId
-where date(millis_to_ts_msk(ctms)) <= partition_date_msk and 
-partition_date_msk >=  date(dbt_valid_from) and (partition_date_msk < date(dbt_valid_to) or dbt_valid_to is null)
+where partition_date_msk is null or (
+    date(millis_to_ts_msk(ctms)) <= partition_date_msk and 
+    partition_date_msk >=  date(dbt_valid_from) and (partition_date_msk < date(dbt_valid_to) or dbt_valid_to is null)
+    )
