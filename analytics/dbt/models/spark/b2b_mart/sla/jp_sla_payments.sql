@@ -309,6 +309,7 @@ client_payment as
     else 0 end as advance_percent,
     payment.paymentWithinDaysAdvance as days_advance,
     payment.paymentWithinDaysComplete as days_complete,
+    payment.clientCurrency as client_currency,
     case when payment.paymentChannel = 1 then 'Internet projects' else 'CIA' end as payment_channel
     from {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
 ),
@@ -414,6 +415,7 @@ select
     o.friendly_id as order_friendly_id,
     cp.advance_percent as client_advance_percent,
     cp.days_advance as client_days_advance,
+    client_currency,
     days_complete,
     cp.payment_channel as client_payment_channel,
     oh.date_client_payed as date_client_payed,
