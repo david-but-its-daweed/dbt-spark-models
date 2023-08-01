@@ -202,7 +202,6 @@ transactions_eur AS (
         transactions_psp.campaign,
         transactions_psp.order_created_time_cet,
         transactions_psp.transaction_date,
-        DATE_TRUNC('DAY', transactions_psp.transaction_date) as transaction_day,
         CAST(transactions_psp.price as float) as price,
         transactions_psp.currency,
         CAST(
