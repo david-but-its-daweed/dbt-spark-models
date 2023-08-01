@@ -248,7 +248,7 @@ select
     pzn,
     count(distinct sessions.event_id) as clicks,
     count(distinct gross_profit.order_id) as payments,
-    count(distinct gross_profit.order_id) / count(distinct sessions.event_id) as cr,
+    (count(distinct gross_profit.order_id) + 1) / count(distinct sessions.event_id) as cr,
     count(distinct sessions.event_id) * 0.44 as cost,
     sum(products_price) as products_price_sum,
     sum(cast(promocode_discount as float)) as promocode_discount,
