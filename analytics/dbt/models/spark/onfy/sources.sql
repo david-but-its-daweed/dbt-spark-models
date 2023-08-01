@@ -5,7 +5,8 @@
     meta = {
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': 'onfy-etl-monitoring'
+      'alerts_channel': 'onfy-etl-monitoring',
+      'priority_weight': '150'
     }
 ) }}
 
