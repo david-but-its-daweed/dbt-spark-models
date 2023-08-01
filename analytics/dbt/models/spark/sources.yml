@@ -14,6 +14,7 @@ sources:
     tables:
       - name: dim_device_min
       - name: dim_region
+      - name: dim_product
       - name: device_events
       - name: dim_published_variant
       - name: product_rating_counters
@@ -28,6 +29,7 @@ sources:
       - name: published_products_current
       - name: onfy_babylone_events
       - name: dim_currency_rate
+      - name: product_events
   - name: cube
     tables:
       - name: event_counts_country_os_days
