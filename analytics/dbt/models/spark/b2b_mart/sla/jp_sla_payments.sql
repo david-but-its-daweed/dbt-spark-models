@@ -33,7 +33,7 @@ from
 select orderId as order_id, currencies, row_number() over (
     partition by orderId order by currencies.rates is not null desc, currencies.companyRates is not null desc, updatedTime) as rn
 from
-(select payload.* from {{ source(‘b2b_mart’, ‘operational_events’) }}
+(select payload.* from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
 and payload.updatedTime is not null and payload.status = 'manufacturing'
 order by updatedTime desc
@@ -70,7 +70,7 @@ from
 select orderId as order_id, explode(typedPricesOriginal), rn
 from
 (select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
-from {{ source( ‘b2b_mart’, ‘operational_events’) }}
+from {{ source( 'b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
 and payload.updatedTime is not null and payload.status = 'manufacturing'
 order by updatedTime desc
@@ -94,7 +94,7 @@ from
 select orderId as order_id, explode(otherPricesOriginal), rn
 from
 (select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
-from {{ source(‘b2b_mart’, ‘operational_events’) }}
+from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
 and payload.updatedTime is not null and payload.status = 'manufacturing'
 order by updatedTime desc
@@ -310,20 +310,20 @@ client_payment as
     payment.paymentWithinDaysAdvance as days_advance,
     payment.paymentWithinDaysComplete as days_complete,
     case when payment.paymentChannel = 1 then 'Internet projects' else 'CIA' end as payment_channel
-    from {{ source(‘mongo’, ‘b2b_core_orders_v2_daily_snapshot’) }}
+    from {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
 ),
 
 order_hist as (
     select 
         order_id,
         date(event_ts_msk) as date_client_payed
-    from {{ ref(‘fact_order_statuses’) }}
+    from {{ ref('fact_order_statuses') }}
     where status = 'manufacturing' and sub_status = 'broker2JoomSIAPaymentSent'
 ),
 
 orders as (
     select distinct order_id, friendly_id 
-    from {{ ref (‘fact_order’) }}
+    from {{ ref('fact_order') }}
     where next_effective_ts_msk is null
 ),
 
@@ -331,7 +331,7 @@ m_statuses as (
   select payload.id as id,
     payload.status,
     min(TIMESTAMP(millis_to_ts_msk(payload.updatedTime))) as day
-    from {{ source(‘b2b_mart’, ‘operational_events’) }}
+    from {{ source('b2b_mart', 'operational_events') }}
     WHERE type  ='merchantOrderChanged'
     group by payload.id,
         payload.status
@@ -363,7 +363,7 @@ from
         from
     (
     select distinct _id, friendlyId, orderId, merchantId, manDays, daysAfterQC, day, s.status as payment_status
-from {{ ref(‘scd2_merchant_orders_v2_snapshot’) }} o
+from {{ ref('scd2_merchant_orders_v2_snapshot') }} o
 left join m_statuses s on o._id = s.id
 
 )
@@ -396,7 +396,7 @@ from
 select payment.advancePercent, payment.paymentType, 
 explode(payment.paymentStatusHistory) as history, orderId, _id, merchantId,
 paymentSchedule 
-from {{ ref (‘scd2_merchant_orders_v2_snapshot’) }}  m
+from {{ ref('scd2_merchant_orders_v2_snapshot') }}  m
     
 ) price
 left join order_rates on order_rates.from = price.history.requestedPrice.ccy and order_rates.to = 'USD' 
