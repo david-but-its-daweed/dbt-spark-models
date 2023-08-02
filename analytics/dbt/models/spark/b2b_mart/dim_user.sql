@@ -32,6 +32,9 @@ SELECT
   rr.reason as funnel_reject_reason,
   pt.type as partner_type,
   partner_source,
+  email,
+  phone,
+  reject_reason_partner,
   TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
   TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_user') }} t
