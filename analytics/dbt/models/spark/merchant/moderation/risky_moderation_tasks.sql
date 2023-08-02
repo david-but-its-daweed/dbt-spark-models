@@ -35,7 +35,6 @@ product_categories AS (
     )
     WHERE
         effective_ts = latest_effective_ts
-
 ),
 
 queued AS (
