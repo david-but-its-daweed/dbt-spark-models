@@ -20,16 +20,38 @@ WITH category_levels AS (
 
 ),
 
+product_categories AS (
+
+    SELECT
+        product_id,
+        category_id
+    FROM (
+        SELECT
+            product_id,
+            category_id,
+            effective_ts,
+            LAST(effective_ts) OVER (PARTITION BY product_id ORDER BY effective_ts) AS latest_effective_ts
+        FROM {{ source('mart', 'dim_product') }}
+    )
+    WHERE
+        effective_ts = latest_effective_ts
+
+),
+
 queued AS (
 
     SELECT
-        payload['processId'] AS item_id,
-        product_id,
-        partition_date AS queued_date,
-        event_ts_utc AS queued_ts
+        product_events.payload['processId'] AS item_id,
+        product_events.product_id AS product_id,
+        product_events.partition_date AS queued_date,
+        product_events.event_ts_utc AS queued_ts,
+        product_events.payload['moderationSource'] AS source,
+        category_levels.category_name AS category_name
     FROM {{ source('mart', 'product_events') }}
+    LEFT JOIN product_categories ON product_events.product_id = product_categories.product_id
+    LEFT JOIN category_levels ON product_categories.category_id = category_levels.category_id
     WHERE
-        type = 'categorizationQueued'
+        product_events.type = 'moderationQueued'
 
 ),
 
@@ -42,7 +64,7 @@ canceled AS (
         event_ts_utc AS canceled_ts
     FROM {{ source('mart', 'product_events') }}
     WHERE
-        type = 'categorizationCanceled'
+        product_events.type = 'moderationCanceled'
 
 ),
 
@@ -52,24 +74,31 @@ processed AS (
         payload['processId'] AS item_id,
         product_id,
         event_ts_utc AS processed_ts,
-        payload['categoryId'] AS category_id,
-        payload['moderatorId'] AS moderator_id
+        payload['moderatorId'] AS moderator_id,
+        payload['rejectReasons'] AS reject_reasons,
+        payload.infraction AS infraction,
+        payload.labels AS labels,
+        payload.state AS state,
+        payload.ver AS ver
     FROM {{ source('mart', 'product_events') }}
     WHERE
-        type = 'categorizationResult'
+        product_events.type = 'moderationResult'
 
 )
 
 SELECT
     queued.item_id AS item_id,
     queued.product_id AS product_id,
+    queued.source AS source,
+    queued.category_name AS category_name,
     queued.queued_date AS queued_date,
     queued.queued_ts AS queued_ts,
     canceled.canceled_ts AS canceled_ts,
     processed.processed_ts AS processed_ts,
     CASE
         WHEN canceled.canceled_ts IS NOT NULL THEN 'canceled'
-        WHEN processed.processed_ts IS NOT NULL THEN 'processed'
+        WHEN processed.processed_ts IS NOT NULL AND processed.reject_reasons IS NOT NULL THEN 'rejected'
+        WHEN processed.processed_ts IS NOT NULL AND processed.reject_reasons IS NULL THEN 'approved'
         ELSE 'queued'
     END AS processed_type,
     CASE
@@ -81,10 +110,12 @@ SELECT
         WHEN processed.processed_ts IS NOT NULL THEN DATE(processed.processed_ts)
         ELSE CURRENT_DATE() - 1
     END AS latest_date,
+    processed.reject_reasons AS reject_reasons,
+    processed.reject_reasons[0]['code'] AS reject_reason,
     processed.moderator_id AS moderator_id,
-    processed.category_id AS category_id,
-    category_levels.category_name AS category_name
+    processed.infraction AS infraction,
+    processed.labels AS labels,
+    processed.state AS state
 FROM queued
 LEFT JOIN canceled ON queued.item_id = canceled.item_id
 LEFT JOIN processed ON queued.item_id = processed.item_id
-LEFT JOIN category_levels ON processed.category_id = category_levels.category_id
