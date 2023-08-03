@@ -1,0 +1,63 @@
+name: Deploy list.json to S3
+description: Deploy list.json to S3
+
+inputs:
+  dbt-select:
+    description: 'dbt select'
+    required: true
+  job-name:
+    description: 'name of job'
+    required: true
+  crontab:
+    description: 'crontab for job'
+    required: true
+  alerts-channel:
+    description: 'Channel to alert errors'
+    required: true
+  workdir:
+    description: 'Working directory'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Check file existence
+      id: check_files
+      uses: andstor/file-existence-action@v1
+      with:
+        files: "${{ inputs.workdir }}/target/lists/${{ inputs.job-name }}/"
+    - name: File exists
+      if: steps.check_files.outputs.files_exists == 'true'
+      shell: bash
+      run: echo "job ${{ inputs.job-name }} allready exists" && exit 1
+    - name: Create folders
+      shell: bash
+      run: mkdir -p target/lists/${{ inputs.job-name }}/
+    - name: Create folders
+      shell: bash
+      run: mkdir -p target/lists/${{ inputs.job-name }}/
+      working-directory: ${{ inputs.workdir }}
+    - name: Compile dbt-models project
+      shell: bash
+      run: dbt --quiet list --profiles-dir deploy/profiles ${{ inputs.dbt-select }} --output json > target/lists/${{ inputs.job-name }}/list.json
+      working-directory: ${{ inputs.workdir }}
+    - name: Check all selectors match some node
+      shell: bash
+      working-directory: ${{ inputs.workdir }}
+      run: |
+        if grep -q "does not match any nodes" "target/lists/${{ inputs.job-name }}/list.json"; then
+           grep "does not match any nodes" "target/lists/${{ inputs.job-name }}/list.json"
+           exit 1
+        fi
+    - name: Write cron
+      shell: bash
+      run: echo "${{ inputs.crontab }}" > target/lists/${{ inputs.job-name }}/crontab
+      working-directory: ${{ inputs.workdir }}
+    - name: Write select
+      shell: bash
+      run: echo "${{ inputs.dbt-select }}" > target/lists/${{ inputs.job-name }}/select
+      working-directory: ${{ inputs.workdir }}
+    - name: Write channel
+      shell: bash
+      run: echo "${{ inputs.alerts-channel }}" > target/lists/${{ inputs.job-name }}/alerts_channel
+      working-directory: ${{ inputs.workdir }}
