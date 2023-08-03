@@ -47,8 +47,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
-      - name: Debug DBT
-        run: dbt debug --profiles-dir deploy/profiles --profile bigquery
+      - name: Test DBT project
+        run: ./test.sh
       - name: Compile DBT
         run: |
           dbt compile --profiles-dir deploy/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}", "table_name": "{table_name}"}'
