@@ -3,8 +3,6 @@ on:
   push:
     branches:
       - develop
-    paths:
-      - ./**
   workflow_dispatch: {}
 
 concurrency: analytics-jobs-dbt
