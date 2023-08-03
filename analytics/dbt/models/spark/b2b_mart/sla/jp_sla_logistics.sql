@@ -152,6 +152,10 @@ orders_hist AS (
             first_substatus_event_msk), NULL)) AS days_in_delivering,
         MAX(IF(sub_status = 'delivered', datediff(lead_sub_status_ts,
             first_substatus_event_msk), NULL)) AS days_in_delivered,
+        MAX(IF(sub_status = 'requestedClosingDocuments', datediff(lead_sub_status_ts,
+            first_substatus_event_msk), NULL)) AS days_in_requested_closing_documents,
+        MAX(IF(sub_status = 'receivedClosingDocuments', datediff(lead_sub_status_ts,
+            first_substatus_event_msk), NULL)) AS days_in_received_closing_documents,
         MAX(IF(status = 'manufacturing', first_status_event_msk, NULL)) AS manufacturing,
         MAX(IF(status = 'shipping', first_status_event_msk, NULL)) AS shipping,
         MAX(IF(status = 'shipping' AND sub_status = 'pickupRequestSentToLogisticians',
@@ -170,7 +174,9 @@ orders_hist AS (
         MAX(IF(status = 'shipping' AND sub_status = 'customsDeclarationReleased', first_substatus_event_msk, NULL)) AS customs_declaration_released,
         MAX(IF(status = 'shipping' AND sub_status = 'uploadToTemporaryWarehouse', first_substatus_event_msk, NULL)) AS upload_to_temporary_warehouse,
         MAX(IF(status = 'shipping' AND sub_status = 'delivering', first_substatus_event_msk, NULL)) AS delivering,
-        MAX(IF(status = 'shipping' AND sub_status = 'delivered', first_substatus_event_msk, NULL)) AS delivered
+        MAX(IF(status = 'shipping' AND sub_status = 'delivered', first_substatus_event_msk, NULL)) AS delivered,
+        MAX(IF(status = 'shipping' AND sub_status = 'requestedClosingDocuments', first_substatus_event_msk, NULL)) AS requested_closing_documents,
+        MAX(IF(status = 'shipping' AND sub_status = 'receivedClosingDocuments', first_substatus_event_msk, NULL)) AS received_closing_documents
     FROM stg2
     WHERE flg = TRUE AND status IN ('manufacturing', 'shipping')
     GROUP BY 1, 2, 3, 4
@@ -207,6 +213,8 @@ SELECT DISTINCT
     oh.days_in_upload_to_temporary_warehouse,
     oh.days_in_delivering,
     oh.days_in_delivered,
+    oh.days_in_requested_closing_documents,
+    oh.days_in_received_closing_documents,
     oh.manufacturing,
     oh.shipping,
     oh.pickup_request_sent_to_logisticians,
@@ -221,7 +229,9 @@ SELECT DISTINCT
     oh.customs_declaration_released,
     oh.upload_to_temporary_warehouse,
     oh.delivering,
-    oh.delivered
+    oh.delivered,
+    oh.requested_closing_documents,
+    oh.received_closing_documents
 FROM orders AS o
 INNER JOIN orders_hist AS oh ON o.order_id = oh.order_id
 LEFT JOIN linehaul AS l ON o.linehaul_channel_id = l.id
