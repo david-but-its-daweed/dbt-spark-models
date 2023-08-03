@@ -8,7 +8,7 @@ on:
 concurrency: analytics-jobs-dbt
 jobs:
   build:
-    runs-on: [self-hosted, analytics-platform]
+    runs-on: ubuntu-latest
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on ${{ runner.name }}"

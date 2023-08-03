@@ -3,6 +3,7 @@
     materialized='view'
 ) }}
 
+
 with deps as (SELECT output.tableName       as output_name,
                      output.tableType       as output_type,
                      input.table.tableName  as input_name,
