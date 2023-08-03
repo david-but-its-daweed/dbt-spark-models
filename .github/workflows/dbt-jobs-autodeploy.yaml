@@ -2,22 +2,38 @@ name: Autodeploy DBT Jobs
 on:
   push:
     branches:
-      - develop
+      - master
   workflow_dispatch: {}
 
-concurrency: analytics-jobs-dbt
+concurrency: deploy-custom-1
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-region: eu-central-1
+          role-to-assume: arn:aws:iam::392166590300:role/github-hosted-runner
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v1
+      - uses: azure/setup-kubectl@v1
+        with:
+          version: 'v1.19.0'
+      - name: Login to EKS
+        run: aws eks --region eu-central-1 update-kubeconfig --name streaming-kube
       - name: Check out repository code
         uses: actions/checkout@v2
-      - name: Ensure Python 3.8
-        run: sudo amazon-linux-extras enable python3.8 && sudo yum -y install python3.8
-      # Not using setup-python because of https://github.com/actions/setup-python/issues/162
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.8'
       - name: Add python installed packages to path
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Install development tools
@@ -31,8 +47,8 @@ jobs:
         with:
           java-version: '11'
           distribution: 'adopt'
-      - name: Test DBT project
-        run: ./test.sh
+      - name: Debug DBT
+        run: dbt debug --profiles-dir deploy/profiles --profile bigquery
       - name: Compile DBT
         run: |
           dbt compile --profiles-dir deploy/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}", "table_name": "{table_name}"}'
@@ -58,26 +74,13 @@ jobs:
         run: tar --exclude="./.git/*" --exclude="*.tar.gz" --exclude="./.idea/*" -zcvf ../dbt-models.tar.gz .
       - name: Upload package
         run: aws s3 cp ../dbt-models.tar.gz s3://joom-analytics-deploy/airflow/dags/platform__dbt_shared_spark/dbt-models.tar.gz
-#        fails with   Tables contain columns with the same names (table_owner), but different types (<dbt.clients.agate_helper.Number object at 0x7fadbcddf8e0> vs <agate.data_types.text.Text object at 0x7fadbcb9e9a0>)
-#        will fix in dbt-spark later
-#      - name: Generate docs
-#        run: ./generate_docs_production.sh
-#      - name: Push image
-#        id: docker_build
-#        uses: docker/build-push-action@v2
-#        with:
-#          file: ./analytics/dbt/Dockerfile
-#          push: true
-#          tags: 392166590300.dkr.ecr.eu-central-1.amazonaws.com/dbt-models-spark:${{ github.sha }}
-#          secrets: |
-#            GIT_AUTH_TOKEN=${{ secrets.GITHUB_TOKEN }}
       - name: Slack Notification
         if: ${{ failure() }}
         uses: rtCamp/action-slack-notify@v2
         env:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-          SLACK_CHANNEL: analytics-monitoring
+          SLACK_CHANNEL: dbt-spark-monitoring
           MSG_MINIMAL: Commit
           SLACK_COLOR: ${{ job.status }}
           SLACK_USERNAME: github
-          SLACK_TITLE: DBT jobs autodeploy failed. Status ${{ job.status }}
+          SLACK_TITLE: Deploy of dbt spark jobs failed. Status ${{ job.status }}
