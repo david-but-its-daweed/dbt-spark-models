@@ -1,4 +1,4 @@
-name: Test DBT Jobs
+name: Test PR
 on:
   pull_request:
     branches:
