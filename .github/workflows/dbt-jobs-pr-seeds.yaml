@@ -3,7 +3,7 @@ name: Reapply DBT Seeds
 on:
   push:
     branches:
-      - develop
+      - master
     paths:
       - seeds/**
 
