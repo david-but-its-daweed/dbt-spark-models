@@ -37,7 +37,7 @@ jobs:
       - name: Add python installed packages to path
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Install development tools
-        run: sudo apt-get -y install gcc gcc-c++ python3-devel python38-devel cyrus-sasl-devel
+        run: sudo apt-get install -y python-dev libsasl2-dev gcc
       - name: Install DBT
         # to fix error
         # ImportError: urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with OpenSSL 1.0.2k-fips  26 Jan 2017. See: https://github.com/urllib3/urllib3/issues/2168
