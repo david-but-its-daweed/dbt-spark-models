@@ -24,7 +24,7 @@ with promocodes as (
           left join {{ source ('mongo', 'b2b_core_customers_daily_snapshot') }} c on ownerId = c._id
           left join {{ source ('mongo', 'b2b_core_users_daily_snapshot') }} u on ownerId = u._id
           left join (
-          select distinct user_id, email, role from {{ ref('dim_user_admin') }}
+          select distinct user_id, dua.email, role from {{ ref('dim_user_admin') }} dua
           inner join {{ ref('dim_user') }} on owner_id = admin_id
           where 1=1
           and next_effective_ts_msk is null
@@ -44,7 +44,7 @@ users as (
           from {{ source ('mongo', 'b2b_core_users_daily_snapshot') }} u
           left join {{ source ('mongo', 'b2b_core_customers_daily_snapshot') }} c on c._id = u._id
           left join (
-          select distinct user_id, email, role from {{ ref('dim_user_admin') }}
+          select distinct user_id, dua.email, role from {{ ref('dim_user_admin') }} dua
           inner join {{ ref('dim_user') }} on owner_id = admin_id
           where 1=1
           and next_effective_ts_msk is null
@@ -122,5 +122,5 @@ user_id,
 order_id,
 interaction_id
 from
-b2b_mart.fact_interactions 
+{{ ref('fact_interactions') }}
 ) fi on i.user_id = fi.user_id and date(partition_date_msk) >= date(TIMESTAMP(millis_to_ts_msk(ctms)))
