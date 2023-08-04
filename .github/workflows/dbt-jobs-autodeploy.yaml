@@ -8,7 +8,7 @@ on:
 concurrency: deploy-custom-1
 jobs:
   deploy:
-    runs-on: [self-hosted, analytics-platform]
+    runs-on: [self-hosted, analytics-platform-dbt-models-spark]
     permissions:
       id-token: write
       contents: read
