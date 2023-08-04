@@ -8,7 +8,7 @@ on:
 concurrency: deploy-custom-1
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, analytics-platform-dbt-models-spark]
     permissions:
       id-token: write
       contents: read
@@ -31,13 +31,13 @@ jobs:
         run: aws eks --region eu-central-1 update-kubeconfig --name streaming-kube
       - name: Check out repository code
         uses: actions/checkout@v2
-      - uses: actions/setup-python@v4
-        with:
-          python-version: '3.8'
+      - name: Ensure Python 3.8
+        run: sudo amazon-linux-extras enable python3.8 && sudo yum -y install python3.8
+      # Not using setup-python because of https://github.com/actions/setup-python/issues/162
       - name: Add python installed packages to path
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Install development tools
-        run: sudo apt-get install -y python3-dev libsasl2-dev gcc
+        run: sudo yum -y install gcc gcc-c++ python3-devel python38-devel cyrus-sasl-devel
       - name: Install DBT
         # to fix error
         # ImportError: urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with OpenSSL 1.0.2k-fips  26 Jan 2017. See: https://github.com/urllib3/urllib3/issues/2168
