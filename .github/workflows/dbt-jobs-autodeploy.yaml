@@ -8,7 +8,7 @@ on:
 concurrency: deploy-custom-1
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, analytics-platform]
     permissions:
       id-token: write
       contents: read
