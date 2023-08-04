@@ -160,6 +160,15 @@ order_statuses AS (
         max(CASE WHEN sub_status = 'broker2JoomSIAPaymentSent' THEN event_ts_msk END) AS broker_to_sia_payment_sent
     FROM {{ ref('fact_order_statuses') }}
     GROUP BY order_id
+),
+
+order_hist AS (
+    SELECT
+        MIN(biz_dev_time_msk) AS min_biz_dev_time,
+        MAX(biz_dev_time_msk) AS max_biz_dev_time,
+        order_id
+    FROM {{ ref('fact_order_change') }}
+    GROUP BY order_id
 )
 
 
@@ -230,10 +239,13 @@ SELECT DISTINCT
     os.sia_payment_received,
     os.client_to_broker_payment_sent,
     os.broker_payment_received,
-    os.broker_to_sia_payment_sent
+    os.broker_to_sia_payment_sent,
+    oh.min_biz_dev_time,
+    oh.max_biz_dev_time
 FROM order_products AS op
 LEFT JOIN merchant_orders AS mo ON mo.merchant_order_id = op.merchant_order_id
 LEFT JOIN product_statuses AS ps ON ps.merchant_order_id = mo.merchant_order_id AND ps.product_id = op.product_id
 LEFT JOIN biz_dev AS bd ON op.order_id = bd.order_id
 LEFT JOIN psi ON op.merchant_order_id = psi.merchant_order_id AND psi.product_id = op.product_id
 LEFT JOIN order_statuses AS os ON op.order_id = os.order_id
+LEFT JOIN order_hist AS oh ON op.order_id = oh.order_id
