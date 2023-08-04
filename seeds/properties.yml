@@ -1,5 +1,6 @@
 version: 2
 
+
 seeds:
   - name: slo_tables_seed
     config:
