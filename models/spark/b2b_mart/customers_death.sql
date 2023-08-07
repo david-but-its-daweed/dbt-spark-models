@@ -8,7 +8,8 @@
 ) }}
 
 with day as (
-  SELECT explode(sequence(to_date('2022-04-01'), current_date(), interval 1 day)) as attribution_day, 1 as for_join
+  SELECT explode(sequence(to_date('2022-04-01'), current_date(), interval 1 day)) as attribution_day, 1 as for_join, country
+    from {{ ref('gmv_by_sources') }}
 )
 ,
 gmv as (
@@ -23,6 +24,7 @@ gmv as (
     g.user_id,
     grade,
     1 as for_join,
+    country,
     min(t) over (partition by g.user_id, grade) as min_date_payed
     FROM {{ ref('gmv_by_sources') }} g
     left join (select distinct user_id, coalesce(grade, 'unknown') as grade from {{ ref('users_daily_table') }}
@@ -47,7 +49,8 @@ grade,
 date_payed,
 previous_time_payed,
 min_date_payed,
-attribution_month
+attribution_month,
+country
 from
 (
 select
@@ -62,15 +65,24 @@ date_payed,
 previous_time_payed,
 min_date_payed,
 cumulative_gmv,
+country,
 make_date(extract(year from attribution_day), extract(month from attribution_day), 1) as attribution_month
 from (
-select u.user_id, g.order_id, u.grade, g.gmv_initial, g.date_payed, attribution_day, u.min_date_payed,
-max(case when g2.date_payed < attribution_day then g2.date_payed end) over (partition by u.user_id, u.grade order by attribution_day) as previous_time_payed,
-sum(case when g2.date_payed <= attribution_day then g2.gmv_initial end) over (partition by u.user_id, u.grade, attribution_day) as cumulative_gmv
+select 
+    u.user_id,
+    g.order_id,
+    u.grade,
+    g.gmv_initial,
+    g.date_payed,
+    attribution_day, 
+    d.country,
+    u.min_date_payed,
+    max(case when g2.date_payed < attribution_day then g2.date_payed end) over (partition by u.user_id, u.grade order by attribution_day) as previous_time_payed,
+    sum(case when g2.date_payed <= attribution_day then g2.gmv_initial end) over (partition by u.user_id, u.grade, attribution_day) as cumulative_gmv
 from 
-(select distinct user_id, grade, min_date_payed, for_join from gmv) u
+(select distinct user_id, grade, min_date_payed, country, for_join from gmv) u
 left join
-day d on u.for_join = d.for_join
+day d on u.for_join = d.for_join and u.country = d.country
 left join gmv g on u.user_id = g.user_id and d.attribution_day = g.date_payed and g.grade = u.grade
 left join gmv g2 on u.user_id = g2.user_id and g2.grade = u.grade
 where attribution_day >= u.min_date_payed
