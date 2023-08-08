@@ -32,13 +32,16 @@ user_interaction as
     max(case when last_interaction_type or (rn = 1 and is_attr = 0) then source end) over (partition by user_id) as source, 
     max(case when last_interaction_type or (rn = 1 and is_attr = 0) then type end) over (partition by user_id) as type,
     max(case when last_interaction_type or (rn = 1 and is_attr = 0) then campaign end) over (partition by user_id) as campaign,
+    row_number() over (partition by last_interaction_type, user_id order by interaction_create_date desc) = 1 as interaction_type,
+    max(last_interaction_type) over (partition by user_id) as max_attr,
     country,
     grade,
     validation_status,
     reject_reason,
     user_created_time,
     validated_date,
-    repeated_order
+    repeated_order,
+    last_interaction_type
     from (
         select 
             interaction_id, 
@@ -72,6 +75,7 @@ orders as (
     select distinct
         request_id,
         o.order_id, 
+        o.user_id,
         friendly_id,
         s.status,
         s.sub_status,
@@ -83,7 +87,8 @@ orders as (
     select distinct 
         order_id, 
         friendly_id,
-        request_id
+        request_id,
+        user_id
         from {{ ref('fact_order') }}
         where next_effective_ts_msk is null) o
     left join 
@@ -127,7 +132,7 @@ order_interaction as (
             min_date
         from
         (select distinct
-            _id as interaction_id, 
+            interaction_id, 
             request_id,
             order_id,
             friendly_id,
@@ -136,8 +141,8 @@ order_interaction as (
             current_status,
             current_substatus,
             min_date
-        from {{ source('mongo', 'b2b_core_interactions_daily_snapshot') }} i
-        left join orders o on i.popupRequestId = o.request_id
+        from user_interaction i
+        left join orders o on i.user_id = o.user_id and (last_interaction_type or (not max_attr and interaction_type))
     )
 ),
 
