@@ -2,6 +2,7 @@
 b2b_mart/ @NastiaMitiushkina
 onfy/ @anyazay @ea-sal @BartolomeuD
 /models/spark/msaf/ @msafonov
+/models/sources @msafonov
 /deploy/ @dmgburg
 /infra/ @dmgburg
 /macros/ @dmgburg
