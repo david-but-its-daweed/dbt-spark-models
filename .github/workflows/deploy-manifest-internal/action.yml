@@ -14,9 +14,6 @@ inputs:
   alerts-channel:
     description: 'Channel to alert errors'
     required: true
-  workdir:
-    description: 'Working directory'
-    required: true
 
 runs:
   using: "composite"
@@ -25,7 +22,7 @@ runs:
       id: check_files
       uses: andstor/file-existence-action@v1
       with:
-        files: "${{ inputs.workdir }}/target/lists/${{ inputs.job-name }}/"
+        files: "target/lists/${{ inputs.job-name }}/"
     - name: File exists
       if: steps.check_files.outputs.files_exists == 'true'
       shell: bash
@@ -36,14 +33,11 @@ runs:
     - name: Create folders
       shell: bash
       run: mkdir -p target/lists/${{ inputs.job-name }}/
-      working-directory: ${{ inputs.workdir }}
     - name: Compile dbt-models project
       shell: bash
-      run: dbt --quiet list --profiles-dir deploy/profiles ${{ inputs.dbt-select }} --output json > target/lists/${{ inputs.job-name }}/list.json
-      working-directory: ${{ inputs.workdir }}
+      run: dbt --quiet list --profiles-dir deploy/production --profile bigquery ${{ inputs.dbt-select }} --output json > target/lists/${{ inputs.job-name }}/list.json
     - name: Check all selectors match some node
       shell: bash
-      working-directory: ${{ inputs.workdir }}
       run: |
         if grep -q "does not match any nodes" "target/lists/${{ inputs.job-name }}/list.json"; then
            grep "does not match any nodes" "target/lists/${{ inputs.job-name }}/list.json"
@@ -52,12 +46,9 @@ runs:
     - name: Write cron
       shell: bash
       run: echo "${{ inputs.crontab }}" > target/lists/${{ inputs.job-name }}/crontab
-      working-directory: ${{ inputs.workdir }}
     - name: Write select
       shell: bash
       run: echo "${{ inputs.dbt-select }}" > target/lists/${{ inputs.job-name }}/select
-      working-directory: ${{ inputs.workdir }}
     - name: Write channel
       shell: bash
       run: echo "${{ inputs.alerts-channel }}" > target/lists/${{ inputs.job-name }}/alerts_channel
-      working-directory: ${{ inputs.workdir }}
