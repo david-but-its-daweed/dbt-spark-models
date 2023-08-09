@@ -4,7 +4,7 @@ models:
   - name: table_with_comments
     description: Testing persisting table documetation
     columns:
-      field1:
+      - name: field1
         description: first field. Its a number
-      field2:
+      - name: field2
         description: second field. Its a string
