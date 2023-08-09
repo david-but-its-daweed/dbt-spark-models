@@ -206,3 +206,6 @@ sources:
   - name: msaf
     tables:
       - name: table_with_comments
+        columns:
+          - name: field1
+          - name: field2
