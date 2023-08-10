@@ -203,9 +203,3 @@ sources:
     tables:
       - name: experiments_setup
       - name: rollout_group
-  - name: msaf
-    tables:
-      - name: table_with_comments
-        columns:
-          - name: field1
-          - name: field2
