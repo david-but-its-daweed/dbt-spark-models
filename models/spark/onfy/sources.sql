@@ -76,7 +76,7 @@ corrected_sources as
         coalesce(utm.source_corrected, sources.utm_source) as source_corrected,
         coalesce(utm.campaign_corrected, sources.utm_campaign) as campaign_corrected
     from sources
-    left join pharmacy.utm_campaigns_corrected as utm
+    left join {{ref("utm_campaigns_corrected")}} as utm
         on coalesce(lower(utm.utm_campaign), '') = coalesce(lower(sources.utm_campaign), '') 
         and coalesce(lower(utm.utm_source), '') = coalesce(lower(sources.utm_source), '') 
 )
