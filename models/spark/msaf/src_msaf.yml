@@ -5,6 +5,6 @@ models:
     description: Testing persisting table documetation
     columns:
       - name: field1
-        description: first field. Its a number
+        description: (from airflow run) first field. Its a number
       - name: field2
-        description: second field. Its a string
+        description: (from airflow run) second field. Its a string

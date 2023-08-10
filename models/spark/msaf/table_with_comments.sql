@@ -2,7 +2,7 @@
     schema='msaf',
     materialized='table',
     file_format='delta',
-    persist_docs={"relation": true, "columns": false},
+    persist_docs={"relation": true, "columns": true},
     meta = {
       'team': 'msaf',
     }
