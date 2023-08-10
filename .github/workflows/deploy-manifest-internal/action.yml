@@ -35,7 +35,7 @@ runs:
       run: mkdir -p target/lists/${{ inputs.job-name }}/
     - name: Compile dbt-models project
       shell: bash
-      run: dbt --quiet list --profiles-dir deploy/production --profile bigquery ${{ inputs.dbt-select }} --output json > target/lists/${{ inputs.job-name }}/list.json
+      run: dbt --quiet list --profiles-dir deploy/profiles --profile spark ${{ inputs.dbt-select }} --output json > target/lists/${{ inputs.job-name }}/list.json
     - name: Check all selectors match some node
       shell: bash
       run: |
