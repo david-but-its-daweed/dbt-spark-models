@@ -9,6 +9,12 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  sqlfluff:
+    uses: joomcode/dbt-models/.github/workflows/sqlfluff-fix-internal@sharing-sqlfluff-fix
+    with:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      user-login: ${{ github.event.pull_request.user.login }}
+      dialect: sqlspark
   build:
     runs-on: [self-hosted, analytics-platform-dbt-models-spark]
     steps:
@@ -29,9 +35,6 @@ jobs:
       - name: test DBT models
         run: ./test.sh
       - name: SQL fluff fix
-        uses: joomcode/dbt-models/.github/workflows/sqlfluff-fix-internal@sharing-sqlfluff-fix
-        with:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          user-login: ${{ github.event.pull_request.user.login }}
-          dialect: sqlspark
+        uses: actions/sqlfluff
+
 
