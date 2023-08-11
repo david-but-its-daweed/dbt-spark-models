@@ -9,12 +9,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  sqlfluff:
-    uses: joomcode/dbt-models/.github/workflows/sqlfluff-fix-internal@sharing-sqlfluff-fix
-    with:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      user-login: ${{ github.event.pull_request.user.login }}
-      dialect: sqlspark
   build:
     runs-on: [self-hosted, analytics-platform-dbt-models-spark]
     steps:
@@ -34,7 +28,4 @@ jobs:
         run: pip3.8 install dbt-core==1.6.0 dbt-spark[PyHive]==1.6.0 urllib3==1.26.6
       - name: test DBT models
         run: ./test.sh
-      - name: SQL fluff fix
-        uses: actions/sqlfluff
-
 
