@@ -28,4 +28,13 @@ jobs:
         run: pip3.8 install dbt-core==1.6.0 dbt-spark[PyHive]==1.6.0 urllib3==1.26.6
       - name: test DBT models
         run: ./test.sh
+      - name: SQL fluff fix
+        uses: joomcode/dbt-models/.github/actions/sqlfluff-fix-internal@master
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_HEAD_REF: ${{ github.head_ref }}
+          user-login: ${{ github.event.pull_request.user.login }}
+          dialect: sparksql
+          pip: pip3.8
+
 
