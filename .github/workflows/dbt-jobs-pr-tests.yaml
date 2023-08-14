@@ -27,7 +27,7 @@ jobs:
       - name: Install development tools
         run: sudo yum -y install gcc gcc-c++ python3-devel python38-devel cyrus-sasl-devel
       - name: SQL fluff fix
-        uses: joomcode/dbt-models/.github/actions/sqlfluff-fix-internal@master
+        uses: joomcode/dbt-models/.github/actions/sqlfluff-fix@master
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_HEAD_REF: ${{ github.head_ref }}

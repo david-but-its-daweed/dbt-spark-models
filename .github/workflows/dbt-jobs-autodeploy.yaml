@@ -52,24 +52,30 @@ jobs:
       - name: Compile DBT
         run: |
           dbt compile --profiles-dir deploy/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}", "table_name": "{table_name}"}'
-      - uses: ./.github/workflows/deploy-manifest-internal/
+      - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
           dbt-select: "--exclude tag:manual tag:platform tag:data_readiness"
           job-name: dbt-etl
           crontab: 15 0 * * *
           alerts-channel: "#analytics-monitoring"
-      - uses: ./.github/workflows/deploy-manifest-internal/
+          profiles-dir: "deploy/profiles"
+          profile-name: spark
+      - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
           dbt-select: "--select tag:platform"
           job-name: dbt-platform
           crontab: 15 0 * * *
           alerts-channel: "#analytics-monitoring"
-      - uses: ./.github/workflows/deploy-manifest-internal/
+          profiles-dir: "deploy/profiles"
+          profile-name: spark
+      - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
           dbt-select: "--select tag:data_readiness"
           job-name: data-readiness
           crontab: 0 * * * *
           alerts-channel: "#analytics-monitoring"
+          profiles-dir: "deploy/profiles"
+          profile-name: spark
       - name: Create package
         run: tar --exclude="./.git/*" --exclude="*.tar.gz" --exclude="./.idea/*" -zcvf ../dbt-models.tar.gz .
       - name: Upload package
