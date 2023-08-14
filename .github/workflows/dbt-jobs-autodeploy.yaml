@@ -86,7 +86,7 @@ jobs:
           profile-name: spark
           image-tag: "392166590300.dkr.ecr.eu-central-1.amazonaws.com/dbt-spark-models"
           kube-deployment: "dbt-docs-spark"
-          dbt-args: "--vars '{'\''start_date_ymd'\'':'\''date_sub(current_date(), 1)'\'','\''end_date_ymd'\'':'\''current_date()'\'','\''table_name'\'':'\'''\''}'"
+          dbt-args: "--vars '{'\\''start_date_ymd'\\'':'\\''date_sub(current_date(), 1)'\\'','\\''end_date_ymd'\\'':'\\''current_date()'\\'','\\''table_name'\\'':'\\'''\\''}'"
       - name: Slack Notification
         if: ${{ failure() }}
         uses: rtCamp/action-slack-notify@v2
