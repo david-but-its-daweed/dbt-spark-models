@@ -84,11 +84,11 @@ jobs:
       - name: Upload package
         run: aws s3 cp dbt-models.tar.gz s3://joom-analytics-deploy/airflow/dags/platform__dbt_shared_spark/dbt-models.tar.gz
 
-      - uses: joomcode/dbt-models/.github/actions/deploy-docs@master
-        with:
-          image-tag: "392166590300.dkr.ecr.eu-central-1.amazonaws.com/dbt-spark-models"
-          kube-deployment: "dbt-docs-spark"
-          generate-docs: "false"
+#      - uses: joomcode/dbt-models/.github/actions/deploy-docs@master
+#        with:
+#          image-tag: "392166590300.dkr.ecr.eu-central-1.amazonaws.com/dbt-spark-models"
+#          kube-deployment: "dbt-docs-spark"
+#          generate-docs: "false"
 #
 #      - name: Slack Notification
 #        if: ${{ failure() }}
