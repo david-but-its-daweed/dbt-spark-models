@@ -34,13 +34,19 @@ tickets AS (
     LEFT JOIN UNNEST(order_ids.list) ol
 ),
 
+active_users AS (
+    SELECT *
+    FROM {{ ref('active_users') }}
+    WHERE day >= '2020-09-01'
+)
+
 tickets_ext AS (
     SELECT 
         a.*, 
         b.platform,
         b.country, 
     FROM tickets a
-    LEFT JOIN (SELECT * FROM {{ ref('active_users') }} WHERE day >= '2020-09-01') b ON a.day = b.day AND a.user_id = b.user_id
+    LEFT JOIN active_users b ON a.day = b.day AND a.user_id = b.user_id
 )
 
 SELECT * FROM tickets_ext
