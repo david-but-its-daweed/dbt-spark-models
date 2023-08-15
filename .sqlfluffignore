@@ -2,3 +2,4 @@
 /macros/
 /models/spark/core/
 /models/spark/gold/
+/models/spark/dashboards/dim_pair_currency_rate.sql
