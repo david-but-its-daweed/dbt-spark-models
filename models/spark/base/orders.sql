@@ -55,7 +55,8 @@ WITH orders_ext1 AS (
         estimated_delivery_max_days,
         customer_refund_reason IS NOT NULL AND customer_refund_reason IN (2, 5, 16, 24, 25, 26, 28) AS is_not_delivered_refund,
         customer_refund_reason IS NOT NULL AND customer_refund_reason IN (3, 4, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27) AS is_quality_refund,
-        COALESCE((customer_refund_reason IS NOT NULL
+        COALESCE((
+            customer_refund_reason IS NOT NULL
             OR refund_reason IS NOT NULL
             OR delivered_time_utc IS NOT NULL
             OR DATEDIFF(CURRENT_DATE(), CAST(created_time_utc AS DATE)) > warranty_duration_max_days
@@ -75,22 +76,31 @@ WITH orders_ext1 AS (
         review_image_count,
         customer_refund_reason,
         COALESCE(DATE_TRUNC(partition_date, month) = DATE_TRUNC(
-            CAST(real_user_join_ts_msk AS DATE), month), FALSE) AS is_join_month_order,
+            CAST(real_user_join_ts_msk AS DATE), month
+        ), FALSE) AS is_join_month_order,
 
-        COALESCE(rating_counts.count_1_star
+        COALESCE(
+            rating_counts.count_1_star
             + rating_counts.count_2_star
             + rating_counts.count_3_star
             + rating_counts.count_4_star
-            + rating_counts.count_5_star, 0) AS number_of_reviews,
-        COALESCE(rating_counts.count_1_star * 1
+            + rating_counts.count_5_star, 0
+        ) AS number_of_reviews,
+        COALESCE(
+            rating_counts.count_1_star * 1
             + rating_counts.count_2_star * 2
             + rating_counts.count_3_star * 3
             + rating_counts.count_4_star * 4
-            + rating_counts.count_5_star * 5, 0) AS total_product_rating,
+            + rating_counts.count_5_star * 5, 0
+        ) AS total_product_rating,
 
-        COALESCE((review_stars IN (1, 2) AND DATEDIFF(review_time_utc, created_time_utc) <= 80)
-            OR (customer_refund_reason IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27)
-                AND DATEDIFF(refund_time_utc, created_time_utc) <= 80), FALSE) AS is_negative_feedback,
+        COALESCE(
+            (review_stars IN (1, 2) AND DATEDIFF(review_time_utc, created_time_utc) <= 80)
+            OR (
+                customer_refund_reason IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27)
+                AND DATEDIFF(refund_time_utc, created_time_utc) <= 80
+            ), FALSE
+        ) AS is_negative_feedback,
         CASE
             WHEN customer_refund_reason IS NULL OR customer_refund_reason = 0 THEN 'none'
             WHEN customer_refund_reason = 1 THEN 'cancelledByCustomer'
@@ -130,8 +140,9 @@ WITH orders_ext1 AS (
         END AS detailed_refund_reason,
         gmv_initial <= 0.05 AS is_influencer_order
     FROM {{ source('mart', 'star_order_2020') }}
-    WHERE TRUE
-        AND NOT(refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
+    WHERE
+        TRUE
+        AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
 ),
 
 logistics_orders AS (
