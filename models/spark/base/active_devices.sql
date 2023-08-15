@@ -9,14 +9,14 @@
 
 SELECT
     *,
-    MAX(day = join_day) OVER(PARTITION BY device_id, day) AS is_new_user
+    MAX(day = join_day) OVER (PARTITION BY device_id, day) AS is_new_user
 FROM (
     SELECT
         device_id,
         date_msk AS day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
         IF(
-            MIN(date_msk) OVER(PARTITION BY device_id) < FIRST_VALUE(TO_DATE(join_ts_msk)),
-            MIN(date_msk) OVER(PARTITION BY device_id),
+            MIN(date_msk) OVER (PARTITION BY device_id) < FIRST_VALUE(TO_DATE(join_ts_msk)),
+            MIN(date_msk) OVER (PARTITION BY device_id),
             FIRST_VALUE(TO_DATE(join_ts_msk))
         ) AS join_day,
         FIRST_VALUE(UPPER(country)) AS country,

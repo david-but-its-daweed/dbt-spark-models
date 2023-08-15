@@ -212,7 +212,7 @@ orders_ext2 AS (
 
         IF(number_of_reviews > 0, ROUND(total_product_rating / number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
         COALESCE(number_of_reviews >= 15, FALSE) AS is_product_with_stable_rating, -- был ли рейтинг стабильным на момент покупки
-        ROW_NUMBER() OVER(PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number -- номер покупки товара
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number -- номер покупки товара
     FROM orders_ext1
 ),
 
@@ -312,7 +312,7 @@ orders_ext4 AS (
         COALESCE(b.is_new_user, FALSE) AS is_new_user
     FROM orders_ext3 AS a
     LEFT JOIN {{ ref('active_devices') }} AS b ON a.device_id = b.device_id AND a.day = b.day
-    LEFT JOIN logistics_orders AS l USING(order_id)
+    LEFT JOIN logistics_orders AS l USING (order_id)
 )
 
 SELECT * FROM orders_ext4
