@@ -1,4 +1,4 @@
-SELECT 
+SELECT
     category_id,
     name,
     level_1_category.name AS l1_category_name,

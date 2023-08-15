@@ -66,7 +66,7 @@ WITH order_groups AS (
 
 SELECT
     *,
-    ROW_NUMBER() OVER(PARTITION BY device_id ORDER BY order_datetime_utc) AS device_order_groups_number,
-    ROW_NUMBER() OVER(PARTITION BY user_id ORDER BY order_datetime_utc) AS user_order_groups_number,
-    ROW_NUMBER() OVER(PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_order_groups_number
+    ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_order_groups_number,
+    ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_order_groups_number,
+    ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_order_groups_number
 FROM order_groups

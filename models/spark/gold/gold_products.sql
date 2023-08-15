@@ -18,7 +18,7 @@ WITH orders AS (
     FROM (
         SELECT
             *,
-            LAST_VALUE(merchant_sale_price) OVER(PARTITION BY product_id ORDER BY order_datetime_utc) AS current_merchant_sale_price
+            LAST_VALUE(merchant_sale_price) OVER (PARTITION BY product_id ORDER BY order_datetime_utc) AS current_merchant_sale_price
         FROM {{ ref('gold_orders') }}
     )
     GROUP BY 1
