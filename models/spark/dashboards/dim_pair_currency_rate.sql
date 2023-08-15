@@ -5,4 +5,4 @@ SELECT
     t2.currency_code AS currency_code_to,
     t1.rate / t2.rate AS rate
 FROM {{ source('mart','dim_currency_rate') }} AS t1
-INNER JOIN {{ source('mart','dim_currency_rate') }} AS t2 USING(effective_date)
+INNER JOIN {{ source('mart','dim_currency_rate') }} AS t2 ON t1.effective_date = t2.effective_date
