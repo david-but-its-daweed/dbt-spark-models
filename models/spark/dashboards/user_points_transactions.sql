@@ -16,6 +16,20 @@ WITH active_devices AS (
         is_ephemeral = FALSE
 ),
 
+points_transactions AS (
+    SELECT
+        id,
+        user_id,
+        amount.value AS points_ccy,
+        amount.ccy AS ccy,
+        type AS point_transaction_type,
+        date_msk
+    FROM
+        {{ ref('mart', 'fact_user_points_transactions') }}
+    WHERE
+        type IN ("referral", "cashback")
+),
+
 points_transactions_with_finalize AS (
     SELECT
         t1.user_id AS user_id,
@@ -23,19 +37,7 @@ points_transactions_with_finalize AS (
         t1.date_msk,
         COUNT(*) AS num_transactions,
         SUM(t2.effective_usd) AS effective_usd
-    FROM (
-        SELECT
-            id,
-            user_id,
-            amount.value AS points_ccy,
-            amount.ccy AS ccy,
-            type AS point_transaction_type,
-            date_msk
-        FROM
-            {{ ref('mart', 'fact_user_points_transactions') }}
-        WHERE
-            type IN ("referral", "cashback")
-    ) AS t1
+    FROM points_transactions AS t1
     INNER JOIN (
         SELECT
             refid,
