@@ -30,6 +30,16 @@ points_transactions AS (
         type IN ("referral", "cashback")
 ),
 
+user_point_transactions AS (
+    SELECT
+        refid,
+        effective_usd
+    FROM
+        {{ ref('mart', 'fact_user_points_transactions') }}
+    WHERE
+        type IN ("finalize")
+)
+
 points_transactions_with_finalize AS (
     SELECT
         t1.user_id AS user_id,
@@ -38,15 +48,7 @@ points_transactions_with_finalize AS (
         COUNT(*) AS num_transactions,
         SUM(t2.effective_usd) AS effective_usd
     FROM points_transactions AS t1
-    INNER JOIN (
-        SELECT
-            refid,
-            effective_usd
-        FROM
-            {{ ref('mart', 'fact_user_points_transactions') }}
-        WHERE
-            type IN ("finalize")
-    ) AS t2
+    INNER JOIN user_point_transactions AS t2
     ON
         t1.id = t2.refid
     GROUP BY 1, 2, 3
