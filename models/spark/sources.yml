@@ -31,7 +31,6 @@ sources:
       - name: dim_currency_rate
       - name: product_events
       - name: dim_merchant
-      - name: fact_user_points_transactions
   - name: cube
     tables:
       - name: event_counts_country_os_days
