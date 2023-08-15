@@ -22,15 +22,15 @@ WITH babylone_ticket_create_joom_100 AS (
 
 tickets AS (
     SELECT
-        id,
-        partition_date AS day,
-        CAST(event_ts_utc AS DATETIME) AS event_ts,
-        customer_external_id AS user_id,
-        ticket_id,
+        e.id,
+        e.partition_date AS day,
+        CAST(e.event_ts_utc AS DATETIME) AS event_ts,
+        e.customer_external_id AS user_id,
+        e.ticket_id,
         ol.element AS order_id,
-        lang,
-        message_source,
-    FROM babylone_ticket_create_joom_100
+        e.lang,
+        e.message_source,
+    FROM babylone_ticket_create_joom_100 as e
     LEFT JOIN UNNEST(order_ids.list) ol
 ),
 
