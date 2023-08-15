@@ -16,7 +16,7 @@ WITH referral_old AS (
         refid,
         date_msk AS order_date_msk
     FROM
-        {{ source('mart', 'fact_user_points_transactions') }}
+        {{ ref('mart', 'fact_user_points_transactions') }}
     WHERE TRUE
         AND type = "referral"
         AND date_msk >= "2022-01-01"
@@ -28,7 +28,7 @@ finalize_old AS (
         refid,
         effective_usd
     FROM
-        {{ source('mart', 'fact_user_points_transactions') }}
+        {{ ref('mart', 'fact_user_points_transactions') }}
     WHERE TRUE
         AND type = "finalize"
         AND date_msk >= "2022-01-01"
@@ -47,6 +47,16 @@ points_referral__old AS (
         finalize_old AS f
         ON
             r.id = f.refid
+),
+
+product_purchase_100 AS (
+    SELECT
+        user_id,
+        device_id,
+        payload.orderId as order_id,
+        partition_date
+    from mart.device_events
+    where type = 'productPurchase'
 ),
 
 orders_old AS (
@@ -78,7 +88,7 @@ orders_new AS (
         effective_usd AS points_to_referrer_user,
         revenueshare_type AS referral_type
     FROM
-        {{ source('engagement', 'fact_referral_purchase') }}
+        {{ ref('engagement', 'fact_referral_purchase') }}
 )
 
 SELECT * FROM orders_old

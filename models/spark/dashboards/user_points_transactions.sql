@@ -32,7 +32,7 @@ points_transactions_with_finalize AS (
             type AS point_transaction_type,
             date_msk
         FROM
-            {{ source('mart', 'fact_user_points_transactions') }}
+            {{ ref('mart', 'fact_user_points_transactions') }}
         WHERE
             type IN ("referral", "cashback")
     ) AS t1
@@ -41,7 +41,7 @@ points_transactions_with_finalize AS (
             refid,
             effective_usd
         FROM
-            {{ source('mart', 'fact_user_points_transactions') }}
+            {{ ref('mart', 'fact_user_points_transactions') }}
         WHERE
             type IN ("finalize")
     ) AS t2
@@ -58,7 +58,7 @@ points_transactions_wo_finalize AS (
         COUNT(*) AS num_transactions,
         SUM(effective_usd) AS effective_usd
     FROM
-        {{ source('mart', 'fact_user_points_transactions') }}
+        {{ ref('mart', 'fact_user_points_transactions') }}
     WHERE
         type NOT IN ("referral", "cashback", "finalize")
     GROUP BY 1, 2, 3

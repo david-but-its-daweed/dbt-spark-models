@@ -413,7 +413,7 @@ orders_ext6 AS (
         a.*,
         COALESCE(b.user_segment, 'Non-buyers') AS real_user_segment
     FROM orders_ext5 AS a
-    LEFT JOIN {{ source('engagement', 'user_segments') }} AS b
+    LEFT JOIN {{ ref('engagement', 'user_segments') }} AS b
         ON
             a.real_user_id = b.real_user_id
             AND a.order_date_msk >= TO_DATE(b.effective_ts)
