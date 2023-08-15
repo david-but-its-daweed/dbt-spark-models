@@ -3,8 +3,7 @@
     materialized='table',
     partition_by={
       "field": "day",
-    },
-    cluster_by = ["country", "platform"],
+    }
   )
 }}
 
