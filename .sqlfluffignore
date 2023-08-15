@@ -1,4 +1,4 @@
 # Ignore anything in the "macros" path
 /macros/
 /models/spark/core/
-/models/spark/dashboards/
+/models/spark/gold/
