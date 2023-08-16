@@ -12,12 +12,12 @@ WITH babylone_ticket_create_joom_100 AS (
         id,
         partition_date,
         event_ts_utc,
-        payload.customerExternalId AS customer_external_id,
-        payload.ticketId AS ticket_id,
+        payload.customerexternalid AS customer_external_id,
+        payload.ticketid AS ticket_id,
         payload.lang,
-        payload.messageSource AS message_source
+        payload.messagesource AS message_source
     FROM {{ source("mart", "babylone_events") }}
-    WHERE `type` = 'ticketCreateJoom'
+    WHERE type = 'ticketCreateJoom'
 ),
 
 tickets AS (
@@ -29,9 +29,9 @@ tickets AS (
         e.ticket_id,
         ol.element AS order_id,
         e.lang,
-        e.message_source,
-    FROM babylone_ticket_create_joom_100 as e
-    LEFT JOIN UNNEST(order_ids.list) ol
+        e.message_source
+    FROM babylone_ticket_create_joom_100 AS e
+    LEFT JOIN UNNEST(order_ids.list) AS ol
 ),
 
 active_users AS (
@@ -41,12 +41,12 @@ active_users AS (
 ),
 
 tickets_ext AS (
-    SELECT 
-        a.*, 
+    SELECT
+        a.*,
         b.platform,
-        b.country, 
-    FROM tickets a
-    LEFT JOIN active_users b ON a.day = b.day AND a.user_id = b.user_id
+        b.country
+    FROM tickets AS a
+    LEFT JOIN active_users AS b ON a.day = b.day AND a.user_id = b.user_id
 )
 
 SELECT * FROM tickets_ext

@@ -173,4 +173,4 @@ LEFT JOIN
     orders_info AS oi USING (payment_order_id)
 WHERE
     po.payment_type != 'points'
-    AND (year(CURRENT_DATE()) - year(po.date)) < 2
+    AND (YEAR(CURRENT_DATE()) - YEAR(po.date)) < 2
