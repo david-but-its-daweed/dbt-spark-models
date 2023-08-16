@@ -55,7 +55,7 @@ product_purchase_100 AS (
         device_id,
         payload.orderId as order_id,
         partition_date
-    from mart.device_events
+    from {{ source("mart", "device_events") }}
     where type = 'productPurchase'
 ),
 
@@ -71,7 +71,7 @@ orders_old AS (
     FROM
         points_referral__old AS t1
     INNER JOIN
-        {{ source('sample_events', 'product_purchase_100') }} AS t2
+        product_purchase_100 AS t2
         ON
             t1.order_id = t2.order_id
     WHERE

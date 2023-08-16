@@ -16,7 +16,7 @@ WITH babylone_ticket_create_joom_100 AS (
         payload.ticketId AS ticket_id,
         payload.lang,
         payload.messageSource AS message_source
-    FROM mart.babylone_events
+    FROM {{ source("mart", "babylone_events") }}
     WHERE `type` = 'ticketCreateJoom'
 ),
 
@@ -24,7 +24,7 @@ tickets AS (
     SELECT
         e.id,
         e.partition_date AS day,
-        CAST(e.event_ts_utc AS DATETIME) AS event_ts,
+        CAST(e.event_ts_utc AS TIMESTAMP) AS event_ts,
         e.customer_external_id AS user_id,
         e.ticket_id,
         ol.element AS order_id,
@@ -38,7 +38,7 @@ active_users AS (
     SELECT *
     FROM {{ ref('active_users') }}
     WHERE day >= '2020-09-01'
-)
+),
 
 tickets_ext AS (
     SELECT 
