@@ -22,8 +22,8 @@ SELECT DISTINCT
     gr.country_code,
     gr.country_name,
     IF(
-        MAX(gr.is_uniq) OVER(PARTITION BY gr.country_code) = TRUE,
-        FIRST_VALUE(gr.region_name) OVER(PARTITION BY gr.country_code ORDER BY gr.is_uniq DESC),
+        MAX(gr.is_uniq) OVER (PARTITION BY gr.country_code) = TRUE,
+        FIRST_VALUE(gr.region_name) OVER (PARTITION BY gr.country_code ORDER BY gr.is_uniq DESC),
         'Other'
     ) AS region_name,
     gr.top_country_code,

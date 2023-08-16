@@ -21,7 +21,7 @@ WITH order_groups AS (
         legal_entity,
         app_entity,
         currency_code,
-        
+
         FIRST_VALUE(platform) AS platform,
         FIRST_VALUE(country_code) AS country_code,
         FIRST_VALUE(top_country_code) AS top_country_code,
