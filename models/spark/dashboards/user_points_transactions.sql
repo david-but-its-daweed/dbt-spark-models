@@ -7,6 +7,7 @@
   )
 }}
 
+
 WITH active_devices AS (
     SELECT
         *
@@ -25,7 +26,7 @@ points_transactions AS (
         type AS point_transaction_type,
         date_msk
     FROM
-        {{ ref('mart', 'fact_user_points_transactions') }}
+        {{ ref('fact_user_points_transactions') }}
     WHERE
         type IN ("referral", "cashback")
 ),
@@ -35,10 +36,10 @@ user_point_transactions AS (
         refid,
         effective_usd
     FROM
-        {{ ref('mart', 'fact_user_points_transactions') }}
+        {{ ref('fact_user_points_transactions') }}
     WHERE
         type IN ("finalize")
-)
+),
 
 points_transactions_with_finalize AS (
     SELECT
@@ -62,7 +63,7 @@ points_transactions_wo_finalize AS (
         COUNT(*) AS num_transactions,
         SUM(effective_usd) AS effective_usd
     FROM
-        {{ ref('mart', 'fact_user_points_transactions') }}
+        {{ ref('fact_user_points_transactions') }}
     WHERE
         type NOT IN ("referral", "cashback", "finalize")
     GROUP BY 1, 2, 3
