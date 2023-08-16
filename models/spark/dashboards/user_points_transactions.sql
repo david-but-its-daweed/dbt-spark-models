@@ -9,8 +9,7 @@
 
 
 WITH active_devices AS (
-    SELECT
-        *
+    SELECT *
     FROM
         {{ ref('active_users') }}
     WHERE
@@ -50,8 +49,8 @@ points_transactions_with_finalize AS (
         SUM(t2.effective_usd) AS effective_usd
     FROM points_transactions AS t1
     INNER JOIN user_point_transactions AS t2
-    ON
-        t1.id = t2.refid
+        ON
+            t1.id = t2.refid
     GROUP BY 1, 2, 3
 ),
 
@@ -100,12 +99,12 @@ base AS (
         points.num_transactions
     FROM
         points
-    LEFT JOIN active_devices ON
+    LEFT JOIN
+        active_devices ON
         points.user_id = active_devices.user_id
         AND points.date_msk = active_devices.day
 )
 
-SELECT
-    *
+SELECT *
 FROM
     base
