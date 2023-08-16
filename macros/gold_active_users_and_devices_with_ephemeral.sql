@@ -219,7 +219,7 @@ active_devices_ext6 AS (
         a.*,
         COALESCE(b.user_segment, 'Non-buyers') AS real_user_segment
     FROM active_devices_ext5 AS a
-    LEFT JOIN {{ source('engagement', 'user_segments') }} AS b
+    LEFT JOIN {{ ref('user_segments') }} AS b
         ON
             a.real_user_id = b.real_user_id
             AND a.date_msk >= TO_DATE(b.effective_ts)
