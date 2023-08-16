@@ -17,7 +17,8 @@ WITH referral_old AS (
         date_msk AS order_date_msk
     FROM
         {{ ref('fact_user_points_transactions') }}
-    WHERE TRUE
+    WHERE
+        TRUE
         AND type = "referral"
         AND date_msk >= "2022-01-01"
 
@@ -29,7 +30,8 @@ finalize_old AS (
         effective_usd
     FROM
         {{ ref('fact_user_points_transactions') }}
-    WHERE TRUE
+    WHERE
+        TRUE
         AND type = "finalize"
         AND date_msk >= "2022-01-01"
 
@@ -53,10 +55,10 @@ product_purchase_100 AS (
     SELECT
         user_id,
         device_id,
-        payload.orderId as order_id,
+        payload.orderid AS order_id,
         partition_date
-    from {{ source("mart", "device_events") }}
-    where type = 'productPurchase'
+    FROM {{ source("mart", "device_events") }}
+    WHERE type = "productPurchase"
 ),
 
 orders_old AS (
