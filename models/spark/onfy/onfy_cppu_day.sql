@@ -12,14 +12,60 @@ with promocodes as
 (
     select 
         order_id,
+        order_created_time_cet,
+        device_id,
+        app_device_type,
         sum(price) as discount_sum
-    from 
-        {{ source('onfy', 'transactions') }}
+    from onfy.transactions
     where 1=1
         and type = 'DISCOUNT'
         and currency = 'EUR'
     group by 
-        order_id
+        order_id,
+        device_id,
+        order_created_time_cet,
+        app_device_type
+),
+
+sourced_promocodes as 
+(
+    select
+        date_trunc('day', order_created_time_cet) as discount_date,
+        if(lower(app_device_type) like '%web%', 'web', lower(app_device_type)) as app_device_type,
+        lower(coalesce(
+            max_by(paid_sources.source_corrected, paid_sources.source_dt), 
+            max_by(organic_sources.source_corrected, organic_sources.source_dt),
+            max_by(all_sources.source_corrected, all_sources.source_dt),
+            'Unknown'
+        )) as source,
+        lower(coalesce(
+            max_by(if(paid_sources.source_corrected like '%facebook%', paid_sources.utm_medium, ''), paid_sources.source_dt), 
+            max_by(if(organic_sources.source_corrected like '%facebook%', organic_sources.utm_medium, ''), organic_sources.source_dt),
+            max_by(if(all_sources.source_corrected like '%facebook%', all_sources.utm_medium, ''), all_sources.source_dt),
+            'Unknown'
+        )) as medium,
+        lower(coalesce(
+            max_by(paid_sources.campaign_corrected, paid_sources.source_dt), 
+            max_by(organic_sources.campaign_corrected, organic_sources.source_dt),
+            max_by(all_sources.campaign_corrected, all_sources.source_dt),
+            'Unknown'
+        )) as campaign,
+        sum(discount_sum) as discount_sum
+    from promocodes
+    left join {{ source('onfy', 'sources') }} as paid_sources
+        on paid_sources.device_id = promocodes.device_id
+        and paid_sources.source_dt <= promocodes.order_created_time_cet
+        and lower(paid_sources.source_corrected) not in ('unknown', 'organic', 'unmarked_facebook_or_instagram', 'social', 'email', 'newsletter')
+    left join {{ source('onfy', 'sources') }} as organic_sources
+        on organic_sources.device_id = promocodes.device_id
+        and organic_sources.source_dt <= promocodes.order_created_time_cet
+        and lower(organic_sources.source_corrected) <> lower('Unknown')
+    left join {{ source('onfy', 'sources') }} as all_sources
+        on all_sources.device_id = promocodes.device_id
+        and all_sources.source_dt <= promocodes.order_created_time_cet
+    group by 
+        date_trunc('day', order_created_time_cet),
+        if(lower(app_device_type) like '%web%', 'web', lower(app_device_type))
 ),
 
 numbered_purchases as 
@@ -272,7 +318,8 @@ select distinct
     sum(coalesce(install.installs, 0)) as installs,
     sum(coalesce(install.visits, 0)) as visits,
     sum(coalesce(first_purchase_discount_sum, 0)) as first_purchase_discount_sum,
-    sum(coalesce(second_purchase_discount_sum, 0)) as second_purchase_discount_sum
+    sum(coalesce(second_purchase_discount_sum, 0)) as second_purchase_discount_sum,
+    sum(coalesce(discount_sum, 0)) as discount_sum
 from 
     ads_spends_corrected_day
 full join users_by_day
@@ -287,6 +334,12 @@ full join installs as install
     and lower(ads_spends_corrected_day.source_corrected) = lower(install.source_corrected)
     and lower(ads_spends_corrected_day.medium) = lower(install.medium)
     and lower(ads_spends_corrected_day.campaign_platform) = lower(install.source_app_device_type)
+full join sourced_promocodes
+    on ads_spends_corrected_day.spend_day = sourced_promocodes.discount_date
+    and lower(ads_spends_corrected_day.campaign_corrected) = lower(sourced_promocodes.campaign)
+    and lower(ads_spends_corrected_day.source_corrected) = lower(sourced_promocodes.source)
+    and lower(ads_spends_corrected_day.medium) = lower(sourced_promocodes.medium)
+    and lower(ads_spends_corrected_day.campaign_platform) = lower(sourced_promocodes.app_device_type)
 group by 
     coalesce(ads_spends_corrected_day.spend_day, users_by_day.first_purchase_date, install.source_day), 
     coalesce(ads_spends_corrected_day.source_corrected, users_by_day.source_corrected, install.source_corrected),
