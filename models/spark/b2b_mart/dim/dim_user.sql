@@ -48,6 +48,6 @@ left join {{ ref('key_funnel_status') }} fs on coalesce(cast(funnel_state.st as 
 left join {{ ref('key_validation_reject_reason') }} rr on cast(funnel_state.rjRsn as int) = cast(rr.id as int)
 left join {{ ref('key_partner_type') }} pt on cast(t.partner_type as int) = cast(pt.id as int)
 left join {{ ref('key_validation_status') }} on key_validation_status.id = t.validation_status
-left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = k.reject_reason
+left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = t.reject_reason
 left join phone_number pn ON pn.user_id = t.user_id
 where not is_test_user or is_test_user is null
