@@ -39,7 +39,7 @@ SELECT
   pt.type as partner_type,
   t.partner_source,
   t.email,
-  ph.phone,
+  pn.phone,
   t.reject_reason_partner,
   TIMESTAMP(t.dbt_valid_from) AS effective_ts_msk,
   TIMESTAMP(t.dbt_valid_to) AS next_effective_ts_msk
