@@ -97,7 +97,7 @@ sources:
       - name: b2b_core_customer_requests_daily_snapshot
       - name: b2b_core_offer_products_daily_snapshot
       - name: babylone_joom_agents_daily_snapshot
-      - name: user_points_transactions_daily_snapshot
+      - name: points_points_transactions_daily_snapshot
       - name: finance_order_costs_daily_snapshot
       - name: babylone_joompay_agents_daily_snapshot
       - name: babylone_logistics_agents_daily_snapshot
