@@ -19,8 +19,8 @@ o.order_id,
 o.user_id,
 sent_status,
 category_id,
-variants.price.amount/1000000 as price_rfq,
-variants.quantity as amount_rfq,
+max(variants.price.amount/1000000) as price_rfq,
+max(variants.quantity) as amount_rfq,
 sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
@@ -95,8 +95,8 @@ d.customer_request_id,
 d.user_id,
 sent_status,
 category_id,
-variants.price.amount/1000000 as price_rfq,
-variants.quantity as amount_rfq,
+max(variants.price.amount/1000000) as price_rfq,
+max(variants.quantity) as amount_rfq,
 sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
