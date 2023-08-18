@@ -44,9 +44,9 @@ users AS (
       is_partner,
       partner_type,
       partner_source,
-        first_deal_planning_volume,
-        first_deal_planning_currency,
-        first_deal_planning_volume_usd
+      first_deal_planning_volume,
+      first_deal_planning_currency,
+      first_deal_planning_volume_usd
   FROM {{ ref('fact_customers') }} du
   left join conversion c on du.conversion_status = c.status_int
 ),
@@ -91,6 +91,7 @@ user_interaction as
     first_deal_planning_volume,
     first_deal_planning_currency,
     first_deal_planning_volume_usd,
+    max(case when websiteForm = 'electronicsBrazil' then 1 else 0 end) over (partition by user_id) as electronics,
     row_number() over (partition by user_id order by case when incorrectAttribution
         then 1 else 0 end, coalesce(interactionType, 100), ctms) = 1 as first_interaction_type,
     row_number() over (partition by user_id order by case when incorrectAttribution
@@ -132,13 +133,32 @@ select distinct
     utm_campaign,
     utm_source,
     utm_medium,
-    source, 
-    type,
-    campaign,
+    case 
+        when type = 'Web' and
+        interaction_type = 10 and utm_source = 'facebook' and
+        not (max(case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end) over (partition by u.user_id))
+        then 'facebook'
+        else source end as source, 
+    case 
+        when electronics = 1 then 'Online Electronics'
+        when type = 'Web' and
+        interaction_type = 10 and utm_source = 'facebook' and
+        not (max(case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end) over (partition by u.user_id))
+        then 'Online'
+        else type end as type,
+    case 
+        when type = 'Web' and
+        interaction_type = 10 and utm_source = 'facebook' and
+        not (max(case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end) over (partition by u.user_id))
+        then 'facebook/br/'
+        else campaign end as campaign,
     website_form,
     promocode_id,
     created_automatically,
-    interaction_type,
+    case 
+        when interaction_type = 10 and utm_source = 'facebook' and
+        not (max(case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end) over (partition by u.user_id))
+        then 0 else interaction_type end as interaction_type,
     case when 
         conversion_status = 'Converted'
     then conversion_status
