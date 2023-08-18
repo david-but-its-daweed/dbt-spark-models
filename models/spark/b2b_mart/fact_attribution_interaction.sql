@@ -227,8 +227,14 @@ select distinct
     first_deal_planning_currency,
     first_deal_planning_volume_usd,
     case when admin is not null or amo_id is null then true else false end as admin,
-    case when interaction_type = 0 and not incorrect_attr then first_interaction_type else FALSE end as first_interaction_type,
-    case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end as last_interaction_type,
+    case when interaction_type = 10 and utm_source = 'facebook' and
+        not (max(case when interaction_type = 0 and not incorrect_attr then first_interaction_type else FALSE end) over (partition by u.user_id))
+        then TRUE 
+        when interaction_type = 0 and not incorrect_attr then first_interaction_type else FALSE end as first_interaction_type,
+    case when interaction_type = 10 and utm_source = 'facebook' and
+        not (max(case when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end) over (partition by u.user_id))
+        then TRUE
+        when interaction_type = 0 and not incorrect_attr then last_interaction_type else FALSE end as last_interaction_type,
     min_date_payed,
     incorrect_attr,
     incorrect_utm,
