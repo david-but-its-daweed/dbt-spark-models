@@ -7,6 +7,7 @@
       'team': 'merchant',
       'model_owner': '@abracadabrik',
       'bigquery_load': 'true',
+      'bigquery_overwrite': 'true',
       'bigquery_partitioning_date_column': 'queued_date'
     },
 ) }}
