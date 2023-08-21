@@ -9,18 +9,19 @@
     }
 ) }}
 
-SELECT _id                                                                                    as id,
-       userId                                                                                 as user_id,
-       kind,
-       type,
-       cast((effectiveUSD / 1000000) as decimal(38, 6))                                       as effective_usd,
-       hidden,
-       refId                                                                                  as refid,
-       to_date(cast(cast(conv(substring(_id, 0, 8), 16, 10) as bigint) + 10800 as timestamp)) as date_msk,
-       amount,
-       badOrderId                                                                             as bad_order_id,
-       index,
-       pending
+SELECT
+    _id AS id,
+    userid AS user_id,
+    kind,
+    type,
+    cast((effectiveusd / 1000000) AS DECIMAL(38, 6)) AS effective_usd,
+    hidden,
+    refid AS refid,
+    to_date(cast(cast(conv(substring(_id, 0, 8), 16, 10) AS BIGINT) + 10800 AS TIMESTAMP)) AS date_msk,
+    amount,
+    NULL AS bad_order_id,
+    index,
+    pending
 FROM {{ source('mongo', 'points_points_transactions_daily_snapshot') }}
-where to_date(cast(cast(conv(substring(_id, 0, 8), 16, 10) as bigint) + 10800 as timestamp)) < to_date(NOW())
+WHERE to_date(cast(cast(conv(substring(_id, 0, 8), 16, 10) AS BIGINT) + 10800 AS TIMESTAMP)) < to_date(now())
 
