@@ -19,7 +19,7 @@ SELECT
     refid AS refid,
     to_date(cast(cast(conv(substring(_id, 0, 8), 16, 10) AS BIGINT) + 10800 AS TIMESTAMP)) AS date_msk,
     amount,
-    NULL AS bad_order_id,
+    cast(NULL AS BOOLEAN) AS bad_order_id,
     index,
     pending
 FROM {{ source('mongo', 'points_points_transactions_daily_snapshot') }}
