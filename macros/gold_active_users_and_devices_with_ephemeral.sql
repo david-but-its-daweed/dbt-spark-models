@@ -214,7 +214,7 @@ active_devices_ext5 AS (
 ),
 
 active_devices_ext6 AS (
-    -- добавляем основной регион
+    -- добавляем сегмент пользователя
     SELECT
         a.*,
         COALESCE(b.user_segment, 'Non-buyers') AS real_user_segment
