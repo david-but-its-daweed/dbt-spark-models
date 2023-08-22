@@ -3,7 +3,6 @@
     materialized='table',
     alias='base_active_users',
     partition_by=['day'],
-    }
   )
 }}
 
