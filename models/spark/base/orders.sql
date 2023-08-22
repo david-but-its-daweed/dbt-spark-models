@@ -24,7 +24,7 @@ WITH orders_ext1 AS (
         product_variant_id,
         category_id,
         refund_reason,
-        CAST(DATETIME(refund_time_utc, 'Europe/Moscow') AS DATE) AS refund_date_msk,
+        TO_DATE(cast(cast(refund_time_utc as int) + 3 * 3600 as timestamp)) AS refund_date_msk,
         UPPER(shipping_country) AS country,
         LOWER(os_type) AS platform,
         COALESCE(last_context.name, 'unknown') AS last_context,
@@ -74,9 +74,9 @@ WITH orders_ext1 AS (
         review_media_count,
         review_image_count,
         customer_refund_reason,
-        COALESCE(DATE_TRUNC(partition_date, month) = DATE_TRUNC(
-            CAST(real_user_join_ts_msk AS DATE), month
-        ), FALSE) AS is_join_month_order,
+                coalesce(
+            date_format(to_date(partition_date), "yyyy-MM") = date_format(to_date(real_user_join_ts_msk), "yyyy-MM"),
+            false) as is_join_month_order,
 
         COALESCE(
             rating_counts.count_1_star
