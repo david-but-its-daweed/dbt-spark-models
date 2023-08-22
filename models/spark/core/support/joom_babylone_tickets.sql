@@ -14,7 +14,7 @@ WITH babylone_ticket_create_joom_100 AS (
         payload.ticketid AS ticket_id,
         payload.lang,
         payload.messagesource AS message_source,
-        payload.orderIds as order_ids
+        payload.orderids AS order_ids
     FROM {{ source("mart", "babylone_events") }}
     WHERE type = 'ticketCreateJoom'
 ),
@@ -29,8 +29,9 @@ tickets AS (
         order_id,
         e.lang,
         e.message_source
-    FROM babylone_ticket_create_joom_100 AS e
-    LATERAL VIEW OUTER explode(order_ids) ol as order_id
+    FROM
+        babylone_ticket_create_joom_100 AS e
+            LATERAL VIEW OUTER EXPLODE(order_ids) ol AS order_id
 ),
 
 active_users AS (
