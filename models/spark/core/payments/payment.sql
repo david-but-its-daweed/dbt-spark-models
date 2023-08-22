@@ -1,9 +1,7 @@
 {{
   config(
     materialized='table',
-    partition_by={
-      "field": "date",
-    }
+    partition_by=['date'],
   )
 }}
 

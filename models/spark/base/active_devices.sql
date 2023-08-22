@@ -2,9 +2,7 @@
   config(
     materialized='table',
     alias='base_active_devices',
-    partition_by={
-      "field": "day",
-    }
+    partition_by=['day'],
   )
 }}
 

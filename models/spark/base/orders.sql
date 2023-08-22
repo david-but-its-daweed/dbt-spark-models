@@ -1,9 +1,7 @@
 {{
   config(
     materialized='table',
-    partition_by={
-      "field": "day",
-    },
+    partition_by=['day'],
     alias='base_orders'
   )
 }}

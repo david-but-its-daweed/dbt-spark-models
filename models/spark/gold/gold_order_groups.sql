@@ -3,9 +3,7 @@
     materialized='table',
     alias='order_groups',
     schema='gold',
-    partition_by={
-      'field': 'order_date_msk',
-    },
+    partition_by=['order_date_msk'],
     meta = {
         'model_owner' : '@gusev'
     }
