@@ -65,7 +65,7 @@ session_precalc as
             order by coalesce(source_dt, order_created_date_cet)) as previous_event,
         if(
             to_unix_timestamp(coalesce(source_dt, order_created_date_cet)) - to_unix_timestamp(lag(coalesce(source_dt, order_created_date_cet)) 
-                over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) <= 60*60*3
+                over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) <= 60*60*24*7 -- we remember the source for the week before forgetting it
             and to_unix_timestamp(lag(coalesce(source_dt, order_created_date_cet)) 
                 over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) is not null,
             0, 1
@@ -85,7 +85,7 @@ session_precalc as
     from corrected_sources
     full join order_data 
         on order_data.device_id = corrected_sources.device_id 
-        and order_data.order_created_time_cet between corrected_sources.source_dt and coalesce(corrected_sources.next_source_dt, corrected_sources.source_dt + interval 24 hours)
+        and order_data.order_created_time_cet between corrected_sources.source_dt and coalesce(corrected_sources.next_source_dt, corrected_sources.source_dt + interval 168 hours) -- allowing for the conversion to happen during the next week
     where 1=1
 ),
 
@@ -181,7 +181,7 @@ data_combined as
         source_dt as session_dt,
         date_trunc('month', coalesce(source_dt, ads_spends.partition_date)) as report_month,
         coalesce(date_trunc('day', source_dt), ads_spends.partition_date) as report_date,
-        coalesce(sessions.source, 'direct') as source,
+        lower(coalesce(sessions.source, 'direct')) as source,
         rank() over (partition by sessions.device_id, ultimate_window order by source_dt) as session_num,
         sessions.source_significant,
         sessions.campaign,
