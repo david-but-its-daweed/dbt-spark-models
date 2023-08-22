@@ -13,7 +13,8 @@ WITH babylone_ticket_create_joom_100 AS (
         payload.customerexternalid AS customer_external_id,
         payload.ticketid AS ticket_id,
         payload.lang,
-        payload.messagesource AS message_source
+        payload.messagesource AS message_source,
+        payload.orderIds as order_ids
     FROM {{ source("mart", "babylone_events") }}
     WHERE type = 'ticketCreateJoom'
 ),
@@ -25,11 +26,11 @@ tickets AS (
         CAST(e.event_ts_utc AS TIMESTAMP) AS event_ts,
         e.customer_external_id AS user_id,
         e.ticket_id,
-        ol.element AS order_id,
+        order_id,
         e.lang,
         e.message_source
     FROM babylone_ticket_create_joom_100 AS e
-    LEFT JOIN UNNEST(order_ids.list) AS ol
+    LATERAL VIEW OUTER explode(order_ids) ol as order_id
 ),
 
 active_users AS (
