@@ -94,9 +94,9 @@ SELECT
     po.*,
     po.target_id AS order_group_id,
     MAX(po.is_success) OVER (PARTITION BY po.device_day, po.provider) AS has_success_provider,
-    ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider) AS number_att_provider,
+    ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider ORDER BY po.created_time) AS number_att_provider,
     MAX(po.is_success) OVER (PARTITION BY po.device_day, po.payment_type, po.is_new_card) AS has_success_pmt_type,
-    ROW_NUMBER() OVER (PARTITION BY po.device_day, po.payment_type, po.is_new_card) AS number_att_pmt_type,
+    ROW_NUMBER() OVER (PARTITION BY po.device_day, po.payment_type, po.is_new_card ORDER BY po.created_time) AS number_att_pmt_type,
     IF(po.payment_type = 'card', IF(
         po.is_new_card_int = 1,
         'new_card', 'linked_card'
