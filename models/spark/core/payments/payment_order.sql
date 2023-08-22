@@ -2,7 +2,6 @@
   config(
     materialized='table',
     partition_by=['date'],
-    }
   )
 }}
 
