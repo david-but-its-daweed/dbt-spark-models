@@ -1,6 +1,7 @@
 {{
   config(
     materialized='table',
+    alias='base_active_users',
     partition_by={
       "field": "day",
     }

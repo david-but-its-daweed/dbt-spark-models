@@ -3,7 +3,8 @@
     materialized='table',
     partition_by={
       "field": "day",
-    }
+    },
+    alias='base_orders'
   )
 }}
 
