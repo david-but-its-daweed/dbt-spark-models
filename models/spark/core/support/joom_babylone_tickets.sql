@@ -5,6 +5,7 @@
     partition_by=['day'],
   )
 }}
+-- todo: incremental candidate (1h)
 
 WITH babylone_ticket_create_joom_100 AS (
     SELECT

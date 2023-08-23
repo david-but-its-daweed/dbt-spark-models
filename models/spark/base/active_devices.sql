@@ -7,6 +7,8 @@
   )
 }}
 
+-- todo: incremental candidate (1h)
+
 SELECT
     *,
     MAX(day = join_day) OVER (PARTITION BY device_id, day) AS is_new_user

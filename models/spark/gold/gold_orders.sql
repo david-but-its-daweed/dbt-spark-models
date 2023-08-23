@@ -1,6 +1,7 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     alias='orders',
     file_format='delta',
     schema='gold',
@@ -198,6 +199,12 @@ orders_ext0 AS (
 
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+    {% if is_incremental() %}
+        AND partition_date >= DATE'{{ var("start_date_ymd") }}'
+        AND partition_date < DATE'{{ var("end_date_ymd") }}'
+    {% else if target.name != 'prod' %}
+        AND partition_date >= DATE'2023-08-14'
+    {% endif %}
 ),
 
 logistics_orders AS (

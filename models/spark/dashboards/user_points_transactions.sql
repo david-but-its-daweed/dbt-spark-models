@@ -5,7 +5,7 @@
     partition_by=['day'],
   )
 }}
-
+-- TODO: incremental candidate (1h)
 
 WITH active_devices AS (
     SELECT *
