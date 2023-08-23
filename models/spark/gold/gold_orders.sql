@@ -26,7 +26,7 @@ WITH numbers as (
         WHERE NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
 ),
 
-orders_ext1 AS (
+orders_ext0 AS (
     SELECT
         order_id,
         friendly_order_id,
@@ -218,6 +218,18 @@ support_tickets AS (
     GROUP BY order_id
 ),
 
+orders_ext1 AS (
+    select
+        O.*,
+        N.product_rating,
+        N.product_orders_number,
+        N.device_orders_number,
+        N.user_orders_number,
+        N.real_user_orders_number
+    from orders_ext0 as O
+    left join numbers N using (order_id, product_id, device_id, user_id, real_user_id)
+)
+
 orders_ext2 AS (
     SELECT
         order_id,
@@ -290,12 +302,11 @@ orders_ext2 AS (
         is_negative_feedback,
 
         IF(number_of_reviews > 0, ROUND(total_product_rating / number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
-        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY order_datetime_utc) AS product_orders_number, -- номер покупки товара
-        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_orders_number, -- номер покупки девайса
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_orders_number, -- номер покупки пользователя
-        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
+        product_orders_number, -- номер покупки товара
+        device_orders_number, -- номер покупки девайса
+        user_orders_number, -- номер покупки пользователя
+        real_user_orders_number -- номер покупки пользователя (real_id)
     FROM orders_ext1
-    LEFT join numbers using (order_id, product_id, device_id, user_id, real_user_id)
 ),
 
 orders_ext3 AS (
