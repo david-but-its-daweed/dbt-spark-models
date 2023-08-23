@@ -158,7 +158,7 @@ orders_ext0 AS (
     {% if is_incremental() %}
         AND partition_date >= DATE'{{ var("start_date_ymd") }}'
         AND partition_date < DATE'{{ var("end_date_ymd") }}'
-    {% else if target.name != 'prod' %}
+    {% elif target.name != 'prod' %}
         AND partition_date >= DATE'2023-08-14'
     {% endif %}
 ),
