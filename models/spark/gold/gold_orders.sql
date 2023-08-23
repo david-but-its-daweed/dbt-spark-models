@@ -198,11 +198,12 @@ orders_ext0 AS (
         ) AS is_negative_feedback
 
     FROM {{ source('mart', 'star_order_2020') }}
-    WHERE NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
-    {% if is_incremental() %}
-        AND partition_date >= DATE'{{ var("start_date_ymd") }}'
-        AND partition_date < DATE'{{ var("end_date_ymd") }}'
-    {% elif target.name != 'prod' %}
+    WHERE
+        NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+        {% if is_incremental() %}
+            AND partition_date >= DATE '{{ var("start_date_ymd") }}'
+            AND partition_date < DATE '{{ var("end_date_ymd") }}'
+        {% elif target.name != 'prod' %}
         AND partition_date >= DATE'2023-08-14'
     {% endif %}
 ),
