@@ -23,7 +23,7 @@ WITH orders_ext1 AS (
         user_id,
 
         partition_date AS order_date_msk,
-        DATETIME(created_time_utc) AS order_datetime_utc,
+        created_time_utc AS order_datetime_utc,
 
         IF(legal_entity = 'jmt', 'JMT', 'Joom') AS legal_entity,
         CASE
