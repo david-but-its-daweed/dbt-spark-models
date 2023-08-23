@@ -12,8 +12,8 @@
   )
 }}
 
-WITH numbers as (
-    select
+WITH numbers AS (
+    SELECT
         order_id,
         product_id,
         device_id,
@@ -23,8 +23,8 @@ WITH numbers as (
         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_orders_number, -- номер покупки девайса
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_orders_number, -- номер покупки пользователя
         ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
-     FROM {{ source('mart', 'star_order_2020') }}
-        WHERE NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+    FROM {{ source('mart', 'star_order_2020') }}
+    WHERE NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
 ),
 
 orders_ext0 AS (
@@ -226,15 +226,15 @@ support_tickets AS (
 ),
 
 orders_ext1 AS (
-    select
-        O.*,
-        N.product_rating,
-        N.product_orders_number,
-        N.device_orders_number,
-        N.user_orders_number,
-        N.real_user_orders_number
-    from orders_ext0 as O
-    left join numbers N using (order_id, product_id, device_id, user_id, real_user_id)
+    SELECT
+        o.*,
+        n.product_rating,
+        n.product_orders_number,
+        n.device_orders_number,
+        n.user_orders_number,
+        n.real_user_orders_number
+    FROM orders_ext0 AS o
+    LEFT JOIN numbers AS n USING (order_id, product_id, device_id, user_id, real_user_id)
 ),
 
 orders_ext2 AS (
