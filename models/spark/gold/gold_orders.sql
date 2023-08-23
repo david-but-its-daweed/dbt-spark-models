@@ -229,7 +229,6 @@ support_tickets AS (
 orders_ext1 AS (
     SELECT
         o.*,
-        n.product_rating,
         n.product_orders_number,
         n.device_orders_number,
         n.user_orders_number,
