@@ -169,7 +169,7 @@ orders_ext1 AS (
         N.product_order_number
     from orders_ext0 O
     left JOIN product_numbers N USING(order_id, product_id)
-)
+),
 
 logistics_orders AS (
     SELECT

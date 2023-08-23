@@ -14,10 +14,10 @@
 WITH numbers as (
     select
         order_id,
-        product_id
-        device_id
-        user_id
-        real_user_id
+        product_id,
+        device_id,
+        user_id,
+        real_user_id,
         ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY order_datetime_utc) AS product_orders_number, -- номер покупки товара
         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_orders_number, -- номер покупки девайса
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_orders_number, -- номер покупки пользователя
@@ -228,7 +228,7 @@ orders_ext1 AS (
         N.real_user_orders_number
     from orders_ext0 as O
     left join numbers N using (order_id, product_id, device_id, user_id, real_user_id)
-)
+),
 
 orders_ext2 AS (
     SELECT
