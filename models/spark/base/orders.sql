@@ -7,8 +7,8 @@
   )
 }}
 
-WITH product_numbers as (
-    select
+WITH product_numbers AS (
+    SELECT
         order_id,
         product_id,
         ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
@@ -155,20 +155,20 @@ orders_ext0 AS (
     WHERE
         TRUE
         AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
-    {% if is_incremental() %}
-        AND partition_date >= DATE'{{ var("start_date_ymd") }}'
-        AND partition_date < DATE'{{ var("end_date_ymd") }}'
-    {% elif target.name != 'prod' %}
+        {% if is_incremental() %}
+            AND partition_date >= DATE '{{ var("start_date_ymd") }}'
+            AND partition_date < DATE '{{ var("end_date_ymd") }}'
+        {% elif target.name != 'prod' %}
         AND partition_date >= DATE'2023-08-14'
     {% endif %}
 ),
 
 orders_ext1 AS (
-    select
-        O.*,
-        N.product_order_number
-    from orders_ext0 O
-    left JOIN product_numbers N USING(order_id, product_id)
+    SELECT
+        o.*,
+        n.product_order_number
+    FROM orders_ext0 AS o
+    LEFT JOIN product_numbers AS n USING (order_id, product_id)
 ),
 
 logistics_orders AS (
