@@ -6,6 +6,8 @@
   )
 }}
 
+-- TODO: inceremental candidate (30min)
+
 WITH device_day_payments AS (
     SELECT
         device_id,

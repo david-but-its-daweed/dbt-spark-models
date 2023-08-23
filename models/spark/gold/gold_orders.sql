@@ -19,10 +19,10 @@ WITH numbers AS (
         device_id,
         user_id,
         real_user_id,
-        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY order_datetime_utc) AS product_orders_number, -- номер покупки товара
-        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_orders_number, -- номер покупки девайса
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_orders_number, -- номер покупки пользователя
-        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_orders_number, -- номер покупки товара
+        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY created_time_utc) AS device_orders_number, -- номер покупки девайса
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_time_utc) AS user_orders_number, -- номер покупки пользователя
+        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY created_time_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
 ),
