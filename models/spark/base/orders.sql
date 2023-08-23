@@ -2,7 +2,7 @@
   config(
     materialized='table',
     partition_by=['day'],
-    alias='base_orders'
+    alias='orders'
   )
 }}
 

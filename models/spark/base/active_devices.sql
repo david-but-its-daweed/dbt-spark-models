@@ -1,7 +1,7 @@
 {{
   config(
     materialized='table',
-    alias='base_active_devices',
+    alias='active_devices',
     partition_by=['day'],
   )
 }}
