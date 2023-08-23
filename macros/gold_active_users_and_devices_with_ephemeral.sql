@@ -9,6 +9,7 @@
         config(
         materialized='table',
         alias='active_devices_with_ephemeral',
+        file_format='delta',
         schema='gold',
         partition_by={
             'field': 'date_msk',
@@ -25,6 +26,7 @@
         config(
         materialized='table',
         alias='active_users_with_ephemeral',
+        file_format='delta',
         schema='gold',
         partition_by={
             'field': 'date_msk',
