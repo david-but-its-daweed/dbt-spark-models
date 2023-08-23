@@ -1,7 +1,7 @@
 {{
   config(
     materialized='incremental',
-    incremental_strategy='insert_overwrite',
+    incremental_strategy='append',
     alias='orders',
     file_format='delta',
     schema='gold',

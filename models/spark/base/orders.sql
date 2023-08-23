@@ -2,7 +2,8 @@
   config(
     partition_by=['day'],
     alias='orders',
-    incremental_strategy='insert_overwrite',
+    file_format='delta',
+    incremental_strategy='append',
     materialized='incremental',
   )
 }}
