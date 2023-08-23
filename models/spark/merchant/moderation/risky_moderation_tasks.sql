@@ -23,7 +23,7 @@ WITH category_levels AS (
 
 product_categories AS (
 
-    SELECT DISTINCT
+    SELECT
         product_id,
         category_id
     FROM (
@@ -31,7 +31,7 @@ product_categories AS (
             product_id,
             category_id,
             effective_ts,
-            FIRST(effective_ts) OVER (PARTITION BY product_id ORDER BY effective_ts DESC) AS latest_effective_ts
+            FIRST(effective_ts) OVER (PARTITION BY product_id ORDER BY effective_ts DESC RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS latest_effective_ts
         FROM {{ source('mart', 'dim_product') }}
     )
     WHERE
