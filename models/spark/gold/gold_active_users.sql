@@ -4,6 +4,7 @@
         alias='active_users',
         schema='gold',
         partition_by=['date_msk'],
+        file_format='delta',
         meta = {
             'model_owner' : '@gusev'
         }

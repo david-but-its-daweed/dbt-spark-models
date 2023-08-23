@@ -1,12 +1,24 @@
 {{
   config(
-    materialized='table',
     partition_by=['day'],
-    alias='orders'
+    alias='orders',
+    incremental_strategy='insert_overwrite',
+    materialized='incremental',
   )
 }}
 
-WITH orders_ext1 AS (
+WITH product_numbers as (
+    select
+        order_id,
+        product_id,
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
+    FROM {{ source('mart', 'star_order_2020') }}
+    WHERE
+        TRUE
+        AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
+),
+
+orders_ext1 AS (
     SELECT
         partition_date AS day,
         created_time_utc,
@@ -140,9 +152,16 @@ WITH orders_ext1 AS (
         END AS detailed_refund_reason,
         gmv_initial <= 0.05 AS is_influencer_order
     FROM {{ source('mart', 'star_order_2020') }}
+    left JOIN product_numbers USING(order_id, product_id)
     WHERE
         TRUE
         AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
+    {% if is_incremental() %}
+        AND partition_date >= DATE'{{ var("start_date_ymd") }}'
+        AND partition_date < DATE'{{ var("end_date_ymd") }}'
+    {% else %}
+        AND partition_date >= DATE'2023-08-14' -- FIXME: replace with actual date after check
+    {% endif %}
 ),
 
 logistics_orders AS (

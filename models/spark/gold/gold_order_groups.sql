@@ -3,6 +3,7 @@
     materialized='table',
     alias='order_groups',
     schema='gold',
+    file_format='delta',
     partition_by=['order_date_msk'],
     meta = {
         'model_owner' : '@gusev'

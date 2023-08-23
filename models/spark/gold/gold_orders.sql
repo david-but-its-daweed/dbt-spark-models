@@ -2,6 +2,7 @@
   config(
     materialized='table',
     alias='orders',
+    file_format='delta',
     schema='gold',
     partition_by=['order_date_msk'],
     meta = {
@@ -10,9 +11,22 @@
   )
 }}
 
+WITH numbers as (
+    select
+        order_id,
+        product_id
+        device_id
+        user_id
+        real_user_id
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY order_datetime_utc) AS product_orders_number, -- номер покупки товара
+        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_orders_number, -- номер покупки девайса
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_orders_number, -- номер покупки пользователя
+        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
+     FROM {{ source('mart', 'star_order_2020') }}
+        WHERE NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+),
 
-
-WITH orders_ext1 AS (
+orders_ext1 AS (
     SELECT
         order_id,
         friendly_order_id,
@@ -281,6 +295,7 @@ orders_ext2 AS (
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_orders_number, -- номер покупки пользователя
         ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
     FROM orders_ext1
+    LEFT join numbers using (order_id, product_id, device_id, user_id, real_user_id)
 ),
 
 orders_ext3 AS (

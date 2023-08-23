@@ -1,6 +1,7 @@
 {{
   config(
     materialized='table',
+    file_format='delta',
     meta = {
         'model_owner' : '@espander'
     }

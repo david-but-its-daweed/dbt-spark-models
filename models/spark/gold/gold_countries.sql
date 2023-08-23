@@ -3,6 +3,7 @@
     materialized='table',
     alias='countries',
     schema='gold',
+    file_format='delta',
     meta = {
         'model_owner' : '@gusev'
     }

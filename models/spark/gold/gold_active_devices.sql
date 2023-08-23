@@ -2,6 +2,7 @@
     config(
         materialized='table',
         alias='active_devices',
+        file_format='delta',
         schema='gold',
         partition_by=['date_msk'],
         meta = {

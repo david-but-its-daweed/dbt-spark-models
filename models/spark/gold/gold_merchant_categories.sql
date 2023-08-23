@@ -3,6 +3,7 @@
     materialized='table',
     alias='merchant_categories',
     schema='gold',
+    file_format='delta',
     meta = {
         'model_owner' : '@gusev'
     }

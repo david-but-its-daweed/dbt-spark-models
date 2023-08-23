@@ -3,6 +3,7 @@
     materialized='view',
     alias='logistics_orders',
     schema='gold',
+    file_format='delta',
     meta = {
         'model_owner' : '@gusev'
     }
