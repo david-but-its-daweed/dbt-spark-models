@@ -1,11 +1,11 @@
 {{
   config(
     materialized='incremental',
-    incremental_strategy='append',
+    incremental_strategy='merge',
     alias='orders',
     file_format='delta',
     schema='gold',
-    partition_by=['order_date_msk'],
+    uinque_key=['order_date_msk', 'order_id'],
     meta = {
         'model_owner' : '@gusev'
     }

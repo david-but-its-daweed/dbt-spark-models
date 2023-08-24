@@ -1,9 +1,9 @@
 {{
   config(
-    partition_by=['day'],
     alias='orders',
     file_format='delta',
-    incremental_strategy='append',
+    incremental_strategy='merge',
+    unique_key=['day', 'order_id']
     materialized='incremental',
   )
 }}

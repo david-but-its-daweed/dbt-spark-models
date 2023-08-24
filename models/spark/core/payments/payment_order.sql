@@ -1,9 +1,9 @@
 {{
   config(
     materialized='incremental',
-    incremetnal_strategy='append',
+    incremetnal_strategy='merge',
     file_format='delta',
-    partition_by=['date'],
+    unique_key=['date', 'payment_order_id'],
   )
 }}
 

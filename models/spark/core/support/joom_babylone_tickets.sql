@@ -1,9 +1,9 @@
 {{
   config(
     materialized='incremental',
-    incremental_strategy='append',
+    incremental_strategy='merge',
     file_format='delta',
-    partition_by=['day'],
+    unique_key=['day', 'id'],
   )
 }}
 
