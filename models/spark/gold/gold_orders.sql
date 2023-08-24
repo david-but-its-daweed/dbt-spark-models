@@ -201,7 +201,7 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() %}
-            AND DATEDIFF(date('{{ var("start_date_ymd") }}'), partition_date) < 181
+            AND DATEDIFF(DATE('{{ var("start_date_ymd") }}'), partition_date) < 181
         {% elif target.name != 'prod' %}
             AND DATEDIFF(current_date(), partition_date) < 181
         {% endif %}

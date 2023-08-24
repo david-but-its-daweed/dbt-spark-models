@@ -17,7 +17,7 @@ WITH device_day_payments AS (
     FROM
         {{ ref('payment') }}
     WHERE
-        DATEDIFF(to_date('{{ var("start_date_ymd") }}'), date) < 181
+        DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date) < 181
     GROUP BY
         1, 2
 ),
@@ -175,7 +175,7 @@ LEFT JOIN
 WHERE
     po.payment_type != 'points'
     {% if is_incremental() %}
-        AND DATEDIFF(to_date('{{ var("start_date_ymd") }}'), po.date) < 181
+        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), po.date) < 181
     {% elif target.name != 'prod' %}
         AND po.date >= date_sub(current_date(), 7)
         AND po.date < current_date()
