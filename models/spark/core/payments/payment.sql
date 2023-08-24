@@ -48,10 +48,10 @@ LEFT JOIN
 WHERE
     p.payment_type != 'points'
     {% if is_incremental() %}
-        AND DATEDIFF(CURRENT_DATE(), p.date) < 6
+        AND DATEDIFF(to_date('{{ var("start_date_ymd") }}'), p.date) < 6
     {% elif target.name != 'prod' %}
-        AND po.date >= date_sub(current_date(), 7)
-        AND po.date < current_date()
+        AND p.date >= date_sub(current_date(), 7)
+        AND p.date < current_date()
     {% else %}
-        AND (YEAR(CURRENT_DATE()) - YEAR(p.date)) < 2
+        AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(p.date)) < 2
     {% endif %}
