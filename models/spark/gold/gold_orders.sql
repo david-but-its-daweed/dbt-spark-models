@@ -5,7 +5,7 @@
     alias='orders',
     file_format='delta',
     schema='gold',
-    uinque_key=['order_date_msk', 'order_id'],
+    unique_key=['order_date_msk', 'order_id'],
     meta = {
         'model_owner' : '@gusev'
     }

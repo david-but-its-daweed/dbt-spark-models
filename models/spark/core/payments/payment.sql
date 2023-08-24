@@ -3,7 +3,7 @@
     materialized='incremental',
     incremental_strategy='merge',
     file_format='delta',
-    uinque_key=['date', 'payment_id']
+    unique_key=['date', 'payment_id']
   )
 }}
 

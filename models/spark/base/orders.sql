@@ -3,7 +3,7 @@
     alias='orders',
     file_format='delta',
     incremental_strategy='merge',
-    unique_key=['day', 'order_id']
+    unique_key=['day', 'order_id'],
     materialized='incremental',
   )
 }}
