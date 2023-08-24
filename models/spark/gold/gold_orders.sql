@@ -204,7 +204,8 @@ orders_ext0 AS (
             AND partition_date >= DATE '{{ var("start_date_ymd") }}'
             AND partition_date < DATE '{{ var("end_date_ymd") }}'
         {% elif target.name != 'prod' %}
-        AND partition_date >= DATE'2023-08-14'
+        AND partition_date >= DATE'2023-08-21'
+        AND partiti
     {% endif %}
 ),
 
