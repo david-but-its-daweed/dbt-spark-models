@@ -1,7 +1,7 @@
 {{
   config(
     materialized='incremental',
-    incremental_strategy='append'
+    incremental_strategy='append',
     file_format='delta',
     partition_by=['date'],
   )
@@ -52,6 +52,6 @@ WHERE
     {% elif target.name != 'prod' %}
         AND po.date >= date_sub(current_date(), 7)
         AND po.date < current_date()
-    {% else $}
+    {% else %}
         AND (YEAR(CURRENT_DATE()) - YEAR(p.date)) < 2
     {% endif %}

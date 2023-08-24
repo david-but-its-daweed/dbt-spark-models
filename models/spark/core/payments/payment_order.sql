@@ -179,6 +179,6 @@ WHERE
     {% elif target.name != 'prod' %}
         AND po.date >= date_sub(current_date(), 7)
         AND po.date < current_date()
-    {% else $}
+    {% else %}
         AND (YEAR(CURRENT_DATE()) - YEAR(po.date)) < 2
     {% endif %}
