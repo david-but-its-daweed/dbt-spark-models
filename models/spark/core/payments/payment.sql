@@ -48,7 +48,7 @@ LEFT JOIN
 WHERE
     p.payment_type != 'points'
     {% if is_incremental() %}
-        AND DATEDIFF(to_date('{{ var("start_date_ymd") }}'), p.date) < 6
+        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), p.date) < 6
     {% elif target.name != 'prod' %}
         AND p.date >= date_sub(current_date(), 7)
         AND p.date < current_date()
