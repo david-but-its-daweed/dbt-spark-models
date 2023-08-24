@@ -201,12 +201,10 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() %}
-            AND partition_date >= DATE '{{ var("start_date_ymd") }}'
-            AND partition_date < DATE '{{ var("end_date_ymd") }}'
+            AND DATEDIFF(CURRENT_DATE(), date) < 181
         {% elif target.name != 'prod' %}
-        AND partition_date >= DATE'2023-08-21'
-        AND partiti
-    {% endif %}
+            AND DATEDIFF(CURRENT_DATE(), date) < 181
+        {% endif %}
 ),
 
 logistics_orders AS (

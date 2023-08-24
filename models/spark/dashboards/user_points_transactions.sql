@@ -2,12 +2,11 @@
   config(
     materialized='table',
     file_format='delta',
-    partition_by=['day'],
   )
 }}
--- TODO: incremental candidate (1h)
 
-WITH active_devices AS (
+
+WITH active_users AS (
     SELECT *
     FROM
         {{ ref('active_users') }}
@@ -90,8 +89,8 @@ points AS (
 base AS (
     SELECT
         points.date_msk AS day,
-        active_devices.country,
-        active_devices.platform,
+        active_users.country,
+        active_users.platform,
         points.user_id AS user_id,
         points.point_transaction_type,
         points.effective_usd AS point_usd,
@@ -99,9 +98,9 @@ base AS (
     FROM
         points
     LEFT JOIN
-        active_devices ON
-        points.user_id = active_devices.user_id
-        AND points.date_msk = active_devices.day
+        active_users ON
+        points.user_id = active_users.user_id
+        AND points.date_msk = active_users.day
 )
 
 SELECT *

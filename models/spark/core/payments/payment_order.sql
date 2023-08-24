@@ -1,12 +1,12 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
+    incremetnal_strategy='append',
     file_format='delta',
     partition_by=['date'],
   )
 }}
 
--- TODO: inceremental candidate (30min)
 
 WITH device_day_payments AS (
     SELECT
@@ -174,4 +174,11 @@ LEFT JOIN
     orders_info AS oi USING (payment_order_id)
 WHERE
     po.payment_type != 'points'
-    AND (YEAR(CURRENT_DATE()) - YEAR(po.date)) < 2
+    {% if is_incremental() %}
+        AND DATEDIFF(CURRENT_DATE(), po.date) < 181
+    {% elif target.name != 'prod' %}
+        AND po.date >= date_sub(current_date(), 7)
+        AND po.date < current_date()
+    {% else $}
+        AND (YEAR(CURRENT_DATE()) - YEAR(po.date)) < 2
+    {% endif %}

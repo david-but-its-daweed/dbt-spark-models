@@ -3,11 +3,8 @@
     materialized='table',
     alias='active_users',
     file_format='delta',
-    partition_by=['day'],
   )
 }}
-
--- todo: incremental candidate (1h)
 
 SELECT
     *,

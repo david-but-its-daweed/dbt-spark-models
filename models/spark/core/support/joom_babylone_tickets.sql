@@ -1,11 +1,12 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='append',
     file_format='delta',
     partition_by=['day'],
   )
 }}
--- todo: incremental candidate (1h)
+
 
 WITH babylone_ticket_create_joom_100 AS (
     SELECT
@@ -19,6 +20,13 @@ WITH babylone_ticket_create_joom_100 AS (
         payload.orderids AS order_ids
     FROM {{ source("mart", "babylone_events") }}
     WHERE type = 'ticketCreateJoom'
+    {% if is_incremental() %}
+        AND partition_date >= DATE '{{ var("start_date_ymd") }}'
+        AND partition_date < DATE '{{ var("end_date_ymd") }}'
+    {% elif target.name != 'prod' %}
+        AND partition_date >= date_sub(current_date(), 7)
+        AND partition_date < current_date()
+    {% endif %}
 ),
 
 tickets AS (

@@ -1,6 +1,7 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='append'
     file_format='delta',
     partition_by=['date'],
   )
@@ -46,4 +47,11 @@ LEFT JOIN
     {{ ref('card_bins') }} AS cb USING (card_bin)
 WHERE
     p.payment_type != 'points'
-    AND (YEAR(CURRENT_DATE()) - YEAR(p.date)) < 2
+    {% if is_incremental() %}
+        AND DATEDIFF(CURRENT_DATE(), p.date) < 6
+    {% elif target.name != 'prod' %}
+        AND po.date >= date_sub(current_date(), 7)
+        AND po.date < current_date()
+    {% else $}
+        AND (YEAR(CURRENT_DATE()) - YEAR(p.date)) < 2
+    {% endif %}

@@ -11,7 +11,6 @@
         alias='active_devices_with_ephemeral',
         file_format='delta',
         schema='gold',
-        partition_by=['date_msk'],
         meta = {
             'model_owner' : '@gusev'
         }
@@ -26,13 +25,13 @@
         alias='active_users_with_ephemeral',
         file_format='delta',
         schema='gold',
-        partition_by=['date_msk'],
         meta = {
             'model_owner' : '@gusev'
         }
     )
     }}
 {% endif %}
+
 
 WITH
 uniq_regions AS (
