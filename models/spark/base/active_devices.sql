@@ -27,8 +27,9 @@ FROM (
         FIRST_VALUE(app_version) AS app_version,
         MIN(ephemeral) AS is_ephemeral
     FROM {{ source('mart', 'star_active_device') }}
-    where TRUE
-         {% if is_incremental() %}
+    WHERE
+        TRUE
+        {% if is_incremental() %}
             AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
         {% elif target.name != 'prod' %}
             AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
