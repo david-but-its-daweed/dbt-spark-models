@@ -53,7 +53,8 @@ sales_calendar AS (
             DATEDIFF(DATE(promo_end_time_utc), DATE(promo_start_time_utc)) AS sale_period,
             COUNT(*) AS cnt
         FROM {{ source('mart', 'promotions') }}
-        WHERE DATE(promo_start_time_utc) >= "2023-01-01"
+        WHERE
+            DATE(promo_start_time_utc) >= "2023-01-01"
             AND (INSTR(LOWER(promo_title), LOWER("Weekly Promotion")) = 0 OR INSTR(LOWER(promo_title), LOWER("Weekly Promotion")) IS NULL)
             AND DATEDIFF(DATE(promo_end_time_utc), DATE(promo_start_time_utc)) < 12
             AND INSTR(LOWER(promo_title), LOWER("sale")) > 0
@@ -66,7 +67,7 @@ sales_calendar AS (
 SELECT
     o.day AS partition_date_msk,
     CASE
-        WHEN a.promo_start_date IS NOT NULL THEN CONCAT(CONCAT(a.promo_start_date,"-"), a.promo_end_date)
+        WHEN a.promo_start_date IS NOT NULL THEN CONCAT(CONCAT(a.promo_start_date, "-"), a.promo_end_date)
         ELSE "no_sales"
     END AS sale_type,
     a.promo_start_date AS start_of_sale,
