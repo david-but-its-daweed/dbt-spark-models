@@ -1,6 +1,8 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='merge',
+    unique_key=['day', 'device_id'],
     alias='active_devices',
     file_format='delta',
   )
@@ -25,5 +27,12 @@ FROM (
         FIRST_VALUE(app_version) AS app_version,
         MIN(ephemeral) AS is_ephemeral
     FROM {{ source('mart', 'star_active_device') }}
+    where TRUE
+         {% if is_incremental() %}
+            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
+        {% elif target.name != 'prod' %}
+            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
+        {% endif %}
+
     GROUP BY 1, 2
 )
