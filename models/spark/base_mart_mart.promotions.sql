@@ -1,8 +1,9 @@
-with source as (
-      select * from {{ source('mart', 'promotions') }}
+WITH source AS (
+        SELECT * FROM {{ source('mart', 'promotions') }}
 ),
-renamed as (
-    select
+
+renamed AS (
+    SELECT
         {{ adapter.quote("promo_id") }},
         {{ adapter.quote("promo_title") }},
         {{ adapter.quote("promo_start_time_utc") }},
@@ -10,7 +11,7 @@ renamed as (
         {{ adapter.quote("product_group_id") }},
         {{ adapter.quote("product_id") }}
 
-    from source
+    FROM source
 )
-select * from renamed
-  
+
+SELECT * FROM renamed
