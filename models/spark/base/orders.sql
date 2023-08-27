@@ -158,7 +158,7 @@ orders_ext0 AS (
         AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
         {% if is_incremental() %}
             AND DATEDIFF(DATE('{{ var("start_date_ymd") }}'), partition_date) < 365
-    {% endif %}
+        {% endif %}
 ),
 
 orders_ext1 AS (
