@@ -50,8 +50,7 @@ WHERE
     {% if is_incremental() %}
         AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), p.date) < 6
     {% elif target.name != 'prod' %}
-        AND p.date >= date_sub(current_date(), 7)
-        AND p.date < current_date()
+        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), p.date) < 181
     {% else %}
         AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(p.date)) < 2
     {% endif %}
