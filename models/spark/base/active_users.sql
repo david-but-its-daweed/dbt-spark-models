@@ -1,8 +1,6 @@
 {{
   config(
-    materialized='incremental',
-    incremental_strategy='merge',
-    unique_key=['day', 'user_id'],
+    materialized='table',
     alias='active_users',
     file_format='delta',
   )

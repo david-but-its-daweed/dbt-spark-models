@@ -23,9 +23,7 @@
 
     {{
         config(
-        materialized='incremental',
-        incremental_strategy='merge',
-        unique_key=['date_msk', 'user_id'],
+        materialized='table',
         alias='active_users_with_ephemeral',
         file_format='delta',
         schema='gold',
@@ -45,11 +43,13 @@ uniq_regions AS (
 orders_ext1 AS (
     SELECT * FROM {{ ref('gold_orders') }}
 
-    {% if is_incremental() %}
-        where DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), order_date_msk) < 181
-    {% else %}
-        {% if  device_or_user_id == 'device_id' %}
-            WHERE order_date_msk >= '2018-04-15' -- до 2018-04-15 пустые device_id
+    {% if device_or_user_id == 'device_id' %}
+        {% if is_incremental() %}
+            where DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), order_date_msk) < 181
+        {% else %}
+            {% if  device_or_user_id == 'device_id' %}
+                WHERE order_date_msk >= '2018-04-15' -- до 2018-04-15 пустые device_id
+            {% endif %}
         {% endif %}
     {% endif %}
 
@@ -91,10 +91,12 @@ active_devices_ext1 AS (
                 MIN(ephemeral) AS is_ephemeral
             FROM {{ source('mart', 'star_active_device') }}
             where true
-            {% if is_incremental() %}
-                AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
-            {% elif target.name != 'prod' %}
-                AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
+            {% if device_or_user_id == 'device_id' %}
+                {% if is_incremental() %}
+                    AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
+                {% elif target.name != 'prod' %}
+                    AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
+                {% endif %}
             {% endif %}
             GROUP BY 1, 2
         )
