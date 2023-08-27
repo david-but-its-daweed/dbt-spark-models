@@ -9,7 +9,7 @@ renamed AS (
         {{ adapter.quote("promo_start_time_utc") }},
         {{ adapter.quote("promo_end_time_utc") }},
         {{ adapter.quote("product_group_id") }},
-        {{ adapter.quote("product_id") }}
+    {{ adapter.quote("product_id") }}
     FROM source
 )
 

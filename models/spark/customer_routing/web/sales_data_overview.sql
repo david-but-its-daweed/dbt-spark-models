@@ -119,7 +119,7 @@ order_stg_5 AS (
             SUM(CASE WHEN avg_gmv_before_sale IS NULL THEN 0 ELSE 1 END) OVER (ORDER BY day) AS value_partition_before,
             SUM(CASE WHEN avg_gmv_after_sale IS NULL THEN 0 ELSE 1 END) OVER (ORDER BY day DESC) AS value_partition_after
         FROM order_stg_4
-   )
+    )
 ),
 
 order_stg_6 AS (
