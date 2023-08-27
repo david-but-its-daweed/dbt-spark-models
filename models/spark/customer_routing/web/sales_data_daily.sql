@@ -15,10 +15,11 @@
 
 WITH orders AS (
     SELECT
-        day AS day,
-        country AS country,
-        gmv_initial AS gmv_initial,
-        gmv_final AS gmv_final
+        day,
+        platform,
+        country,
+        gmv_initial,
+        gmv_final
     FROM
         (
             SELECT
@@ -66,6 +67,7 @@ sales_calendar AS (
 
 SELECT
     o.day AS partition_date_msk,
+    platform,
     CASE
         WHEN a.promo_start_date IS NOT NULL THEN CONCAT(CONCAT(a.promo_start_date, "-"), a.promo_end_date)
         ELSE "no_sales"
@@ -84,4 +86,4 @@ WHERE
     {% else %}
         AND o.day   >= DATE'2022-12-15'
     {% endif %}
-GROUP BY 1, 2, 3, 4, 5
+GROUP BY 1, 2, 3, 4, 5, 6
