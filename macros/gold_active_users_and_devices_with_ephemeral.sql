@@ -44,12 +44,9 @@ orders_ext1 AS (
     SELECT * FROM {{ ref('gold_orders') }}
 
     {% if device_or_user_id == 'device_id' %}
+        WHERE order_date_msk >= '2018-04-15' -- до 2018-04-15 пустые device_id
         {% if is_incremental() %}
-            where DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), order_date_msk) < 181
-        {% else %}
-            {% if  device_or_user_id == 'device_id' %}
-                WHERE order_date_msk >= '2018-04-15' -- до 2018-04-15 пустые device_id
-            {% endif %}
+            and DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), order_date_msk) < 365
         {% endif %}
     {% endif %}
 
@@ -93,9 +90,7 @@ active_devices_ext1 AS (
             where true
             {% if device_or_user_id == 'device_id' %}
                 {% if is_incremental() %}
-                    AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
-                {% elif target.name != 'prod' %}
-                    AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
+                    AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 365
                 {% endif %}
             {% endif %}
             GROUP BY 1, 2

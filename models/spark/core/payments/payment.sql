@@ -49,8 +49,6 @@ WHERE
     p.payment_type != 'points'
     {% if is_incremental() %}
         AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), p.date) < 6
-    {% elif target.name != 'prod' %}
-        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), p.date) < 181
     {% else %}
         AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(p.date)) < 2
     {% endif %}

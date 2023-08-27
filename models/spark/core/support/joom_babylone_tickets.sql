@@ -3,7 +3,7 @@
     materialized='incremental',
     incremental_strategy='merge',
     file_format='delta',
-    unique_key=['day', 'id'],
+    unique_key=['day', 'id', 'order_id'],
   )
 }}
 
@@ -24,8 +24,6 @@ WITH babylone_ticket_create_joom_100 AS (
         {% if is_incremental() %}
             AND partition_date >= DATE '{{ var("start_date_ymd") }}'
             AND partition_date < DATE '{{ var("end_date_ymd") }}'
-        {% elif target.name != 'prod' %}
-            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), partition_date) < 181
         {% endif %}
 ),
 

@@ -11,13 +11,13 @@
 WITH device_day_payments AS (
     SELECT
         device_id,
-        date,
+        `date`,
         IF(COUNT(DISTINCT CONCAT(device_id, provider)) = 1, 1, 0)
         AS is_only_one_provider
     FROM
         {{ ref('payment') }}
     WHERE
-        DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date) < 181
+        DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), `date`) < 181
     GROUP BY
         1, 2
 ),
@@ -249,9 +249,7 @@ LEFT JOIN
 WHERE
     po.payment_type != 'points'
     {% if is_incremental() %}
-        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), po.date) < 181
-    {% elif target.name != 'prod' %}
-        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), po.date) < 181
+        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), po.date) < 365
     {% else %}
         AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(po.date)) < 2
     {% endif %}

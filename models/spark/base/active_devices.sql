@@ -30,9 +30,7 @@ FROM (
     WHERE
         TRUE
         {% if is_incremental() %}
-            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
-        {% elif target.name != 'prod' %}
-            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
+            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 365
         {% endif %}
 
     GROUP BY 1, 2
