@@ -25,7 +25,8 @@ SELECT
     CONCAT('https://secure.holistics.io/data_models?ds=8167&model', datamodels.datamodel_id) AS datamodel_url,
     sources.gbq_dataset AS gbq_dataset,
     sources.gbq_table AS gbq_table,
-    sources.table_type as table_type
+    sources.table_type as table_type,
+    CONCAT(sources.gbq_dataset, '.', sources.gbq_table) as full_table_name
 FROM holistics.dashboards AS dashboards
          LEFT JOIN holistics.dashboards_widgets AS dashboards_widgets ON dashboards_widgets.dashboard_id = dashboards.dashboard_id
          LEFT JOIN holistics.widgets AS widgets ON widgets.widget_id = dashboards_widgets.widget_id
