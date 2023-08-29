@@ -1,9 +1,7 @@
 {{
   config(
-    materialized='incremental',
-    incremental_strategy='merge',
+    materialized='table',
     file_format='delta',
-    unique_key=['date', 'payment_id']
   )
 }}
 
@@ -47,8 +45,4 @@ LEFT JOIN
     {{ ref('card_bins') }} AS cb USING (card_bin)
 WHERE
     p.payment_type != 'points'
-    {% if is_incremental() %}
-        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), p.date) < 6
-    {% else %}
-        AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(p.date)) < 2
-    {% endif %}
+    AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(p.date)) < 2

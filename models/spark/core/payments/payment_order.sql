@@ -1,9 +1,7 @@
 {{
   config(
-    materialized='incremental',
-    incremetnal_strategy='merge',
+    materialized='table',
     file_format='delta',
-    unique_key=['date', 'payment_order_id'],
   )
 }}
 
@@ -248,8 +246,4 @@ LEFT JOIN
     orders_info AS oi USING (payment_order_id)
 WHERE
     po.payment_type != 'points'
-    {% if is_incremental() %}
-        AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), po.date) < 365
-    {% else %}
-        AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(po.date)) < 2
-    {% endif %}
+    AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(po.date)) < 2
