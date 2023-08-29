@@ -1,4 +1,4 @@
-name: Autodeploy DBT Jobs
+name: Run DBT model manually
 on:
   push:
     branches:
