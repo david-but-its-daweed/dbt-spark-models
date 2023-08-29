@@ -1,8 +1,5 @@
 name: Run DBT model manually
 on:
-  push:
-    branches:
-      - master
   workflow_dispatch:
     inputs:
       select:
