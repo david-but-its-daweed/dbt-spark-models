@@ -14,6 +14,12 @@ jobs:
       id-token: write
       contents: read
     steps:
+      - name: Exit if the branch is not master
+        run: |
+          if [[ "${{ github.ref }}" != "refs/heads/master" ]]; then
+            echo "Branch is not master, exiting."
+            exit 1
+          fi
       - run: echo "🎉 The job was automatically triggered by a ${{ github.event_name }} event."
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
