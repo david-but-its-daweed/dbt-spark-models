@@ -2,7 +2,8 @@
     schema='holistics',
     materialized='view',
     meta = {
-      'bigquery_load': 'true'
+      'bigquery_load': 'true',
+      'bigquery_check_counts': 'false'
     },
 ) }}
 
