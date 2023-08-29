@@ -51,13 +51,13 @@ left join (
     retention,
     user_id,
     estimated_gmv as gmv,
-    current_date,
+    status_time AS current_date,
     case when status_int >= 10 and status_int <= 50 then 'upside'
     when status_int >= 60 and status_int <= 60 then 'forecast'
     when status_int >= 70 and status_int <= 80 then 'commited'
     end as dim
 from {{ ref('fact_deals') }}
-where partition_date_msk = (select max(partition_date_msk) from {{ ref('fact_deals') }})
+where next_effective_ts_msk is null
 ) g on fi.user_id = g.user_id
 ),
 

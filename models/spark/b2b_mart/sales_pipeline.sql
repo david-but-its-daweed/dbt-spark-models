@@ -114,7 +114,7 @@ deals AS (
         when status_int = 60 then 'Forecast'
         when status_int >= 70 and status_int <= 80 then 'Commited' end as status
     FROM {{ ref('fact_deals') }}
-    WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM {{ ref('fact_deals') }})
+    WHERE next_effective_ts_msk IS NULL
 ),
 
 
