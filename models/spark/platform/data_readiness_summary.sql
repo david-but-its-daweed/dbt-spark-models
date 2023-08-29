@@ -2,7 +2,8 @@
     schema='platform_slo',
     materialized='table',
     meta = {
-      'bigquery_load': 'true'
+      'bigquery_load': 'true',
+      'airflow_pool': 'k8s_platform_hourly_spark_tasks',
     },
     tags=['data_readiness']
 ) }}

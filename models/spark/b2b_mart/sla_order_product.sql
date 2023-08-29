@@ -163,11 +163,26 @@ order_statuses AS (
 ),
 
 order_hist AS (
-    SELECT
-        MIN(biz_dev_time_msk) AS min_biz_dev_time,
-        MAX(biz_dev_time_msk) AS max_biz_dev_time,
+    SELECT 
+        MIN(CASE WHEN biz_dev_moderator_id = current_biz_dev THEN biz_dev_time_msk END) AS min_biz_dev_time,
+        MAX(CASE WHEN biz_dev_moderator_id = current_biz_dev AND DATE(biz_dev_time_msk) <= CURRENT_DATE() THEN biz_dev_time_msk END) AS max_biz_dev_time,
         order_id
-    FROM {{ ref('fact_order_change') }}
+    FROM (
+        SELECT DISTINCT
+            MIN(biz_dev_time_msk) OVER (PARTITION BY order_id) AS min_biz_dev_time,
+            FIRST_VALUE(biz_dev_moderator_id) OVER (PARTITION BY order_id ORDER BY biz_dev_time_msk DESC) AS current_biz_dev,
+            biz_dev_moderator_id,
+            biz_dev_time_msk,
+            order_id
+        FROM {{ ref('fact_order_change') }} AS f
+        JOIN (
+            SELECT DISTINCT
+                role,
+                admin_id
+            FROM {{ ref('dim_user_admin') }}
+            WHERE role = 'ProcurementManager'
+        ) AS a ON f.biz_dev_moderator_id = a.admin_id
+    )
     GROUP BY order_id
 )
 

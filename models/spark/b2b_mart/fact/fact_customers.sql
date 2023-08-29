@@ -20,8 +20,8 @@ admin as (
 users as (
 select 
 user_id,
-key_validation_status.status as validation_status,
-reject_reason.reason as reject_reason,
+validation_status,
+reject_reason,
 owner_id,
 country,
 du.amo_crm_id, 
@@ -35,10 +35,9 @@ funnel_status,
 funnel_reject_reason,
 is_partner,
 partner_type,
-partner_source
+partner_source,
+phone
 from {{ ref('dim_user') }} du
-left join {{ ref('key_validation_status') }} on key_validation_status.id = validation_status
-left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = du.reject_reason
 where next_effective_ts_msk is null
 ),
 
@@ -103,6 +102,7 @@ select distinct
     u.owner_id,
     a.email as owner_email,
     a.owner_role,
+    phone,
     last_name, 
     first_name,
     company_name,

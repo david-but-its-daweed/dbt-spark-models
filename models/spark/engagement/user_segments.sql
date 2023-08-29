@@ -4,7 +4,8 @@
     file_format='delta',
     meta = {
       'team': 'clan',
-      'bigquery_load': 'true'
+      'bigquery_load': 'true',
+      'priority_weight': '150'
     }
 ) }}
 
