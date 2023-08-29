@@ -52,7 +52,7 @@ left join
     using(country)
 where 
     (refund_type is null 
-    OR refund_type NOT IN ('cancelled_by_user', 'cancelled_by_merchant'))
+    OR refund_type NOT IN ('cancelled_by_customer', 'cancelled_by_merchant'))
     and order_created_date_utc >= "2020-01-01"
     and origin_country = 'CN'
     and shipping_type IN ('RM', 'SRM', 'NRM')
