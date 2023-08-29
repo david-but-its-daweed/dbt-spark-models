@@ -1,9 +1,7 @@
 {{
   config(
-    materialized='incremental',
-    incremental_strategy='merge',
+    materialized='table',
     file_format='delta',
-    unique_key=['day', 'id', 'order_id'],
   )
 }}
 
@@ -19,12 +17,7 @@ WITH babylone_ticket_create_joom_100 AS (
         payload.messagesource AS message_source,
         payload.orderids AS order_ids
     FROM {{ source("mart", "babylone_events") }}
-    WHERE
-        type = 'ticketCreateJoom'
-        {% if is_incremental() %}
-            AND partition_date >= DATE '{{ var("start_date_ymd") }}'
-            AND partition_date < DATE '{{ var("end_date_ymd") }}'
-        {% endif %}
+    WHERE type = 'ticketCreateJoom'
 ),
 
 tickets AS (
