@@ -203,7 +203,7 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() or target.name != 'prod' %}
-            AND DATEDIFF(current_date(), partition_date) < 183
+            AND DATEDIFF(CURRENT_DATE(), partition_date) < 183
         {% endif %}
 ),
 
