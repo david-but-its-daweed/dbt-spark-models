@@ -45,4 +45,4 @@ LEFT JOIN
     {{ ref('card_bins') }} AS cb USING (card_bin)
 WHERE
     p.payment_type != 'points'
-    AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(p.date)) < 2
+    AND (YEAR(TO_DATE('{{ var("start_date_ymd") }}')) - YEAR(p.date)) < 2
