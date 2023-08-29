@@ -12,7 +12,7 @@ on:
 
 concurrency: run-dbt-model
 jobs:
-  deploy:
+  run:
     runs-on: [self-hosted, analytics-platform-dbt-models-spark]
     permissions:
       id-token: write
