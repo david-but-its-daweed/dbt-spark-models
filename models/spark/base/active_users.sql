@@ -36,7 +36,7 @@ FROM (
     LEFT JOIN join_days AS b USING (user_id)
     WHERE
         TRUE
-        {% if is_incremental()  or target.name != 'prod' %}
+        {% if is_incremental() %}
             AND DATEDIFF(CURRENT_DATE(), a.date_msk) < 183
         {% endif %}
 

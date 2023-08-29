@@ -53,7 +53,7 @@ orders_ext1 AS (
     {% if device_or_user_id == 'device_id' %}
         and order_date_msk >= '2018-04-15' -- до 2018-04-15 пустые device_id
     {% endif %}
-    {% if is_incremental() or target.name != 'prod' %}
+    {% if is_incremental() %}
         and DATEDIFF(current_date(), order_date_msk) < 183
     {% endif %}
 ),

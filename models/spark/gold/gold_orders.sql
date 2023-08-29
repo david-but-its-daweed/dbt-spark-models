@@ -202,7 +202,7 @@ orders_ext0 AS (
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
-        {% if is_incremental() or target.name != 'prod' %}
+        {% if is_incremental() %}
             AND DATEDIFF(CURRENT_DATE(), partition_date) < 183
         {% endif %}
 ),
