@@ -81,15 +81,15 @@ active_devices_history_1 as (
     select
         {{ device_or_user_id }},
         date_msk,
-        MIN(is_ephemeral) as is_ephemeral,
+        MIN(ephemeral) as is_ephemeral,
         {% if  device_or_user_id == 'device_id' %}
             IF(
                 MIN(date_msk) OVER(PARTITION BY device_id) < FIRST_VALUE(TO_DATE(join_ts_msk)),
                 MIN(date_msk) OVER(PARTITION BY device_id),
                 FIRST_VALUE(TO_DATE(join_ts_msk))
-            ) AS join_date_msk,
+            ) AS join_date_msk
         {% elif  device_or_user_id == 'user_id' %}
-            MIN(date_msk) OVER(PARTITION BY user_id) AS join_date_msk,
+            MIN(date_msk) OVER(PARTITION BY user_id) AS join_date_msk
         {% endif %}
     FROM {{ source('mart', 'star_active_device') }}
     group by 1, 2
@@ -218,7 +218,7 @@ active_devices_ext1 AS (
         COALESCE(SUM(go.ecgp_initial), 0) AS ecgp_per_day_initial,
         COALESCE(SUM(go.ecgp_final), 0) AS ecgp_per_day_final,
         COUNT(go.order_id) AS number_of_orders,
-        MAX(hgo.is_payer) > 0 AS is_payer,
+        MAX(hgo.is_payer) AS is_payer,
         COUNT(go.order_id) > 0 AS is_converted,
 
         FIRST_VALUE(hd.is_rd1) as is_rd1,
