@@ -5,6 +5,10 @@ on:
       select:
         description: 'Example: --select +my_model_name'
         required: true
+      action:
+        description: 'Example: run'
+        required: true
+        default: 'run'
 
 concurrency: run-dbt-model
 jobs:
