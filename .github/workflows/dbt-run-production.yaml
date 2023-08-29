@@ -6,7 +6,7 @@ on:
         description: 'Example: --select +my_model_name'
         required: true
 
-concurrency: deploy-custom-1
+concurrency: run-dbt-model
 jobs:
   deploy:
     runs-on: [self-hosted, analytics-platform-dbt-models-spark]
