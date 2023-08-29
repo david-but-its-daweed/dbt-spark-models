@@ -4,10 +4,7 @@
     incremental_strategy='merge',
     unique_key=['day', 'device_id'],
     partition_by=['day'],
-    incremental_predicates=[
-        "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.day)) < 181",
-        "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.day)) >= 0",
-    ],
+    incremental_predicates=["datediff(current_date(), TO_DATE(DBT_INTERNAL_DEST.day)) < 183"],
     alias='active_devices',
     file_format='delta',
   )
@@ -44,8 +41,7 @@ FROM (
     WHERE
         TRUE
         {% if is_incremental() or target.name != 'prod' %}
-            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), a.date_msk) < 181
-            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), a.date_msk) >= 0
+            AND DATEDIFF(current_date(), a.date_msk) < 183
         {% endif %}
 
     GROUP BY 1, 2

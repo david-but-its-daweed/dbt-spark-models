@@ -7,10 +7,7 @@
     schema='gold',
     unique_key=['order_date_msk', 'order_id'],
     partition_by=['order_date_msk'],
-    incremental_predicates=[
-        "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.order_date_msk)) < 181",
-        "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.order_date_msk)) >= 0",
-    ],
+    incremental_predicates=["datediff(current_date(), TO_DATE(DBT_INTERNAL_DEST.order_date_msk)) < 183"],
     meta = {
         'model_owner' : '@gusev'
     }
@@ -206,8 +203,7 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() or target.name != 'prod' %}
-            AND DATEDIFF(DATE('{{ var("start_date_ymd") }}'), partition_date) < 181
-            AND DATEDIFF(DATE('{{ var("start_date_ymd") }}'), partition_date) >= 0
+            AND DATEDIFF(current_date(), partition_date) < 183
         {% endif %}
 ),
 

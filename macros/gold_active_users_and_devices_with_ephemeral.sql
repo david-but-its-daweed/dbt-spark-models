@@ -11,10 +11,7 @@
         incremental_strategy='merge',
         unique_key=['date_msk', 'device_id'],
         partition_by=['date_msk'],
-        incremental_predicates=[
-            "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.date_msk)) < 181",
-            "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.date_msk)) >= 0",
-        ],
+        incremental_predicates=["datediff(current_date(), TO_DATE(DBT_INTERNAL_DEST.date_msk)) < 183"],
         alias='active_devices_with_ephemeral',
         file_format='delta',
         schema='gold',
@@ -32,10 +29,7 @@
         incremental_strategy='merge',
         unique_key=['date_msk', 'device_id'],
         partition_by=['date_msk'],
-        incremental_predicates=[
-            "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.date_msk)) < 181",
-            "datediff(TO_DATE('{{ var(\"start_date_ymd\") }}'), TO_DATE(DBT_INTERNAL_DEST.date_msk)) >= 0",
-        ],
+        incremental_predicates=["datediff(current_date(), TO_DATE(DBT_INTERNAL_DEST.date_msk)) < 183"],
         alias='active_users_with_ephemeral',
         file_format='delta',
         schema='gold',
@@ -60,8 +54,7 @@ orders_ext1 AS (
         and order_date_msk >= '2018-04-15' -- до 2018-04-15 пустые device_id
     {% endif %}
     {% if is_incremental() or target.name != 'prod' %}
-        and DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), order_date_msk) < 181
-        and DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), order_date_msk) >= 0
+        and DATEDIFF(current_date(), order_date_msk) < 183
     {% endif %}
 ),
 
@@ -245,8 +238,7 @@ active_devices_ext1 AS (
     LEFT JOIN orders_historical_info AS hgo ON sd.{{ device_or_user_id }} = hgo.{{ device_or_user_id }} AND sd.date_msk = hgo.order_date_msk
     LEFT JOIN active_devices_history_4 as hd ON sd.{{ device_or_user_id }} = hd.{{ device_or_user_id }} AND sd.date_msk = hd.date_msk
     {% if is_incremental() or target.name != 'prod' %}
-        where DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), sd.date_msk) < 181
-          and DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), sd.date_msk) >= 0
+        where DATEDIFF(current_date(), sd.date_msk) < 183
     {% endif %}
 
     GROUP BY 1, 2
