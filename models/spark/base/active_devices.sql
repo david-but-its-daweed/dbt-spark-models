@@ -41,7 +41,7 @@ FROM (
     WHERE
         TRUE
         {% if is_incremental() or target.name != 'prod' %}
-            AND DATEDIFF(current_date(), a.date_msk) < 183
+            AND DATEDIFF(CURRENT_DATE(), a.date_msk) < 183
         {% endif %}
 
     GROUP BY 1, 2
