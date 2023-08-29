@@ -246,4 +246,4 @@ LEFT JOIN
     orders_info AS oi USING (payment_order_id)
 WHERE
     po.payment_type != 'points'
-    AND (YEAR(to_date('{{ var("start_date_ymd") }}')) - YEAR(po.date)) < 2
+    AND (YEAR(TO_DATE('{{ var("start_date_ymd") }}')) - YEAR(po.date)) < 2

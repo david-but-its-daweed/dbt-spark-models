@@ -14,12 +14,12 @@
 }}
 
 
-with join_days as (
-  SELECT
-    user_id,
-    MIN(date_msk) as join_day
-  FROM {{ source('mart', 'star_active_device') }}
-  group by 1
+WITH join_days AS (
+    SELECT
+        user_id,
+        MIN(date_msk) AS join_day
+    FROM {{ source('mart', 'star_active_device') }}
+    GROUP BY 1
 )
 
 SELECT
@@ -35,8 +35,8 @@ FROM (
         FIRST_VALUE(a.os_version) AS os_version,
         FIRST_VALUE(a.app_version) AS app_version,
         MIN(a.ephemeral) AS is_ephemeral
-    FROM {{ source('mart', 'star_active_device') }} as a
-    left join join_days as b using(user_id)
+    FROM {{ source('mart', 'star_active_device') }} AS a
+    LEFT JOIN join_days AS b USING (user_id)
     WHERE
         TRUE
         {% if is_incremental()  or target.name != 'prod' %}
