@@ -9,13 +9,13 @@
 WITH device_day_payments AS (
     SELECT
         device_id,
-        `date`,
+        date,
         IF(COUNT(DISTINCT CONCAT(device_id, provider)) = 1, 1, 0)
         AS is_only_one_provider
     FROM
         {{ ref('payment') }}
     WHERE
-        DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), `date`) < 181
+        DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date) < 181
     GROUP BY
         1, 2
 ),
