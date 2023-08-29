@@ -40,8 +40,8 @@ FROM (
     WHERE
         TRUE
         {% if is_incremental()  or target.name != 'prod' %}
-            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) < 181
-            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), date_msk) >= 0
+            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), a.date_msk) < 181
+            AND DATEDIFF(TO_DATE('{{ var("start_date_ymd") }}'), a.date_msk) >= 0
         {% endif %}
 
     GROUP BY 1, 2
