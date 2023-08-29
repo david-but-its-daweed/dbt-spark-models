@@ -1,4 +1,4 @@
-{% snapshot scd2_orders_v2_snapshot %}
+{% snapshot scd2_deals_snapshot %}
 
 {{
     config(
