@@ -83,7 +83,7 @@ CASE
     END AS legal_scheme,
 d.name AS deal_name, 
 d.orderId AS order_id,
-d.payment.advancePercent AS advance_percent,
+d.payment.advancePercent/10000 AS advance_percent,
 d.payment.clientCurrency AS client_currency,
 d.payment.completePaymentAfter AS complete_payment_after,
 CASE 
