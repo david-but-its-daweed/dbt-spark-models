@@ -275,10 +275,10 @@ orders_ext2 AS (
         is_negative_feedback,
 
         IF(number_of_reviews > 0, ROUND(total_product_rating / number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
-        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_orders_number, -- номер покупки товара
-        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY created_time_utc) AS device_orders_number, -- номер покупки девайса
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_time_utc) AS user_orders_number, -- номер покупки пользователя
-        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY created_time_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY order_datetime_utc) AS product_orders_number, -- номер покупки товара
+        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_orders_number, -- номер покупки девайса
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_orders_number, -- номер покупки пользователя
+        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
 
     FROM orders_ext1
 ),
