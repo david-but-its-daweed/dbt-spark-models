@@ -2,11 +2,7 @@
   config(
     alias='orders',
     file_format='delta',
-    incremental_strategy='merge',
-    unique_key=['day', 'order_id'],
-    materialized='incremental',
-    partition_by=['day'],
-    incremental_predicates=["datediff(current_date(), TO_DATE(DBT_INTERNAL_DEST.day)) < 183"],
+    materialized='table',
   )
 }}
 
@@ -158,9 +154,6 @@ orders_ext0 AS (
     WHERE
         TRUE
         AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
-        {% if is_incremental() %}
-            AND DATEDIFF(CURRENT_DATE(), partition_date) < 183
-        {% endif %}
 ),
 
 orders_ext1 AS (

@@ -1,13 +1,9 @@
 {{
   config(
-    materialized='incremental',
-    incremental_strategy='merge',
+    materialized='table',
     alias='orders',
     file_format='delta',
     schema='gold',
-    unique_key=['order_date_msk', 'order_id'],
-    partition_by=['order_date_msk'],
-    incremental_predicates=["datediff(current_date(), TO_DATE(DBT_INTERNAL_DEST.order_date_msk)) < 183"],
     meta = {
         'model_owner' : '@gusev'
     }
@@ -202,9 +198,6 @@ orders_ext0 AS (
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
-        {% if is_incremental() %}
-            AND DATEDIFF(CURRENT_DATE(), partition_date) < 183
-        {% endif %}
 ),
 
 logistics_orders AS (
