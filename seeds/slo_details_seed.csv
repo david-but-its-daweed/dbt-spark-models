@@ -17,3 +17,4 @@ slo_gmv_structure_report,GMV Structure,@yatsushko,#slo-monitoring,7,Data for GMV
 slo_contribution_profit_report,Contribution Profit,@yatsushko,#slo-monitoring,7,Data for Contribution Profit report https://secure.holistics.io/dashboards/v3/63984-contribution-profit,report,80,
 slo_country_info_report,Country Info,@yatsushko,#slo-monitoring,7,Data for Country Info report https://secure.holistics.io/dashboards/v3/17297-country-info,report,80,
 slo_gmv_structure_report,GMV Structure,@yatsushko,#slo-monitoring,7,Data for GMV Structure report https://secure.holistics.io/dashboards/v3/63886-gmv-structure,report,80,
+slo_real_user_segments_tables,Real User Segments Main Tables,@evstvia,#slo-monitoring,7,Data for Real User Segments report https://secure.holistics.io/dashboards/v3/70708-user-segments-main,report,80,
