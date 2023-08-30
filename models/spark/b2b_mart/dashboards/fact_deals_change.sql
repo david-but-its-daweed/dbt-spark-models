@@ -24,7 +24,7 @@ with deals as (
         source,
         type,
         campaign,
-        grade
+        client_grade as grade
     FROM {{ ref('fact_deals') }}
     WHERE next_effective_ts_msk IS NULL
 ),
