@@ -19,6 +19,8 @@ o.order_id,
 o.user_id,
 sent_status,
 category_id,
+max(variants.price.amount/1000000) as price_rfq,
+max(variants.quantity) as amount_rfq,
 sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
@@ -49,6 +51,8 @@ source,
 campaign,
 rfq_request_id,
 date(created_time) as created_date,
+price_rfq,
+amount_rfq,
 sum_price,
 is_top,
 o.order_id,
@@ -91,6 +95,8 @@ d.customer_request_id,
 d.user_id,
 sent_status,
 category_id,
+max(variants.price.amount/1000000) as price_rfq,
+max(variants.quantity) as amount_rfq,
 sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
@@ -126,6 +132,8 @@ source,
 campaign,
 o.rfq_request_id,
 date(created_time) as created_date,
+price_rfq,
+amount_rfq,
 sum_price,
 is_top,
 op.order_id,
@@ -160,6 +168,13 @@ order by created_time desc
 select 
 r.*,
 level_1_category.name as level_1_category,
+level_2_category.name as level_2_category,
+level_1_category.id as cate_lv1_id,
+level_2_category.id as cate_lv2_id,
+case 
+    when level_2_category is not null then 2
+    when level_2_category is null and level_1_category is not null then 1
+end as category_level,
 merchant_name,
 owner_id,
 owner_email,

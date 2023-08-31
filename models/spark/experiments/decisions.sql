@@ -6,7 +6,6 @@
       'model_owner': '@logrel',
       'bigquery_load': 'true',
       'bigquery_table_name': 'experiments.decisions',
-      'bigquery_partitioning_date_column': 'finish_date',
       'bigquery_overwrite': 'true'
     }
 ) }}

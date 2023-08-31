@@ -8,6 +8,7 @@
       'bigquery_upload_horizon_days': '2',
       'bigquery_fail_on_missing_partitions': 'false',
       'bigquery_check_counts': 'false',
+      'airflow_pool': 'k8s_platform_hourly_spark_tasks'
     },
 ) }}
 

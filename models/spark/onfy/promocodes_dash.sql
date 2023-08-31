@@ -37,7 +37,7 @@ with promo_applications as
         on order_parcel.order_id = order.id
     join {{ source('pharmacy_landing', 'order_parcel_item') }} as order_parcel_item
         on order_parcel_item.order_parcel_id = order_parcel.id
-    join {{ source('pharmacy', 'checkout_promocode') }} as checkout_promocode
+    join pharmacy.checkout_promocode as checkout_promocode
         on order.checkout_id = checkout_promocode.checkout_id
         and order.checkout_id is not null
     join {{ source('pharmacy_landing', 'promocode') }} as promocode
