@@ -169,6 +169,8 @@ select
 r.*,
 level_1_category.name as level_1_category,
 level_2_category.name as level_2_category,
+level_1_category.id as cate_lv1_id,
+level_2_category.id as cate_lv2_id,
 case 
     when level_2_category is not null then 2
     when level_2_category is null and level_1_category is not null then 1
