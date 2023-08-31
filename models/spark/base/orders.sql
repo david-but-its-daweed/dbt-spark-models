@@ -6,8 +6,18 @@
   )
 }}
 
+WITH product_numbers AS (
+    SELECT
+        order_id,
+        partition_date as order_date_msk
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
+    FROM {{ source('mart', 'star_order_2020') }}
+    WHERE
+        TRUE
+        AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
+),
 
-WITH orders_ext1 AS (
+orders_ext0 AS (
     SELECT
         partition_date AS day,
         created_time_utc,
@@ -146,6 +156,13 @@ WITH orders_ext1 AS (
         AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
 ),
 
+orders_ext1 AS (
+    SELECT
+        o.*,
+        n.product_order_number
+    FROM orders_ext0 AS o
+    LEFT JOIN product_numbers AS n USING (order_id, order_date_msk)
+),
 
 logistics_orders AS (
     SELECT
@@ -225,7 +242,7 @@ orders_ext2 AS (
 
         IF(number_of_reviews > 0, ROUND(total_product_rating / number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
         COALESCE(number_of_reviews >= 15, FALSE) AS is_product_with_stable_rating, -- был ли рейтинг стабильным на момент покупки
-        ROW_NUMBER() OVER(PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number -- номер покупки товара
+        product_order_number -- номер покупки товара
     FROM orders_ext1
 ),
 
