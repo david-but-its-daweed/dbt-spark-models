@@ -9,7 +9,7 @@
 WITH product_numbers AS (
     SELECT
         order_id,
-        partition_date as order_date_msk,
+        partition_date AS order_date_msk,
         ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
