@@ -1,7 +1,7 @@
 [sqlfluff]
 sql_file_exts = .sql
-dialect = sparksql
 max_line_length = 200
+dialect = sparksql
 exclude_rules = ST06, LT12, RF01, RF03, RF04, AL07, ST07, AM06, AL06
 
 [sqlfluff:indentation]
@@ -15,13 +15,11 @@ line_position = trailing
 capitalisation_policy = upper
 
 [sqlfluff:rules:capitalisation.functions]
+extended_capitalisation_policy = upper
 capitalisation_policy = upper
 
 [sqlfluff:rules:capitalisation.literals]
 capitalisation_policy = upper
-
-[sqlfluff:rules:capitalisation.identifiers]
-extended_capitalisation_policy = lower
 
 [sqlfluff:rules:capitalisation.types]
 extended_capitalisation_policy = upper
