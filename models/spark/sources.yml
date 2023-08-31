@@ -30,6 +30,7 @@ sources:
       - name: onfy_babylone_events
       - name: dim_currency_rate
       - name: product_events
+      - name: dim_merchant
   - name: cube
     tables:
       - name: event_counts_country_os_days
@@ -121,6 +122,12 @@ sources:
       - name: card_bins_snapshot
       - name: checkout_data
       - name: country_filter
+      - name: card_bins
+      - name: chargeback
+      - name: fact_refund
+      - name: order_groups
+      - name: payment
+      - name: payment_order
   - name: recom
     tables:
       - name: context_device_counters_v5

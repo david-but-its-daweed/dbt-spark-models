@@ -1,0 +1,1 @@
+{{ gold_active_users_and_devices_with_ephemeral('user_id') }}

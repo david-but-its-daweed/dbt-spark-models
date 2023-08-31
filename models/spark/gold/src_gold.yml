@@ -1,0 +1,850 @@
+version: 2
+
+models:
+- name: gold_active_devices_with_ephemeral
+  description: Основные метрики пользователя в конкретную дату. Первичный ключ - `device_id` и `date_msk`
+  columns:
+    - name: date_msk
+      description: Дата активности в UTC+3
+    - name: device_id
+      description: ID устройства пользователя (В случае переустрановки приложения `device_id` сбрасывается. На `web` `device_id` может протухать)
+    - name: real_user_id
+      description: ID уникального пользователя, не ID аккаунта [`user_id`] (решает проблему того, что один и тот же пользователь может иметь несколько `user_id`, обладать несколькими девайсами). Все девайсы внутри каждого связного графа объединяются в одного юзера. Подробнее можно почитать тут https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
+    - name: country_code
+      description: Код страны (A2-код). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение пустой строки ''
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other'). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: region_name
+      description: Название уникального для страны региона ('Other' проставляется в том случае, если для страны нет соответствуюшего региона с флагом `is_uniq`). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: app_language
+      description: Язык устройства пользователя
+    - name: platform
+      description: Платформа устройства пользователя
+    - name: legal_entity
+      description: Юридическое лицо, через которое для `device_id` будут проводиться платежи. Используется для разграничения заказов через основное приложение Joom и через JMT. Под сегмент Россия и Белоруссия запускается отдельное приложение 'JMT', для прочих - 'Joom' (основное)
+    - name: join_date_msk
+      description: Дата первой активности пользователя в UTC+3
+    - name: real_user_segment
+      description: Название сегмента, поле истинно для `real_user_id`. Возможные значения - `Non-buyers` - нет заказов за последние 3 месяца, `Occasional buyers` - 1 или 2 месяца с заказами за последние 3 месяца, `Regular buyers` - 3/3 последних месяца с заказами или 4+/6, `Constant buyers` - 10+/12 последних месяцев с заказами
+    - name: is_new_device
+      description: Флаг, является ли девайс новым (считается как `date_msk = join_date_msk`)
+    - name: blogger_type
+      description: Является ли заказ, заказом от блогера
+    - name: is_ephemeral_device
+      description: Флаг, является ли девайс эфемерным (если у девайса в `date_msk` наблюдались оба состояния, то будет FALSE)
+    - name: device_lifetime
+      description: Календарный лайфтайм `device_id` в днях
+    - name: previous_activity_device_group
+      description: Тип `device_id` в зависимости от времени отсутствия. Принимает 3 состоянияния. 'new' - дата активности равна дате первой активности. 'regular' - предыдущая активность состоялась в интервале [1 ; 28]. 'reactivated' - предыдущая активность была больше 28 дней назад.
+    - name: prev_date_msk_lag
+      description: Сколько календарных дней прошло для `device_id` с предыдущей активности по UTC+3 (Если такой нет, будет считаться по `join_date_msk`)
+    - name: next_date_msk_lag
+      description: Через сколько календарных дней наступит следующая активность `device_id` по UTC+3
+    - name: order_gross_profit_per_day_final
+      description: Суммарная прибыль от заказов Joom Group (не Joom) на `date_msk`. Поле может корректироваться в соответствии с изменениями по заказу. Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: order_gross_profit_per_day_final_estimated
+      description: Суммарная прибыль от заказов Joom Group (не Joom) на `date_msk`. Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: ecgp_per_day_initial
+      description: Суммарная прибыль от заказов Joom (не Joom Group) на `date_msk`, поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: ecgp_per_day_final
+      description: Суммарная прибыль от заказов Joom (не Joom Group) на `date_msk`, поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Поле может корректироваться в соответствии с изменениями по заказу. Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: gmv_per_day_initial
+      description: Сумма GMV Initial по заказам `device_id` в рассматриваемую дату
+    - name: gmv_per_day_final
+      description: Сумма GMV Final по заказам `device_id` в рассматриваемую дату
+    - name: number_of_orders
+      description: Число `order_group_id` для `device_id` в рассматриваемую дату
+    - name: is_payer
+      description: Флаг, является ли `device_id` платящим на текущую дату (совершал ли он вообще покупки <= `date_msk`)
+    - name: is_converted
+      description: Флаг, совершал ли `device_id` покупку в рассматриваемую дату
+    - name: is_rd1
+      description: Флаг, вернулся ли `device_id` в сервис спустя 1 календарный день (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd3
+      description: Флаг, вернулся ли `device_id` в сервис спустя 3 календарных дня (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd7
+      description: Флаг, вернулся ли `device_id` в сервис спустя 7 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd14
+      description: Флаг, вернулся ли `device_id` в сервис спустя 14 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw1
+      description: Флаг, вернулся ли `device_id` в сервис в течение 1-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw2
+      description: Флаг, вернулся ли `device_id` в сервис в течение 2-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw3
+      description: Флаг, вернулся ли `device_id` в сервис в течение 3-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw4
+      description: Флаг, вернулся ли `device_id` в сервис в течение 4-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_14
+      description: Флаг, попал ли `device_id` в Churn с календарным окном в 14 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_28
+      description: Флаг, попал ли `device_id` в Churn с календарным окном в 28 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+
+- name: gold_active_devices
+  description: Основные метрики пользователя в конкретную дату. Первичный ключ - `device_id` и `date_msk`
+  columns:
+    - name: date_msk
+      description: Дата активности в UTC+3
+    - name: device_id
+      description: ID устройства пользователя (В случае переустрановки приложения `device_id` сбрасывается. На `web` `device_id` может протухать)
+    - name: real_user_id
+      description: ID уникального пользователя, не ID аккаунта [`user_id`] (решает проблему того, что один и тот же пользователь может иметь несколько `user_id`, обладать несколькими девайсами). Все девайсы внутри каждого связного графа объединяются в одного юзера. Подробнее можно почитать тут https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
+    - name: country_code
+      description: Код страны (A2-код). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение пустой строки ''
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other'). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: region_name
+      description: Название уникального для страны региона (`Other` проставляется в том случае, если для страны нет соответствуюшего региона с флагом `is_uniq`). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: app_language
+      description: Язык устройства пользователя
+    - name: platform
+      description: Платформа устройства пользователя
+    - name: legal_entity
+      description: Юридическое лицо, через которое для `device_id` будут проводиться платежи. Используется для разграничения заказов через основное приложение Joom и через JMT. Под сегмент Россия и Белоруссия запускается отдельное приложение 'JMT', для прочих - 'Joom' (основное)
+    - name: join_date_msk
+      description: Дата первой активности пользователя в UTC+3
+    - name: real_user_segment
+      description: Название сегмента, поле истинно для `real_user_id`. Возможные значения - `Non-buyers` - нет заказов за последние 3 месяца, `Occasional buyers` - 1 или 2 месяца с заказами за последние 3 месяца, `Regular buyers` - 3/3 последних месяца с заказами или 4+/6, `Constant buyers` - 10+/12 последних месяцев с заказами
+    - name: is_new_device
+      description: Флаг, является ли девайс новым (считается как `date_msk = join_date_msk`)
+    - name: device_lifetime
+      description: Календарный лайфтайм `device_id` в днях
+    - name: previous_activity_device_group
+      description: Тип `device_id` в зависимости от времени отсутствия. Принимает 3 состоянияния. 'new' - дата активности равна дате первой активности. 'regular' - предыдущая активность состоялась в интервале [1 ; 28]. 'reactivated' - предыдущая активность была больше 28 дней назад.
+    - name: prev_date_msk_lag
+      description: Сколько календарных дней прошло для `device_id` с предыдущей активности по UTC+3 (Если такой нет, будет считаться по `join_date_msk`)
+    - name: next_date_msk_lag
+      description: Через сколько календарных дней наступит следующая активность `device_id` по UTC+3
+    - name: order_gross_profit_per_day_final
+      description: Суммарная прибыль от заказов Joom Group (не Joom) на `date_msk`. Поле может корректироваться в соответствии с изменениями по заказу. Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: order_gross_profit_per_day_final_estimated
+      description: Суммарная прибыль от заказов Joom Group (не Joom) на `date_msk`. Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: ecgp_per_day_initial
+      description: Суммарная прибыль от заказов Joom (не Joom Group) на `date_msk`, поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: ecgp_per_day_final
+      description: Суммарная прибыль от заказов Joom (не Joom Group) на `date_msk`, поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Поле может корректироваться в соответствии с изменениями по заказу. Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: gmv_per_day_initial
+      description: Сумма GMV Initial по заказам `device_id` в рассматриваемую дату
+    - name: gmv_per_day_final
+      description: Сумма GMV Final по заказам `device_id` в рассматриваемую дату
+    - name: number_of_orders
+      description: Число `order_group_id` `device_id` в рассматриваемую дату
+    - name: is_payer
+      description: Флаг, является ли `device_id` платящим на текущую дату (совершал ли он вообще покупки <= `date_msk`)
+    - name: is_converted
+      description: Флаг, совершал ли `device_id` покупку в рассматриваемую дату
+    - name: is_rd1
+      description: Флаг, вернулся ли `device_id` в сервис спустя 1 календарный день (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd3
+      description: Флаг, вернулся ли `device_id` в сервис спустя 3 календарных дня (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd7
+      description: Флаг, вернулся ли `device_id` в сервис спустя 7 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd14
+      description: Флаг, вернулся ли `device_id` в сервис спустя 14 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw1
+      description: Флаг, вернулся ли `device_id` в сервис в течение 1-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw2
+      description: Флаг, вернулся ли `device_id` в сервис в течение 2-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw3
+      description: Флаг, вернулся ли `device_id` в сервис в течение 3-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw4
+      description: Флаг, вернулся ли `device_id` в сервис в течение 4-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_14
+      description: Флаг, попал ли `device_id` в Churn с календарным окном в 14 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_28
+      description: Флаг, попал ли `device_id` в Churn с календарным окном в 28 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+
+- name: gold_active_users_with_ephemeral
+  description: Основные метрики пользователя в конкретную дату. Первичный ключ - `user_id` и `date_msk`
+  columns:
+    - name: date_msk
+      description: Дата активности в UTC+3
+    - name: user_id
+      description: ID пользователя (В случае переустрановки приложения до момента повторной авторизации ему присваивается новый `user_id`)
+    - name: real_user_id
+      description: ID уникального пользователя, не ID аккаунта [`user_id`] (решает проблему того, что один и тот же пользователь может иметь несколько `user_id`, обладать несколькими девайсами). Все девайсы внутри каждого связного графа объединяются в одного юзера. Подробнее можно почитать тут https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
+    - name: country_code
+      description: Код страны (A2-код). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение пустой строки ''
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other'). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: region_name
+      description: Название уникального для страны региона (`Other` проставляется в том случае, если для страны нет соответствуюшего региона с флагом `is_uniq`). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: app_language
+      description: Язык устройства пользователя
+    - name: platform
+      description: Платформа устройства пользователя
+    - name: legal_entity
+      description: Юридическое лицо, через которое для `device_id` будут проводиться платежи (для `user_id` берется ANY-значение). Используется для разграничения заказов через основное приложение Joom и через JMT. Под сегмент Россия и Белоруссия запускается отдельное приложение 'JMT', для прочих - 'Joom' (основное)
+    - name: join_date_msk
+      description: Дата первой активности пользователя в UTC+3
+    - name: real_user_segment
+      description: Название сегмента, поле истинно для `real_user_id`. Возможные значения - `Non-buyers` - нет заказов за последние 3 месяца, `Occasional buyers` - 1 или 2 месяца с заказами за последние 3 месяца, `Regular buyers` - 3/3 последних месяца с заказами или 4+/6, `Constant buyers` - 10+/12 последних месяцев с заказами
+    - name: is_new_user
+      description: Флаг, является ли пользователь новым (считается как `date_msk = join_date_msk`)
+    - name: is_ephemeral_user
+      description: Флаг, является ли пользователь эфемерным (если у пользователя в `date_msk` наблюдались оба состояния, то будет FALSE)
+    - name: user_lifetime
+      description: Календарный лайфтайм `user_id` в днях
+    - name: previous_activity_user_group
+      description: Тип `user_id` в зависимости от времени отсутствия. Принимает 3 состояния. 'new' - дата активности равна дате первой активности. 'regular' - предыдущая активность состоялась в интервале [1 ; 28]. 'reactivated' - предыдущая активность была больше 28 дней назад.
+    - name: prev_date_msk_lag
+      description: Сколько календарных дней прошло для `user_id` с предыдущей активности по UTC+3
+    - name: next_date_msk_lag
+      description: Через сколько календарных дней наступит следующая активность `user_id` по UTC+3 (Если такой нет, будет считаться по `join_date_msk`)
+    - name: gmv_per_day_initial
+      description: Сумма GMV Initial по заказам пользователя в рассматриваемую дату
+    - name: gmv_per_day_final
+      description: Сумма GMV Final по заказам пользователя в рассматриваемую дату
+    - name: number_of_orders
+      description: Число `order_group_id` пользователя в рассматриваемую дату
+    - name: is_payer
+      description: Флаг, является ли `user_id` платящим на текущую дату (совершал ли он вообще покупки <= `date_msk` текущей строки)
+    - name: is_converted
+      description: Флаг, совершал ли `user_id` покупку в рассматриваемую дату
+    - name: is_rd1
+      description: Флаг, вернулся ли `user_id` в сервис спустя 1 календарный день (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd3
+      description: Флаг, вернулся ли `user_id` в сервис спустя 3 календарных дня (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd7
+      description: Флаг, вернулся ли `user_id` в сервис спустя 7 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd14
+      description: Флаг, вернулся ли `user_id` в сервис спустя 14 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw1
+      description: Флаг, вернулся ли `user_id` в сервис в течение 1-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw2
+      description: Флаг, вернулся ли `user_id` в сервис в течение 2-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw3
+      description: Флаг, вернулся ли `user_id` в сервис в течение 3-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw4
+      description: Флаг, вернулся ли `user_id` в сервис в течение 4-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_14
+      description: Флаг, попал ли `user_id` в Churn с календарным окном в 14 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_28
+      description: Флаг, попал ли `user_id` в Churn с календарным окном в 28 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+
+- name: gold_active_users
+  description: Основные метрики пользователя в конкретную дату. Первичный ключ - `user_id` и `date_msk`
+  columns:
+    - name: date_msk
+      description: Дата активности в UTC+3
+    - name: user_id
+      description: ID пользователя (В случае переустрановки приложения до момента повторной авторизации ему присваивается новый `user_id`)
+    - name: real_user_id
+      description: ID уникального пользователя, не ID аккаунта [`user_id`] (решает проблему того, что один и тот же пользователь может иметь несколько `user_id`, обладать несколькими девайсами). Все девайсы внутри каждого связного графа объединяются в одного юзера. Подробнее можно почитать тут https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
+    - name: country_code
+      description: Код страны (A2-код). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение пустой строки ''
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other'). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: region_name
+      description: Название уникального для страны региона (`Other` проставляется в том случае, если для страны нет соответствуюшего региона с флагом `is_uniq`). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: app_language
+      description: Язык устройства пользователя
+    - name: platform
+      description: Платформа устройства пользователя
+    - name: legal_entity
+      description: Юридическое лицо, через которое для `device_id` будут проводиться платежи (для `user_id` берется ANY-значение). Используется для разграничения заказов через основное приложение Joom и через JMT. Под сегмент Россия и Белоруссия запускается отдельное приложение 'JMT', для прочих - 'Joom' (основное)
+    - name: join_date_msk
+      description: Дата первой активности пользователя в UTC+3
+    - name: real_user_segment
+      description: Название сегмента, поле истинно для `real_user_id`. Возможные значения - `Non-buyers` - нет заказов за последние 3 месяца, `Occasional buyers` - 1 или 2 месяца с заказами за последние 3 месяца, `Regular buyers` - 3/3 последних месяца с заказами или 4+/6, `Constant buyers` - 10+/12 последних месяцев с заказами
+    - name: is_new_user
+      description: Флаг, является ли пользователь новым (считается как `date_msk = join_date_msk`)
+    - name: user_lifetime
+      description: Календарный лайфтайм `user_id` в днях
+    - name: previous_activity_user_group
+      description: Тип `user_id` в зависимости от времени отсутствия. Принимает 3 состоянияния. 'new' - дата активности равна дате первой активности. 'regular' - предыдущая активность состоялась в интервале [1 ; 28]. 'reactivated' - предыдущая активность была больше 28 дней назад.
+    - name: prev_date_msk_lag
+      description: Сколько календарных дней прошло для `user_id` с предыдущей активности по UTC+3 (Если такой нет, будет считаться по `join_date_msk`)
+    - name: next_date_msk_lag
+      description: Через сколько календарных дней наступит следующая активность `user_id` по UTC+3
+    - name: gmv_per_day_initial
+      description: Сумма GMV Initial по заказам пользователя в рассматриваемую дату
+    - name: gmv_per_day_final
+      description: Сумма GMV Final по заказам пользователя в рассматриваемую дату
+    - name: number_of_orders
+      description: Число `order_group_id` пользователя в рассматриваемую дату
+    - name: is_payer
+      description: Флаг, является ли `user_id` платящим на текущую дату (совершал ли он вообще покупки <= `date_msk` текущей строки)
+    - name: is_converted
+      description: Флаг, совершал ли `user_id` покупку в рассматриваемую дату
+    - name: is_rd1
+      description: Флаг, вернулся ли `user_id` в сервис спустя 1 календарный день (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd3
+      description: Флаг, вернулся ли `user_id` в сервис спустя 3 календарных дня (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd7
+      description: Флаг, вернулся ли `user_id` в сервис спустя 7 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rd14
+      description: Флаг, вернулся ли `user_id` в сервис спустя 14 календарных дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw1
+      description: Флаг, вернулся ли `user_id` в сервис в течение 1-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw2
+      description: Флаг, вернулся ли `user_id` в сервис в течение 2-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw3
+      description: Флаг, вернулся ли `user_id` в сервис в течение 3-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_rw4
+      description: Флаг, вернулся ли `user_id` в сервис в течение 4-й календарной недели (c 1 по 7 день, где нулевой день - дата активности) (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_14
+      description: Флаг, попал ли `user_id` в Churn с календарным окном в 14 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+    - name: is_churned_28
+      description: Флаг, попал ли `user_id` в Churn с календарным окном в 28 дней (Если нужное кол-во дней еще не прошло, будет поставляться NULL)
+
+- name: gold_countries
+  description: Информация о странах. Первичный ключ - `country_code` или `country_code`
+  columns:
+    - name: country_code
+      description: Код страны (A2-код)
+    - name: country_name
+      description: Название страны на английском языке
+    - name: region_name
+      description: Название уникального для страны региона ('Other' проставляется в том случае, если для страны нет соответствуюшего региона с флагом `is_uniq`)
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other')
+    - name: national_currency_code
+      description: Код национальной валюты страны (Если у страны более 1 национальной валюты, выводится произвольная)
+
+- name: gold_merchant_categories
+  description: Информация о мерчантских категориях. Строка таблицы истинна для `merchant_category_id`
+  columns:
+    - name: merchant_category_id
+      description: ID мерчантской категории товара
+    - name: merchant_category_name
+      description: Название мерчантской категории товара
+    - name: main_business_category_name
+      description: Название наиболее высокоуровневой мерчантской категории товара. Полный список значений -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
+    - name: l1_merchant_category_id
+      description: ID мерчантской категории товара 1-го уровня
+    - name: l1_merchant_category_name
+      description: Название мерчантской категории товара 1-го уровня
+    - name: l2_merchant_category_id
+      description: ID мерчантской категории товара 2-го уровня
+    - name: l2_merchant_category_name
+      description: Название мерчантской категории товара 2-го уровня
+    - name: l3_merchant_category_id
+      description: ID мерчантской категории товара 3-го уровня
+    - name: l3_merchant_category_name
+      description: Название мерчантской категории товара 3-го уровня
+    - name: l4_merchant_category_id
+      description: ID мерчантской категории товара 4-го уровня
+    - name: l4_merchant_category_name
+      description: Название мерчантской категории товара 4-го уровня
+    - name: l5_merchant_category_id
+      description: ID мерчантской категории товара 5-го уровня
+    - name: l5_merchant_category_name
+      description: Название мерчантской категории товара 5-го уровня
+    
+- name: gold_merchants
+  description: Информация о мерчантах. Строка таблицы истинна для `merchant_id`
+  columns:
+    - name: merchant_id
+      description: ID мерчанта
+    - name: merchant_name
+      description: Псевдоним мерчанта
+    - name: origin_name
+      description: Происхождение мерчанта, откуда отправляет товары
+    - name: created_datetime_utc
+      description: Дата и время создания аккаунта мерчанта в UTC
+    - name: updated_datetime_utc
+      description: Дата и время последнего обновления аккаунта мерчанта в UTC
+    - name: is_enabled
+      description: Флаг, включен ли мерчант на платформе
+
+- name: gold_orders
+  description: Информация о заказах. Строка таблицы истинна для `order_id`
+  columns:
+    - name: order_id
+      description: ID заказа. Заказом считается покупка конкретного `product_variant_id` у одного мерчанта. Если нужно посчитать метрики по всей купленной корзине, то используйте `order_group_id`
+    - name: friendly_order_id
+      description: order_id в человеческом виде. Этот ID отображается у пользователя в заказах. 
+    - name: order_group_id
+      description: ID купленной корзины товаров. При оформлении заказа пользователем для всех купленных товаров присваивается один ID. 
+    - name: device_id
+      description: ID устройства пользователя (В случае переустрановки приложения `device_id` сбрасывается. На `web` `device_id` может протухать)
+    - name: real_user_id
+      description: ID уникального пользователя, не ID аккаунта [`user_id`] (решает проблему того, что один и тот же пользователь может иметь несколько `user_id`, обладать несколькими девайсами). Все девайсы внутри каждого связного графа объединяются в одного юзера. Подробнее можно почитать тут https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
+    - name: user_id
+      description: ID пользователя (В случае переустрановки приложения до момента повторной авторизации ему присваивается новый `user_id`)
+    - name: order_date_msk
+      description: Дата создания заказа UTC+3
+    - name: order_datetime_utc
+      description: Дата и время создания заказа UTC
+    - name: legal_entity
+      description: Юридическое лицо, через которое для `device_id` будут проводиться платежи. Используется для разграничения заказов через основное приложение Joom и через JMT. Под сегмент Россия и Белоруссия запускается отдельное приложение 'JMT', для прочих - 'Joom' (основное)
+    - name: app_entity
+      description: Название интернет-магазина, в котором был оформлен заказ. Поле истинно для `order_group_id`. Под `интернет-магазином` подразумевается разбивка между `Joom` (основной маркетплейс) и `Joom Geek` (отдельный сайт с товарами для гиков, подробнее можно почитать здесь https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee)
+    - name: merchant_id
+      description: ID мерчанта
+    - name: store_id
+      description: ID стора (у одного мерчанта может быть несколько сторов)
+    - name: product_id
+      description: ID купленного товара
+    - name: product_variant_id
+      description: ID вариации купленного товара (например, цвет/размер товара)
+    - name: merchant_category_id
+      description: ID мерчантской категории товара
+    - name: country_code
+      description: Код страны (A2-код). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение пустой строки ''
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other'). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: region_name
+      description: Название уникального для страны региона (`Other` проставляется в том случае, если для страны нет соответствуюшего региона с флагом `is_uniq`). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: origin_name
+      description: Происхождение мерчанта, откуда отправляет товары
+    - name: platform
+      description: Платформа устройства пользователя
+    - name: last_context
+      description: Последний перед покупкой контекст пользователя
+    - name: contexts
+      description: Набор контекстов пользователя за последние 30 дней
+    - name: is_new_device
+      description: Флаг, является ли девайс новым (считается как `date_msk = join_date_msk`)
+    - name: real_user_segment
+      description: Название сегмента, поле истинно для `real_user_id`. Возможные значения - `Non-buyers` - нет заказов за последние 3 месяца, `Occasional buyers` - 1 или 2 месяца с заказами за последние 3 месяца, `Regular buyers` - 3/3 последних месяца с заказами или 4+/6, `Constant buyers` - 10+/12 последних месяцев с заказами
+    - name: product_orders_number
+      description: Номер совершенного `order_id` для `product_id`
+    - name: device_orders_number
+      description: Номер совершенного `order_id` для `device_id`
+    - name: user_orders_number
+      description: Номер совершенного `order_id` для `user_id`
+    - name: real_user_orders_number
+      description: Номер совершенного `order_id` для `real_user_id`
+    - name: device_lifetime
+      description: Календарный лайфтайм `device_id` в днях
+    - name: product_quantity
+      description: Количество `product_variant_id` в заказе
+    - name: item_price
+      description: Стоимость одного `product_variant_id` до применения скидок и купонов
+    - name: gmv_initial
+      description: Сколько заплатил пользователь в USD
+    - name: gmv_final
+      description: Сколько заплатил пользователь в USD с учетом возвратов (Если по заказу был оформлен возврат, то `gmv_final` будет снижен на сумму возврата)
+    - name: gmv_refunded
+      description: Сумма возврата в USD
+    - name: currency_code
+      description: Код валюты, в которой был оплачен заказ (ISO 4217)
+    - name: gmv_initial_in_local_currency
+      description: Сколько заплатил пользователь в валюте платежа (код валюты хранится в поле `currency_code`)
+    - name: psp_initial
+      description: Комиссия платежной системы на момент соверщения заказа
+    - name: psp_final
+      description: Комиссия платежной системы. Поле может корректироваться в соответствии с изменениями по заказу
+    - name: ecgp_initial
+      description: Прибыль от конкретного заказа Joom (не Joom Group), поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: ecgp_final
+      description: Прибыль от конкретного заказа Joom (не Joom Group), поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Поле может корректироваться в соответствии с изменениями по заказу. Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: order_gross_profit_final
+      description: Прибыль от конкретного заказа Joom Group (не Joom). Поле может корректироваться в соответствии с изменениями по заказу. Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: order_gross_profit_final_estimated
+      description: Прибыль от конкретного заказа Joom Group (не Joom). Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: merchant_revenue_initial
+      description: Стоимость всех товаров заказа в USD, установленная мерчантом. Общий платеж, причитающийся продавцу, рассчитывается как costs.merchantPayout + costs.merchantRevenueInsurance, потому что merchantPayout не включает merchantRevenueInsurance + существует merchantRevenueFinal, который звучит именно так, как мы хотим, за исключением того, что он не включает merchantRevenueInsurance, а также, в отличие от merchantPayout, не включает компенсацию за отслеживание продавца.
+    - name: merchant_revenue_final
+      description: Стоимость товара в USD, установленная мерчантом. Поле может корректироваться в соответствии с изменениями по заказу. Общий платеж, причитающийся продавцу, рассчитывается как costs.merchantPayout + costs.merchantRevenueInsurance, потому что merchantPayout не включает merchantRevenueInsurance + существует merchantRevenueFinal, который звучит именно так, как мы хотим, за исключением того, что он не включает merchantRevenueInsurance, а также, в отличие от merchantPayout, не включает компенсацию за отслеживание продавца.
+    - name: merchant_sale_price
+      description: Цена продавца в USD для заказа, включает цену товара (умноженную на количество), логистику продавца (если имеется) и скидки продавца. Поле может корректироваться в соответствии с изменениями по заказу. Не включает в себя логистику Joom.
+    - name: merchant_list_price
+      description: Цена продавца в USD на момент соверщения заказа, включает цену товара (умноженную на количество), логистику продавца (если имеется) и скидки продавца. Не включает в себя логистику Joom.
+    - name: item_merchant_revenue_initial
+      description: Стоимость единицы товара в USD, установленная мерчантом. Общий платеж, причитающийся продавцу, рассчитывается как costs.merchantPayout + costs.merchantRevenueInsurance, потому что merchantPayout не включает merchantRevenueInsurance + существует merchantRevenueFinal, который звучит именно так, как мы хотим, за исключением того, что он не включает merchantRevenueInsurance, а также, в отличие от merchantPayout, не включает компенсацию за отслеживание продавца.
+    - name: logistics_price_initial
+      description: Цена логистики за заказ, которую мы ожидали при оформлении заказа, была добавлена к окончательной цене продажи
+    - name: item_logistics_price_initial
+      description: Цена логистики за единицу товара, которую мы ожидали при оформлении заказа, была добавлена к окончательной цене продажи
+    - name: jl_consolidation_profit_final
+      description: Прибыль от конкретного заказа логистики от консолидации. Распределяется из финальной группы консолидации на логистические заказы пропорционально весу логистического заказа на чекине в Хэкни, а затем от логистического заказа на джумовские (order_id) пропорционально мерчантской цене. По этому полю можно суммировать
+    - name: vat_initial
+      description: Местный налог
+    - name: marketplace_commission_initial
+      description: Комиссия маркетплейса в USD, вычисляется на основе цены мерчанта, зависит от категории и страны  
+    - name: jm_markup
+      description: Доп. наценка, зависит от пользователя, товара и т.д. (не учитывает купоны и баллы, т.е. добавляется к цене мерчанта + цена логистики)
+    - name: jl_markup
+      description: Доп. наценка, в большинстве случаев связана с логистикой, управляется на стороне маркетплейса командой цен
+    - name: is_with_coupon
+      description: Флаг, был ли использован купон в заказе
+    - name: coupon_discount
+      description: Сумма скидки по купону в USD для order_id
+    - name: used_coupon_id
+      description: ID использованного купона
+    - name: is_with_points
+      description: Флаг, были ли использованы баллы
+    - name: points_initial
+      description: Сумма скидок за счет использования баллов в пересчете на USD
+    - name: points_final
+      description: Итоговая сумма скидок за счет использования баллов в пересчете на USD. Поле учитывает возвраты
+    - name: discounts
+      description: Словарь, хранит примененные скидки
+    - name: is_refunded
+      description: Флаг, есть ли возврат по заказу
+    - name: refund_reason
+      description: Причина, по которой был оформлен возврат. Принимает значения `cancelled_by_customer`, `cancelled_by_merchant`, `not_delivered`, `quality`, `other`, `fraud`, NULL
+    - name: detailed_refund_reason
+      description: Подробная причина, по которой был оформлен возврат
+    - name: refund_date_msk
+      description: Дата возврата по заказу в UTC+3
+    - name: is_not_delivered_refund
+      description: Флаг, был ли оформлен возврат средств по причине недоставки
+    - name: is_quality_refund
+      description: Флаг, был ли оформлен возврат средств по причине плохого качества
+    - name: is_finalized
+      description: Флаг, финализирован ли заказ
+    - name: is_canceled_by_merchant
+      description: Флаг, был заказ отменен мерчантом
+    - name: is_with_support_ticket
+      description: Флаг, есть ли соотствующий заказу тикет в саппорте
+    - name: support_ticket_id
+      description: ID тикета саппорта
+    - name: shipping_type_initial
+      description: Тип доставки, которой отправлен `order_id`
+    - name: estimated_delivery_min_days
+      description: Оценка минимального количества дней доставки, показанная пользователю при покупке
+    - name: estimated_delivery_max_days
+      description: Оценка максимального количества дней доставки, показанная пользователю при покупке
+    - name: is_delivered
+      description: Флаг, доставлен ли заказ (Либо есть доставка по трекингу, либо пользователь подтвердил доставку товара)
+    - name: delivery_duration_by_user
+      description: Сколько дней прошло с момента заказа до подтверждения пользователем получения товара
+    - name: delivery_duration_by_tracking
+      description: Сколько дней прошло с момента заказа до доставки по трекингу
+    - name: review_date_msk
+      description: Дата оставления отзыва по заказу пользователем UTC+3
+    - name: review_stars
+      description: Оценка заказа в звездах (по шкале от 1 до 5)
+    - name: is_review_with_text
+      description: Флаг, содержит ли отзыв текст
+    - name: review_media_count
+      description: Кол-во медиа-материала в отзыве (изображения + видео)
+    - name: review_image_count
+      description: Кол-во изображений в отзыве (изображения + видео)
+    - name: number_of_reviews
+      description: Кол-во отзывов у `product_id` на момент заказа
+    - name: product_rating
+      description: Рейтинг товара на момент его покупки
+    - name: is_negative_feedback
+      description: Флаг, остался ли пользователь недоволен покупкой. Считается по условию [прошло меньше 80 дней с момента создания заказа] И [[1 или 2 звезды в отзыве до оставления отзыва] ИЛИ [`customer_refund_reason` IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27)]]
+
+- name: gold_order_groups
+  description: Информация о купленных корзинах. Строка таблицы истинна для `order_group_id`
+  columns:
+    - name: order_group_id
+      description: ID купленной корзины товаров. При оформлении заказа пользователем для всех купленных товаров присваивается один ID
+    - name: device_id
+      description: ID устройства пользователя (В случае переустрановки приложения `device_id` сбрасывается. На `web` `device_id` может протухать)
+    - name: real_user_id
+      description: ID уникального пользователя, не ID аккаунта [`user_id`] (решает проблему того, что один и тот же пользователь может иметь несколько `user_id`, обладать несколькими девайсами). Все девайсы внутри каждого связного графа объединяются в одного юзера. Подробнее можно почитать тут https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
+    - name: user_id
+      description: ID пользователя (В случае переустрановки приложения до момента повторной авторизации ему присваивается новый `user_id`)
+    - name: platform
+      description: Платформа устройства пользователя
+    - name: order_date_msk
+      description: Дата создания заказа UTC+3
+    - name: order_datetime_utc
+      description: Дата и время создания заказа UTC
+    - name: legal_entity
+      description: Юридическое лицо, через которое для `device_id` будут проводиться платежи. Используется для разграничения заказов через основное приложение Joom и через JMT. Под сегмент Россия и Белоруссия запускается отдельное приложение 'JMT', для прочих - 'Joom' (основное)
+    - name: app_entity
+      description: Название интернет-магазина, в котором был оформлен заказ. Поле истинно для `order_group_id`. Под `интернет-магазином` подразумевается разбивка между `Joom` (основной маркетплейс) и `Joom Geek` (отдельный сайт с товарами для гиков, подробнее можно почитать здесь https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee)
+    - name: country_code
+      description: Код страны (A2-код). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение пустой строки ''
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other'). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: region_name
+      description: Название уникального для страны региона (`Other` проставляется в том случае, если для страны нет соответствуюшего региона с флагом `is_uniq`). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение 'Other'
+    - name: is_new_device
+      description: Флаг, является ли девайс новым (считается как `date_msk = join_date_msk`)
+    - name: real_user_segment
+      description: Название сегмента, поле истинно для `real_user_id`. Возможные значения - `Non-buyers` - нет заказов за последние 3 месяца, `Occasional buyers` - 1 или 2 месяца с заказами за последние 3 месяца, `Regular buyers` - 3/3 последних месяца с заказами или 4+/6, `Constant buyers` - 10+/12 последних месяцев с заказами
+    - name: device_lifetime
+      description: Календарный лайфтайм `device_id` в днях
+    - name: currency_code
+      description: Код валюты, в которой был оплачен заказ (ISO 4217)
+    - name: mechants_number
+      description: Число уникальных мерчантов
+    - name: stores_number
+      description: Число уникальных сторов
+    - name: products_number
+      description: Число уникальных товаров
+    - name: orders_number
+      description: Число уникальных `order_id` (или число уникальных `product_variant_id`)
+    - name: product_quantity_total
+      description: Общее число купленных товаров (сумма `product_quantity`)
+    - name: gmv_initial
+      description: Сколько заплатил пользователь в USD
+    - name: gmv_final
+      description: Сколько заплатил пользователь в USD с учетом возвратов (Если по заказу был оформлен возврат, то `gmv_final` будет снижен на сумму возврата)
+    - name: gmv_refunded
+      description: Сумма возврата в USD
+    - name: currency_code
+      description: Код валюты, в которой был оплачен заказ (ISO 4217)
+    - name: gmv_initial_in_local_currency
+      description: Сколько заплатил пользователь в валюте платежа (код валюты хранится в поле `currency_code`)
+    - name: psp_initial
+      description: Комиссия платежной системы на момент соверщения заказа
+    - name: psp_final
+      description: Комиссия платежной системы. Поле может корректироваться в соответствии с изменениями по заказу
+    - name: ecgp_initial
+      description: Прибыль от конкретного заказа Joom (не Joom Group), поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: ecgp_final
+      description: Прибыль от конкретного заказа Joom (не Joom Group), поле не учитывает прибыль логистики и adtech. Использовать с осторожностью! Поле может корректироваться в соответствии с изменениями по заказу. Считается как `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. Также можно посчитать как `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
+    - name: order_gross_profit_final
+      description: Прибыль от конкретного заказа Joom Group (не Joom). Поле может корректироваться в соответствии с изменениями по заказу. Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: order_gross_profit_final_estimated
+      description: Прибыль от конкретного заказа Joom Group (не Joom). Чтобы его посчитать, из GMV вычитаются все расходы - включая платежи логистическим партнерам.
+    - name: merchant_revenue_initial
+      description: Стоимость всех товаров заказа в USD, установленная мерчантом. Общий платеж, причитающийся продавцу, рассчитывается как costs.merchantPayout + costs.merchantRevenueInsurance, потому что merchantPayout не включает merchantRevenueInsurance + существует merchantRevenueFinal, который звучит именно так, как мы хотим, за исключением того, что он не включает merchantRevenueInsurance, а также, в отличие от merchantPayout, не включает компенсацию за отслеживание продавца.
+    - name: merchant_revenue_final
+      description: Стоимость товара в USD, установленная мерчантом. Поле может корректироваться в соответствии с изменениями по заказу. Общий платеж, причитающийся продавцу, рассчитывается как costs.merchantPayout + costs.merchantRevenueInsurance, потому что merchantPayout не включает merchantRevenueInsurance + существует merchantRevenueFinal, который звучит именно так, как мы хотим, за исключением того, что он не включает merchantRevenueInsurance, а также, в отличие от merchantPayout, не включает компенсацию за отслеживание продавца.
+    - name: merchant_sale_price
+      description: Цена продавца в USD для заказа, включает цену товара (умноженную на количество), логистику продавца (если имеется) и скидки продавца. Поле может корректироваться в соответствии с изменениями по заказу. Не включает в себя логистику Joom.
+    - name: merchant_list_price
+      description: Цена продавца в USD на момент соверщения заказа, включает цену товара (умноженную на количество), логистику продавца (если имеется) и скидки продавца. Не включает в себя логистику Joom.
+    - name: item_merchant_revenue_initial
+      description: Стоимость единицы товара в USD, установленная мерчантом. Общий платеж, причитающийся продавцу, рассчитывается как costs.merchantPayout + costs.merchantRevenueInsurance, потому что merchantPayout не включает merchantRevenueInsurance + существует merchantRevenueFinal, который звучит именно так, как мы хотим, за исключением того, что он не включает merchantRevenueInsurance, а также, в отличие от merchantPayout, не включает компенсацию за отслеживание продавца.
+    - name: logistics_price_initial
+      description: Цена логистики за заказ, которую мы ожидали при оформлении заказа, была добавлена к окончательной цене продажи
+    - name: item_logistics_price_initial
+      description: Цена логистики за единицу товара, которую мы ожидали при оформлении заказа, была добавлена к окончательной цене продажи
+    - name: vat_markup
+      description: Деньги, которые мы закладываем в стоимость товара для оплаты налогов
+    - name: marketplace_commission_initial
+      description: Комиссия маркетплейса в USD, вычисляется на основе цены мерчанта, зависит от категории и страны  
+    - name: jm_markup
+      description: Доп. наценка, зависит от пользователя, товара и т.д. (не учитывает купоны и баллы, т.е. добавляется к цене мерчанта + цена логистики)
+    - name: jl_markup
+      description: Доп. наценка, в большинстве случаев связана с логистикой, управляется на стороне маркетплейса командой цен
+    - name: is_with_coupon
+      description: Флаг, был ли использован купон в заказе
+    - name: coupon_discount
+      description: Сумма скидки по купону в USD для order_id
+    - name: used_coupon_id
+      description: ID использованного купона
+    - name: is_with_points
+      description: Флаг, были ли использованы баллы
+    - name: points_initial
+      description: Сумма скидок за счет использования баллов в пересчете на USD
+    - name: device_order_groups_number
+      description: Номер совершенного `order_group_id` для `device_id`
+    - name: user_order_groups_number
+      description: Номер совершенного `order_group_id` для `user_id`
+    - name: real_user_order_groups_number
+      description: Номер совершенного `order_group_id` для `real_user_id`
+
+- name: gold_regions
+  description: Информация о странах и соответствующих им регионах. Первичный ключ - (`country_code` или `country_name`) и `region_name`
+  columns:
+    - name: country_name
+      description: Название страны на английском языке
+    - name: region_name
+      description: Название региона
+    - name: country_code
+      description: Код страны (A2-код)
+    - name: is_uniq
+      description: Флаг, является ли регион уникальным (должен быть из списка ('Europe', 'Africa', 'Other', 'CIS', 'LatAm'))
+    - name: top_country_code
+      description: Код топ-страны (A2-код или 'Other')
+  
+- name: gold_products
+  description: Информация о товарах. Первичный ключ - `product_id`
+  columns:
+    - name: product_id
+      description: ID товара
+    - name: merchant_category_id
+      description: ID мерчантской категории товара
+    - name: store_id
+      description: ID стора (у одного мерчанта может быть несколько сторов)
+    - name: brand_id
+      description: ID бренда
+    - name: merchant_id
+      description: ID мерчанта
+    - name: product_name
+      description: Название товара на английском языке
+    - name: brand_name
+      description: Название бренда
+    - name: image_url
+      description: URL основной картинки товара
+    - name: last_purchase_datetime_utc
+      description: Дата и время последней покупки товара в UTC
+    - name: total_number_of_purchases
+      description: Общее число покупок товара (Считается как сумма `product_quantity`)
+    - name: current_merchant_sale_price
+      description:  Цена продавца в USD последней продажи, включает цену товара (умноженную на количество), логистику продавца (если имеется) и скидки продавца. Поле может корректироваться в соответствии с изменениями по заказу. Не включает в себя логистику Joom.
+    - name: is_public
+      description: Флаг, доступен ли товар для продажи (На самом деле состояний для товаров намного больше, существуют свои нюансы. Например, товар может быть "скрыт" для какой-то конкретной страны, но при этом значение этого флага будет TRUE)
+    - name: created_date_utc
+      description: Дата создания товара в UTC (будьте осторожны, абсолютное большинство столбцов с датами хранится в UTC+3)
+    - name: product_rating
+      description: Актуальный рейтинг товара
+      
+- name: gold_referral_orders
+  description: Данные по заказам, совершенным по реферальной программе. Первичный ключ - `order_id`
+  columns:
+    - name: order_id
+      description: ID заказа. Заказом считается покупка конкретного `product_variant_id` у одного мерчанта. Если нужно посчитать метрики по всей купленной корзине, то используйте `order_group_id`
+    - name: order_date_msk
+      description: Дата создания заказа UTC+3
+    - name: user_id
+      description: ID пользователя (В случае переустрановки приложения до момента повторной авторизации ему присваивается новый `user_id`)
+    - name: device_id
+      description: ID устройства пользователя (В случае переустрановки приложения `device_id` сбрасывается. На `web` `device_id` может протухать)
+    - name: referrer_user_id
+      description: Тот `user_id`, которому начислились баллы по реферальной программе за заказ
+    - name: points_to_referrer_user
+      description: Число начисленных баллов в $, начисленных за заказ
+    - name: referral_type
+      description: Тип реферального начисления (внешняя ссылка, соц пост, пользовательская подборка)
+
+- name: gold_logistics_orders
+  description: Информация о заказах с полями для логистики. Первичный ключ - `order_id`
+  columns:
+    - name: order_id
+      description: ID заказа. Заказом считается покупка конкретного `product_variant_id` у одного мерчанта. Если нужно посчитать метрики по всей купленной корзине, то используйте `order_group_id`
+    - name: shipping_order_number
+      description: Номер логистического заказа. Создается в момент создания логистического заказа (несколько часов после создания джумовского заказа). Значение может поменяться во время мерчантской консолидации (тогда вместо нескольких `shipping_order_number` появится один новый). Логистический заказ может содержать несколько джумовских в случае мерчантской консолидации.
+    - name: order_group_id
+      description: ID купленной корзины товаров. При оформлении заказа пользователем для всех купленных товаров присваивается один ID. 
+    - name: parcel_id
+      description: ID посылки (пакета). Посылка может содержать несколько логистических заказов (`shipping_order_number`) в случае консолидации Хекни. Сущность может изменяться до отправки из Хекни
+    - name: tracking_number
+      description: Текущий трек номер посылки. 1 `tracking_number` строго соответствует 1 `parcel_id`
+    - name: user_id
+      description: ID пользователя (В случае переустрановки приложения до момента повторной авторизации ему присваивается новый `user_id`)
+    - name: device_id
+      description: ID устройства пользователя (В случае переустрановки приложения `device_id` сбрасывается. На `web` `device_id` может протухать)
+    - name: country_code
+      description: Код страны (A2-код). В случае, если пользователь запросит удаление его персональных данных из наших хранилищ, поле будет принимать значение NULL
+    - name: origin_name
+      description: Происхождение мерчанта, откуда отправляет товары
+    - name: is_delivered_by_jl
+      description: Флаг, доставляется ли посылка JL
+    - name: is_fbj_order
+      description: Флаг, зафулфилен ли заказ с помощью FBJ (на складе Хекни, а не на складе мерчанта)
+    - name: delivery_method_name
+      description: Название метода доставки. `mail` - обычная почтовая доставка; `delivery point` - доставка в ПВЗ (пункт выдачи заказов); `courier` - курьерская доставка; `fast mail` - ускоренная или отслеживаемая доставка, выбранная добровольно пользователем на чекауте; `unknown` - будет в случае появления нового метода, который не будет обработан автоматически
+    - name: linehaul_shipper_final
+      description: Финальное название магистрального логиста (международная перевозка - от Хекни в страну назначения)
+    - name: shipping_type_initial
+      description: Логистический тип доставки, который использовался для расчета цены логистики для товара во время совершения заказа пользователем. Это поле не меняется. Возможные значения - `Offline`/`NRM`/`SRM`/`RM`
+    - name: shipping_type_final
+      description: Логистический тип доставки, которым отправлен пакет. Если пакет еще не отправлен со склада Хекни, то в этом поле содержится наиболее актуальное для посылки значение. Возможные значения - `Offline`/`NRM`/`SRM`/`RM`
+    - name: channel_id_initial
+      description: Логистический канал доставки, который использовался для расчета цены логистики для товара во время совершения заказа пользователем. Это поле не меняется
+    - name: channel_id_final
+      description: Логистический канал доставки, которым отправлен пакет. Если пакет еще не отправлен со склада Хекни, то в этом поле содержится наиболее актуальное для посылки значение
+    - name: is_consolidated_by_hecny
+      description: Флаг, сконсолидирован ли заказ в сортировочном центре Хекни
+    - name: is_consolidated_by_merchant
+      description: Флаг, сконсолидирован ли заказ мерчантом
+    - name: is_refunded
+      description: Флаг, есть ли возврат по заказу
+    - name: refund_reason
+      description: Причина, по которой был оформлен возврат. Принимает значения `cancelled_by_customer`, `cancelled_by_merchant`, `not_delivered`, `quality`, `other`, `fraud`, NULL
+    - name: shipping_order_weight
+      description: Вес логистического заказа. Получается при чекине посылки в Хекни. ВНИМАНИЕ(!) поле истинно для `shipping_order_number`, поэтому не суммируется по всей таблицы без дедубликации
+    - name: parcel_weight
+      description: Логистический вес посылки. Получается при чекауте посылки из Хекни. ВНИМАНИЕ(!) поле истинно для `parcel_id`, поэтому не суммируется по всей таблицы без дедубликации
+    - name: product_quantity
+      description: Количество `product_variant_id` в заказе
+    - name: gmv_initial
+      description: Сколько заплатил пользователь в USD
+    - name: gmv_refund
+      description: Сумма возврата в USD
+    - name: jl_revenue_final
+      description: Финальная выручка логистики. Считается по весу при чекине `shipping_order_weight`. Распределяется из логистических заказов (`shipping_order_number`) на джумовские (`order_id`) пропорционально мерчантской цене. По этому полю можно суммировать
+    - name: jl_consolidation_revenue_final
+      description: Финальная выручка логистики от консолидации. Распределяется из финальной группы консолидации на логистические заказы пропорционально весу логистического заказа на чекине в Хэкни, а затем от логистического заказа на джумовские (order_id) пропорционально мерчантской цене. По этому полю можно суммировать
+    - name: jl_gross_profit_final
+      description: Прибыль от конкретного заказа логистики. Распределяется из логистических заказов (`shipping_order_number`) на джумовские (`order_id`) пропорционально мерчантской цене. По этому полю можно суммировать
+    - name: jl_consolidation_profit_final
+      description: Прибыль от конкретного заказа логистики от консолидации. Распределяется из финальной группы консолидации на логистические заказы пропорционально весу логистического заказа на чекине в Хэкни, а затем от логистического заказа на джумовские (order_id) пропорционально мерчантской цене. По этому полю можно суммировать
+    - name: days_to_non_delivery_warranty_start
+      description: Количество дней от создания заказа до начала действия гарантии по недоставке
+    - name: days_to_non_delivery_warranty_end
+      description: Количество дней от создания заказа до окончания действия гарантии по недоставке
+    - name: delivery_estimate_lower_bound_days
+      description: Нижняя граница времени доставки, показанная пользователю при покупке
+    - name: delivery_estimate_upper_bound_days
+      description: Верхняя граница времени доставки, показанная пользователю при покупке
+    - name: delivery_duration_by_user
+      description: Сколько дней прошло с момента заказа до подтверждения пользователем получения товара
+    - name: delivery_duration_by_tracking
+      description: Сколько дней прошло с момента заказа до доставки на Шаг 6 (tracking_issuing_point_datetime_utc) по трекингу
+    - name: order_date_msk
+      description: Дата создания заказа UTC+3
+    - name: tracking_shipped_datetime_utc
+      description: Шаг 1 доставки. Время фулфила заказа на склад Хекни. Считается как наименьшее время чекпоинтов после первого чекина в Хекни
+    - name: tracking_origin_country_datetime_utc
+      description: Шаг 2 доставки. Время появления заказа в стране отправления. Считается как наименьшее время чекпоинтов после первого чекпоинта в стране отправления
+    - name: tracking_in_transit_datetime_utc
+      description: Шаг 3 доставки. Время чекаута заказа из Хекни. Считается как наименьшее время чекпоинтов после первого чекпоинта выезда с Хэкни
+    - name: tracking_international_datetime_utc
+      description: Шаг 4 доставки. Время появления заказа в международной доставке. Для китайских заказов - первый чекпоинт за пределами Китая. Считается как наименьшее время чекпоинтов после первого чекпоинта с глубиной international
+    - name: tracking_destination_country_datetime_utc
+      description: Шаг 5 доставки. Время появления заказа в стране назначения. Считается как наименьшее время чекпоинтов после первого чекпоинта в стране назначения
+    - name: tracking_issuing_point_datetime_utc
+      description: Шаг 6 доставки. Время появления заказа в пункте выдачи (или доставки клиенту, в зависимости от типа логистики). Считается как наименьшее время чекпоинтов после первого чекпоинта в пункте выдачи заказов
+    - name: tracking_delivered_datetime_utc
+      description: Шаг 7 доставки. Время доставки заказа клиенту или получения заказа клиентом в пункте выдачи (в зависимости от типа логистики). Считается как наименьшее время чекпоинтов после первого чекпоинта с выдачей посылки
+    - name: tracking_returned_datetime_utc
+      description: Шаг 8 доставки (возврат посылки обратно отправителю). Время отправки заказа обратно в страну отправления. Валидно для заказов, которые не были получены клиентом или были возвращены с доставкой обратно отправителю. Считается как наименьшее время чекпоинтов после первого чекпоинта с глубиной returned
+    - name: logistics_tracking_stage
+      description: Этап, на котором находится посылка согласно чекпоинтам логистического трекинга - 6. Returned, 5. Delivered, 4. Issuing Point, 3. Destination Country, 2. International, 1.5 In Tansit, 1. Origin Country, 1. Hecny':' + last_hecny_checkin_point, 0. No Tracking
+
+- name: gold_payment_orders
+  description: Информация о попытках провести платежную операцию через провайдера. Первичный ключ - `payment_order_id`. Таких попыток может быть несколько для одного заказа (`order_group_id`) или 0). В таблице нет оплаты баллами. `Payment Order` - это платежное поручение. Есть сущность `Payment`, она говорит нам о конкретной попытке провести платеж через провайдера с заданными параметрами. В случае неудачи для `Payment Order` может быть инициирована повторная попытка (`Payment`) с другими параметрами (Например, другой провайдер/запрос cvv/запрос 3ds), это отражено во флаге `is_with_cascade_of_payment_attempts`.
+  columns:
+    - name: payment_order_id
+      description: ID платежного поручения, начинается с момента нажатия на кнопку "купить" на чекауте. Для `payment_order_id` создается конкретная попытка провести оплату с заданными параметрами (`payment`). В случае неудачи может быть инициирована повторная попытка (`payment`) с другими параметрами (Мы можем варьировать `provider`/запрос `3ds`/запрос `cvv`). Если `payment` будет несколько, это отразится во флаге `is_with_cascade_of_payment_attempts`.
+    - name: order_group_id
+      description: ID купленной корзины товаров. При оформлении заказа пользователем для всех купленных товаров присваивается один ID. Для одного `order_group_id` может быть несколько платежных поручений (`payment_order_id`)
+    - name: device_id
+      description: ID устройства пользователя
+    - name: user_id
+      description: ID пользователя
+    - name: device_country_code
+      description: Код страны `device_id` (A2-код)
+    - name: platform
+      description: Платформа устройства пользователя
+    - name: is_first_successful_payment_on_date_for_device
+      description: Флаг, является ли девайс новым с точки зрения успешных оплат ранее. `True`, если дата соответствует самой ранней из дат, на которые приходилась хотя бы одна успешная оплата для `device_id`
+    - name: payment_date_msk
+      description: Дата платежного порвучения UTC+3
+    - name: is_success
+      description: Флаг успешности платежа
+    - name: is_with_cascade_of_payment_attempts
+      description: Флаг, был ли у платежной попытки каскад по `payment`. `True`, если у платежной попытки был каскад по `payment` (в зависимости от настроек, он может быть по провайдеру, по форсу 3ds или не быть вообще - см. таблицу `payments.payment`), иначе `False`
+    - name: is_with_chargeback
+      description: Флаг, был ли у заказа чарджбэк. `True`, если у заказа был чарджбэк, иначе `False`. Чарджбэк  — возврат денег юзеру банком-эмитентом по запросу юзера
+    - name: is_refunded
+      description: Флаг, был ли у `payment_order_id` возврат
+    - name: payment_type
+      description: Тип оплаты. Возможные значения - `card`, `paypal`, `googlePay`, `applePay`, `klarnaPayLater` и другие. Около 15-20 возможных значений
+    - name: payment_origin
+      description: Источник оплаты. Возможные значения -  `native` (оплата происходит внутри сессии джума) или `web` (редирект на страницу метода оплаты)
+    - name: provider_name
+      description: Имя провайдера. Например - `solidgate`, `qiwi_payin_iproj`, `qiwi_payin_jm`, `ingenico`, `paypal_joom_sia` и другие. Около 20 возможных значений. В случае, если у `payment_order_id` был каскад платежных попыток, который не завершился успешной оплатой, берется первый провайдер.
+    - name: card_linking_status
+      description: Возможные значения -> `new_card` - пользователь вводит данные краты при оплате, `linked_card` - данные карты уже есть в нашей базе (были успешные оплаты этой картой ранее), пользователь их не вводит, `not_card` - оплата идет при помощи альтернативного метода оплаты
+    - name: card_brand
+      description: Бренд карты. Возможные значения - `VISA`, `MASTERCARD`, `NSPK MIR`, `MAESTRO`, `UNKNOWN`, `AMEX` и другие. Около 30 возможных значений (from `payments.card_bins table`)
+    - name: card_country_code
+      description: Код страны карты (A2-код) (from `payments.card_bins table`)
+    - name: card_bin
+      description: Банковский идентификационный номер (БИН) - часть , расположенного на пластиковой карте. Используется для идентификации банка в рамках карточной платежной системы при , процессинге и клиринге (https://www.banki.ru/wikibank/bankovskiy_identifikatsionnyiy_nomer/)
+    - name: is_3ds
+      description: Флаг, был ли у оплаты 3ds
+    - name: initiator_3ds
+      description: На чьей стороне инициирован 3ds (`provider` - провайдер, `antifraud` - антифрод, `payments` - команда платежей, `NULL` - без 3ds)
+    - name: payment_currency
+      description: Валюта проведения платежа
+    - name: user_currency
+      description: Валюта пользователя (та, что высвечивалась у него на чекауте)
+    - name: payment_amount_user_currency
+      description: Сумма оплаты в валюте пользователя
+    - name: payment_amount
+      description: Сумма оплаты в USD
+    - name: refund_amount
+      description: Сумма рефанда в USD
+    - name: antifraud_status
+      description: Антифрод статус. Возможные значения - `safe`, `soft_blocked`, `blocked`, `risky`, `unknown` (Источник - `riskResult.antifraudStatus` from `mongo.payment_payment_orders_daily_snapshot`)
+    - name: cancel_reason_type
+      description: Тип ошибки, от которого зависит сообщение, передаваемое пользователю при неуспешной оплате
+    - name: cancel_reason_message
+      description: Описание ошибки

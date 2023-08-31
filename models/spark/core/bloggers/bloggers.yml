@@ -1,0 +1,10 @@
+version: 2
+
+models:
+  - name: bloggers
+    description: Список пользователей замеченных в блоггерстве 
+    columns:
+      - name: user_id
+        description: ID пользователя
+      - name: blogger_type
+        description: тип блоггера

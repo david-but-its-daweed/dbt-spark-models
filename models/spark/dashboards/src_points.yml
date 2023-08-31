@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: user_points_transactions
+    description: model to build dashboard about points transactions 
+    columns:
+      - name: day
+        description: Дата (MSK)
+      - name: country
+        description: Страна устройства
+      - name: platform
+        description: Платформа устройства
+      - name: user_id
+        description: id пользователя
+      - name: point_transaction_type
+        description: Тип начисления
+      - name: point_usd
+        description: Сумма баллов в $
+      - name: num_transactions
+        description: Число транзакций
+      
