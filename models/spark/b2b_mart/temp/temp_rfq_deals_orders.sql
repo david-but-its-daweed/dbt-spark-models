@@ -168,6 +168,11 @@ order by created_time desc
 select 
 r.*,
 level_1_category.name as level_1_category,
+level_2_category.name as level_2_category,
+case 
+    when level_2_category is not null then 2
+    when level_2_category is null and level_1_category is not null then 1
+end as category_level,
 merchant_name,
 owner_id,
 owner_email,
