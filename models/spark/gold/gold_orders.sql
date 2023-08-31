@@ -13,7 +13,7 @@
 WITH numbers AS (
     SELECT
         order_id,
-        partition_date as order_date_msk
+        partition_date as order_date_msk,
         ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_orders_number, -- номер покупки товара
         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY created_time_utc) AS device_orders_number, -- номер покупки девайса
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_time_utc) AS user_orders_number, -- номер покупки пользователя
