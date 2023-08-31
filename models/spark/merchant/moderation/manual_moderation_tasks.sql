@@ -7,6 +7,7 @@
       'team': 'merchant',
       'model_owner': '@abracadabrik',
       'bigquery_load': 'true',
+      'bigquery_overwrite': 'true',
       'bigquery_partitioning_date_column': 'queued_date'
     },
 ) }}
@@ -30,7 +31,7 @@ product_categories AS (
             product_id,
             category_id,
             effective_ts,
-            LAST(effective_ts) OVER (PARTITION BY product_id ORDER BY effective_ts) AS latest_effective_ts
+            LAST(effective_ts) OVER (PARTITION BY product_id ORDER BY effective_ts RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS latest_effective_ts
         FROM {{ source('mart', 'dim_product') }}
     )
     WHERE

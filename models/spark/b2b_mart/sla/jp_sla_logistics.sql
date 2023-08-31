@@ -236,4 +236,4 @@ FROM orders AS o
 INNER JOIN orders_hist AS oh ON o.order_id = oh.order_id
 LEFT JOIN linehaul AS l ON o.linehaul_channel_id = l.id
 LEFT JOIN merchant_order AS mo ON o.order_id = mo.order_id
-WHERE oh.manufacturing IS NOT NULL
+WHERE oh.manufacturing IS NOT NULL OR oh.shipping IS NOT NULL
