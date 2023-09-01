@@ -146,7 +146,7 @@ psi AS (
         product_id,
         max(running_time) AS psi_running_time,
         max(ready_time) AS psi_ready_time,
-        max(coalesce(failed_time, psi_end_time)) AS psi_end_time
+        max(psi_end_time) AS psi_end_time
     FROM {{ ref('fact_psi') }}
     GROUP BY merchant_order_id, product_id
 ),
@@ -157,7 +157,8 @@ order_statuses AS (
         max(CASE WHEN sub_status = 'joomSIAPaymentReceived' THEN event_ts_msk END) AS sia_payment_received,
         max(CASE WHEN sub_status = 'client2BrokerPaymentSent' THEN event_ts_msk END) AS client_to_broker_payment_sent,
         max(CASE WHEN sub_status = 'brokerPaymentReceived' THEN event_ts_msk END) AS broker_payment_received,
-        max(CASE WHEN sub_status = 'broker2JoomSIAPaymentSent' THEN event_ts_msk END) AS broker_to_sia_payment_sent
+        max(CASE WHEN sub_status = 'broker2JoomSIAPaymentSent' THEN event_ts_msk END) AS broker_to_sia_payment_sent,
+        max(CASE WHEN status = 'cancelled' THEN event_ts_msk END) AS order_cancelled
     FROM {{ ref('fact_order_statuses') }}
     GROUP BY order_id
 ),
@@ -255,6 +256,7 @@ SELECT DISTINCT
     os.client_to_broker_payment_sent,
     os.broker_payment_received,
     os.broker_to_sia_payment_sent,
+    os.order_cancelled,
     oh.min_biz_dev_time,
     oh.max_biz_dev_time
 FROM order_products AS op
