@@ -173,7 +173,7 @@ owners AS (
 kam_country AS (
     SELECT 
         owner_email,
-        FIRST_VALUE(country) OVER (PARTITION BY owner_email ORDER BY country DESC) AS country
+        FIRST_VALUE(country) OVER (PARTITION BY owner_email ORDER BY users DESC) AS country
     FROM
     (
     SELECT
