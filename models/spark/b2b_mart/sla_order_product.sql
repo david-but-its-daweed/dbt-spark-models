@@ -146,6 +146,7 @@ psi AS (
         product_id,
         max(running_time) AS psi_running_time,
         max(ready_time) AS psi_ready_time,
+        max(failed_time) AS psi_failed_time,
         max(psi_end_time) AS psi_end_time
     FROM {{ ref('fact_psi') }}
     GROUP BY merchant_order_id, product_id
@@ -245,6 +246,7 @@ SELECT DISTINCT
     ps.pickup_completed,
     psi.psi_running_time,
     psi.psi_ready_time,
+    psi.psi_failed_time,
     psi.psi_end_time,
     op.current_order_status,
     op.current_order_substatus,
