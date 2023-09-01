@@ -1,7 +1,7 @@
 {{ config(
      schema='support',
      materialized='table',
-     location_root='s3://joom-analytics-mart/support/nonpartitioned/'
+     location_root='s3://joom-analytics-mart/support/nonpartitioned/',
      file_format='delta',
      meta = {
        'team': 'analytics',
