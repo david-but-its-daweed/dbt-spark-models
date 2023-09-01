@@ -135,7 +135,7 @@ funnel_cart AS (
         funnel.session_minenv_dt,
         funnel.cart_open_dt,
         funnel.payment_dt,
-        session_dates.max_session_event_dt,
+        last_cart.max_session_event_dt,
         cart_switcher.switcher_num,
         --------------------------------------------------------------------------------------------
         first_cart.packagescount AS first_packagescount,
