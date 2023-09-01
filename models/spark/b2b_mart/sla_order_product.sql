@@ -170,10 +170,10 @@ order_hist AS (
         order_id
     FROM (
         SELECT DISTINCT
-            MIN(biz_dev_time_msk) OVER (PARTITION BY order_id) AS min_biz_dev_time,
+            MIN(event_ts_msk) OVER (PARTITION BY order_id) AS min_biz_dev_time,
             FIRST_VALUE(biz_dev_moderator_id) OVER (PARTITION BY order_id ORDER BY biz_dev_time_msk DESC) AS current_biz_dev,
             biz_dev_moderator_id,
-            biz_dev_time_msk,
+            event_ts_msk as biz_dev_time_msk,
             order_id
         FROM {{ ref('fact_order_change') }} AS f
         JOIN (
