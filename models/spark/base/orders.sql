@@ -9,7 +9,7 @@
 WITH product_numbers AS (
     SELECT
         order_id,
-        partition_date AS order_date_msk,
+        partition_date AS day,
         ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
@@ -161,7 +161,7 @@ orders_ext1 AS (
         o.*,
         n.product_order_number
     FROM orders_ext0 AS o
-    LEFT JOIN product_numbers AS n USING (order_id, order_date_msk)
+    LEFT JOIN product_numbers AS n USING (order_id, day)
 ),
 
 logistics_orders AS (

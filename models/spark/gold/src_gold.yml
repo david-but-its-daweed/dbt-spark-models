@@ -28,8 +28,6 @@ models:
       description: Название сегмента, поле истинно для `real_user_id`. Возможные значения - `Non-buyers` - нет заказов за последние 3 месяца, `Occasional buyers` - 1 или 2 месяца с заказами за последние 3 месяца, `Regular buyers` - 3/3 последних месяца с заказами или 4+/6, `Constant buyers` - 10+/12 последних месяцев с заказами
     - name: is_new_device
       description: Флаг, является ли девайс новым (считается как `date_msk = join_date_msk`)
-    - name: blogger_type
-      description: Является ли заказ, заказом от блогера
     - name: is_ephemeral_device
       description: Флаг, является ли девайс эфемерным (если у девайса в `date_msk` наблюдались оба состояния, то будет FALSE)
     - name: device_lifetime
@@ -184,8 +182,6 @@ models:
       description: Флаг, является ли пользователь эфемерным (если у пользователя в `date_msk` наблюдались оба состояния, то будет FALSE)
     - name: user_lifetime
       description: Календарный лайфтайм `user_id` в днях
-    - name: previous_activity_user_group
-      description: Тип `user_id` в зависимости от времени отсутствия. Принимает 3 состояния. 'new' - дата активности равна дате первой активности. 'regular' - предыдущая активность состоялась в интервале [1 ; 28]. 'reactivated' - предыдущая активность была больше 28 дней назад.
     - name: prev_date_msk_lag
       description: Сколько календарных дней прошло для `user_id` с предыдущей активности по UTC+3
     - name: next_date_msk_lag
@@ -594,12 +590,8 @@ models:
       description: Цена продавца в USD для заказа, включает цену товара (умноженную на количество), логистику продавца (если имеется) и скидки продавца. Поле может корректироваться в соответствии с изменениями по заказу. Не включает в себя логистику Joom.
     - name: merchant_list_price
       description: Цена продавца в USD на момент соверщения заказа, включает цену товара (умноженную на количество), логистику продавца (если имеется) и скидки продавца. Не включает в себя логистику Joom.
-    - name: item_merchant_revenue_initial
-      description: Стоимость единицы товара в USD, установленная мерчантом. Общий платеж, причитающийся продавцу, рассчитывается как costs.merchantPayout + costs.merchantRevenueInsurance, потому что merchantPayout не включает merchantRevenueInsurance + существует merchantRevenueFinal, который звучит именно так, как мы хотим, за исключением того, что он не включает merchantRevenueInsurance, а также, в отличие от merchantPayout, не включает компенсацию за отслеживание продавца.
     - name: logistics_price_initial
       description: Цена логистики за заказ, которую мы ожидали при оформлении заказа, была добавлена к окончательной цене продажи
-    - name: item_logistics_price_initial
-      description: Цена логистики за единицу товара, которую мы ожидали при оформлении заказа, была добавлена к окончательной цене продажи
     - name: vat_markup
       description: Деньги, которые мы закладываем в стоимость товара для оплаты налогов
     - name: marketplace_commission_initial
@@ -608,14 +600,8 @@ models:
       description: Доп. наценка, зависит от пользователя, товара и т.д. (не учитывает купоны и баллы, т.е. добавляется к цене мерчанта + цена логистики)
     - name: jl_markup
       description: Доп. наценка, в большинстве случаев связана с логистикой, управляется на стороне маркетплейса командой цен
-    - name: is_with_coupon
-      description: Флаг, был ли использован купон в заказе
     - name: coupon_discount
       description: Сумма скидки по купону в USD для order_id
-    - name: used_coupon_id
-      description: ID использованного купона
-    - name: is_with_points
-      description: Флаг, были ли использованы баллы
     - name: points_initial
       description: Сумма скидок за счет использования баллов в пересчете на USD
     - name: device_order_groups_number
