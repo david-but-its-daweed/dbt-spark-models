@@ -262,7 +262,7 @@ final_kam AS (
 )
 
 
-SELECT
+SELECT DISTINCT
     *,
     date'{{ var("start_date_ymd") }}' AS partition_date_msk
 FROM (
