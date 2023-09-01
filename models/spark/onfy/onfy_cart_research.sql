@@ -175,7 +175,7 @@ funnel_cart as (
   left join max_status
     on funnel.device_id = max_status.device_id
     and funnel.session_minenv_dt = max_status.session_minenv_dt
-  where window_size = '7 days'
+  where funnel.window_size = '7 days'
     and date(funnel.session_minenv_dt) >= '2023-06-01'
     and funnel.cart_open_dt is not null
 ),
