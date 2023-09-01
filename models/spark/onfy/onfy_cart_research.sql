@@ -101,11 +101,11 @@ sessions_last_cart as (
 max_status as (
     select
         session_dates.device_id,
-        session_minenv_dt,
-        MAX(packagescount) as max_parcels,
-        MAX(itemscount) as max_items,
-        MAX(cart_price) as max_cart,
-        MAX(hasoptimalshippingtab) as had_optimal
+        session_dates.session_minenv_dt,
+        MAX(cart_open.packagescount) as max_parcels,
+        MAX(cart_open.itemscount) as max_items,
+        MAX(cart_open.cart_price) as max_cart,
+        MAX(cart_open.hasoptimalshippingtab) as had_optimal
     from session_dates
     join cart_open
         on session_dates.device_id = cart_open.device_id
@@ -129,7 +129,7 @@ funnel_cart as (
         funnel.session_minenv_dt,
         funnel.cart_open_dt,
         funnel.payment_dt,
-        max_session_event_dt,
+        session_dates.max_session_event_dt,
         cart_switcher.switcher_num,
   --------------------------------------------------------------------------------------------
         first_cart.packagescount as first_packagescount,
@@ -146,21 +146,21 @@ funnel_cart as (
         first_cart.optimalshippingdisplayeddiscount as fisrt_optimalshippingdisplayeddiscount,
   --------------------------------------------------------------------------------------------
         last_cart.cart_dt as last_cart_dt,
-        COALESCE(last_packagescount, first_cart.packagescount) as last_packagescount,
+        COALESCE(last_cart.last_packagescount, first_cart.packagescount) as last_packagescount,
         case 
-            when COALESCE(last_packagescount, first_cart.packagescount) = 1 then '1 parcel'
-            when COALESCE(last_packagescount, first_cart.packagescount) > 1 then '2 and more parcels'
+            when COALESCE(last_cart.last_packagescount, first_cart.packagescount) = 1 then '1 parcel'
+            when COALESCE(last_cart.last_packagescount, first_cart.packagescount) > 1 then '2 and more parcels'
         end as last_parcels_num,
-        COALESCE(last_carttab, first_cart.carttab) as last_carttab,
-        last_deliveryprice,
-        last_productsprice,
-        last_hasoptimalshippingtab,
-        last_optimalshippingdeliveryprice,
+        COALESCE(last_cart.last_carttab, first_cart.carttab) as last_carttab,
+        last_cart.last_deliveryprice,
+        last_cart.last_productsprice,
+        last_cart.last_hasoptimalshippingtab,
+        last_cart.last_optimalshippingdeliveryprice,
   -------------------------------------------------------------------------------------------- 
-        max_parcels,
-        max_items,
-        max_cart,
-        had_optimal
+        max_status.max_parcels,
+        max_status.max_items,
+        max_status.max_cart,
+        max_status.had_optimal
   from {{ source('onfy', 'conversion_funnel') }} funnel
   left join cart_open as first_cart
     on funnel.device_id = first_cart.device_id
@@ -184,45 +184,45 @@ two_parcel_scenarios as (
     select
         *,
         case
-            when last_deliveryprice = 0 then 'free delivery'
-            when last_deliveryprice > 0 and last_deliveryprice <= 5 then 'less then 5eur delivery'
-            when last_deliveryprice > 5 then 'more then 5eur delivery'
+            when funnel_cart.last_deliveryprice = 0 then 'free delivery'
+            when funnel_cart.last_deliveryprice > 0 and funnel_cart.last_deliveryprice <= 5 then 'less then 5eur delivery'
+            when funnel_cart.last_deliveryprice > 5 then 'more then 5eur delivery'
         end as delivery,
-    GREATEST(first_packagescount, last_packagescount) as packages_count,
+    GREATEST(funnel_cart.first_packagescount, funnel_cart.last_packagescount) as packages_count,
     case
         when 
-            switcher_num = 0
-            and max_parcels > 1
-            and had_optimal
-            and first_parcels_num = '1 parcel'
-            and last_parcels_num = '1 parcel'
+            funnel_cart.switcher_num = 0
+            and funnel_cart.max_parcels > 1
+            and funnel_cart.had_optimal
+            and funnel_cart.first_parcels_num = '1 parcel'
+            and funnel_cart.last_parcels_num = '1 parcel'
         then 'manually_optimised'
         when 
-            switcher_num = 0
-            and first_carttab = 'optimalShipping' 
-            and last_carttab = 'optimalShipping'
+            funnel_cart.switcher_num = 0
+            and funnel_cart.first_carttab = 'optimalShipping' 
+            and funnel_cart.last_carttab = 'optimalShipping'
         then 'optimal_pre_selected'
         when 
-            switcher_num = 0
-            and max_parcels > 1
-            and not had_optimal
-            and first_carttab != 'optimalShipping'
+            funnel_cart.switcher_num = 0
+            and funnel_cart.max_parcels > 1
+            and not funnel_cart.had_optimal
+            and funnel_cart.first_carttab != 'optimalShipping'
         then 'no_optimal_shipping'
         when 
-            switcher_num = 0
-            and max_parcels > 1
-            and had_optimal
-            and first_carttab != 'optimalShipping'
+            funnel_cart.switcher_num = 0
+            and funnel_cart.max_parcels > 1
+            and funnel_cart.had_optimal
+            and funnel_cart.first_carttab != 'optimalShipping'
         then 'had_optimal_didnt_tried'
         when 
-            switcher_num > 0
-            and first_carttab != 'optimalShipping'
-            and last_carttab != 'optimalShipping' 
+            funnel_cart.switcher_num > 0
+            and funnel_cart.first_carttab != 'optimalShipping'
+            and funnel_cart.last_carttab != 'optimalShipping' 
         then 'tried_optimal_didnt_use'
         when 
-            switcher_num > 0
-            and first_carttab != 'optimalShipping'
-            and last_carttab = 'optimalShipping' 
+            funnel_cart.switcher_num > 0
+            and funnel_cart.first_carttab != 'optimalShipping'
+            and funnel_cart.last_carttab = 'optimalShipping' 
         then 'choose_optimal'
     end as cart_scenarios
 from funnel_cart
