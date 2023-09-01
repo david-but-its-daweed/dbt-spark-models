@@ -180,6 +180,8 @@ sources:
         description: Traffic sources by device and session date
       - name: transactions
         description: Main financial source
+      - name: conversion_funnel
+        description: Onfy main stages conversion rates
   - name: merchant
     tables:
       - name: dim_merchant_payment_channel
