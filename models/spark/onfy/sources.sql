@@ -1,5 +1,4 @@
-
- {{ config(
+{{ config(
     schema='onfy',
     materialized='table',
     meta = {
@@ -10,76 +9,91 @@
     }
 ) }}
 
-with sources as 
-(
-    select distinct
+WITH sources AS (
+    SELECT DISTINCT
         device_id,
-        event_ts_cet as source_dt,
-        lead(event_ts_cet) over (partition by device_id order by event_ts_cet) as next_source_dt,
-        onfy_mart.device_events.type,
-        coalesce(
-            case 
-                when onfy_mart.device_events.type = 'externalLink'
-                then
-                    case
-                        when lower(onfy_mart.device_events.payload.params.utm_source) like '%google%' 
-                        then 'google' 
-                        when onfy_mart.device_events.payload.params.utm_source like '%tiktok%'
-                        then 'tiktok'
-                        when onfy_mart.device_events.payload.params.utm_source is not null
-                        then onfy_mart.device_events.payload.params.utm_source
-                        when 
-                            (onfy_mart.device_events.payload.referrer like '%/www.google%') 
-                            or (onfy_mart.device_events.payload.referrer like '%/www.bing%')
-                            or (onfy_mart.device_events.payload.referrer like '%/search.yahoo.com%')
-                            or (onfy_mart.device_events.payload.referrer like '%/duckduckgo.com%')
-                        then 'Organic'
-                        when
-                            (onfy_mart.device_events.payload.referrer like '%facebook.com%') 
-                            or (onfy_mart.device_events.payload.referrer like '%instagram.com%')             
-                        then 'UNMARKED_facebook_or_instagram'      
-                    end
-                when onfy_mart.device_events.type in ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
-                then
-                    case
-                        when onfy_mart.device_events.payload.utm_source = 'Unattributed' then 'Facebook'
-                        when onfy_mart.device_events.payload.utm_source is null then 'Unknown'
-                        when onfy_mart.device_events.payload.utm_source = 'Google Organic Search' then 'Organic'
-                        when lower(onfy_mart.device_events.payload.utm_source) like '%tiktok%' then 'TikTok'
-                        else onfy_mart.device_events.payload.utm_source
-                    end
-            end
-        , 'Unknown') AS utm_source,
-        regexp_replace(coalesce(onfy_mart.device_events.payload.params.utm_campaign, onfy_mart.device_events.payload.utm_campaign), ' \\((\\d+)\\)$', '') as utm_campaign,
-        coalesce(onfy_mart.device_events.payload.params.utm_medium, onfy_mart.device_events.payload.traffic_medium) as utm_medium,
-        case 
-            when 
-                lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%adchampaign%'
-                or lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%adchampagn%' 
-                then 'adchampagne'
-                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%rocket%' then 'rocket10'
-                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%whiteleads%' then 'whiteleads'
-                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%ohm%' then 'ohm'
-                when lower(coalesce(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) like '%mobihunter%' then 'mobihunter'
-                else 'onfy'
-        end as partner
-    from {{ source('onfy_mart', 'device_events') }}
-    where 1=1
-        and type in ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
+        type,
+        event_ts_cet AS source_dt,
+        LEAD(event_ts_cet) OVER (PARTITION BY device_id ORDER BY event_ts_cet) AS next_source_dt,
+        COALESCE(
+            CASE
+                WHEN onfy_mart.device_events.type = 'externalLink'
+                    THEN
+                        CASE
+                            WHEN LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%'
+                                THEN 'google'
+                            WHEN onfy_mart.device_events.payload.params.utm_source IS NOT NULL
+                                THEN onfy_mart.device_events.payload.params.utm_source
+                            WHEN
+                                (onfy_mart.device_events.payload.referrer LIKE '%/www.google%')
+                                OR (onfy_mart.device_events.payload.referrer LIKE '%/www.bing%')
+                                OR (onfy_mart.device_events.payload.referrer LIKE '%/search.yahoo.com%')
+                                OR (onfy_mart.device_events.payload.referrer LIKE '%/duckduckgo.com%')
+                                THEN 'Organic'
+                            WHEN
+                                (onfy_mart.device_events.payload.referrer LIKE '%facebook.com%')
+                                OR (onfy_mart.device_events.payload.referrer LIKE '%instagram.com%')
+                                THEN 'UNMARKED_facebook_or_instagram'
+                        END
+                WHEN onfy_mart.device_events.type IN ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
+                    THEN
+                        CASE
+                            WHEN onfy_mart.device_events.payload.utm_source = 'Unattributed' THEN 'Facebook'
+                            WHEN LOWER(onfy_mart.device_events.payload.utm_source) LIKE '%google%' AND LOWER(onfy_mart.device_events.payload.utm_source) NOT LIKE '%organic%' THEN 'Google'
+                            WHEN LOWER(onfy_mart.device_events.payload.utm_source) LIKE '%tiktok%' THEN 'TikTok'
+                            WHEN onfy_mart.device_events.payload.utm_source = 'Google Organic Search' THEN 'Organic'
+                            WHEN payload.fb_install_referrer_campaign_group_name IS NOT NULL THEN 'Facebook'
+                            ELSE onfy_mart.device_events.payload.utm_source
+                        END
+            END,
+            'Unknown'
+        ) AS utm_source,
+        COALESCE(
+            CASE
+                WHEN onfy_mart.device_events.type = 'externalLink' THEN onfy_mart.device_events.payload.params.utm_campaign
+                WHEN onfy_mart.device_events.type IN ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
+                    THEN
+                        CASE
+                            WHEN onfy_mart.device_events.payload.utm_source = 'Unattributed' THEN payload.fb_install_referrer_campaign_group_name
+                            WHEN
+                                LOWER(onfy_mart.device_events.payload.utm_source) LIKE '%google%'
+                                AND LOWER(onfy_mart.device_events.payload.utm_source) NOT LIKE '%organic%' THEN onfy_mart.device_events.payload.utm_campaign
+                            WHEN LOWER(onfy_mart.device_events.payload.utm_source) LIKE '%tiktok%' THEN 'tiktok'
+                            WHEN payload.fb_install_referrer_campaign_group_name IS NOT NULL THEN payload.fb_install_referrer_campaign_group_name
+                            ELSE onfy_mart.device_events.payload.utm_campaign
+                        END
+            END,
+            'Unknown'
+        ) AS utm_campaign,
+        COALESCE(onfy_mart.device_events.payload.params.utm_medium, onfy_mart.device_events.payload.traffic_medium, payload.fb_install_referrer_campaign_name) AS utm_medium,
+        CASE
+            WHEN LOWER(COALESCE(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) LIKE '%adcha%' THEN 'adchampagne'
+            WHEN LOWER(COALESCE(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) LIKE '%rocket%' THEN 'rocket10'
+            WHEN LOWER(COALESCE(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) LIKE '%whiteleads%' THEN 'whiteleads'
+            WHEN LOWER(COALESCE(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) LIKE '%ohm%' THEN 'ohm'
+            WHEN LOWER(COALESCE(onfy_mart.device_events.payload.utm_campaign, onfy_mart.device_events.payload.params.utm_campaign)) LIKE '%mobihunter%' THEN 'mobihunter'
+            ELSE 'onfy'
+        END AS partner,
+        device.ostype AS os_type,
+        COALESCE(payload.link, payload.deeplink) AS landing_page
+    FROM {{ source('onfy_mart', 'device_events') }}
+    WHERE
+        1 = 1
+        AND type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
 ),
 
 
-corrected_sources as 
-(
-    select
+corrected_sources AS (
+    SELECT
         sources.*,
-        coalesce(utm.source_corrected, sources.utm_source) as source_corrected,
-        coalesce(utm.campaign_corrected, sources.utm_campaign) as campaign_corrected
-    from sources
-    left join {{ref("utm_campaigns_corrected")}} as utm
-        on coalesce(lower(utm.utm_campaign), '') = coalesce(lower(sources.utm_campaign), '') 
-        and coalesce(lower(utm.utm_source), '') = coalesce(lower(sources.utm_source), '') 
+        LOWER(COALESCE(utm.source_corrected, sources.utm_source, 'Unknown')) AS source_corrected,
+        SPLIT_PART(COALESCE(utm.campaign_corrected, sources.utm_campaign, 'Unknown'), ' ', 1) AS campaign_corrected
+    FROM sources
+    LEFT JOIN {{ ref("utm_campaigns_corrected") }} AS utm
+        ON
+            COALESCE(LOWER(utm.utm_campaign), '') = COALESCE(LOWER(sources.utm_campaign), '')
+            AND COALESCE(LOWER(utm.utm_source), '') = COALESCE(LOWER(sources.utm_source), '')
 )
 
-select *
-from corrected_sources
+SELECT *
+FROM corrected_sources
