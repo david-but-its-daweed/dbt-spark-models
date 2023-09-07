@@ -42,16 +42,21 @@ with source as (
     (event_ts_cet + INTERVAL 24 hours) as session_dt_24h,
     lead(event_ts_cet) over(partition by device_id order by event_ts_cet) as next_session_dt 
   from {{ source('onfy_mart', 'device_events')}}
-  where type in ('sessionConfigured', 'homeOpen')
+  where type in ('sessionConfigured')
 )
 
 , minimal_involvement as ( 
     select
       device_id,
       event_ts_cet as minimal_involvement_dt,
-      type
+      case 
+        when type = 'homeOpen' then 'main_page'
+        when type in ('search', 'searchServer') then 'search'
+        when type = 'productOpen' then 'product_page'
+        when type = 'catalogOpen' then 'catalog'
+        end as type
     from {{ source('onfy_mart', 'device_events')}}
-    where type in ('search', 'searchServer', 'productOpen', 'catalogOpen')
+    where type in ('search', 'searchServer', 'productOpen', 'catalogOpen', 'homeOpen')
 )
 
 , add_to_cart as (
@@ -145,6 +150,8 @@ to cut "technical" session start events taking sessions only if:
       sessions.source,
       sessions.campaign,
       sessions.partner,
+      minimal_involvement.type,
+      rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk,
       lag(session_dt) over(partition by sessions.device_id order by session_dt) as prev_session_minenv_dt
       , lead(session_dt) over(partition by sessions.device_id order by session_dt) as next_session_minenv_dt
     from sourced_sessions_30 as sessions
@@ -164,6 +171,7 @@ to cut "technical" session start events taking sessions only if:
     left join successful_payment as payment
       on sessions.device_id = payment.device_id
       and payment_dt between session_minenv_dt and least(next_session_minenv_dt, session_dt_30d)
+    where type_rnk = 1
 )
 
 , sessions_counter_30 as (
@@ -209,6 +217,7 @@ to cut "technical" session start events taking sessions only if:
       session.device_id,
       session_minenv_dt,
       session_window_30d,
+      session.type,
       session.source,
       session.campaign,
       session.partner,
@@ -317,6 +326,8 @@ to cut "technical" session start events taking sessions only if:
       sessions.source,
       sessions.campaign,
       sessions.partner,
+      minimal_involvement.type,
+      rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk,
       lag(session_dt) over(partition by sessions.device_id order by session_dt) as prev_session_minenv_dt
       , lead(session_dt) over(partition by sessions.device_id order by session_dt) as next_session_minenv_dt
     from sourced_sessions_7 as sessions
@@ -336,6 +347,7 @@ to cut "technical" session start events taking sessions only if:
     left join successful_payment as payment
       on sessions.device_id = payment.device_id
       and payment_dt between session_minenv_dt and least(next_session_minenv_dt, session_dt_7d)
+    where type_rnk = 1 
 )
 
 , sessions_counter_7 as (
@@ -382,6 +394,7 @@ to cut "technical" session start events taking sessions only if:
       session_minenv_dt,
       session_window_7d,
       session.source,
+      session.type,
       session.campaign,
       session.partner,
       add_to_cart_dt,
@@ -489,6 +502,8 @@ to cut "technical" session start events taking sessions only if:
       sessions.source,
       sessions.campaign,
       sessions.partner,
+      minimal_involvement.type,
+      rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk,
       lag(session_dt) over(partition by sessions.device_id order by session_dt) as prev_session_minenv_dt
       , lead(session_dt) over(partition by sessions.device_id order by session_dt) as next_session_minenv_dt
     from sourced_sessions_24 as sessions
@@ -508,6 +523,7 @@ to cut "technical" session start events taking sessions only if:
     left join successful_payment as payment
       on sessions.device_id = payment.device_id
       and payment_dt between session_minenv_dt and least(next_session_minenv_dt, session_dt_24h)
+    where type_rnk = 1 
 )
 
 , sessions_counter_24 as (
@@ -553,6 +569,7 @@ to cut "technical" session start events taking sessions only if:
       session.device_id,
       session_minenv_dt,
       session_window_24h,
+      session.type,
       session.source,
       session.campaign,
       session.partner,
@@ -625,6 +642,7 @@ to cut "technical" session start events taking sessions only if:
         events_30.checkout_dt,
         events_30.payment_start_dt,
         events_30.payment_dt,
+        events_30.type,
         events_30.source,
         events_30.campaign,
         events_30.partner,
@@ -642,6 +660,7 @@ union all
         events_7.checkout_dt,
         events_7.payment_start_dt,
         events_7.payment_dt,
+        events_7.type,
         events_7.source,
         events_7.campaign,
         events_7.partner,
@@ -659,6 +678,7 @@ union all
         events_1.checkout_dt,
         events_1.payment_start_dt,
         events_1.payment_dt,
+        events_1.type,
         events_1.source,
         events_1.campaign,
         events_1.partner,
@@ -679,6 +699,7 @@ select
     checkout_dt,
     payment_start_dt,
     payment_dt,
+    type as session_start_screen,
     source,
     campaign,
     partner,
