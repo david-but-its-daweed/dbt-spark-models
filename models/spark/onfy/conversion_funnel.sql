@@ -699,11 +699,11 @@ select
     checkout_dt,
     payment_start_dt,
     payment_dt,
-    type as session_start_screen,
     source,
     campaign,
     partner,
-    window_size
+    window_size,
+    type as session_start_screen,
 from all_together
 inner join devices_mart as devices
   on all_together.device_id = devices.device_id
