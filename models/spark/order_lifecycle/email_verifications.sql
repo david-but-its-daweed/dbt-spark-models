@@ -12,8 +12,6 @@
        'alerts_channel': "#olc_dbt_alerts",
        'bigquery_fail_on_missing_partitions': 'false',
        'model_owner' : '@ilypavlov'
-  }
-  )
     }
 ) }}
 
