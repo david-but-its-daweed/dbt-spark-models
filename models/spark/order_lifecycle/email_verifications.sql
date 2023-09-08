@@ -10,7 +10,10 @@
        'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date',
        'alerts_channel': "#olc_dbt_alerts",
-       'bigquery_fail_on_missing_partitions': 'false'
+       'bigquery_fail_on_missing_partitions': 'false',
+       'model_owner' : '@ilypavlov'
+  }
+  )
     }
 ) }}
 
