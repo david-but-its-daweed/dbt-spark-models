@@ -201,6 +201,7 @@ to cut "technical" session start events taking sessions only if:
       device_id,
       session_minenv_dt,
       (session_minenv_dt + INTERVAL 30 days) as session_window_30d, -- we use this to have events chain exactly in 30d window
+      type,
       source,
       campaign,
       partner
@@ -377,6 +378,7 @@ to cut "technical" session start events taking sessions only if:
       device_id,
       session_minenv_dt,
       (session_minenv_dt + INTERVAL 7 days) as session_window_7d, -- we use this to have events chain exactly in 7d window
+      type,
       source,
       campaign,
       partner
@@ -553,6 +555,7 @@ to cut "technical" session start events taking sessions only if:
       device_id,
       session_minenv_dt,
       (session_minenv_dt + INTERVAL 24 hours) as session_window_24h, -- we use this to have events chain exactly in 24h window
+      type,
       source,
       campaign,
       partner
@@ -703,7 +706,7 @@ select
     campaign,
     partner,
     window_size,
-    type as session_start_screen,
+    type as session_start_screen
 from all_together
 inner join devices_mart as devices
   on all_together.device_id = devices.device_id
