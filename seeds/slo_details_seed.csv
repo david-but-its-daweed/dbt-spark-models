@@ -20,3 +20,4 @@ slo_gmv_structure_report,GMV Structure,@yatsushko,#slo-monitoring,7,Data for GMV
 slo_real_user_segments_tables,Real User Segments | Main,@evstvia,#slo-monitoring,7,Data for Real User Segments report https://secure.holistics.io/dashboards/v3/70708-user-segments-main,report,80,
 slo_jm_plan_fact_business_lines,JM Plan-Fact | Business lines,@yatsushko,#slo-monitoring,7,Data for JM Plan-Fact | Business lines report https://secure.holistics.io/dashboards/v3/71745-jm-plan-fact-business-lines,report,90,
 slo_jm_plan_fact_weekly,JM Plan-Fact | Weekly,@yatsushko,#slo-monitoring,7,Data for JM Plan-Fact | Weekly report https://secure.holistics.io/dashboards/v3/71280-jm-plan-fact-weekly,report,90,
+slo_real_user_segments_retention_tables,Real User Segments | Retention,@evstvia,#slo-monitoring,7,Data for Real User Segments Retention report https://secure.holistics.io/dashboards/v3/71319-real-user-segments-retention,report,80,
