@@ -26,6 +26,13 @@ jobs:
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Install development tools
         run: sudo yum -y install gcc gcc-c++ python3-devel python38-devel cyrus-sasl-devel
+
+      - name: Install DBT
+        run: pip3.8 install dbt-core==1.6.0 dbt-spark[PyHive]==1.6.0 urllib3==1.26.6
+      - name: test DBT models
+        run: ./test.sh
+      - name: Check all models have owners
+        run: python3 get_no_owner.py
       - name: SQL fluff fix
         uses: joomcode/dbt-models/.github/actions/sqlfluff-fix@master
         with:
@@ -34,7 +41,3 @@ jobs:
           user-login: ${{ github.event.pull_request.user.login }}
           dialect: sparksql
           pip: pip3.8
-      - name: Install DBT
-        run: pip3.8 install dbt-core==1.6.0 dbt-spark[PyHive]==1.6.0 urllib3==1.26.6
-      - name: test DBT models
-        run: ./test.sh
