@@ -94,8 +94,12 @@ order_stg_4 AS (
             lag_type,
             before_sale_lead,
             after_sale_first_date,
-            AVG(IF(day >= before_sale_lead AND day < before_sale_lead + INTERVAL 7 DAY AND sale_type = "no_sales", gmv_initial, NULL)) OVER (PARTITION BY before_sale_lead, platform) AS avg_gmv_before_sale,
-            AVG(IF(day < after_sale_first_date AND day >= after_sale_first_date - INTERVAL 5 DAY AND sale_type = "no_sales", gmv_initial, NULL)) OVER (PARTITION BY before_sale_lead, platform) AS avg_gmv_after_sale,
+            AVG(IF(day >= before_sale_lead AND day < before_sale_lead + INTERVAL 7 DAY AND sale_type = "no_sales", gmv_initial, NULL)) OVER (
+                PARTITION BY before_sale_lead, platform
+            ) AS avg_gmv_before_sale,
+            AVG(IF(day < after_sale_first_date AND day >= after_sale_first_date - INTERVAL 5 DAY AND sale_type = "no_sales", gmv_initial, NULL)) OVER (
+                PARTITION BY before_sale_lead, platform
+            ) AS avg_gmv_after_sale,
             AVG(IF(sale_type != "no_sales", gmv_initial, NULL)) OVER (PARTITION BY sale_type, platform) AS sale_avg
         FROM order_stg_3
     )
@@ -155,8 +159,11 @@ SELECT
     avg_gmv_before_sale,
     avg_gmv_after_sale,
     sale_avg - avg_gmv_before_sale * sale_period AS sale_profit,
-    IF(avg_gmv_before_sale > avg_gmv_after_sale, (sale_avg - avg_gmv_before_sale * sale_period) + 5 * (avg_gmv_after_sale - avg_gmv_before_sale), sale_avg - avg_gmv_before_sale * sale_period) AS sale_proffit_with_hangover_5_day,
-    IF(avg_gmv_before_sale > avg_gmv_after_sale, (sale_avg - avg_gmv_before_sale * sale_period) + 5 * (avg_gmv_after_sale - avg_gmv_before_sale), sale_avg - avg_gmv_before_sale * sale_period) / (avg_gmv_before_sale * sale_period) AS sale_proffit_with_hangover_5_day_pr,
+    IF(
+        avg_gmv_before_sale > avg_gmv_after_sale, (sale_avg - avg_gmv_before_sale * sale_period) + 5 * (avg_gmv_after_sale - avg_gmv_before_sale), sale_avg - avg_gmv_before_sale * sale_period
+    ) AS sale_proffit_with_hangover_5_day,
+    IF(avg_gmv_before_sale > avg_gmv_after_sale, (sale_avg - avg_gmv_before_sale * sale_period) + 5 * (avg_gmv_after_sale - avg_gmv_before_sale), sale_avg - avg_gmv_before_sale * sale_period)
+    / (avg_gmv_before_sale * sale_period) AS sale_proffit_with_hangover_5_day_pr,
     IF(avg_gmv_before_sale > avg_gmv_after_sale, 1, 0) AS is_there_hangover,
     COUNT(IF(avg_gmv_before_sale > avg_gmv_after_sale, sale_period, NULL)) OVER (PARTITION BY platform ORDER BY start_of_sale DESC) AS sales_with_hangover,
     COUNT(sale_period) OVER (PARTITION BY platform ORDER BY start_of_sale DESC) AS sales
