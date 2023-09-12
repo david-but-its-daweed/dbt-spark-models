@@ -30,6 +30,7 @@ sources:
       - name: onfy_babylone_events
       - name: dim_currency_rate
       - name: product_events
+      - name: promotions
       - name: dim_merchant
   - name: cube
     tables:
