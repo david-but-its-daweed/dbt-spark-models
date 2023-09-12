@@ -2,6 +2,7 @@
     schema='category_management',
     materialized='view',
     meta = {
+      'model_owner' : '@aplotnikov',
       'team': 'category_management',
     }
 ) }}

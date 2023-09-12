@@ -3,6 +3,7 @@
     materialized='table',
     file_format='parquet',
     meta = {
+      'model_owner' : '@amitiushkina',
       'bigquery_load': 'true',
       'priority_weight': '150'
     }

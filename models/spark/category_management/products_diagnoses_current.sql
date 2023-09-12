@@ -2,6 +2,7 @@
     schema='category_management',
     materialized='table',
     meta = {
+      'model_owner' : '@troyanovskaya',
       'team': 'category_management',
       'bigquery_load': 'true',
     }

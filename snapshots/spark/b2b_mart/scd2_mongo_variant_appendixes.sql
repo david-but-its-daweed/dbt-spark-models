@@ -2,6 +2,9 @@
 
     {{
         config(
+    meta = {
+      'model_owner' : '@amitiushkina'
+    },
           target_schema='b2b_mart',
           strategy='check',
           unique_key='variant_id',

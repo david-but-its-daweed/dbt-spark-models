@@ -2,6 +2,9 @@
 
 {{
     config(
+    meta = {
+      'model_owner' : '@ekutynina'
+    },
       target_schema='b2b_mart',
       unique_key='id',
 

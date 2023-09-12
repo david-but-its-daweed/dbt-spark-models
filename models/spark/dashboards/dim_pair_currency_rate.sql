@@ -1,3 +1,11 @@
+{{
+  config(
+    meta = {
+      'model_owner' : '@gusev'
+    },
+  )
+}}
+
 SELECT
     t1.effective_date AS effective_date,
     t1.next_effective_date AS next_effective_date,

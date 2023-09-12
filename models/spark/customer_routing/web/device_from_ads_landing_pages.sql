@@ -5,6 +5,7 @@
     file_format='parquet',
     partition_by=['partition_date_msk'],
     meta = {
+      'model_owner' : '@ekutynina',
       'team': 'clan',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',

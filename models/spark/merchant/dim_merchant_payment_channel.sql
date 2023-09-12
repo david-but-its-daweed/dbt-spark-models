@@ -2,6 +2,7 @@
     schema='merchant',
     materialized='view',
     meta = {
+      'model_owner' : '@mshlyapenko',
       'team': 'merchant',
     }
 ) }}

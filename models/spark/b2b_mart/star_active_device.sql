@@ -5,6 +5,7 @@
     materialized='incremental',
     file_format='parquet',
     meta = {
+      'model_owner' : '@amitiushkina',
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',

@@ -2,6 +2,9 @@
 
 {{
     config(
+    meta = {
+      'model_owner' : '@zhabrev'
+    },
       target_schema='customer_routing',
       unique_key='user_id',
 

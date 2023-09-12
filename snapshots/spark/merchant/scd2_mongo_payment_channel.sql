@@ -2,6 +2,9 @@
 
 {{
     config(
+    meta = {
+      'model_owner' : '@mshlyapenko'
+    },
       target_schema='merchant',
       unique_key='id',
       strategy='timestamp',

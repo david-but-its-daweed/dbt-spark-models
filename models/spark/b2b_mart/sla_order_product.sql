@@ -2,6 +2,7 @@
     schema='b2b_mart',
     materialized='view',
     meta = {
+      'model_owner' : '@amitiushkina',
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'priority_weight': '150'

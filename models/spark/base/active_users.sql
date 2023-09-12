@@ -1,5 +1,8 @@
 {{
   config(
+    meta = {
+      'model_owner' : '@gusev'
+    },
     materialized='table',
     alias='active_users',
     file_format='delta',

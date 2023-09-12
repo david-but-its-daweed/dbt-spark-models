@@ -2,6 +2,7 @@
     schema='onfy',
     materialized='table',
     meta = {
+      'model_owner' : '@marksysoev',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': 'onfy-etl-monitoring'

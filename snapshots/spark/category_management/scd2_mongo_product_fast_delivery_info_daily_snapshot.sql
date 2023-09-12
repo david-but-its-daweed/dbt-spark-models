@@ -2,6 +2,9 @@
 
 {{
     config(
+    meta = {
+      'model_owner' : '@aplotnikov'
+    },
       target_schema='category_management',
       unique_key='id',
 

@@ -1,3 +1,11 @@
+{{
+  config(
+    meta = {
+      'model_owner' : '@gusev'
+    },
+  )
+}}
+
 SELECT
     category_id,
     name,

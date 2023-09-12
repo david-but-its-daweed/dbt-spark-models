@@ -1,4 +1,7 @@
 {{ config(
+    meta = {
+      'model_owner' : '@aplotnikov'
+    },
     schema='junk2',
     materialized='incremental',
     file_format='delta',

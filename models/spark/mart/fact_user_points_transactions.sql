@@ -2,6 +2,7 @@
     schema='mart',
     materialized='view',
     meta = {
+      'model_owner' : '@gusev',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'date_msk',
       'bigquery_upload_horizon_days': '14',

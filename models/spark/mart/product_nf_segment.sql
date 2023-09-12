@@ -5,6 +5,7 @@
     incremental_strategy='insert_overwrite',
     file_format='parquet',
     meta = {
+      'model_owner' : '@leonid.enov',
       'team': 'categories',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date'

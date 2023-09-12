@@ -2,6 +2,7 @@
     schema='anomaly_detection',
     materialized='table',
     meta = {
+      'model_owner' : '@vladimir',
       'predictor_enabled': 'true',
       'predictor_model': 'prophet_generic',
       'predictor_time_column': 'day',

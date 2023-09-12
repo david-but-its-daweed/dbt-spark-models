@@ -2,6 +2,7 @@
     schema='mart',
     materialized='view',
     meta = {
+      'model_owner' : '@yushkov',
       'bigquery_load': 'true'
     }
 ) }}

@@ -9,6 +9,7 @@
       file_format='delta',
       invalidate_hard_deletes=True,
       meta = {
+      'model_owner' : '@aleksandrov',
           'team' : 'merchant',
       }
     )

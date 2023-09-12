@@ -2,6 +2,7 @@
     schema='ads',
     materialized='view',
     meta = {
+      'model_owner' : '@gusev',
       'team': 'ads',
       'bigquery_load': 'true',
       'bigquery_table_name': 'ads.web_analytics_cohorts_v4',

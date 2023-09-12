@@ -2,6 +2,7 @@
     schema='holistics',
     materialized='view',
     meta = {
+      'model_owner' : '@gburg',
       'bigquery_load': 'true',
       'bigquery_check_counts': 'false'
     },

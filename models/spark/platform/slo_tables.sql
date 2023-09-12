@@ -2,6 +2,7 @@
     schema='platform_slo',
     materialized='view',
     meta = {
+      'model_owner' : '@gburg',
       'bigquery_load': 'true',
       'airflow_pool': 'k8s_platform_hourly_spark_tasks'
     },

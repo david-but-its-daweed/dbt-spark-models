@@ -1,4 +1,7 @@
 {{ config(
+    meta = {
+      'model_owner' : '@gburg'
+    },
     schema='platform',
     materialized='table'
 ) }}

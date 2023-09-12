@@ -3,6 +3,7 @@
     materialized='incremental',
     file_format='delta',
     meta = {
+      'model_owner' : '@aplotnikov',
       'team': 'onfy'
     }
 ) }}

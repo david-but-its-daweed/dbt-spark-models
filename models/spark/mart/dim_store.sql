@@ -2,6 +2,7 @@
     schema='mart',
     materialized='view',
      meta = {
+      'model_owner' : '@gburg',
         'priority_weight': '1000'
     }
 ) }}

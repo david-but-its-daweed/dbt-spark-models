@@ -1,5 +1,8 @@
 {{
   config(
+    meta = {
+      'model_owner' : '@gusev'
+    },
     materialized='table',
     incremental_strategy='merge',
     alias='active_devices',

@@ -1,4 +1,7 @@
 {{ config(
+    meta = {
+      'model_owner' : '@aplotnikov'
+    },
     schema='junk2',
     materialized='table',
     partition_by=['partition_date_msk'],

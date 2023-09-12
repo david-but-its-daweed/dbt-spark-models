@@ -1,4 +1,7 @@
 {{ config(
+    meta = {
+      'model_owner' : '@gburg'
+    },
     schema='mart',
     materialized='incremental',
     file_format='parquet',

@@ -1,4 +1,7 @@
 {{ config(
+    meta = {
+      'model_owner' : '@leonid.enov'
+    },
     schema='mongo',
     materialized='view',
 ) }}

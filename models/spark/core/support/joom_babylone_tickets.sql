@@ -1,5 +1,8 @@
 {{
   config(
+    meta = {
+      'model_owner' : '@ilypavlov'
+    },
     materialized='table',
     file_format='delta',
   )

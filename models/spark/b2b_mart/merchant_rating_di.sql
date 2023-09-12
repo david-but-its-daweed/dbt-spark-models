@@ -4,6 +4,7 @@
     partition_by=['partition_date_msk'],
     file_format='delta',
     meta = {
+      'model_owner' : '@amitiushkina',
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',

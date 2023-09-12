@@ -2,6 +2,7 @@
     schema='mongo',
     materialized='view',
     meta = {
+      'model_owner' : '@leonid.enov',
         'priority_weight': '1000'
     }
 ) }}

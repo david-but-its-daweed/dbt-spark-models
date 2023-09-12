@@ -9,6 +9,7 @@
       updated_at='updated_ts',
       file_format='delta',
       meta = {
+      'model_owner' : '@acherezova',
             'priority_weight': '150'
       }
     )

@@ -2,6 +2,7 @@
     schema='anomaly_detection',
     materialized='table',
     meta = {
+      'model_owner' : '@leonid.enov',
       'predictor_enabled': 'true',
       'predictor_model': 'prophet_generic',
       'predictor_time_column': 'date',

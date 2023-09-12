@@ -3,6 +3,7 @@
     materialized='view',
     incremental_strategy='insert_overwrite',
     meta = {
+      'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': 'onfy-etl-monitoring'

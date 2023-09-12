@@ -3,6 +3,7 @@
     materialized='table',
     file_format='delta',
     meta = {
+      'model_owner' : '@evstvia',
       'team': 'clan',
       'bigquery_load': 'true',
       'priority_weight': '150'

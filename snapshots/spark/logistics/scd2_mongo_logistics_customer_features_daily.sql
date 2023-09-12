@@ -2,6 +2,9 @@
 
 {{
     config(
+    meta = {
+      'model_owner' : '@yushkov'
+    },
       target_schema='logistics',
       unique_key='_id',
 

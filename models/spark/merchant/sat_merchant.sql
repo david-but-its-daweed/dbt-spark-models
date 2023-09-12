@@ -2,6 +2,7 @@
     schema='merchant',
     materialized='view',
     meta = {
+      'model_owner' : '@gburg',
           'bigquery_load': 'true',
     }
 ) }}

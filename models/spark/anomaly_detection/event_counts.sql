@@ -3,6 +3,7 @@
     materialized='table',
     file_format='delta',
     meta = {
+      'model_owner' : '@aplotnikov',
       'predictor_enabled': 'true',
       'predictor_model': 'prophet_generic',
       'predictor_time_column': 'partition_date_msk',
