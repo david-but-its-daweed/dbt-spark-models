@@ -67,7 +67,7 @@ sales_calendar AS (
 
 SELECT
     o.day AS partition_date_msk,
-    platform,
+    o.platform,
     CASE
         WHEN a.promo_start_date IS NOT NULL THEN CONCAT(CONCAT(a.promo_start_date, "-"), a.promo_end_date)
         ELSE "no_sales"
@@ -81,8 +81,8 @@ LEFT JOIN sales_calendar AS a ON o.day >= a.promo_start_date AND o.day < a.promo
 WHERE
     1 = 1
     {% if is_incremental() %}
-        AND o.day >= DATE'{{ var("start_date_ymd") }}'
-        AND o.day < DATE'{{ var("end_date_ymd") }}'
+        AND o.day >= DATE '{{ var("start_date_ymd") }}'
+        AND o.day < DATE '{{ var("end_date_ymd") }}'
     {% else %}
         AND o.day   >= DATE'2022-12-15'
     {% endif %}
