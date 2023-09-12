@@ -1,14 +1,14 @@
 {{ config(
      schema='support',
      materialized='table',
-     partition_by=['partition_date'],
+     location_root='s3://joom-analytics-mart/support/nonpartitioned/',
      file_format='delta',
      meta = {
        'team': 'analytics',
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
-       'bigquery_partitioning_date_column': 'partition_date',
-       'alerts_channel': "#olc_dbt_alerts"
+       'alerts_channel': "#olc_dbt_alerts",
+       'model_owner' : '@ilypavlov'
      }
  ) }}
 

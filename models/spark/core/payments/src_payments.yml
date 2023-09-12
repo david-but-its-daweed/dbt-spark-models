@@ -1,0 +1,227 @@
+version: 2
+
+models:
+  - name: card_bins
+    description: Table with card bin main data based on payments.card_bins table
+    columns:
+      - name: card_bin
+        description: Card bin
+      - name: card_bank
+        description: Canonical name of card bank
+      - name: card_brand
+        description: Canonical card brand
+      - name: card_country
+        description: Canonical bank country
+      - name: card_level
+        description: Canonical card level
+      - name: card_type
+        description: Canonical card type  
+
+  - name: payment_order
+    description: Table with payment_order info data without points, last 365 days
+    columns:
+      - name: date
+        description: Date (msk)
+      - name: payment_order_id
+        description: Payment order id - the key of the table
+      - name: payment_id
+        description: Payment id - order by is_success desc, created_time asc in case of few payment in one payment order
+      - name: user_id
+        description: User id
+      - name: device_id
+        description: Device id
+      - name: target_id
+        description: Target id
+      - name: created_time
+        description: Created time (msk)
+      - name: is_success
+        description: 1 - if payment has success, 0 - the otherwise
+      - name: payment_type
+        description: Payment method
+      - name: payment_type_extended
+        description: Payment method where card is exploded to new_card and linked_card
+      - name: payment_origin
+        description: Payment origin - native or web
+      - name: is_new_card
+        description: new_card - if the card is not in payments base, linked_card - the otherwise, not_card - if payment type is not card
+      - name: is_new_card_int
+        description: 1 - if the card is not in payments base, 0 - the otherwise, null - if payment type is not card
+      - name: card_pan_id
+        description: Unique id for card number
+      - name: card_bin
+        description: Card bin
+      - name: currency
+        description: User's payment currency
+      - name: amount_usd
+        description: Purchase amount in usd
+      - name: amount_currency
+        description: Purchase amount in user's payment currency
+      - name: request3ds
+        description: 1 - if we wanted 3ds on our side, 0 - the otherwise, null - if it is not a card payment
+      - name: antifraud_status
+        description: riskResult.antifraudStatus from mongo.payment_payment_orders_daily_snapshot
+      - name: cancel_reason_message
+        description: cancel reason message of fail cancel_reason_type
+      - name: cancel_reason_type
+        description: cancel reason type code
+      - name: cancel_reason_type_string
+        description: cancel reason type of fail in friendly view
+      - name: price_range
+        description: 3 main category of price amount
+      - name: provider
+        description: Provider name
+      - name: is_3ds_int
+        description: 1 - if payment has 3ds, 0 - the otherwise, null - if payment type is not card or order doesn't have the payment
+      - name: is_3ds
+        description: 3ds - if payment has 3ds, non3ds - the otherwise, not_card - if payment type is not card, null - if card order doesn't have the payment
+      - name: version_3ds
+        description: version 3ds, 100 - 3ds1, 210 - 3ds2
+      - name: method_3ds
+        description: method of 3ds, 1 - another issuer method was used to authenticate this transaction, 2 - frictionless authentication, 3 - cardholder was challenged, 4 - AVS verified
+      - name: pref_country
+        description: Device ip country code
+      - name: os_type
+        description: Device os type
+      - name: category_name
+        description: The category name of the most expensive good of target
+      - name: has_cascade
+        description: 1 - if payment order has more than 1 payment, 0 - the otherwise
+      - name: is_new_device
+        description: new - if device join date = payment date, old - the otherwise
+      - name: card_bank
+        description: Name of card bank (from payments.card_bins table)
+      - name: card_country
+        description: Card country code (from payments.card_bins table)
+      - name: card_level
+        description: Card level (from payments.card_bins table)
+      - name: card_type
+        description: Card type (from payments.card_bins table)
+      - name: is_only_one_provider
+        description: 1 - if there was only 1 provider for this device date, 0 - the otherwise
+      - name: dev_date
+        description: The concationation of device_id and date
+      - name: number_attempt_device
+        description: number of device attempt over day
+      - name: cnt_attempts_device
+        description: count of device attempts over day
+      - name: psp_initial
+        description: psp initial fee from mart.star_order_2020
+      - name: psp_refund_fee
+        description: psp refund fee from mart.star_order_2020
+      - name: psp_chargeback_fee
+        description: psp chargeback fee from mart.star_order_2020
+      - name: has_chb
+        description: 1 if payment order has chargeback, 0 - the otherwise
+      - name: is_chb_reverted_int
+        description: 1 if we won in chargeback game, 0 - if we lost and null if payment order doesn't have a chargeback
+      - name: chb_status
+        description: The status of chargeback (if payment order has it)
+      - name: chb_reason
+        description: The reason of chargeback (if payment order has it)
+      - name: chb_date
+        description: Chargeback created date msk
+      - name: chb_days_dif
+        description: Days difference between payment and chargeback creations
+      - name: chb_reason_code
+        description: Chargeback reason code from provider data
+      - name: chb_reason_category
+        description: fraud, dispute or unknown values, depend on chb_reason_code
+      - name: has_refund
+        description: 1 if payment order has refund, 0 - the otherwise
+      - name: refund_usd
+        description: refund amount in usd
+      - name: amount_eur
+        description: target amount in eur
+      - name: p_id_to_admin_link
+        description: payment id with html link to support admin
+      - name: country_rank
+        description: rank of gmv for top-20 countries of the previous month
+      - name: price_segment_wide
+        description: price segment of the purchase
+      - name: is_currency_diff_int
+        description: 1 if currency at checkout is different with currency in payment transaction, 0 the otherwise
+      - name: is_currency_diff
+        description: like is_currency_diff_int - coinciding or different
+      - name: has_fraud_chb
+        description: has_fraud_chb if payment order has chargeback with non customer reason and no_chb the otherwise
+      - name: category_id
+        description: category_id of the most expensive product for success payment order
+      - name: category_name
+        description: category_name of the most expensive product for success payment order
+      - name: psp_initial
+        description: psp initial fee for success payment order
+      - name: psp_refund_fee
+        description: psp refund fee for success payment order
+      - name: psp_chargeback_fee
+        description: psp chargeback fee for success payment order
+
+  - name: payment
+    description: Table with payment info data without points, last 365 days
+    columns:
+      - name: payment_id
+        description: Payment id - the key of the table
+      - name: payment_order_id
+        description: Payment order id
+      - name: is_success
+        description: 1 if payment is success, 0 if it is not success
+      - name: payment_type
+        description: payment method
+      - name: fail_reason_message
+        description: description of fail from provider
+      - name: is_3ds_int
+        description: 1 if payment type is card and payment had 3ds verification, 0 the otherwise
+      - name: is_3ds
+        description: The same as is_3ds_int, just in string type
+      - name: provider
+        description: Provider name
+      - name: created_time
+        description: Created time in msk zone
+      - name: date
+        description: Creating payment date in msk zone
+      - name: is_new_card_int
+        description: 1 - if payment type is card and it is new, 0 - the otherwise
+      - name: card_pan_id
+        description: Unique id for card number
+      - name: card_bin
+        description: Card bin
+      - name: force3ds
+        description: True if we wanted to make card payment with 3ds verification (in this case payment can be actually without 3ds, look at method_3ds), null the otherwise
+      - name: amount_usd
+        description: The target cost in USD
+      - name: amount_currency
+        description: The target cost in payment currency
+      - name: currency
+        description: The payment's currency
+      - name: user_id
+        description: User id
+      - name: device_id
+        description: Devide id
+      - name: version_3ds
+        description: 100 if it is a payment with 3ds, 210 - payment with 3ds2,  null the otherwise. Payment can be without 3ds verification, but have 3ds version, look at method_3ds field.
+      - name: method_3ds
+        description: 1 - another issuer method was used to authenticate this transaction, 2 - frictionless authentication, 3 - cardholder was challenged, 4 - AVS verified
+      - name: fee_amount
+        description: amount of provider's fee for transaction
+      - name: fee_currency
+        description: currency of fee
+      - name: price_range
+        description: 3 categories of target's cost - amount_usd < 20, 20 <= amount_usd < 100, amount_usd >= 100
+      - name: pref_country
+        description: Device country
+      - name: antifraud_status_from_event
+        description: antifraud verdict
+      - name: antifraud_status_reason
+        description: Reason of the antifraud verdict
+      - name: os_type
+        description: OS type
+      - name: card_bank
+        description: Card bank name
+      - name: card_brand
+        description: Card brand name
+      - name: card_country
+        description: Bank country
+      - name: card_level
+        description: Card level
+      - name: card_type
+        description: Card type
+

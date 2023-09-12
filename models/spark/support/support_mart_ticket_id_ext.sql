@@ -6,7 +6,8 @@
        'team': 'analytics',
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
-       'alerts_channel': "#olc_dbt_alerts"
+       'alerts_channel': "#olc_dbt_alerts",
+       'model_owner' : '@ilypavlov'
      }
  ) }}
 

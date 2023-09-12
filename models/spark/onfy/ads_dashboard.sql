@@ -26,8 +26,7 @@ with uid as
 corrected_sources as 
 (
     select *
-    from 
-        onfy.sources
+    from {{source('onfy', 'sources')}} 
 ),
 
 order_data as 
@@ -65,14 +64,14 @@ session_precalc as
             order by coalesce(source_dt, order_created_date_cet)) as previous_event,
         if(
             to_unix_timestamp(coalesce(source_dt, order_created_date_cet)) - to_unix_timestamp(lag(coalesce(source_dt, order_created_date_cet)) 
-                over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) <= 60*60*24*7 -- we remember the source for the week before forgetting it
+                over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) <= 60*60*24*7
             and to_unix_timestamp(lag(coalesce(source_dt, order_created_date_cet)) 
                 over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) is not null,
             0, 1
         ) as new_session_group,
         if(source_corrected in ('unknown', 'unmarked_facebook_or_instagram', 'social'), 0, 1) as significant_source,
         if(lower(source_corrected) like '%google%', 'google', source_corrected) as source_corrected,
-        if(lower(source_corrected) like '%tok%', "", campaign_corrected) as campaign_corrected,
+        split_part(if(lower(source_corrected) like '%tok%', "", campaign_corrected), " ", 1) as campaign_corrected,
         if(lower(source_corrected) = 'facebook', utm_medium, '') as utm_medium,
         user_email_hash,
         order_id,
@@ -85,7 +84,7 @@ session_precalc as
     from corrected_sources
     full join order_data 
         on order_data.device_id = corrected_sources.device_id 
-        and order_data.order_created_time_cet between corrected_sources.source_dt and coalesce(corrected_sources.next_source_dt, corrected_sources.source_dt + interval 168 hours) -- allowing for the conversion to happen during the next week
+        and order_data.order_created_time_cet between corrected_sources.source_dt and coalesce(corrected_sources.next_source_dt, corrected_sources.source_dt + interval 168 hours)
     where 1=1
 ),
 
@@ -123,6 +122,7 @@ sessions as
         significant_source_window,
         timeout_source_window,
         ultimate_window,
+        first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window order by source_dt) as attributed_session_dt,
         first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window order by source_dt) as source,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window order by source_dt) as campaign,
         first_value(sessions_window.utm_medium) over (partition by device_id, ultimate_window order by source_dt) as medium,
@@ -161,7 +161,7 @@ ads_spends as
         sum(spend) as spend,
         sum(clicks) as clicks
     from {{source('onfy_mart', 'ads_spends')}} as united_spends
-    left join onfy.spends_campaign_corrected as spends_campaigns_corrected
+    left join {{ref("spends_campaign_corrected")}} as spends_campaigns_corrected
         on lower(united_spends.campaign_name) = lower(spends_campaigns_corrected.campaign_name)
         and lower(united_spends.source) = lower(spends_campaigns_corrected.source)
     group by 
@@ -181,10 +181,10 @@ data_combined as
         source_dt as session_dt,
         date_trunc('month', coalesce(source_dt, ads_spends.partition_date)) as report_month,
         coalesce(date_trunc('day', source_dt), ads_spends.partition_date) as report_date,
-        lower(coalesce(sessions.source, 'direct')) as source,
+        coalesce(sessions.source, 'Unknown') as source,
         rank() over (partition by sessions.device_id, ultimate_window order by source_dt) as session_num,
         sessions.source_significant,
-        sessions.campaign,
+        coalesce(sessions.campaign, 'Unknown') as campaign,
         sessions.campaign_significant,
         sessions.medium,
         sessions.medium_significant,
@@ -193,6 +193,7 @@ data_combined as
         sessions.source_corrected,
         sessions.campaign_corrected,
         sessions.utm_medium,
+        sessions.attributed_session_dt,
         ads_spends.source_corrected as ads_source,
         ads_spends.campaign_corrected as ads_campaign,
         ads_spends.medium as ads_medium,
@@ -212,12 +213,17 @@ data_combined as
         order_created_time_cet as order_dt,
         order_created_date_cet as order_date,
         app_device_type,
-        coalesce(spend, 0) as spend,
-        coalesce(if(app_device_type like 'web%', 'web', app_device_type), campaign_platform) as report_app_type,
+        coalesce(ads_spends.spend, 0) as total_spend,
+        coalesce(ads_spends_attributed.spend, 0) as attributed_spend,
+        coalesce(if(app_device_type like 'web%', 'web', app_device_type), ads_spends.campaign_platform) as report_app_type,
         count(*) over (partition by date_trunc('day', sessions.source_dt), campaign_significant, source_significant, 
         utm_medium, if(app_device_type like 'web%', 'web', app_device_type)) as campaign_sessions,
         count(order_id) over (partition by order_created_date_cet, campaign_significant, source_significant, 
-        utm_medium, if(app_device_type like 'web%', 'web', app_device_type)) as campaign_purchases
+        utm_medium, if(app_device_type like 'web%', 'web', app_device_type)) as campaign_purchases,
+        count(*) over (partition by date_trunc('day', sessions.attributed_session_dt), campaign, source, 
+        sessions.medium, if(app_device_type like 'web%', 'web', app_device_type)) as attributed_campaign_sessions,
+        count(order_id) over (partition by date_trunc('day', sessions.attributed_session_dt), campaign, source,
+        sessions.medium, if(app_device_type like 'web%', 'web', app_device_type)) as attributed_campaign_purchases
     from sessions as sessions
     join uid 
         on sessions.device_id = uid.device_id
@@ -227,12 +233,20 @@ data_combined as
         and lower(ads_spends.campaign_platform) = if(app_device_type like 'web%', 'web', app_device_type)
         and lower(ads_spends.source_corrected) = lower(sessions.source_corrected)
         and lower(ads_spends.medium) = lower(sessions.utm_medium)
+    left join ads_spends as ads_spends_attributed
+        on date_trunc('day', ads_spends_attributed.partition_date) = date_trunc('day', sessions.attributed_session_dt)
+        and lower(ads_spends_attributed.campaign_corrected) = lower(sessions.campaign)
+        and lower(ads_spends_attributed.campaign_platform) = if(app_device_type like 'web%', 'web', app_device_type)
+        and lower(ads_spends_attributed.source_corrected) = lower(sessions.source)
+        and lower(ads_spends_attributed.medium) = lower(sessions.medium)
+
 )
 
 
 
-select  
+select distinct
     session_dt,
+    attributed_session_dt,
     report_month,
     report_date,
     source,
@@ -265,10 +279,15 @@ select
     order_dt,
     order_date,
     app_device_type,
-    spend as total_spend,
+    total_spend as total_spend,
+    attributed_spend,
     report_app_type,
     campaign_sessions,
     campaign_purchases,
-    spend / if(source_corrected is not null or campaign_corrected is not null, campaign_sessions, 1) as session_spend,
-    spend / if(source_corrected is not null or campaign_corrected is not null, campaign_purchases, 1) as order_spend
+    attributed_campaign_sessions,
+    attributed_campaign_purchases,
+    total_spend / if(source_corrected is not null or campaign_corrected is not null, campaign_sessions, 1) as session_spend,
+    if(order_id is not null, total_spend, 0) / if(source_corrected is not null or campaign_corrected is not null, campaign_purchases, 1) as order_session_spend,
+    attributed_spend / if(source is not null or campaign is not null, attributed_campaign_sessions, 1) as attributed_session_spend,
+    if(order_id is not null, attributed_spend, 0) / if(source is not null or campaign is not null, attributed_campaign_purchases, 1) as attributed_order_spend
 from data_combined

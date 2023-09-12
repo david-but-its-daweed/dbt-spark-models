@@ -11,6 +11,7 @@
       'bigquery_known_gaps': ['2023-06-24', '2023-06-23', '2023-06-27']
     }
 ) }}
+    
 WITH 
 customer_plans AS (
     SELECT
@@ -114,7 +115,7 @@ deals AS (
         when status_int = 60 then 'Forecast'
         when status_int >= 70 and status_int <= 80 then 'Commited' end as status
     FROM {{ ref('fact_deals') }}
-    WHERE partition_date_msk = (SELECT MAX(partition_date_msk) FROM {{ ref('fact_deals') }})
+    WHERE next_effective_ts_msk IS NULL
 ),
 
 
@@ -169,6 +170,23 @@ owners AS (
     FROM {{ ref('dim_user_admin') }}
 ),
 
+kam_country AS (
+    SELECT 
+        owner_email,
+        FIRST_VALUE(country) OVER (PARTITION BY owner_email ORDER BY users DESC) AS country
+    FROM
+    (
+    SELECT
+        owner_email,
+        country,
+        COUNT(DISTINCT user_id) AS users
+    FROM final_users
+    WHERE country IS NOT NULL
+    GROUP BY owner_email,
+        country
+    )
+),
+
 forecast_kam AS (
     SELECT
         owner_email,
@@ -213,7 +231,7 @@ final_kam AS (
         c.owner_email,
         c.owner_role,
         '' as user_id,
-        '' as country,
+        kc.country as country,
         '' as conversion_status,
         true as tracked,
         '' as validation_status,
@@ -240,10 +258,11 @@ final_kam AS (
     FROM forecast_kam AS c
     LEFT JOIN fact_kam AS f ON f.owner_email = c.owner_email 
         and COALESCE(c.predicted, false) = COALESCE(f.predicted, false)
+    LEFT JOIN kam_country AS kc ON c.owner_email = kc.owner_email 
 )
 
 
-SELECT
+SELECT DISTINCT
     *,
     date'{{ var("start_date_ymd") }}' AS partition_date_msk
 FROM (

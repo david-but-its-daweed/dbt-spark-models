@@ -146,7 +146,8 @@ psi AS (
         product_id,
         max(running_time) AS psi_running_time,
         max(ready_time) AS psi_ready_time,
-        max(coalesce(failed_time, psi_end_time)) AS psi_end_time
+        max(failed_time) AS psi_failed_time,
+        max(psi_end_time) AS psi_end_time
     FROM {{ ref('fact_psi') }}
     GROUP BY merchant_order_id, product_id
 ),
@@ -157,17 +158,33 @@ order_statuses AS (
         max(CASE WHEN sub_status = 'joomSIAPaymentReceived' THEN event_ts_msk END) AS sia_payment_received,
         max(CASE WHEN sub_status = 'client2BrokerPaymentSent' THEN event_ts_msk END) AS client_to_broker_payment_sent,
         max(CASE WHEN sub_status = 'brokerPaymentReceived' THEN event_ts_msk END) AS broker_payment_received,
-        max(CASE WHEN sub_status = 'broker2JoomSIAPaymentSent' THEN event_ts_msk END) AS broker_to_sia_payment_sent
+        max(CASE WHEN sub_status = 'broker2JoomSIAPaymentSent' THEN event_ts_msk END) AS broker_to_sia_payment_sent,
+        max(CASE WHEN status = 'cancelled' THEN event_ts_msk END) AS order_cancelled
     FROM {{ ref('fact_order_statuses') }}
     GROUP BY order_id
 ),
 
 order_hist AS (
-    SELECT
-        MIN(biz_dev_time_msk) AS min_biz_dev_time,
-        MAX(biz_dev_time_msk) AS max_biz_dev_time,
+    SELECT 
+        MIN(CASE WHEN biz_dev_moderator_id = current_biz_dev THEN biz_dev_time_msk END) AS min_biz_dev_time,
+        MAX(CASE WHEN biz_dev_moderator_id = current_biz_dev AND DATE(biz_dev_time_msk) <= CURRENT_DATE() THEN biz_dev_time_msk END) AS max_biz_dev_time,
         order_id
-    FROM {{ ref('fact_order_change') }}
+    FROM (
+        SELECT DISTINCT
+            MIN(event_ts_msk) OVER (PARTITION BY order_id) AS min_biz_dev_time,
+            FIRST_VALUE(biz_dev_moderator_id) OVER (PARTITION BY order_id ORDER BY biz_dev_time_msk DESC) AS current_biz_dev,
+            biz_dev_moderator_id,
+            event_ts_msk as biz_dev_time_msk,
+            order_id
+        FROM {{ ref('fact_order_change') }} AS f
+        JOIN (
+            SELECT DISTINCT
+                role,
+                admin_id
+            FROM {{ ref('dim_user_admin') }}
+            WHERE role = 'ProcurementManager'
+        ) AS a ON f.biz_dev_moderator_id = a.admin_id
+    )
     GROUP BY order_id
 )
 
@@ -229,6 +246,7 @@ SELECT DISTINCT
     ps.pickup_completed,
     psi.psi_running_time,
     psi.psi_ready_time,
+    psi.psi_failed_time,
     psi.psi_end_time,
     op.current_order_status,
     op.current_order_substatus,
@@ -240,6 +258,7 @@ SELECT DISTINCT
     os.client_to_broker_payment_sent,
     os.broker_payment_received,
     os.broker_to_sia_payment_sent,
+    os.order_cancelled,
     oh.min_biz_dev_time,
     oh.max_biz_dev_time
 FROM order_products AS op

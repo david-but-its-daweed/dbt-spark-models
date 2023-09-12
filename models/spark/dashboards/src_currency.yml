@@ -1,0 +1,16 @@
+version: 2
+
+models:
+  - name: dim_pair_currency_rate
+    description: Таблица с информацией по внутреннему курсу валют по отношению друг к другу
+    columns:
+    - name: effective_date
+      description: Дата 
+    - name: next_effective_date
+      description: следующая актуальная дата 
+    - name: currency_code
+      description: Код валюты, которая конвертируется
+    - name: currency_code_to
+      description: Код валюты, в которую конвертируется исходная
+    - name: rate
+      description: Курс валют (Валюта, которая конвертируется / Валюта, в которую конвертируется исходная)
