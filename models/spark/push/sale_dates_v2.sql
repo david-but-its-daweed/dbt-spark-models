@@ -4,7 +4,8 @@
     alias='sale_dates_v2',
     meta = {
       'model_owner' : '@gusev',
-      'bigquery_load': 'true'
+      'bigquery_load': 'true',
+      'priority_weight': '150'
     }
   ) 
 }}
