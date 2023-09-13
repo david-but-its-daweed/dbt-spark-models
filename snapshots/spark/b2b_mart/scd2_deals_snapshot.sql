@@ -47,6 +47,6 @@ SELECT
     userId,
     utms,
     workScheme,
-    millis_to_ts_msk(utms)  AS update_ts_msk
+    millis_to_ts_msk(utms) AS update_ts_msk
 FROM {{ source('mongo', 'b2b_core_deals_daily_snapshot') }}
 {% endsnapshot %}
