@@ -5,6 +5,7 @@
     partition_by=['partition_date'],
     file_format='parquet',
     meta = {
+      'priority_weight': '150',
       'model_owner' : '@leonid.enov',
       'team': 'categories',
       'bigquery_load': 'true',
