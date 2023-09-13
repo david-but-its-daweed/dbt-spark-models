@@ -46,6 +46,6 @@ SELECT
     tags,
     utms,
     csmr,
-    millis_to_ts_msk(utms)  AS update_ts_msk
+    millis_to_ts_msk(utms) AS update_ts_msk
 FROM {{ source('mongo', 'b2b_core_orders_v2_daily_snapshot') }}
 {% endsnapshot %}
