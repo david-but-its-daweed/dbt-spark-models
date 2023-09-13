@@ -15,7 +15,6 @@
     )
 }}
 
-
 SELECT
     _id,
     brokerId,
