@@ -16,6 +16,37 @@
 }}
 
 
-SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
+SELECT
+    _id,
+    attachedSpreadsheets,
+    contractId,
+    country,
+    ctms,
+    currencyRates,
+    delivery,
+    description,
+    docsFolderId,
+    estimatedEndDate,
+    estimatedGmv,
+    finalCalculationId,
+    finalGmv,
+    interactionId,
+    legalScheme,
+    name,
+    orderId,
+    struct(
+        payment.advancePercent AS advancePercent,
+        payment.clientCurrency AS clientCurrency,
+        payment.completePaymentAfter AS completePaymentAfter,
+        payment.paymentChannel AS paymentChannel,
+        payment.paymentType AS paymentType,
+        payment.paymentWithinDaysAdvance AS paymentWithinDaysAdvance,
+        payment.paymentWithinDaysComplete AS paymentWithinDaysComplete
+    ) AS payment,
+    requestType,
+    userId,
+    utms,
+    workScheme,
+    millis_to_ts_msk(utms) AS update_ts_msk
 FROM {{ source('mongo', 'b2b_core_deals_daily_snapshot') }}
 {% endsnapshot %}
