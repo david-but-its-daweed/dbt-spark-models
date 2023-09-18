@@ -160,7 +160,7 @@ final_users AS (
         COALESCE(cp.plan, 0) AS plan,
         COALESCE(cp.plan, 0) > 0 as predicted,
         'clients' AS type,
-        c.funnel_status
+        c.funnel_status,
         c.funnel_reject_reason
     FROM customers AS c
     LEFT JOIN gmv AS g ON c.user_id = g.user_id
