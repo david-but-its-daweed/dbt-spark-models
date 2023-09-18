@@ -41,7 +41,8 @@ SELECT
         payment.paymentChannel AS paymentChannel,
         payment.paymentType AS paymentType,
         payment.paymentWithinDaysAdvance AS paymentWithinDaysAdvance,
-        payment.paymentWithinDaysComplete AS paymentWithinDaysComplete
+        payment.paymentWithinDaysComplete AS paymentWithinDaysComplete,
+        payment.workScheme AS workScheme
     ) AS payment,
     requestType,
     userId,
