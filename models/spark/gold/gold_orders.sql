@@ -4,7 +4,7 @@
     alias='orders',
     file_format='delta',
     schema='gold',
-    unique_key=['order_id']
+    unique_key=['order_id'],
     partition_by=['month'],
     meta = {
         'model_owner' : '@gusev'
