@@ -6,8 +6,10 @@
     materialized='incremental',
     incremental_strategy='merge',
     unique_key=['day', 'device_id'],
+    partition_by=['month'],
     alias='active_devices',
     file_format='delta',
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 220 days, 'MM')"]
   )
 }}
 
@@ -52,6 +54,7 @@ SELECT
     device_stats.os_version,
     device_stats.app_version,
     device_stats.is_ephemeral,
-    device_stats.day = join_day as is_new_user
+    device_stats.day = join_day as is_new_user,
+    trunc(device_stats.day, 'MM') as month
 FROM device_stats
 join min_dates using (device_id)
