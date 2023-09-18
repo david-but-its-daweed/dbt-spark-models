@@ -205,12 +205,6 @@ sources:
   - name: threat
     tables:
       - name: bot_factors_onfy
-  - name: support
-    tables:
-      - name: shiftbase_rosters_snapshot_2023
-      - name: shiftbase_users
-      - name: shiftbase_teams
-      - name: cbr_currency_rate 
   - name: push
     tables:
       - name: sale_dates_v1
