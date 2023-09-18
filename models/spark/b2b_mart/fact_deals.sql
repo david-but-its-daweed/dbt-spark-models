@@ -13,7 +13,7 @@ WITH key_status AS (
     SELECT
         id,
         status
-    FROM b2b_mart.key_issue_status
+    FROM {{ ref('key_issue_status') }}
 ),
 
 owner AS (
@@ -26,7 +26,7 @@ owner AS (
         fi.status_time,
         fi.status,
         ks.id as status_int
-    FROM b2b_mart.fact_issues AS fi
+    FROM {{ ref('fact_issues') }} AS fi
     LEFT JOIN key_status AS ks ON fi.status = ks.status
     WHERE type = 'CloseTheDeal'
 ),
@@ -37,7 +37,7 @@ purchase AS (
         assignee_id AS purchaser_id,
         assignee_email AS purchaser_email,
         assignee_role AS purchaser_role
-    FROM b2b_mart.fact_issues
+    FROM {{ ref('fact_issues') }}
     WHERE type = 'DealPurchaseSupport'
 ),
 
@@ -50,7 +50,7 @@ source AS
         type,
         campaign,
         min_date_payed
-    FROM b2b_mart.fact_attribution_interaction
+    FROM {{ ref('fact_attribution_interaction') }}
     WHERE last_interaction_type
 ),
  
@@ -60,7 +60,7 @@ users AS (
          user_id,
          grade,
          company_name
-    FROM b2b_mart.fact_customers
+    FROM {{ ref('fact_customers') }}
 )
 
 
@@ -122,7 +122,7 @@ users.grade AS client_grade,
 users.company_name AS client_company_name,
 TIMESTAMP(d.dbt_valid_from) AS effective_ts_msk,
 TIMESTAMP(d.dbt_valid_to) AS next_effective_ts_msk
-FROM b2b_mart.scd2_deals_snapshot AS d
+FROM {{ ref('scd2_deals_snapshot') }} AS d
 LEFT JOIN owner ON d._id = owner.deal_id
 LEFT JOIN purchase ON d._id = purchase.deal_id
 LEFT JOIN source ON source.user_id = d.userId
