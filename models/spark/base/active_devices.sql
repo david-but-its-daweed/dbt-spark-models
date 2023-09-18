@@ -5,7 +5,7 @@
     },
     materialized='incremental',
     incremental_strategy='merge',
-    unique_key=['day', 'device_id']
+    unique_key=['day', 'device_id'],
     alias='active_devices',
     file_format='delta',
   )
