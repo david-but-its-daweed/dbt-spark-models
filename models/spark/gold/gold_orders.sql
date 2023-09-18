@@ -1,14 +1,19 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
     alias='orders',
     file_format='delta',
     schema='gold',
+    unique_key=['order_id']
+    partition_by=['month'],
     meta = {
         'model_owner' : '@gusev'
-    }
+    },
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 220 days, 'MM')"]
   )
 }}
+
+-- todo: calculate what period we should take for incremental update to get the correct result
 
 WITH numbers AS (
     SELECT
@@ -195,8 +200,12 @@ orders_ext0 AS (
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+        {% if is_incremental() %}
+            and partition_date >= date'{{ var("start_date_ymd") }}' - interval 190 days
+        {% endif %}
 ),
 
+-- todo: find out if we can get these orders incrementally
 logistics_orders AS (
     SELECT
         order_id,
@@ -212,6 +221,9 @@ support_tickets AS (
         order_id,
         MAX(ticket_id) AS ticket_id
     FROM {{ ref('joom_babylone_tickets') }}
+    {% if is_incremental() %}
+        where partition_date >= date'{{ var("start_date_ymd") }}' - interval 190 days
+    {% endif %}
     GROUP BY order_id
 ),
 
@@ -315,6 +327,18 @@ orders_ext3 AS (
     LEFT JOIN support_tickets AS c ON a.friendly_order_id = c.order_id
 ),
 
+active_devices as (
+    select
+        device_id,
+        day as order_date_msk,
+        is_new_user,
+        join_day
+    from {{ ref('active_devices') }}
+    {% if is_incremental() %}
+        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 190 days, 'MM')
+    {% endif %}
+),
+
 orders_ext4 AS (
     -- добавляем информацию, новый девайс или нет из таблицы active_devices
     -- добавляем регион
@@ -327,7 +351,7 @@ orders_ext4 AS (
         DATEDIFF(a.order_date_msk, b.join_day) AS device_lifetime,
         IF(d.user_id IS NOT NULL, d.blogger_type, IF(a.gmv_initial = 0 AND a.points_initial >= 100, 'probably', 'not')) AS blogger_type
     FROM orders_ext3 AS a
-    LEFT JOIN {{ ref('active_devices') }} AS b ON a.device_id = b.device_id AND a.order_date_msk = b.day
+    LEFT JOIN active_devices AS b USING (device_id, order_date_msk)
     LEFT JOIN {{ ref('gold_countries') }} AS c USING (country_code)
     LEFT JOIN {{ ref('bloggers') }} AS d USING (user_id)
 ),
