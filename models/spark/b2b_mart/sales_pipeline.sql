@@ -9,7 +9,7 @@
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',
-      'bigquery_known_gaps': ['2023-06-24', '2023-06-23', '2023-06-27']
+      'bigquery_known_gaps': ['2023-06-24', '2023-06-23', '2023-06-27', '2023-09-15']
     }
 ) }}
     
@@ -87,7 +87,9 @@ customers AS (
     gu.gmv_quarter,
     c.amo_crm_id, 
     c.amo_id, 
-    c.invited_by_promo
+    c.invited_by_promo,
+    c.funnel_status,
+    c.funnel_reject_reason
     from {{ ref('fact_customers') }} as c
     left join gmv_user gu on gu.user_id = c.user_id
 ),
@@ -157,7 +159,9 @@ final_users AS (
         coalesce(g.gmv_fact, 0) AS fact,
         COALESCE(cp.plan, 0) AS plan,
         COALESCE(cp.plan, 0) > 0 as predicted,
-        'clients' AS type
+        'clients' AS type,
+        c.funnel_status
+        c.funnel_reject_reason
     FROM customers AS c
     LEFT JOIN gmv AS g ON c.user_id = g.user_id
     LEFT JOIN forecast_user AS d ON c.user_id = d.user_id
@@ -254,7 +258,9 @@ final_kam AS (
         coalesce(f.fact, 0) AS fact,
         COALESCE(f.plan, 0) AS plan,
         COALESCE(f.predicted, false) as predicted,
-        'KAM' AS type
+        'KAM' AS type,
+        '' AS funnel_status,
+        '' AS funnel_reject_reason
 
     FROM forecast_kam AS c
     LEFT JOIN fact_kam AS f ON f.owner_email = c.owner_email 
