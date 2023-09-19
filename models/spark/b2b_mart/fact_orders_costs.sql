@@ -130,7 +130,7 @@ where rn = 1 and col is not null
 ),
 
 all_prices as 
-(select order_id, type, tag, stage, sum(fee_rub) as fee_rub
+(select order_id, replace(type, 'DDP', '') AS type, tag, stage, sum(fee_rub) as fee_rub
 from
 (
 select p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub
