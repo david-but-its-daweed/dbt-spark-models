@@ -46,13 +46,12 @@ uniq_regions AS (
     SELECT * FROM {{ ref('gold_regions') }} WHERE is_uniq = TRUE
 ),
 
-is_payer_flag AS (
+first_order_dates AS (
     SELECT
         {{ device_or_user_id }},
-        order_date_msk as date_msk,
-        SUM(COUNT(order_id)) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY order_date_msk) > 0 AS is_payer
+        min(order_date_msk) as dt
     FROM {{ ref('gold_orders') }}
-    GROUP BY 1, 2
+    GROUP BY 1
 ),
 
 orders_ext1 AS (
@@ -176,12 +175,12 @@ active_devices_ext3 AS (
         COALESCE(b.ecgp_per_day_final, 0) AS ecgp_per_day_final,
         COALESCE(b.number_of_orders, 0) AS number_of_orders,
 
-        COALESCE(p.is_payer, false) AS is_payer,
+        COALESCE(a.date_msk > f.dt, false) AS is_payer,
 
         COALESCE(b.is_converted, false) as is_converted
     FROM active_devices_ext2 AS a
     LEFT JOIN orders_ext1 AS b USING ({{ device_or_user_id }}, date_msk)
-    LEFT JOIN is_payer_flag p USING ({{ device_or_user_id }}, date_msk)
+    LEFT JOIN first_order_dates f USING ({{ device_or_user_id }})
 ),
 
 active_devices_ext4 AS (
