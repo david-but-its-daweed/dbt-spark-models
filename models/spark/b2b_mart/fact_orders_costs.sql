@@ -96,7 +96,7 @@ from
 (select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
-and payload.updatedTime is not null and payload.status = 'manufacturing'
+and payload.updatedTime is not null and payload.status in ('manufacturing', 'shipping', 'claim', 'done')
 order by updatedTime desc
 )
 )
@@ -120,7 +120,7 @@ from
 (select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
-and payload.updatedTime is not null and payload.status = 'manufacturing'
+and payload.updatedTime is not null and payload.status in ('manufacturing', 'shipping', 'claim', 'done')
 order by updatedTime desc
 )
 )
