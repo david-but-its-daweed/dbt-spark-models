@@ -9,7 +9,7 @@
     meta = {
         'model_owner' : '@gusev'
     },
-    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 390 days, 'MM')"]
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
   )
 }}
 
@@ -18,7 +18,6 @@
 WITH numbers AS (
     SELECT
         order_id,
-        partition_date AS order_date_msk,
         ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_orders_number, -- номер покупки товара
         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY created_time_utc) AS device_orders_number, -- номер покупки девайса
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_time_utc) AS user_orders_number, -- номер покупки пользователя
@@ -201,11 +200,10 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() %}
-            and partition_date >= date'{{ var("start_date_ymd") }}' - interval 360 days
+            and partition_date >= date'{{ var("start_date_ymd") }}' - interval 200 days
         {% endif %}
 ),
 
--- todo: find out if we can get these orders incrementally
 logistics_orders AS (
     SELECT
         order_id,
@@ -221,9 +219,6 @@ support_tickets AS (
         order_id,
         MAX(ticket_id) AS ticket_id
     FROM {{ ref('joom_babylone_tickets') }}
-    {% if is_incremental() %}
-        where day >= date'{{ var("start_date_ymd") }}' - interval 360 days
-    {% endif %}
     GROUP BY order_id
 ),
 
@@ -235,7 +230,7 @@ orders_ext1 AS (
         n.user_orders_number,
         n.real_user_orders_number
     FROM orders_ext0 AS o
-    LEFT JOIN numbers AS n USING (order_id, order_date_msk)
+    LEFT JOIN numbers AS n USING (order_id)
 ),
 
 orders_ext2 AS (
@@ -335,7 +330,7 @@ active_devices as (
         join_day
     from {{ ref('active_devices') }}
     {% if is_incremental() %}
-        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 360 days, 'MM')
+        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
     {% endif %}
 ),
 
