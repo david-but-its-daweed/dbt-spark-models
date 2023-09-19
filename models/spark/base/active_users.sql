@@ -22,7 +22,10 @@ with user_info as (
         FIRST_VALUE(LOWER(os_type)) AS platform,
         FIRST_VALUE(os_version) AS os_version,
         FIRST_VALUE(app_version) AS app_version,
-        MIN(ephemeral) AS is_ephemeral
+        MIN(ephemeral) AS is_ephemeral,
+        FIRST_VALUE(real_user_id) AS real_user_id,
+        FIRST_VALUE(IF(legal_entity = 'jmt', 'JMT', 'Joom')) AS legal_entity,
+        FIRST_VALUE(UPPER(language)) AS app_language
     from {{ source('mart', 'star_active_device')}}
     {% if is_incremental() %}
          where date_msk >= date'{{ var("start_date_ymd") }}' - interval 200 days
@@ -48,6 +51,9 @@ SELECT
     u.app_version,
     u.is_ephemeral,
     u.day = jd.join_day as is_new_user,
+    u.real_user~_id,
+    u.legal_entity,
+    u.app_language,
     trunc(u.day, 'MM') as month
 from user_info as u
 join join_dates as jd using(user_id)
