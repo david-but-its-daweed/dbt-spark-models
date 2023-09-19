@@ -7,13 +7,17 @@
 
     {{
         config(
-        materialized='table',
+        materialized='incremental',
         alias='active_devices_with_ephemeral',
         file_format='delta',
         schema='gold',
         meta = {
             'model_owner' : '@gusev'
-        }
+        },
+        incremental_strategy='merge',
+        unique_key=['date_msk', 'device_id'],
+        partition_by=['month'],
+        incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
     )
     }}
 {% elif device_or_user_id == 'user_id' %}
@@ -21,13 +25,17 @@
 
     {{
         config(
-        materialized='table',
+        materialized='incremental',
         alias='active_users_with_ephemeral',
         file_format='delta',
         schema='gold',
         meta = {
             'model_owner' : '@gusev'
-        }
+        },
+        incremental_strategy='merge',
+        unique_key=['date_msk', 'user_id'],
+        partition_by=['month'],
+        incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
     )
     }}
 {% endif %}
@@ -297,7 +305,8 @@ SELECT
     is_rw3,
     is_rw4,
     is_churned_14,
-    is_churned_28
+    is_churned_28,
+    trunc(date_msk, 'MM') as month
 FROM active_devices_ext6
 
 {% endmacro %}
