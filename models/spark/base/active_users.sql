@@ -9,7 +9,7 @@
     incremental_strategy='merge',
     unique_key=['day', 'user_id'],
     partition_by=['month'],
-    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 300 days, 'MM')"]
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
   )
 }}
 
@@ -25,7 +25,7 @@ with user_info as (
         MIN(ephemeral) AS is_ephemeral
     from {{ source('mart', 'star_active_device')}}
     {% if is_incremental() %}
-         where date_msk >= date'{{ var("start_date_ymd") }}' - interval 270 days
+         where date_msk >= date'{{ var("start_date_ymd") }}' - interval 200 days
     {% endif %}
     group by 1, 2
 ),
