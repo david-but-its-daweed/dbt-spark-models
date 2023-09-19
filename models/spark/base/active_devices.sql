@@ -9,7 +9,7 @@
     partition_by=['month'],
     alias='active_devices',
     file_format='delta',
-    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 220 days, 'MM')"]
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 300 days, 'MM')"]
   )
 }}
 
@@ -20,12 +20,7 @@
      - link_device_ad_partner
      - link_device_real_user
  */
-with min_dates as (
-    select device_id, min(date_msk) as dt
-    from  {{ source('mart', 'star_active_device') }}
-    group by 1
-),
-device_stats as (
+with device_info as (
     select
         device_id,
         date_msk AS day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
@@ -37,24 +32,31 @@ device_stats as (
         MIN(ephemeral) AS is_ephemeral
     FROM {{ source('mart', 'star_active_device') }}
     {% if is_incremental() %}
-        where date_msk >= date'{{ var("start_date_ymd") }}' - interval 190 days
+        where date_msk >= date'{{ var("start_date_ymd") }}' - interval 270 days
     {% endif %}
     group by 1, 2
+),
+
+min_dates as (
+    select device_id, min(date_msk) as dt
+    from  {{ source('mart', 'star_active_device') }}
+    group by 1
 )
+
 SELECT
-    device_stats.device_id,
-    device_stats.day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
+    d.device_id,
+    d.day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
     IF(
-        min_dates.dt < device_stats.join_dt,
+        min_dates.dt < d.join_dt,
         min_dates.dt,
-        device_stats.join_dt
+        d.join_dt
     ) AS join_day,
-    device_stats.country,
-    device_stats.platform,
-    device_stats.os_version,
-    device_stats.app_version,
-    device_stats.is_ephemeral,
-    device_stats.day = join_day as is_new_user,
-    trunc(device_stats.day, 'MM') as month
-FROM device_stats
+    d.country,
+    d.platform,
+    d.os_version,
+    d.app_version,
+    d.is_ephemeral,
+    d.day = join_day as is_new_user,
+    trunc(d.day, 'MM') as month
+FROM device_info d
 join min_dates using (device_id)

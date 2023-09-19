@@ -9,7 +9,7 @@
     meta = {
         'model_owner' : '@gusev'
     },
-    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 220 days, 'MM')"]
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 390 days, 'MM')"]
   )
 }}
 
@@ -201,7 +201,7 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() %}
-            and partition_date >= date'{{ var("start_date_ymd") }}' - interval 190 days
+            and partition_date >= date'{{ var("start_date_ymd") }}' - interval 360 days
         {% endif %}
 ),
 
@@ -222,7 +222,7 @@ support_tickets AS (
         MAX(ticket_id) AS ticket_id
     FROM {{ ref('joom_babylone_tickets') }}
     {% if is_incremental() %}
-        where partition_date >= date'{{ var("start_date_ymd") }}' - interval 190 days
+        where day >= date'{{ var("start_date_ymd") }}' - interval 360 days
     {% endif %}
     GROUP BY order_id
 ),
@@ -335,7 +335,7 @@ active_devices as (
         join_day
     from {{ ref('active_devices') }}
     {% if is_incremental() %}
-        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 190 days, 'MM')
+        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 360 days, 'MM')
     {% endif %}
 ),
 
@@ -561,6 +561,7 @@ SELECT
     review_image_count,
     number_of_reviews,
     product_rating,
-    is_negative_feedback
+    is_negative_feedback,
+    trunc(order_date_msk, 'MM') as month
 
 FROM orders_ext6
