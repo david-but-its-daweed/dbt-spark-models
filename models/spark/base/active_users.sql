@@ -51,7 +51,7 @@ SELECT
     u.app_version,
     u.is_ephemeral,
     u.day = jd.join_day as is_new_user,
-    u.real_user~_id,
+    u.real_user_id,
     u.legal_entity,
     u.app_language,
     trunc(u.day, 'MM') as month

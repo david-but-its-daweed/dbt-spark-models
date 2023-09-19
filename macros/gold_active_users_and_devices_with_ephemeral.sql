@@ -50,7 +50,7 @@ is_payer_flag AS (
     SELECT
         {{ device_or_user_id }},
         order_date_msk as date_msk,
-        SUM(COUNT(b.order_id)) OVER (PARTITION BY b.{{ device_or_user_id }} ORDER BY b.order_date_msk) > 0 AS is_payer
+        SUM(COUNT(order_id)) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY order_date_msk) > 0 AS is_payer
     FROM {{ ref('gold_orders') }}
     GROUP BY 1, 2
 ),
@@ -59,14 +59,14 @@ orders_ext1 AS (
     SELECT
         {{ device_or_user_id }},
         order_date_msk as date_msk,
-        SUM(b.gmv_initial) AS gmv_per_day_initial,
-        SUM(b.gmv_final) AS gmv_per_day_final,
-        SUM(b.order_gross_profit_final_estimated) AS order_gross_profit_per_day_final_estimated,
-        SUM(b.order_gross_profit_final) AS order_gross_profit_per_day_final,
-        SUM(b.ecgp_initial) AS ecgp_per_day_initial,
-        SUM(b.ecgp_final) AS ecgp_per_day_final,
-        COUNT(b.order_id) AS number_of_orders,
-        COUNT(b.order_id) > 0 AS is_converted
+        SUM(gmv_initial) AS gmv_per_day_initial,
+        SUM(gmv_final) AS gmv_per_day_final,
+        SUM(order_gross_profit_final_estimated) AS order_gross_profit_per_day_final_estimated,
+        SUM(order_gross_profit_final) AS order_gross_profit_per_day_final,
+        SUM(ecgp_initial) AS ecgp_per_day_initial,
+        SUM(ecgp_final) AS ecgp_per_day_final,
+        COUNT(order_id) AS number_of_orders,
+        COUNT(order_id) > 0 AS is_converted
     FROM {{ ref('gold_orders') }}
 
     {% if is_incremental() %}
@@ -81,7 +81,7 @@ active_devices_ext0 as (
     -- добавляем предыдущий день активности и другие св-ва, для которых требуется вся история
     select
         {{ device_or_user_id }},
-        day as date_msk,
+        day,
         LAG(day) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY day) AS prev_date_msk, -- смотрим на предыдущий день активности
         LEAD(day) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY day) AS next_date_msk,  -- смотрим на следующий  день активности
         MIN(is_ephemeral) OVER(PARTITION BY {{ device_or_user_id }}) AS min_is_ephemeral
@@ -100,26 +100,26 @@ active_devices_ext1 AS (
         main.real_user_id,
         main.join_day as join_date_msk,
         main.legal_entity,
-        main.country,
+        main.country as country_code,
         main.app_language,
         main.platform,
         main.os_version,
         main.app_version,
         main.is_ephemeral,
-        DATEDIFF(main.date_msk, main.join_date_msk) AS {{ naming_field }}_lifetime,
+        DATEDIFF(main.day, main.join_day) AS {{ naming_field }}_lifetime,
 
         aux.prev_date_msk,
         aux.next_date_msk,
         aux.min_is_ephemeral,
 
-        main.is_new_{{ naming_field }}
+        main.day = main.join_day AS is_new_{{ naming_field }}
 
     {% if device_or_user_id == 'user_id' %}
         FROM {{ ref('active_users') }} as main
     {% else %}
         FROM {{ ref('active_devices') }} as main
     {% endif %}
-    JOIN active_devices_ext0 as aux USING ({{ device_or_user_id}}, date_msk)
+    JOIN active_devices_ext0 as aux USING ({{ device_or_user_id}}, day)
 
     {% if is_incremental() %}
         WHERE month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
@@ -176,13 +176,12 @@ active_devices_ext3 AS (
         COALESCE(b.ecgp_per_day_final, 0) AS ecgp_per_day_final,
         COALESCE(b.number_of_orders, 0) AS number_of_orders,
 
-        COALESCE(p.is_payer, false),
+        COALESCE(p.is_payer, false) AS is_payer,
 
         COALESCE(b.is_converted, false) as is_converted
     FROM active_devices_ext2 AS a
     LEFT JOIN orders_ext1 AS b USING ({{ device_or_user_id }}, date_msk)
-    LEFT JOIN is_payser_flag p USING ({{ device_or_user_id }}, date_msk)
-    GROUP BY 1, 2
+    LEFT JOIN is_payer_flag p USING ({{ device_or_user_id }}, date_msk)
 ),
 
 active_devices_ext4 AS (
