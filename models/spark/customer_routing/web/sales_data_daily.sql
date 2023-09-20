@@ -61,6 +61,7 @@ sales_calendar AS (
             AND INSTR(LOWER(promo_title), LOWER("sale")) > 0
             AND DATEDIFF(DATE(promo_end_time_utc), DATE(promo_start_time_utc)) > 2
             AND SPLIT_PART(LOWER(promo_title), "sale", 1) != ""
+            AND LOWER(promo_title) NOT LIKE "%converse%"
         GROUP BY 1, 2, 3, 4
     )
 )
