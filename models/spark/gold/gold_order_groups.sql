@@ -13,9 +13,9 @@
 WITH ditinct_ids AS (
     SELECT
         order_group_id,
-        coalesce(real_user_id, "__null") as real_user_id,
-        coalesce(user_id, "__null") as user_id,
-        coalesce(first_value(device_id), "__null") as device_id,
+        COALESCE(real_user_id, "__null") AS real_user_id,
+        COALESCE(user_id, "__null") AS user_id,
+        COALESCE(FIRST_VALUE(device_id), "__null") AS device_id,
         MIN(order_datetime_utc) AS order_datetime_utc
     FROM {{ ref('gold_orders') }}
     GROUP BY 1, 2, 3
@@ -36,8 +36,8 @@ numbers AS (
 order_groups AS (
     SELECT
         order_group_id,
-        coalesce(real_user_id, "__null") as real_user_id,
-        coalesce(user_id, "__null") as user_id,
+        COALESCE(real_user_id, "__null") AS real_user_id,
+        COALESCE(user_id, "__null") AS user_id,
         order_date_msk,
         legal_entity,
         app_entity,
@@ -48,7 +48,7 @@ order_groups AS (
         FIRST_VALUE(top_country_code) AS top_country_code,
         FIRST_VALUE(region_name) AS region_name,
 
-        coalesce(FIRST_VALUE(device_id), "__null") AS device_id,
+        COALESCE(FIRST_VALUE(device_id), "__null") AS device_id,
         FIRST_VALUE(real_user_segment) AS real_user_segment,
         MIN(is_new_device) AS is_new_device,
         MIN(device_lifetime) AS device_lifetime,
@@ -87,8 +87,8 @@ order_groups AS (
 
 SELECT
     og.order_group_id,
-    if (og.real_user_id = "__null", null, og.real_user_id) as real_user_id,
-    if (og.user_id = "__null", null, og.user_id) as user_id,
+    IF(og.real_user_id = "__null", NULL, og.real_user_id) AS real_user_id,
+    IF(og.user_id = "__null", NULL, og.user_id) AS user_id,
     og.order_date_msk,
     og.legal_entity,
     og.app_entity,
@@ -99,7 +99,7 @@ SELECT
     og.top_country_code,
     og.region_name,
 
-    if (og.device_id = "__null", null, og.device_id) as device_id,
+    IF(og.device_id = "__null", NULL, og.device_id) AS device_id,
     og.real_user_segment,
     og.is_new_device,
     og.device_lifetime,
