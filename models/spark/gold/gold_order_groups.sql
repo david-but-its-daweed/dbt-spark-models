@@ -98,7 +98,7 @@ order_groups AS (
         where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
     {% endif %}
     GROUP BY 1, 2, 3, 4, 5, 6, 7
-),
+)
 
 SELECT
     og.*,
@@ -107,4 +107,4 @@ SELECT
     n.real_user_order_groups_number,
     trunc(og.order_date_msk, 'MM') as month
 FROM order_groups as og
-join numbers as n using (order_group_id, device_id, real_user_id, user_id)
+left join numbers as n using (order_group_id, device_id, real_user_id, user_id)
