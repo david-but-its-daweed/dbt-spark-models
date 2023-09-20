@@ -13,12 +13,12 @@
 WITH ditinct_ids AS (
     SELECT
         order_group_id,
-        device_id,
-        real_user_id,
-        user_id,
+        coalesce(real_user_id, "__null") as real_user_id,
+        coalesce(user_id, "__null") as user_id,
+        coalesce(first_value(device_id), "__null") as device_id,
         MIN(order_datetime_utc) AS order_datetime_utc
     FROM {{ ref('gold_orders') }}
-    GROUP BY 1, 2, 3, 4
+    GROUP BY 1, 2, 3
 ),
 
 numbers AS (
@@ -36,8 +36,8 @@ numbers AS (
 order_groups AS (
     SELECT
         order_group_id,
-        real_user_id,
-        user_id,
+        coalesce(real_user_id, "__null") as real_user_id,
+        coalesce(user_id, "__null") as user_id,
         order_date_msk,
         legal_entity,
         app_entity,
@@ -48,7 +48,7 @@ order_groups AS (
         FIRST_VALUE(top_country_code) AS top_country_code,
         FIRST_VALUE(region_name) AS region_name,
 
-        FIRST_VALUE(device_id) AS device_id,
+        coalesce(FIRST_VALUE(device_id), "__null") AS device_id,
         FIRST_VALUE(real_user_segment) AS real_user_segment,
         MIN(is_new_device) AS is_new_device,
         MIN(device_lifetime) AS device_lifetime,
@@ -86,7 +86,53 @@ order_groups AS (
 )
 
 SELECT
-    og.*,
+    og.order_group_id,
+    if (og.real_user_id = "__null", null, og.real_user_id) as real_user_id,
+    if (og.user_id = "__null", null, og.user_id) as user_id,
+    og.order_date_msk,
+    og.legal_entity,
+    og.app_entity,
+    og.currency_code,
+
+    og.platform,
+    og.country_code,
+    og.top_country_code,
+    og.region_name,
+
+    if (og.device_id = "__null", null, og.device_id) as device_id,
+    og.real_user_segment,
+    og.is_new_device,
+    og.device_lifetime,
+    og.order_datetime_utc,
+
+    og.mechants_number,
+    og.stores_number,
+    og.products_number,
+    og.orders_number,
+
+    og.product_quantity_total,
+    og.gmv_initial,
+    og.gmv_final,
+    og.gmv_refunded,
+    og.gmv_initial_in_local_currency,
+    og.psp_initial,
+    og.psp_final,
+    og.order_gross_profit_final,
+    og.order_gross_profit_final_estimated,
+    og.ecgp_initial,
+    og.ecgp_final,
+    og.merchant_revenue_initial,
+    og.merchant_revenue_final,
+    og.merchant_sale_price,
+    og.merchant_list_price,
+    og.logistics_price_initial,
+    og.vat_markup,
+    og.marketplace_commission_initial,
+    og.jl_markup,
+    og.jm_markup,
+    og.coupon_discount,
+    og.points_initial,
+
     n.device_order_groups_number,
     n.user_order_groups_number,
     n.real_user_order_groups_number
