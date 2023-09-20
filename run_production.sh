@@ -20,7 +20,13 @@ DEFAULT_START_DATE=$(days_ago 1)
 DEFAULT_END_DATE=$(days_ago 0)
 DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_DATE','table_name':'table_name'}"
 
-if [[ $(git fetch --all --prune && git diff origin/master) ]]; then
+DIFF=$(git fetch --quiet --all --prune && git diff origin/master)
+
+if [[ $DIFF ]]; then
+    echo "Your branch is not up-to-date with master"
+    echo ""
+    echo "$DIFF"
+    echo ""
     echo "Your branch is not up-to-date with master"
     exit 1
 else

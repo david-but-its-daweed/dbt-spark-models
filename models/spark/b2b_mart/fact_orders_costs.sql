@@ -42,7 +42,7 @@ order by updatedTime desc
 where rn = 1
 ),
 
-order_rates as(
+order_rates_1 as (
 select * from
 (
 select order_id, 
@@ -57,6 +57,30 @@ order by order_id
 where rate is not null
 ),
 
+order_rates as (
+select * from order_rates_1
+union all 
+select 
+    order_id,
+    rate, 
+    markup_rate, 
+    company_rate,
+    case when from = 'CNY' then 'CNH' else from end as from,
+    case when to = 'CNY' then 'CNH' else to end as to
+from order_rates_1
+where from = 'CNY' or to = 'CNY'
+union all 
+select
+    order_id,
+    rate, 
+    markup_rate, 
+    company_rate,
+    case when from = 'CNH' then 'CNY' else from end as from,
+    case when to = 'CNH' then 'CNY' else to end as to
+from order_rates_1
+where from = 'CNH' or to = 'CNH' and not (from = 'CNY' or to = 'CNY')
+),
+    
 typed_prices as 
 (select order_id, type, tag, stage, col.amount as fee, col.ccy as currency
 from
@@ -72,7 +96,7 @@ from
 (select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
-and payload.updatedTime is not null and payload.status = 'manufacturing'
+and payload.updatedTime is not null and payload.status in ('manufacturing', 'shipping', 'claim', 'done')
 order by updatedTime desc
 )
 )
@@ -96,7 +120,7 @@ from
 (select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
-and payload.updatedTime is not null and payload.status = 'manufacturing'
+and payload.updatedTime is not null and payload.status in ('manufacturing', 'shipping', 'claim', 'done')
 order by updatedTime desc
 )
 )
@@ -106,7 +130,7 @@ where rn = 1 and col is not null
 ),
 
 all_prices as 
-(select order_id, type, tag, stage, sum(fee_rub) as fee_rub
+(select order_id, replace(type, 'DDP', '') AS type, tag, stage, sum(fee_rub) as fee_rub
 from
 (
 select p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub
