@@ -13,13 +13,7 @@
   )
 }}
 
-/*
-    Зависимости (todo: проверить. за какой период обновляются , подобрать период для инкрементального расчета)
-     - fact_active_device
-     - dim_device_min
-     - link_device_ad_partner
-     - link_device_real_user
- */
+
 with device_info as (
     select
         device_id,
