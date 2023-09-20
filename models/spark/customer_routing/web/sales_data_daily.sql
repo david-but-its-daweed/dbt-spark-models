@@ -69,7 +69,7 @@ SELECT
     o.day AS partition_date_msk,
     o.platform,
     CASE
-        WHEN a.promo_start_date IS NOT NULL THEN CONCAT(CONCAT(a.promo_start_date, "-"), a.promo_end_date)
+        WHEN a.promo_start_date IS NOT NULL THEN CONCAT(CONCAT(a.promo_start_date, "-"), a.promo_end_date - INTERVAL 1 DAY)
         ELSE "no_sales"
     END AS sale_type,
     a.promo_start_date AS start_of_sale,
