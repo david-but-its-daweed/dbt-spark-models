@@ -1,24 +1,12 @@
 {{
   config(
-    materialized='incremental',
+    materialized='table',
     alias='order_groups',
     schema='gold',
     file_format='delta',
     meta = {
         'model_owner' : '@gusev'
-    },
-    incremental_strategy='merge',
-    unique_key=[
-        'order_group_id',
-        'real_user_id',
-        'user_id',
-        'order_date_msk',
-        'legal_entity',
-        'app_entity',
-        'currency_code'
-    ],
-    partition_by=['month'],
-    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
+    }
   )
 }}
 
@@ -94,9 +82,6 @@ order_groups AS (
         SUM(coupon_discount) AS coupon_discount,
         SUM(points_initial) AS points_initial
     FROM {{ ref('gold_orders') }}
-    {% if is_incremental() %}
-        WHERE month >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
-    {% endif %}
     GROUP BY 1, 2, 3, 4, 5, 6, 7
 )
 
@@ -104,7 +89,6 @@ SELECT
     og.*,
     n.device_order_groups_number,
     n.user_order_groups_number,
-    n.real_user_order_groups_number,
-    TRUNC(og.order_date_msk, 'MM') AS month
+    n.real_user_order_groups_number
 FROM order_groups AS og
 INNER JOIN numbers AS n USING (order_group_id, device_id, real_user_id, user_id)

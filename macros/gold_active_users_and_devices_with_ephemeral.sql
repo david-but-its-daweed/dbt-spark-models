@@ -175,7 +175,7 @@ active_devices_ext3 AS (
         COALESCE(b.ecgp_per_day_final, 0) AS ecgp_per_day_final,
         COALESCE(b.number_of_orders, 0) AS number_of_orders,
 
-        COALESCE(a.date_msk > f.dt, false) AS is_payer,
+        COALESCE(a.date_msk >= f.dt, false) AS is_payer,
 
         COALESCE(b.is_converted, false) as is_converted
     FROM active_devices_ext2 AS a
