@@ -201,7 +201,7 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() %}
-            and partition_date >= date'{{ var("start_date_ymd") }}' - interval 200 days
+            AND partition_date >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS
         {% endif %}
 ),
 
@@ -323,15 +323,15 @@ orders_ext3 AS (
     LEFT JOIN support_tickets AS c ON a.friendly_order_id = c.order_id
 ),
 
-active_devices as (
-    select
+active_devices AS (
+    SELECT
         device_id,
-        day as order_date_msk,
+        day AS order_date_msk,
         is_new_user,
         join_day
-    from {{ ref('active_devices') }}
+    FROM {{ ref('active_devices') }}
     {% if is_incremental() %}
-        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
+        WHERE month >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
     {% endif %}
 ),
 
@@ -558,6 +558,6 @@ SELECT
     number_of_reviews,
     product_rating,
     is_negative_feedback,
-    trunc(order_date_msk, 'MM') as month
+    TRUNC(order_date_msk, 'MM') AS month
 
 FROM orders_ext6

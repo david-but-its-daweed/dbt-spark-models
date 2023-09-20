@@ -23,18 +23,18 @@
 }}
 
 WITH ditinct_ids AS (
-    select
+    SELECT
         order_group_id,
         device_id,
         real_user_id,
         user_id,
-        min(order_datetime_utc) as order_datetime_utc
-    from {{ ref('gold_orders') }}
-    group by 1, 2, 3, 4
+        MIN(order_datetime_utc) AS order_datetime_utc
+    FROM {{ ref('gold_orders') }}
+    GROUP BY 1, 2, 3, 4
 ),
 
-numbers as (
-    select
+numbers AS (
+    SELECT
         order_group_id,
         device_id,
         real_user_id,
@@ -42,7 +42,7 @@ numbers as (
         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_order_groups_number,
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_order_groups_number,
         ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_order_groups_number
-    from ditinct_ids
+    FROM ditinct_ids
 ),
 
 order_groups AS (
@@ -95,7 +95,7 @@ order_groups AS (
         SUM(points_initial) AS points_initial
     FROM {{ ref('gold_orders') }}
     {% if is_incremental() %}
-        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
+        WHERE month >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
     {% endif %}
     GROUP BY 1, 2, 3, 4, 5, 6, 7
 )
@@ -105,6 +105,6 @@ SELECT
     n.device_order_groups_number,
     n.user_order_groups_number,
     n.real_user_order_groups_number,
-    trunc(og.order_date_msk, 'MM') as month
-FROM order_groups as og
-join numbers as n using (order_group_id, device_id, real_user_id, user_id)
+    TRUNC(og.order_date_msk, 'MM') AS month
+FROM order_groups AS og
+INNER JOIN numbers AS n USING (order_group_id, device_id, real_user_id, user_id)

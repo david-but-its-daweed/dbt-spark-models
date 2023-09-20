@@ -14,8 +14,8 @@
 }}
 
 
-with user_info as (
-    select
+WITH user_info AS (
+    SELECT
         user_id,
         date_msk AS day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
         FIRST_VALUE(UPPER(country)) AS country,
@@ -26,19 +26,19 @@ with user_info as (
         FIRST_VALUE(real_user_id) AS real_user_id,
         FIRST_VALUE(IF(legal_entity = 'jmt', 'JMT', 'Joom')) AS legal_entity,
         FIRST_VALUE(UPPER(language)) AS app_language
-    from {{ source('mart', 'star_active_device')}}
+    FROM {{ source('mart', 'star_active_device') }}
     {% if is_incremental() %}
-         where date_msk >= date'{{ var("start_date_ymd") }}' - interval 200 days
+        WHERE date_msk >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS
     {% endif %}
-    group by 1, 2
+    GROUP BY 1, 2
 ),
 
-join_dates as (
-    select
+join_dates AS (
+    SELECT
         user_id,
-        min(date_msk) as join_day
-    from {{ source('mart', 'star_active_device')}}
-    group by 1
+        MIN(date_msk) AS join_day
+    FROM {{ source('mart', 'star_active_device') }}
+    GROUP BY 1
 )
 
 SELECT
@@ -50,10 +50,10 @@ SELECT
     u.os_version,
     u.app_version,
     u.is_ephemeral,
-    u.day = jd.join_day as is_new_user,
+    u.day = jd.join_day AS is_new_user,
     u.real_user_id,
     u.legal_entity,
     u.app_language,
-    trunc(u.day, 'MM') as month
-from user_info as u
-join join_dates as jd using(user_id)
+    TRUNC(u.day, 'MM') AS month
+FROM user_info AS u
+INNER JOIN join_dates AS jd USING (user_id)

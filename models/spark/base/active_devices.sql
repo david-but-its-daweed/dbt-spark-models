@@ -14,11 +14,11 @@
 }}
 
 
-with device_info as (
-    select
+WITH device_info AS (
+    SELECT
         device_id,
         date_msk AS day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
-        FIRST_VALUE(TO_DATE(join_ts_msk)) as join_dt,
+        FIRST_VALUE(TO_DATE(join_ts_msk)) AS join_dt,
         FIRST_VALUE(UPPER(country)) AS country,
         FIRST_VALUE(LOWER(os_type)) AS platform,
         FIRST_VALUE(os_version) AS os_version,
@@ -29,15 +29,17 @@ with device_info as (
         FIRST_VALUE(UPPER(language)) AS app_language
     FROM {{ source('mart', 'star_active_device') }}
     {% if is_incremental() %}
-        where date_msk >= date'{{ var("start_date_ymd") }}' - interval 200 days
+        WHERE date_msk >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS
     {% endif %}
-    group by 1, 2
+    GROUP BY 1, 2
 ),
 
-min_dates as (
-    select device_id, min(date_msk) as dt
-    from  {{ source('mart', 'star_active_device') }}
-    group by 1
+min_dates AS (
+    SELECT
+        device_id,
+        MIN(date_msk) AS dt
+    FROM {{ source('mart', 'star_active_device') }}
+    GROUP BY 1
 )
 
 SELECT
@@ -53,10 +55,10 @@ SELECT
     d.os_version,
     d.app_version,
     d.is_ephemeral,
-    d.day = join_day as is_new_user,
+    d.day = join_day AS is_new_user,
     d.real_user_id,
     d.legal_entity,
     d.app_language,
-    trunc(d.day, 'MM') as month
-FROM device_info d
-join min_dates using (device_id)
+    TRUNC(d.day, 'MM') AS month
+FROM device_info AS d
+INNER JOIN min_dates USING (device_id)
