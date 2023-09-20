@@ -1,16 +1,51 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
     alias='order_groups',
     schema='gold',
     file_format='delta',
     meta = {
         'model_owner' : '@gusev'
-    }
+    },
+    incremental_strategy='merge',
+    unique_key=[
+        'order_group_id',
+        'real_user_id',
+        'user_id',
+        'order_date_msk',
+        'legal_entity',
+        'app_entity',
+        'currency_code'
+    ],
+    partition_by=['month'],
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
   )
 }}
 
-WITH order_groups AS (
+WITH ditinct_ids AS (
+    select
+        order_group_id,
+        device_id,
+        real_user_id,
+        user_id,
+        min(order_datetime_utc) as order_datetime_utc
+    from {{ ref('gold_orders') }}
+    group by 1, 2, 3, 4
+),
+
+numbers as (
+    select
+        order_group_id,
+        device_id,
+        real_user_id,
+        user_id,
+        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_order_groups_number,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_order_groups_number,
+        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_order_groups_number
+    from ditinct_ids
+),
+
+order_groups AS (
     SELECT
         order_group_id,
         real_user_id,
@@ -59,12 +94,17 @@ WITH order_groups AS (
         SUM(coupon_discount) AS coupon_discount,
         SUM(points_initial) AS points_initial
     FROM {{ ref('gold_orders') }}
+    {% if is_incremental() %}
+        where month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
+    {% endif %}
     GROUP BY 1, 2, 3, 4, 5, 6, 7
-)
+),
 
 SELECT
-    *,
-    ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY order_datetime_utc) AS device_order_groups_number,
-    ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY order_datetime_utc) AS user_order_groups_number,
-    ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY order_datetime_utc) AS real_user_order_groups_number
-FROM order_groups
+    og.*,
+    n.device_order_groups_number,
+    n.user_order_groups_number,
+    n.real_user_order_groups_number,
+    trunc(og.order_date_msk, 'MM') as month
+FROM order_groups as og
+join numbers as n using (order_group_id, device_id, real_user_id, user_id)
