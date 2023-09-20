@@ -107,4 +107,4 @@ SELECT
     n.real_user_order_groups_number,
     trunc(og.order_date_msk, 'MM') as month
 FROM order_groups as og
-left join numbers as n using (order_group_id, device_id, real_user_id, user_id)
+join numbers as n using (order_group_id, device_id, real_user_id, user_id)
