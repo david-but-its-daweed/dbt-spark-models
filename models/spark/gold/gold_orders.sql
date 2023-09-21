@@ -1,19 +1,24 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
     alias='orders',
     file_format='delta',
     schema='gold',
+    unique_key='order_id',
+    incremental_strategy='merge',
+    partition_by=['month'],
     meta = {
         'model_owner' : '@gusev'
-    }
+    },
+    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
   )
 }}
+
+-- todo: calculate what period we should take for incremental update to get the correct result
 
 WITH numbers AS (
     SELECT
         order_id,
-        partition_date AS order_date_msk,
         ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_orders_number, -- номер покупки товара
         ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY created_time_utc) AS device_orders_number, -- номер покупки девайса
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_time_utc) AS user_orders_number, -- номер покупки пользователя
@@ -195,6 +200,9 @@ orders_ext0 AS (
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+        {% if is_incremental() %}
+            AND partition_date >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS
+        {% endif %}
 ),
 
 logistics_orders AS (
@@ -223,7 +231,7 @@ orders_ext1 AS (
         n.user_orders_number,
         n.real_user_orders_number
     FROM orders_ext0 AS o
-    LEFT JOIN numbers AS n USING (order_id, order_date_msk)
+    LEFT JOIN numbers AS n USING (order_id)
 ),
 
 orders_ext2 AS (
@@ -315,6 +323,18 @@ orders_ext3 AS (
     LEFT JOIN support_tickets AS c ON a.friendly_order_id = c.order_id
 ),
 
+active_devices AS (
+    SELECT
+        device_id,
+        day AS order_date_msk,
+        is_new_user,
+        join_day
+    FROM {{ ref('active_devices') }}
+    {% if is_incremental() %}
+        WHERE month >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
+    {% endif %}
+),
+
 orders_ext4 AS (
     -- добавляем информацию, новый девайс или нет из таблицы active_devices
     -- добавляем регион
@@ -327,7 +347,7 @@ orders_ext4 AS (
         DATEDIFF(a.order_date_msk, b.join_day) AS device_lifetime,
         IF(d.user_id IS NOT NULL, d.blogger_type, IF(a.gmv_initial = 0 AND a.points_initial >= 100, 'probably', 'not')) AS blogger_type
     FROM orders_ext3 AS a
-    LEFT JOIN {{ ref('active_devices') }} AS b ON a.device_id = b.device_id AND a.order_date_msk = b.day
+    LEFT JOIN active_devices AS b USING (device_id, order_date_msk)
     LEFT JOIN {{ ref('gold_countries') }} AS c USING (country_code)
     LEFT JOIN {{ ref('bloggers') }} AS d USING (user_id)
 ),
@@ -537,6 +557,7 @@ SELECT
     review_image_count,
     number_of_reviews,
     product_rating,
-    is_negative_feedback
+    is_negative_feedback,
+    TRUNC(order_date_msk, 'MM') AS month
 
 FROM orders_ext6
