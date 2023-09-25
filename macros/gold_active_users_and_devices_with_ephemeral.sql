@@ -12,7 +12,11 @@
         file_format='delta',
         schema='gold',
         meta = {
-            'model_owner' : '@gusev'
+            'model_owner' : '@gusev',
+            'bigquery_load': 'true',
+            'bigquery_partitioning_date_column': 'date_msk',
+            'bigquery_upload_horizon_days': '230',
+            'bigquery_override_dataset_id': 'gold_migration',
         },
         incremental_strategy='merge',
         unique_key=['date_msk', 'device_id'],
@@ -30,7 +34,11 @@
         file_format='delta',
         schema='gold',
         meta = {
-            'model_owner' : '@gusev'
+            'model_owner' : '@gusev',
+            'bigquery_load': 'true',
+            'bigquery_partitioning_date_column': 'date_msk',
+            'bigquery_upload_horizon_days': '230',
+            'bigquery_override_dataset_id': 'gold_migration',
         },
         incremental_strategy='merge',
         unique_key=['date_msk', 'user_id'],

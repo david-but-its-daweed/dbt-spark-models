@@ -5,7 +5,10 @@
     schema='gold',
     file_format='delta',
     meta = {
-        'model_owner' : '@gusev'
+        'model_owner' : '@gusev',
+        'bigquery_load': 'true',
+        'bigquery_overwrite': 'true',
+        'bigquery_override_dataset_id': 'gold_migration',
     }
   )
 }}
