@@ -37,7 +37,8 @@ funnel_reject_reason,
 is_partner,
 partner_type,
 partner_source,
-phone
+phone,
+email
 from {{ ref('dim_user') }} du
 where next_effective_ts_msk is null
 ),
@@ -104,6 +105,7 @@ select distinct
     a.email as owner_email,
     a.owner_role,
     phone,
+    email,
     last_name, 
     first_name,
     company_name,
