@@ -55,6 +55,7 @@ SELECT
        last_order_status,
        last_order_sub_status,
        m.min_manufactured_ts_msk,
+       order_description,
        TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
        TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_order') }} t
