@@ -41,3 +41,13 @@ slo_jpro_base_tables,b2b_mart.gmv_by_sources,bq
 slo_jpro_base_tables,b2b_mart.jp_sla_logistics,bq
 slo_jpro_base_tables,b2b_mart.fact_attribution_interaction,bq
 slo_jpay_base_tables,cube.joompay_overview_v1_days,bq
+slo_gold_migration,gold_migration.active_devices,bq
+slo_gold_migration,gold_migration.active_devices_with_ephemeral,bq
+slo_gold_migration,gold_migration.active_users,bq
+slo_gold_migration,gold_migration.active_users_with_ephemeral,bq
+slo_gold_migration,gold_migration.merchant_categories,bq
+slo_gold_migration,gold_migration.merchants,bq
+slo_gold_migration,gold_migration.order_groups,bq
+slo_gold_migration,gold_migration.orders,bq
+slo_gold_migration,gold_migration.products,bq
+slo_gold_migration,gold_migration.referral_orders,bq
