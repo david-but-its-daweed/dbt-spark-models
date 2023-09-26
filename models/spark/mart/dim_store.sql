@@ -3,7 +3,8 @@
     materialized='view',
      meta = {
       'model_owner' : '@gburg',
-        'priority_weight': '1000'
+      'priority_weight': '1000',
+      'bigquery_load': 'true'
     }
 ) }}
 WITH store_performance AS (SELECT *, row_number() over (partition by id order by effective_ts desc) as rn
