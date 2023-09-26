@@ -105,7 +105,7 @@ select distinct
     a.email as owner_email,
     a.owner_role,
     phone,
-    email,
+    u.email as customer_email,
     last_name, 
     first_name,
     company_name,
