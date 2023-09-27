@@ -10,4 +10,4 @@ if [ $WRONG_FILES_COUNT -ne 0 ]; then
         exit 1
 fi
 
-dbt compile --profiles-dir deploy/profiles --target prod --vars '{"start_date_ymd": "2020", "end_date_ymd": "2020", "table_name": "2020"}'
+dbt compile --profiles-dir production/profiles --target prod --vars '{"start_date_ymd": "2020", "end_date_ymd": "2020", "table_name": "2020"}'

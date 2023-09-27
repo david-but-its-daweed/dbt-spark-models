@@ -51,14 +51,14 @@ jobs:
         run: ./test.sh
       - name: Compile DBT
         run: |
-          dbt compile --profiles-dir deploy/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}", "table_name": "{table_name}"}'
+          dbt compile --profiles-dir production/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}", "table_name": "{table_name}"}'
       - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
           dbt-select: "--exclude tag:manual tag:platform tag:data_readiness"
           job-name: dbt-etl
           crontab: 15 0 * * *
           alerts-channel: "#analytics-monitoring"
-          profiles-dir: "deploy/profiles"
+          profiles-dir: "production/profiles"
           profile-name: spark
       - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
@@ -66,7 +66,7 @@ jobs:
           job-name: dbt-platform
           crontab: 15 0 * * *
           alerts-channel: "#analytics-monitoring"
-          profiles-dir: "deploy/profiles"
+          profiles-dir: "production/profiles"
           profile-name: spark
       - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
@@ -74,7 +74,7 @@ jobs:
           job-name: data-readiness
           crontab: 0 * * * *
           alerts-channel: "#analytics-monitoring"
-          profiles-dir: "deploy/profiles"
+          profiles-dir: "production/profiles"
           profile-name: spark
       - name: Create package
         run: |
