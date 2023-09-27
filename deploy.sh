@@ -13,7 +13,7 @@ DBT_ETL_JOB_DIR=$ANALYTICS_PROJECT_DIR/joom/jobs/platform_team/thrift-server
 
 # Produce target/manifest.json
 cd $DBT_DIR
-dbt compile --profiles-dir deploy/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}"}'
+dbt compile --profiles-dir production/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}"}'
 
 # Produce job-graph.sh and copy it to Airflow DAG
 cd $PYTHON_DIR
