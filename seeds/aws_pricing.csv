@@ -5,5 +5,4 @@ EUC1-TimedStorage-SIA-ByteHrs,0.0108,Storage cost per GB per month,storage
 EUC1-TimedStorage-INT-FA-ByteHrs,0.018,Storage cost per GB per month,storage
 EUC1-TimedStorage-INT-AIA-ByteHrs,0.005,Storage cost per GB per month,storage
 EUC1-Requests-Tier2,0.00043,Request costs per request,requests
-EUC1-TimedStorage-INT-FA-ByteHrs,0.018,Storage cost per GB per month,storage
 EUC1-Requests-Tier1,0.0054,Request costs per request,requests
