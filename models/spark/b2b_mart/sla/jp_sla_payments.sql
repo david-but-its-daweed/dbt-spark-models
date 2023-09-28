@@ -320,7 +320,7 @@ order_hist as (
         order_id,
         date(event_ts_msk) as date_client_payed
     from {{ ref('fact_order_statuses') }}
-    where status = 'manufacturing' and sub_status = 'broker2JoomSIAPaymentSent'
+    where status = 'manufacturing' and sub_status = 'joomSIAPaymentReceived'
 ),
 
 orders as (
