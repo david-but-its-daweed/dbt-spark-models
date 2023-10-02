@@ -4,6 +4,7 @@
      location_root='s3://joom-analytics-mart/support/nonpartitioned/',
      file_format='delta',
      meta = {
+       'priority_weight': '150',
        'team': 'analytics',
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
