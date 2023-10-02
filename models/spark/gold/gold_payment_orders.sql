@@ -9,7 +9,7 @@
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true',
         'bigquery_override_dataset_id': 'gold_migration',
-        'priority_weight': '150',
+        'priority_weight': '1000',
     }
   )
 }}

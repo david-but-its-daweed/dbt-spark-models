@@ -9,7 +9,7 @@
             'bigquery_partitioning_date_column': 'date_msk',
             'bigquery_upload_horizon_days': '230',
             'bigquery_override_dataset_id': 'gold_migration',
-            'priority_weight': '150',
+            'priority_weight': '1000',
         }
     )
 }}
