@@ -9,7 +9,7 @@
         config(
         materialized='incremental',
         alias='active_devices_with_ephemeral',
-        file_format='delta',
+        file_format='parquet',
         schema='gold',
         meta = {
             'model_owner' : '@gusev',
@@ -19,10 +19,8 @@
             'bigquery_override_dataset_id': 'gold_migration',
             'priority_weight': '1000',
         },
-        incremental_strategy='merge',
-        unique_key=['date_msk', 'device_id'],
+        incremental_strategy='insert_overwrite',
         partition_by=['month'],
-        incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
     )
     }}
 {% elif device_or_user_id == 'user_id' %}
@@ -32,7 +30,7 @@
         config(
         materialized='incremental',
         alias='active_users_with_ephemeral',
-        file_format='delta',
+        file_format='parquet',
         schema='gold',
         meta = {
             'model_owner' : '@gusev',
@@ -42,10 +40,8 @@
             'bigquery_override_dataset_id': 'gold_migration',
             'priority_weight': '1000',
         },
-        incremental_strategy='merge',
-        unique_key=['date_msk', 'user_id'],
+        incremental_strategy='insert_overwrite',
         partition_by=['month'],
-        incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
     )
     }}
 {% endif %}

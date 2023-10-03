@@ -2,10 +2,9 @@
   config(
     materialized='incremental',
     alias='orders',
-    file_format='delta',
+    file_format='parquet',
     schema='gold',
-    unique_key='order_id',
-    incremental_strategy='merge',
+    incremental_strategy='insert_overwrite',
     partition_by=['month'],
     meta = {
         'model_owner' : '@gusev',
@@ -15,7 +14,6 @@
         'bigquery_override_dataset_id': 'gold_migration',
         'priority_weight': '1000',
     },
-    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
   )
 }}
 
