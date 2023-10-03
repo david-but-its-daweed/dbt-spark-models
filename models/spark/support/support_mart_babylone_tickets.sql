@@ -3,6 +3,7 @@
      materialized='table',
      file_format='delta',
      meta = {
+       'priority_weight': '150',
        'team': 'analytics',
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
