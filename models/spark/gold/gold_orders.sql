@@ -267,8 +267,8 @@ orders_ext2 AS (
         gmv_final,
         gmv_refunded,
         gmv_initial_in_local_currency,
-        psp_name
-        AS psp_initial,
+        psp_name,
+        psp_initial,
         psp_final,
         order_gross_profit_final,
         order_gross_profit_final_estimated,
