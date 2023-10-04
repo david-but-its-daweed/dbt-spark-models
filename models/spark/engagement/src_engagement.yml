@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: user_segments
-    description: Пользовательские сегменты. Первичный ключ таблицы `real_user_id` + `effective_ts`. В таблице есть только те пользователи, которые делали покупки. При джойне на активность несджойнившимся пользователям стоит проставлять сегмент Non-buyers
+    description: User segments. The primary key of the table is `real_user_id` + `effective_ts`. The table only includes users who have made purchases. When joining with activity for users who haven't joined, it should be labeled as the Non-buyers segment.
     columns:
       - name: real_user_id
         description: user_id from link_device_real_user after user merge
