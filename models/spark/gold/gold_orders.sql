@@ -204,7 +204,7 @@ orders_ext0 AS (
     WHERE
         NOT(refund_reason = 'fraud' AND refund_reason IS NOT NULL)
         {% if is_incremental() %}
-            AND partition_date >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS
+            AND partition_date >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
         {% endif %}
 ),
 
