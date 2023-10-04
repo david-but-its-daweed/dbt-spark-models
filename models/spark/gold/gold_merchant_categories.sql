@@ -53,6 +53,13 @@ SELECT
                 level_1_category.id = '1473502940089562515-64-2-118-3246238019'
                 AND level_2_category.id != '1473502945103749897-56-2-118-3819238657'
             )
+            OR (
+                category_id IN (
+                    '1473502940089562515-64-2-118-3246238019',
+                    '1499704328870930735-221-2-709-988109982',
+                    '1473502937882545231-111-2-118-3567328761'
+                )
+            )
             THEN 'Home & Kitchen'
         WHEN
             level_1_category.id IN (
@@ -90,6 +97,6 @@ SELECT
             )
             THEN 'Health & Beauty'
         ELSE 'Other'
-    END AS main_business_category_name
+    END AS business_line
 
 FROM {{ source('mart', 'category_levels') }}
