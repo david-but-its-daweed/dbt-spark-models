@@ -4,11 +4,11 @@
     alias='logistics_orders',
     schema='gold',
     file_format='delta',
-    partition_by=['order_date_msk'],
     meta = {
         'model_owner' : '@gusev',
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true',
+        'bigquery_partitioning_date_column': 'order_date_msk',
         'bigquery_override_dataset_id': 'gold_migration',
         'priority_weight': '1000',
     }
