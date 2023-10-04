@@ -51,6 +51,7 @@ order_groups AS (
         FIRST_VALUE(country_code) AS country_code,
         FIRST_VALUE(top_country_code) AS top_country_code,
         FIRST_VALUE(region_name) AS region_name,
+        FIRST_VALUE(psp_name) AS psp_name,
 
         COALESCE(FIRST_VALUE(device_id), "__null") AS device_id,
         FIRST_VALUE(real_user_segment) AS real_user_segment,
@@ -102,6 +103,7 @@ SELECT
     og.country_code,
     og.top_country_code,
     og.region_name,
+    og.psp_name,
 
     IF(og.device_id = "__null", NULL, og.device_id) AS device_id,
     og.real_user_segment,

@@ -304,8 +304,8 @@ models:
       description: ID of the merchant category of the product
     - name: merchant_category_name
       description: Name of the merchant category of the product
-    - name: main_business_category_name
-      description: Name of the highest-level merchant category of the product. Possible values include "Home & Kitchen," "Electronics & HA" (Home Appliances), "Fashion," "Health & Beauty," "Other."
+    - name: business_line
+      description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
     - name: l1_merchant_category_id
       description: ID of the 1st-level merchant category of the product
     - name: l1_merchant_category_name
@@ -368,6 +368,8 @@ models:
       description: "The name of the online store where the order was placed. This field is true for `order_group_id`. By 'online store,' we mean the distinction between 'Joom' (the main marketplace) and 'Joom Geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee)"
     - name: merchant_id
       description: Merchant ID.
+    - name: business_line
+      description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
     - name: store_id
       description: Store ID (One merchant may have multiple stores).
     - name: product_id
@@ -418,6 +420,8 @@ models:
       description: Currency code in which the order was paid (ISO 4217)
     - name: gmv_initial_in_local_currency
       description: How much the user paid in the payment currency (currency code is stored in the `currency_code` field)
+    - name: psp_name
+      description: Name of the Payment Service Provider (PSP) through which the payment was processed.
     - name: psp_initial
       description: Payment system commission at the time of the order
     - name: psp_final
@@ -570,6 +574,8 @@ models:
       description: Currency code in which the order was paid (ISO 4217)
     - name: gmv_initial_in_local_currency
       description: How much the user paid in the payment currency (currency code is stored in the `currency_code` field)
+    - name: psp_name
+      description: Name of the Payment Service Provider (PSP) through which the payment was processed.
     - name: psp_initial
       description: Payment system commission at the time of the order
     - name: psp_final
@@ -694,6 +700,10 @@ models:
       description: User device ID (In case of app reinstallation, `device_id` is reset. On the web, `device_id` may expire).
     - name: country_code
       description: Country code (A2 code). In case a user requests the deletion of their personal data from our storage, the field will be set to NULL.
+    - name: top_country_code
+      description: Code of the top country (A2-code or 'Other'). In case a user requests the removal of their personal data from our storage, this field will have the value 'Other'.
+    - name: region_name
+      description: Name of a region unique to the country ('Other' is assigned in cases where there is no corresponding region with the 'is_uniq' flag for the country). In case a user requests the removal of their personal data from our storage, this field will have the value 'Other'.
     - name: origin_name
       description: Merchant's origin from which the products are shipped.
     - name: is_delivered_by_jl
@@ -712,6 +722,10 @@ models:
       description: Logistics delivery channel used for calculating logistics prices for the product at the time of user order placement. This field does not change.
     - name: channel_id_final
       description: Logistics delivery channel by which the parcel is sent. If the parcel has not yet been shipped from Hecny's warehouse, this field contains the most up-to-date value for the parcel.
+    - name: merchant_category_id
+      description: ID of the merchant product category.
+    - name: business_line
+      description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
     - name: is_consolidated_by_hecny
       description: Flag indicating whether the order is consolidated at Hecny's sorting center.
     - name: is_consolidated_by_merchant
@@ -738,10 +752,16 @@ models:
       description: Profit from a specific logistics order. Distributed from logistics orders (`shipping_order_number`) to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
     - name: jl_consolidation_profit_final
       description: Profit from a specific logistics order due to consolidation. Distributed from the final consolidation group to logistics orders proportionally to the weight of the logistics order at the Hecny check-in, and then from the logistics order to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
+    - name: jl_total_cost_final
+      description: Final logistics costs, including per-order consolidation costs, but excluding fixed consolidation costs.
     - name: days_to_non_delivery_warranty_start
       description: Number of days from order creation to the start of the non-delivery warranty period.
     - name: days_to_non_delivery_warranty_end
       description: Number of days from order creation to the end of the non-delivery warranty period.
+    - name: warranty_start_date_msk
+      description: Start date of non-delivery warranty UTC+3
+    - name: warranty_end_date_msk
+      description: End date of non-delivery warranty UTC+3 (usually +15 days from the start date of the warranty)
     - name: delivery_estimate_lower_bound_days
       description: Lower bound of the delivery time shown to the user during purchase.
     - name: delivery_estimate_upper_bound_days
@@ -752,6 +772,8 @@ models:
       description: Number of days from order placement to delivery at Step 6 (tracking_issuing_point_datetime_utc) based on tracking.
     - name: order_date_msk
       description: Order creation date in UTC+3.
+    - name: order_created_datetime_utc
+      description: Date and time of order creation in UTC+3.
     - name: tracking_shipped_datetime_utc
       description: Step 1 of delivery. Time of fulfilling the order at the Hecny warehouse. Calculated as the earliest time of checkpoints after the first check-in at Hecny.
     - name: tracking_origin_country_datetime_utc

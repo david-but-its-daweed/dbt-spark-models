@@ -77,6 +77,7 @@ orders_ext0 AS (
         ROUND(gmv_final, 3) AS gmv_final,
         ROUND(refund, 3) AS gmv_refunded,
         ROUND(amount_currency, 3) AS gmv_initial_in_local_currency,
+        psp AS psp_name,
         ROUND(psp_initial, 3) AS psp_initial,
         ROUND(psp_final, 3) AS psp_final,
         ROUND(order_gross_profit_final, 3) AS order_gross_profit_final,
@@ -266,6 +267,7 @@ orders_ext2 AS (
         gmv_final,
         gmv_refunded,
         gmv_initial_in_local_currency,
+        psp_name
         psp_initial,
         psp_final,
         order_gross_profit_final,
@@ -385,6 +387,7 @@ orders_ext5 AS (
         a.gmv_final,
         a.gmv_refunded,
         a.gmv_initial_in_local_currency,
+        a.psp_name,
         a.psp_initial,
         a.psp_final,
         a.order_gross_profit_final,
@@ -461,6 +464,15 @@ orders_ext6 AS (
             a.real_user_id = b.real_user_id
             AND a.order_date_msk >= TO_DATE(b.effective_ts)
             AND a.order_date_msk <= TO_DATE(b.next_effective_ts)
+),
+
+orders_ext7 AS (
+    -- добавляем бизнес-линию
+    SELECT
+        a.*,
+        b.business_line
+    FROM orders_ext6 AS a
+    LEFT JOIN {{ ref('gold_merchant_categories') }} AS b USING (merchant_category_id)
 )
 
 SELECT
@@ -482,6 +494,7 @@ SELECT
     product_id,
     product_variant_id,
     merchant_category_id,
+    business_line,
 
     country_code,
     top_country_code,
@@ -506,6 +519,7 @@ SELECT
     gmv_refunded,
     currency_code,
     gmv_initial_in_local_currency,
+    psp_name,
     psp_initial,
     psp_final,
     order_gross_profit_final,
@@ -563,4 +577,4 @@ SELECT
     is_negative_feedback,
     TRUNC(order_date_msk, 'MM') AS month
 
-FROM orders_ext6
+FROM orders_ext7
