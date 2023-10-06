@@ -21,7 +21,7 @@ WITH sources AS (
                 WHEN onfy_mart.device_events.type = 'externalLink'
                     THEN
                         CASE
-                            WHEN LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%'
+                            WHEN LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%' AND onfy_mart.device_events.payload.params.utm_campaign IS NOT NULL
                                 THEN 'google'
                             WHEN onfy_mart.device_events.payload.params.utm_source IS NOT NULL
                                 THEN onfy_mart.device_events.payload.params.utm_source
@@ -30,6 +30,7 @@ WITH sources AS (
                                 OR (onfy_mart.device_events.payload.referrer LIKE '%/www.bing%')
                                 OR (onfy_mart.device_events.payload.referrer LIKE '%/search.yahoo.com%')
                                 OR (onfy_mart.device_events.payload.referrer LIKE '%/duckduckgo.com%')
+                                OR (LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%' AND onfy_mart.device_events.payload.params.utm_campaign IS NULL)
                                 THEN 'Organic'
                             WHEN
                                 (onfy_mart.device_events.payload.referrer LIKE '%facebook.com%')
@@ -81,6 +82,7 @@ WITH sources AS (
     WHERE
         1 = 1
         AND type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
+        AND payload.referrer NOT LIKE '%kairion%'
 ),
 
 
