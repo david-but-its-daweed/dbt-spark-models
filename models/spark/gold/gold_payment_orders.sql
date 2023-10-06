@@ -3,7 +3,7 @@
     materialized='view',
     alias='payment_orders',
     schema='gold',
-    file_format='delta',
+    file_format='parquet',
     meta = {
         'model_owner' : '@gusev',
         'bigquery_load': 'true',
