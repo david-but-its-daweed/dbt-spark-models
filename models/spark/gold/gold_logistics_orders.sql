@@ -40,6 +40,7 @@ SELECT
     a.category_id AS merchant_category_id,
     mc.business_line AS business_line,
 
+    a.consolidation_group_id IS NOT NULL AS is_planned_for_consolidation_by_hecny,
     a.is_consolidated AS is_consolidated_by_hecny,
     a.is_consolidated_by_merchant,
     a.is_refunded,

@@ -726,6 +726,8 @@ models:
       description: ID of the merchant product category.
     - name: business_line
       description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
+    - name: is_planned_for_consolidation_by_hecny
+      description: Флаг, планирует ли логистика сконсолидировать заказ на Хекни.
     - name: is_consolidated_by_hecny
       description: Flag indicating whether the order is consolidated at Hecny's sorting center.
     - name: is_consolidated_by_merchant
