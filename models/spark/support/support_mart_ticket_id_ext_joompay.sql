@@ -2,6 +2,7 @@
      schema='support',
      materialized='table',
      file_format='delta',
+     priority_weight=150,
      meta = {
        'team': 'analytics',
        'bigquery_load': 'true',
