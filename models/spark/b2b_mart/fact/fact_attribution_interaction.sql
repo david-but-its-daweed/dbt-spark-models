@@ -197,27 +197,14 @@ select distinct
     when
         amo_id is not null 
         and admin is null 
-        and closed is not null 
+        and closed
     then 'ConversionFailed' 
     when 
         amo_id is not null 
         and admin is null 
-        and closed is null 
-    then 'Converting'
-    when 
-        amo_id is not null 
-        and admin is null 
         and validation_status = 'validated'
+        and closed is null
     then 'ValidatedNoConversionAttempt'
-    when 
-        amo_id is not null 
-        and admin is null 
-        and validation_status = 'rejected'
-    then 'Rejected'
-    when 
-        amo_id is not null 
-        and admin is null 
-    then 'NeedValidation'
     else funnel_status end as 
     funnel_status,
     funnel_reject_reason,
@@ -250,10 +237,9 @@ select distinct
         ) amo on u.amo_id = amo.leadId
     left join (
         select distinct 
-        leadId, true as closed
+        leadId, case when st.status_name in ('решение отложено', 'закрыто и не реализовано') then true else false end as closed
         from
         {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
         left join {{ ref('key_amo_status') }} st on amo.status = st.status_id
-        where st.status_name in ('решение отложено', 'закрыто и не реализовано')
     ) cl on u.amo_id = cl.leadId
     left join orders o on u.user_id = o.user_id
