@@ -3,7 +3,10 @@
     materialized='table',
     file_format='delta',
     meta = {
-        'model_owner' : '@espander'
+        'model_owner' : '@espander',
+        'bigquery_load': 'true',
+        'bigquery_override_dataset_id': 'models',
+        'priority_weight': '1000',
     }
   )
 }}

@@ -1,7 +1,10 @@
 {{
   config(
     meta = {
-      'model_owner' : '@gusev'
+      'model_owner' : '@gusev',
+      'bigquery_load': 'true',
+      'bigquery_override_dataset_id': 'models',
+      'priority_weight': '1000',
     },
     materialized='table',
     file_format='delta',

@@ -1,7 +1,11 @@
 {{
   config(
     meta = {
-      'model_owner' : '@ilypavlov'
+      'model_owner' : '@ilypavlov',
+      'bigquery_load': 'true',
+      'bigquery_override_dataset_id': 'models',
+      'bigquery_partitioning_date_column': 'day',
+      'priority_weight': '1000',
     },
     materialized='table',
     file_format='delta',

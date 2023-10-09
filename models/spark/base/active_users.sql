@@ -1,15 +1,18 @@
 {{
   config(
-    meta = {
-      'model_owner' : '@gusev'
-    },
     materialized='incremental',
     alias='active_users',
-    file_format='delta',
-    incremental_strategy='merge',
-    unique_key=['day', 'user_id'],
+    file_format='parquet',
+    incremental_strategy='insert_overwrite',
     partition_by=['month'],
-    incremental_predicates=["DBT_INTERNAL_DEST.month >= trunc(current_date() - interval 230 days, 'MM')"]
+    meta = {
+        'model_owner' : '@gusev',
+        'bigquery_load': 'true',
+        'bigquery_partitioning_date_column': 'day',
+        'bigquery_upload_horizon_days': '230',
+        'bigquery_override_dataset_id': 'models',
+        'priority_weight': '1000',
+    },
   )
 }}
 
