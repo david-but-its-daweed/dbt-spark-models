@@ -10,7 +10,6 @@
         'bigquery_load': 'true',
         'bigquery_partitioning_date_column': 'day',
         'bigquery_upload_horizon_days': '230',
-        'bigquery_override_dataset_id': 'models',
         'priority_weight': '1000',
     },
   )

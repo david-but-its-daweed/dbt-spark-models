@@ -4,7 +4,6 @@
       'model_owner' : '@gusev',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'day',
-      'bigquery_override_dataset_id': 'models',
       'priority_weight': '1000',
     },
     materialized='table',

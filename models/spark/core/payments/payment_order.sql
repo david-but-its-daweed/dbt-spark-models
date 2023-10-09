@@ -3,7 +3,6 @@
     meta = {
       'model_owner' : '@acherezova',
       'bigquery_load': 'true',
-      'bigquery_override_dataset_id': 'models',
       'bigquery_partitioning_date_column': 'date',
       'priority_weight': '1000',
     },

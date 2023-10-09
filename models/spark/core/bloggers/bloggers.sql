@@ -5,7 +5,6 @@
     meta = {
         'model_owner' : '@espander',
         'bigquery_load': 'true',
-        'bigquery_override_dataset_id': 'models',
         'priority_weight': '1000',
     }
   )
