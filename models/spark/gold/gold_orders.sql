@@ -11,7 +11,7 @@
         'bigquery_load': 'true',
         'bigquery_partitioning_date_column': 'order_date_msk',
         'bigquery_upload_horizon_days': '230',
-        'bigquery_override_dataset_id': 'gold_migration',
+        'bigquery_override_dataset_id': 'gold',
         'priority_weight': '1000',
     },
   )
