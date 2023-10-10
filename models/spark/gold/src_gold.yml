@@ -727,9 +727,9 @@ models:
     - name: business_line
       description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
     - name: is_planned_for_consolidation_by_hecny
-      description: Flag indicating whether the order is planned for consolidation at Hecny's sorting center.
+      description: Flag indicating whether the order is planned for consolidation at Hecny's sorting center. If there is no logistics order for the order_id, the flag is NULL
     - name: is_consolidated_by_hecny
-      description: Flag indicating whether the order is consolidated at Hecny's sorting center.
+      description: Flag indicating whether the order is consolidated at Hecny's sorting center. If there is no logistics order for the order_id, the flag is NULL
     - name: is_consolidated_by_merchant
       description: Flag indicating whether the order is consolidated by the merchant.
     - name: is_refunded
