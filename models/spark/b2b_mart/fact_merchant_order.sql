@@ -11,10 +11,11 @@
 ) }}
 
 WITH merchants AS (
-    SELECT merchantId, typ as merchant_type,
+    SELECT merchant_id, merchant_type,
             min(created_ts_msk) as first_order_created
         FROM {{ ref('scd2_mongo_merchant_order') }}
-    GROUP BY merchantId, typ
+    WHERE dbt_valid_to IS NULL
+    GROUP BY merchant_id, merchant_type
 ),
 
 orders as (
@@ -146,7 +147,7 @@ SELECT DISTINCT
        TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
        TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_merchant_order') }} t
-LEFT JOIN merchants m on t.merchant_id = m.merchantId
+LEFT JOIN merchants m on t.merchant_id = m.merchant_id
 LEFT JOIN merchant_gmv g ON t.merchant_id = g.merchant_id AND t.merchant_order_id = g.merchant_order_id
 LEFT JOIN orders o ON t.order_id = o.order_id
 WHERE deleted IS NULL
