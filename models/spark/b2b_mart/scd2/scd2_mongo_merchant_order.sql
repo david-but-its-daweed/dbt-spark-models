@@ -19,6 +19,7 @@ WITH products AS (
             _id AS merchant_order_id,
             explode(products)
         FROM {{ ref('scd2_merchant_orders_v2_snapshot') }}
+        WHERE dbt_valid_to IS NULL
     )
 )
 
@@ -43,6 +44,8 @@ SELECT
     typ as merchant_type,
     millis_to_ts_msk(utms) AS update_ts_msk,
     merchant.paymentMethodType AS payment_method_type,
-    merchant.paymentMethod._id AS payment_method_id
+    merchant.paymentMethod._id AS payment_method_id,
+    dbt_valid_from,
+    dbt_valid_to
 FROM  {{ ref('scd2_merchant_orders_v2_snapshot') }} AS m
 LEFT JOIN products AS p ON m._id = p.merchant_order_id
