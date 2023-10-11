@@ -131,7 +131,7 @@ SELECT DISTINCT
        friendly_id,
        manufacturing_days,
        t.merchant_id,
-       merchant_type,
+       m.merchant_type,
        first_order_created,
        t.order_id,
        afterpayment_done,
