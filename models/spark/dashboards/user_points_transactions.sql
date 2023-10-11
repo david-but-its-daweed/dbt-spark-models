@@ -1,7 +1,10 @@
 {{
   config(
     meta = {
-      'model_owner' : '@gusev'
+      'model_owner' : '@gusev',
+      'bigquery_load': 'true',
+      'bigquery_partitioning_date_column': 'day',
+      'priority_weight': '1000',
     },
     materialized='table',
     file_format='delta',

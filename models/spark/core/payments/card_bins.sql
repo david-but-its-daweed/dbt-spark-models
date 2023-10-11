@@ -1,7 +1,9 @@
 {{
   config(
     meta = {
-      'model_owner' : '@gusev'
+      'model_owner' : '@gusev',
+      'bigquery_load': 'true',
+      'priority_weight': '1000',
     },
     materialized='table',
     file_format='delta',

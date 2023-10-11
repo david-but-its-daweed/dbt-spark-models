@@ -1,7 +1,10 @@
 {{
   config(
+    materialized='view',
     meta = {
-      'model_owner' : '@gusev'
+      'model_owner' : '@gusev',
+      'bigquery_load': 'true',
+      'priority_weight': '1000',
     },
   )
 }}

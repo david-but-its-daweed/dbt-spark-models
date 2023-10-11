@@ -8,7 +8,6 @@
         'model_owner' : '@gusev',
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true',
-        'bigquery_override_dataset_id': 'gold_migration',
         'priority_weight': '1000',
     }
   )
