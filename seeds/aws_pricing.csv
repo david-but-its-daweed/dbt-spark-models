@@ -6,3 +6,7 @@ EUC1-TimedStorage-INT-FA-ByteHrs,0.018,Storage cost per GB per month,storage
 EUC1-TimedStorage-INT-AIA-ByteHrs,0.005,Storage cost per GB per month,storage
 EUC1-Requests-Tier2,0.00043,Request costs per request,requests
 EUC1-Requests-Tier1,0.0054,Request costs per request,requests
+r5a.large,0.137,EC2 instance per hour,ec2_ondemand
+r6i.xlarge,0.304,EC2 instance per hour,ec2_ondemand
+r6i.2xlarge,0.608,EC2 instance per hour,ec2_ondemand
+g5.xlarge,1.258,EC2 instance per hour,ec2_ondemand
