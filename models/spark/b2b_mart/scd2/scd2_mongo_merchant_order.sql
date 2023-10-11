@@ -40,6 +40,7 @@ SELECT
     product_vat_rate,
     deleted,
     skipBilling AS skip_billing,
+    typ as merchant_type,
     millis_to_ts_msk(utms) AS update_ts_msk,
     merchant.paymentMethodType AS payment_method_type,
     merchant.paymentMethod._id AS payment_method_id
