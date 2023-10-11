@@ -12,8 +12,8 @@
 
 WITH merchants AS (
     SELECT merchantId, typ as merchant_type,
-            min(millis_to_ts_msk(ctms)) as first_order_created
-        FROM {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
+            min(created_ts_msk) as first_order_created
+        FROM {{ ref('scd2_mongo_merchant_order') }}
     GROUP BY merchantId, typ
 ),
 
@@ -149,3 +149,4 @@ FROM {{ ref('scd2_mongo_merchant_order') }} t
 LEFT JOIN merchants m on t.merchant_id = m.merchantId
 LEFT JOIN merchant_gmv g ON t.merchant_id = g.merchant_id AND t.merchant_order_id = g.merchant_order_id
 LEFT JOIN orders o ON t.order_id = o.order_id
+WHERE deleted IS NULL
