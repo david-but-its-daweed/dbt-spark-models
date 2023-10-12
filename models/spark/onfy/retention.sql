@@ -15,9 +15,22 @@ WITH first_purchases AS (
         from_utc_timestamp(
             FIRST_VALUE(pharmacy_landing.order.created) OVER (PARTITION BY pharmacy_landing.order.user_email_hash ORDER BY pharmacy_landing.order.created)
         , 'Europe/Berlin') AS first_purchase_date,
-        FIRST_VALUE(pharmacy_landing.order.device_id) OVER (PARTITION BY pharmacy_landing.order.user_email_hash ORDER BY pharmacy_landing.order.created) AS first_purchase_device_id
+        FIRST_VALUE(pharmacy_landing.order.device_id) OVER (PARTITION BY pharmacy_landing.order.user_email_hash ORDER BY pharmacy_landing.order.created) 
+            AS first_purchase_device_id
     FROM 
         {{ source('pharmacy_landing', 'order') }}
+),
+
+transactions_gmv AS (
+    SELECT
+        order_id,
+        SUM(gmv_initial) as gmv_initial
+    FROM
+        {{ source('onfy', 'transactions') }}
+    WHERE 
+        currency = 'EUR'
+    GROUP BY
+        order_id
 ),
 
 base_email AS (
@@ -49,10 +62,15 @@ base_email AS (
         END AS platform_type,
         onfy.lndc_user_attribution.source_corrected as traffic_source,
         onfy.lndc_user_attribution.campaign_corrected,
-        SUM(pharmacy_landing.order_parcel_item.price * pharmacy_landing.order_parcel_item.quantity) OVER (PARTITION BY pharmacy_landing.order.id)
-        + SUM(pharmacy_landing.order_parcel.delivery_price * 1. / COUNT(pharmacy_landing.order_parcel_item.id) OVER (PARTITION BY pharmacy_landing.order_parcel.id) ) OVER (PARTITION BY pharmacy_landing.order.id)
-        + pharmacy_landing.order.service_fee_price * 1. / COUNT(pharmacy_landing.order_parcel_item.id) OVER (PARTITION BY pharmacy_landing.order.id) 
-        as gmv_initial
+        CASE 
+            WHEN from_utc_timestamp(pharmacy_landing.order.created, 'Europe/Berlin') < '2023-01-01' 
+            THEN
+                SUM(pharmacy_landing.order_parcel_item.price * pharmacy_landing.order_parcel_item.quantity) OVER (PARTITION BY pharmacy_landing.order.id)
+                + SUM(pharmacy_landing.order_parcel.delivery_price * 1. / COUNT(pharmacy_landing.order_parcel_item.id) OVER (PARTITION BY pharmacy_landing.order_parcel.id) ) OVER (PARTITION BY pharmacy_landing.order.id)
+                + pharmacy_landing.order.service_fee_price * 1. / COUNT(pharmacy_landing.order_parcel_item.id) OVER (PARTITION BY pharmacy_landing.order.id) 
+            ELSE
+                transactions_gmv.gmv_initial
+        END as gmv_initial
     FROM 
         {{ source('pharmacy_landing', 'order') }}
         LEFT JOIN first_purchases
@@ -66,6 +84,8 @@ base_email AS (
             AND pharmacy_landing.order_parcel_item.product_id IS NOT NULL
         LEFT JOIN {{ source('onfy', 'lndc_user_attribution') }}
             ON onfy.lndc_user_attribution.user_email_hash = pharmacy_landing.order.user_email_hash
+        LEFT JOIN transactions_gmv
+            ON transactions_gmv.order_id = pharmacy_landing.order.id
 ),
 
 cohort_values AS (
