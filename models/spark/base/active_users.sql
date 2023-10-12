@@ -30,7 +30,7 @@ WITH user_info AS (
         FIRST_VALUE(UPPER(language)) AS app_language
     FROM {{ source('mart', 'star_active_device') }}
     {% if is_incremental() %}
-        WHERE date_msk >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS
+       WHERE date_msk >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
     {% endif %}
     GROUP BY 1, 2
 ),
