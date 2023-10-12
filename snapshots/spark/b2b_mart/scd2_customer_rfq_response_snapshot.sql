@@ -17,5 +17,5 @@
 
 
 SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
-FROM {{ source('mongo', 'b2b_core_customer_rfq_response_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_core_customer_rfq_response_v2_daily_snapshot') }}
 {% endsnapshot %}
