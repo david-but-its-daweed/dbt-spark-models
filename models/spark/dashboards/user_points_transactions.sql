@@ -5,6 +5,7 @@
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'day',
       'priority_weight': '1000',
+      'bigquery_upload_horizon_days': '230',
     },
     materialized='table',
     file_format='delta',
