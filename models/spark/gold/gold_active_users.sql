@@ -7,6 +7,7 @@
             'model_owner' : '@gusev',
             'bigquery_load': 'true',
             'bigquery_partitioning_date_column': 'date_msk',
+            'bigquery_check_counts_max_diff_fraction': '0.01',
             'bigquery_upload_horizon_days': '230',
             'priority_weight': '1000',
         }
