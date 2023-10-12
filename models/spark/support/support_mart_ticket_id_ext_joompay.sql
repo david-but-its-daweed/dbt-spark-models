@@ -2,8 +2,8 @@
      schema='support',
      materialized='table',
      file_format='delta',
-     priority_weight='150',
      meta = {
+       'priority_weight': '150',
        'team': 'analytics',
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
