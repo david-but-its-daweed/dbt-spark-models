@@ -98,6 +98,7 @@ sources:
       - name: b2b_core_customer_plans_daily_snapshot
       - name: b2b_core_customer_offers_daily_snapshot
       - name: b2b_core_customer_rfq_response_daily_snapshot
+      - name: b2b_core_customer_rfq_response_v2_daily_snapshot
       - name: b2b_core_customer_rfq_request_daily_snapshot
       - name: b2b_core_customer_requests_daily_snapshot
       - name: b2b_core_offer_products_daily_snapshot
