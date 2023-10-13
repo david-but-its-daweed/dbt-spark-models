@@ -172,7 +172,7 @@ left join (
     select distinct type, source, campaign, user_id 
     from {{ ref('fact_attribution_interaction') }}
     where last_interaction_type) a on o.user_id = a.user_id
-left join offer_product op on o.customer_request_id = op.customer_request_id and rr.product_id = op.product_id
+left join offer_product op on o.customer_request_id = op.customer_request_id and rr.pId = op.product_id
 left join (select distinct order_id, 1 as converted from {{ ref('gmv_by_sources') }}) g on op.order_id = g.order_id
 where created_time >= date('2022-06-01')
 order by created_time desc
