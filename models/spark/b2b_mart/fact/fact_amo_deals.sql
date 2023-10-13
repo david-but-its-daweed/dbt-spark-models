@@ -49,7 +49,6 @@ select distinct
                 from {{ source('mongo', 'b2b_core_amo_crm_calls_daily_snapshot') }}
                 group by leadId
                 ) call on amo.leadId = call.leadId
-        left join b2b_mart.key_amo_status st on amo.status = st.status_id and st.pipeline_id = amo.pipelineId
-        left join {{ ref('key_amo_status') }} st on amo.status = st.status_id
+        left join {{ ref('key_amo_status') }} st on amo.status = st.status_id and st.pipeline_id = amo.pipelineId
         left join users on amo.leadId = users.leadId
         where users.user_id is not null
