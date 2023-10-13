@@ -9,45 +9,45 @@
     }
 ) }}
 
-select
+SELECT 
     order.user_id,
     order.device_id,
     devices_mart.app_device_type,
-    case
-        when from_utc_timestamp(order.created, 'Europe/Berlin') > devices_mart.min_purchase_ts then True
-        else False
-        end as is_buyer,
+    CASE
+        WHEN from_utc_timestamp(order.created, 'Europe/Berlin') > devices_mart.min_purchase_ts THEN True
+        ELSE False
+        END AS is_buyer,
              
-    order.id as order_id,
-    from_utc_timestamp(order.created, 'Europe/Berlin') as order_created_time_cet,
+    order.id AS order_id,
+    from_utc_timestamp(order.created, 'Europe/Berlin') AS order_created_time_cet,
     order.city,
     order.payment_method,
              
-    order_parcel.id as parcel_id,
+    order_parcel.id AS parcel_id,
     order_parcel.store_id,
-    store.name as store_name,
+    store.name AS store_name,
     store_delivery.express,
-    order_parcel.delivery_price as parcel_delivery_price,
+    order_parcel.delivery_price AS parcel_delivery_price,
              
     order_parcel_item.product_id,
-    medicine.country_local_id as pzn,
+    medicine.country_local_id AS pzn,
     order_parcel_item.quantity,
-    cast(order_parcel_item.price as double) as item_price,
-    cast(order_parcel_item.price * order_parcel_item.quantity as double) as products_price
-from {{ source('pharmacy_landing', 'order') }} as order
-join {{ source('pharmacy_landing', 'order_parcel') }} as order_parcel
-    on order.id = order_parcel.order_id
-left join {{ source('pharmacy_landing', 'order_parcel_item') }} as order_parcel_item
-    on order_parcel.id = order_parcel_item.order_parcel_id
-    and order_parcel_item.type = 'PRODUCT'
+    cast(order_parcel_item.price AS double) AS item_price,
+    cast(order_parcel_item.price * order_parcel_item.quantity as double) AS products_price
+FROM {{ source('pharmacy_landing', 'order') }} AS order
+JOIN {{ source('pharmacy_landing', 'order_parcel') }} AS order_parcel
+    ON order.id = order_parcel.order_id
+LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_item') }} AS order_parcel_item
+    ON order_parcel.id = order_parcel_item.order_parcel_id
+    AND order_parcel_item.type = 'PRODUCT'
              
-left join {{ source('pharmacy_landing', 'store') }} as store
-    on store.id = order_parcel.store_id
-join {{ source('pharmacy_landing', 'store_delivery') }} as store_delivery
-    on store.id = store_delivery.store_id
+LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS store
+    ON store.id = order_parcel.store_id
+JOIN {{ source('pharmacy_landing', 'store_delivery') }} AS store_delivery
+    ON store.id = store_delivery.store_id
              
-left join {{ source('pharmacy_landing', 'medicine') }} medicine
-    on order_parcel_item.product_id = medicine.id
+LEFT JOIN {{ source('pharmacy_landing', 'medicine') }} medicine
+    ON order_parcel_item.product_id = medicine.id
              
-join {{ source('onfy_mart', 'devices_mart') }} as devices_mart
-    on order.device_id = devices_mart.device_id
+JOIN {{ source('onfy_mart', 'devices_mart') }} AS devices_mart
+    ON order.device_id = devices_mart.device_id
