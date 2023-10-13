@@ -39,7 +39,17 @@ select distinct
         status_name as status_amo,
         case when status_name in ("закрыто и не реализовано", "решение отложено") then "Cancelled"
         else "Converting" end as status,
-        millis_to_ts_msk(createdAt*1000) as created_at
+        millis_to_ts_msk(createdAt*1000) as created_at,
+        pipeline_name,
+        coalesce(call, 0) as call,
+        coalesce(call_minute, 0) as call_minute
+        from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
+        left join (
+                select leadId, max(case when callTime > 60 then 1 else 0 end) as call_minute, 1 as call
+                from {{ source('mongo', 'b2b_core_amo_crm_calls_daily_snapshot') }}
+                group by leadId
+                ) call on amo.leadId = call.leadId
+        left join b2b_mart.key_amo_status st on amo.status = st.status_id and st.pipeline_id = amo.pipelineId
         from
         {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
         left join {{ ref('key_amo_status') }} st on amo.status = st.status_id
