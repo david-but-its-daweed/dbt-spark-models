@@ -71,10 +71,10 @@ _id as pickup_id,
 friendlyId as pickup_friendly_id,
 merchOrdId as merchant_order_id,
 orderId as order_id,
-millis_to_ts_msk(arrivedDate) as arrived_date,
-millis_to_ts_msk(pickUpDate) as pickup_date,
-millis_to_ts_msk(plannedDate) as planned_date,
-millis_to_ts_msk(shippedDate) as shipped_date,
+to_date(cast(arrivedDateV2 as string), "yyyyMMdd") as arrived_date,
+to_date(cast(pickUpDateV2 as string), "yyyyMMdd") as pickup_date,
+to_date(cast(plannedDateV2 as string), "yyyyMMdd") as planned_date,
+to_date(cast(shippedDateV2 as string), "yyyyMMdd") as shipped_date,
 explode(state.statusHistory)
 from {{ ref('scd2_pick_up_orders_snapshot') }}
 )
