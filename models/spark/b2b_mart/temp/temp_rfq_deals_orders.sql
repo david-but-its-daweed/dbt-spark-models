@@ -15,6 +15,7 @@ select
 null as deal_id,
 rfq_request_id,
 created_time,
+sent_time,
 is_top,
 o.order_id,
 o.user_id,
@@ -27,6 +28,7 @@ from
 (select 
 r._id as rfq_request_id,
 millis_to_ts_msk(r.ctms) as created_time,
+millis_to_ts_msk(r.ctms) as sent_time,
 isTop as is_top,
 oid as order_id,
 explode(productVariants) as variants,
@@ -38,7 +40,7 @@ from
 left join (
     select distinct user_id, order_id from {{ ref('fact_order') }} where next_effective_ts_msk is null
     ) o on r.order_id = o.order_id
-group by 1, 2, 3, 4, 5, 6, 7, 8),
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9),
 
 order_product as (select order_id, customer_request_id, offer_id, product_id, deal_id, 1 as order_product
     from {{ ref('dim_deal_products') }}
@@ -51,7 +53,11 @@ type,
 source,
 campaign,
 rfq_request_id,
+created_time,
 date(created_time) as created_date,
+sent_time as rfq_sent_time,
+millis_to_ts_msk(rr.stms) as rfq_response_sent_time,
+rr.sent as rfq_response_sent,
 price_rfq,
 amount_rfq,
 sum_price,
@@ -90,6 +96,7 @@ rfq_sent_deals as (
 select 
 rfq_request_id,
 created_time,
+sent_time,
 is_top,
 d.deal_id,
 d.customer_request_id,
@@ -103,6 +110,7 @@ from
 (select 
 r._id as rfq_request_id,
 millis_to_ts_msk(r.ctms) as created_time,
+millis_to_ts_msk(r.stms) as sent_time,
 isTop as is_top,
 crid as customer_request_id,
 explode(productVariants) as variants,
@@ -115,7 +123,7 @@ left join (
     select customer_request_id, deal_id, user_id
     from {{ ref('fact_customer_requests') }}
 ) d on r.customer_request_id = d.customer_request_id
-group by 1, 2, 3, 4, 5, 6, 7, 8),
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9),
 
 offer_product as (
 select distinct
@@ -132,7 +140,11 @@ type,
 source,
 campaign,
 o.rfq_request_id,
+created_time,
 date(created_time) as created_date,
+sent_time as rfq_sent_time,
+millis_to_ts_msk(rr.ctms) as rfq_response_sent_time,
+rr.sent as rfq_response_sent,
 price_rfq,
 amount_rfq,
 sum_price,
@@ -142,20 +154,20 @@ o.customer_request_id,
 offer_id,
 o.deal_id,
 o.user_id,
-order_rfq_response_id as rfq_response_id,
+_id as rfq_response_id,
 status,
-rr.merchant_id,
-rr.product_id,
+rr.mId as merchant_id,
+rr.pId as product_id,
 case when g.order_id is not null then 1 else 0 end as order_product,
 coalesce(order_product, 0) as offer_product,
 coalesce(converted, 0) as converted,
-reject_reason as reject_reason,
-reject_reason_group as reject_reason_group,
+rejectReason as reject_reason,
+rejectReasonGroup as reject_reason_group,
 sent_status,
 category_id
 from
 rfq_sent_deals o
-left join {{ ref('fact_customer_rfq_response') }} rr on o.rfq_request_id = rr.rfq_request_id
+left join {{ ref('scd2_customer_rfq_response_snapshot') }} rr on o.rfq_request_id = rr.rfqid
 left join (
     select distinct type, source, campaign, user_id 
     from {{ ref('fact_attribution_interaction') }}
