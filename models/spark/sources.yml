@@ -164,6 +164,7 @@ sources:
       - name: order
       - name: order_parcel
       - name: store
+      - name: store_delivery
       - name: order_parcel_checkpoint
       - name: device
       - name: order_parcel_item
