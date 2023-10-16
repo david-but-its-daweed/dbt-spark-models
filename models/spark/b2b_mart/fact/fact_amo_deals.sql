@@ -51,4 +51,3 @@ select distinct
                 ) call on amo.leadId = call.leadId
         left join {{ ref('key_amo_status') }} st on amo.status = st.status_id and st.pipeline_id = amo.pipelineId
         left join users on amo.leadId = users.leadId
-        where users.user_id is not null
