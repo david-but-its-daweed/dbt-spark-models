@@ -46,7 +46,7 @@ with source as (
   where type in ('sessionConfigured')
 )
 
-, minimal_involvement as ( 
+, minimal_involvement_temp as ( 
     select
       device_id,
       event_ts_cet as minimal_involvement_dt,
@@ -55,9 +55,17 @@ with source as (
         when type in ('search', 'searchServer') then 'search'
         when type = 'productOpen' then 'product_page'
         when type = 'catalogOpen' then 'catalog'
+        when type = 'productPreview' and payload.sourceScreen = 'productPageLanding' then 'products_list'
+        else null 
         end as type
     from {{ source('onfy_mart', 'device_events')}}
-    where type in ('search', 'searchServer', 'productOpen', 'catalogOpen', 'homeOpen')
+    where type in ('search', 'searchServer', 'productOpen', 'catalogOpen', 'homeOpen', 'productPreview')
+)
+
+, minimal_involvement as (
+  select * 
+  from minimal_involvement_temp
+  where type is not null
 )
 
 , add_to_cart as (
