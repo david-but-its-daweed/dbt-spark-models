@@ -57,7 +57,7 @@ jobs:
           dbt-select: "--exclude tag:manual tag:platform tag:data_readiness"
           job-name: dbt-etl
           crontab: 15 0 * * *
-          alerts-channel: "#analytics-monitoring"
+          alerts-channel: "#dbt-spark-monitoring"
           profiles-dir: "production/profiles"
           profile-name: spark
       - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
