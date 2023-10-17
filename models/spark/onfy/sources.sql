@@ -82,7 +82,7 @@ WITH sources AS (
     WHERE
         1 = 1
         AND type IN ('externalLink', 'adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
-        AND payload.referrer NOT LIKE '%kairion%'
+        AND COALESCE(payload.referrer, ' ') NOT LIKE '%kairion%'
 ),
 
 
