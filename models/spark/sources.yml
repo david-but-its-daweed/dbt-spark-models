@@ -32,6 +32,8 @@ sources:
       - name: product_events
       - name: promotions
       - name: dim_merchant
+      - name: dim_date
+      - name: dim_pair_currency_rate
   - name: cube
     tables:
       - name: event_counts_country_os_days
@@ -109,6 +111,7 @@ sources:
       - name: babylone_logistics_agents_daily_snapshot
       - name: babylone_narwhal_agents_daily_snapshot
       - name: babylone_onfy_agents_daily_snapshot
+      - name: logistics_jl_obligatory_channels_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -120,6 +123,7 @@ sources:
   - name: logistics_mart
     tables:
       - name: fact_order
+      - name: tariffs
   - name: payments
     tables:
       - name: card_bins_snapshot
@@ -214,3 +218,6 @@ sources:
     tables:
       - name: experiments_setup
       - name: rollout_group
+  - name: mi_analytics
+    tables:
+      - name: aliexpress_logistics_prices
