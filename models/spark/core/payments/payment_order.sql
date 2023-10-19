@@ -69,12 +69,12 @@ categories AS (
         FIRST_VALUE(
             category_id) OVER (
             PARTITION BY o.order_group_id
-            ORDER BY o.gmv_initial DESC
+            ORDER BY o.gmv_initial DESC, o.order_id ASC
         ) AS category_id,
         FIRST_VALUE(
             c.l1_category_name) OVER (
             PARTITION BY o.order_group_id
-            ORDER BY o.gmv_initial DESC
+            ORDER BY o.gmv_initial DESC, o.order_id ASC
         ) AS category_name
     FROM
         {{ ref('orders') }} AS o
@@ -174,17 +174,20 @@ SELECT
     po.reason_3ds,
     po.date,
     po.target_id AS order_group_id,
-    MAX(po.is_success) OVER (PARTITION BY po.device_day, po.provider) AS has_success_provider,
-    ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider ORDER BY po.created_time) AS number_att_provider,
-    MAX(po.is_success) OVER (PARTITION BY po.device_day, po.payment_type, po.is_new_card) AS has_success_pmt_type,
-    ROW_NUMBER() OVER (PARTITION BY po.device_day, po.payment_type, po.is_new_card ORDER BY po.created_time) AS number_att_pmt_type,
+
+    ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int ORDER BY po.created_time)
+        AS number_attempt_provider_payment_type,
+    MAX(po.is_success) OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int)
+        AS has_success_provider_payment_type,
+    CONCAT(DATE_TRUNC(date, MONTH), po.provider, po.payment_type, po.is_new_card_int) AS pp_id,
+
     IF(po.payment_type = 'card', IF(
         po.is_new_card_int = 1,
         'new_card', 'linked_card'
     ), po.payment_type) AS payment_type_extended,
     MAX(IF(po.cancel_reason_message = 'blacklist , reason sanctionList', 1, 0)) OVER
     (PARTITION BY po.user_id ORDER BY po.created_time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-    AS has_sanction_block_user,
+        AS has_sanction_block_user,
     cb.card_bank,
     cb.card_brand,
     cb.card_country,
