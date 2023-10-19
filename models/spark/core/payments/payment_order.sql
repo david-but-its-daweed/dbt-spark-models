@@ -179,7 +179,7 @@ SELECT
         AS number_attempt_provider_payment_type,
     MAX(po.is_success) OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int)
         AS has_success_provider_payment_type,
-    CONCAT(DATE_TRUNC(date, MONTH), po.provider, po.payment_type, po.is_new_card_int) AS pp_id,
+    CONCAT(TRUNC(po.date, 'MM'), po.provider, po.payment_type, po.is_new_card_int) AS pp_id,
 
     IF(po.payment_type = 'card', IF(
         po.is_new_card_int = 1,
