@@ -70,6 +70,8 @@ SELECT
 
     a.order_created_date_msk AS order_date_msk,
     a.order_created_time_utc AS order_created_datetime_utc,
+    a.check_in_time_utc AS check_in_datetime_utc,
+    a.check_out_time_utc AS check_out_datetime_utc,
     a.tracking_shipped_time_utc AS tracking_shipped_datetime_utc,
     a.tracking_origin_country_time_utc AS tracking_origin_country_datetime_utc,
     a.tracking_in_transit_time_utc AS tracking_in_transit_datetime_utc,

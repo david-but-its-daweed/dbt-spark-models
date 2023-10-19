@@ -776,6 +776,10 @@ models:
       description: Order creation date in UTC+3.
     - name: order_created_datetime_utc
       description: Date and time of order creation in UTC+3.
+    - name: check_in_datetime_utc
+      description: Date and time of order check in at Hecny.
+    - name: check_out_datetime_utc
+      description: Date and time of order check out from Hecny.
     - name: tracking_shipped_datetime_utc
       description: Step 1 of delivery. Time of fulfilling the order at the Hecny warehouse. Calculated as the earliest time of checkpoints after the first check-in at Hecny.
     - name: tracking_origin_country_datetime_utc
