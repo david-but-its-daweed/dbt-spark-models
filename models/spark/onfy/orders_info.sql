@@ -9,6 +9,12 @@
     }
 ) }}
 
+WITH product_names AS (
+    SELECT DISTINCT
+        product_id,
+        product_name
+    FROM onfy_mart.dim_product
+)
 SELECT
     ord.user_id,
     ord.device_id,
@@ -28,6 +34,7 @@ SELECT
     order_parcel.delivery_price AS parcel_delivery_price,
     order_parcel_item.product_id,
     medicine.country_local_id AS pzn,
+    product_names.product_name,
     order_parcel_item.quantity,
     CAST(order_parcel_item.price AS DOUBLE) AS item_price,
     CAST(order_parcel_item.price * order_parcel_item.quantity AS DOUBLE) AS products_price
@@ -50,3 +57,6 @@ LEFT JOIN {{ source('pharmacy_landing', 'medicine') }} AS medicine
 INNER JOIN {{ source('onfy_mart', 'devices_mart') }} AS devices_mart
     ON
         ord.device_id = devices_mart.device_id
+INNER JOIN product_names
+    ON
+        product_names.product_id = order_parcel_item.product_id
