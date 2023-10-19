@@ -176,9 +176,9 @@ SELECT
     po.target_id AS order_group_id,
 
     ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int ORDER BY po.created_time)
-        AS number_attempt_provider_payment_type,
+    AS number_attempt_provider_payment_type,
     MAX(po.is_success) OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int)
-        AS has_success_provider_payment_type,
+    AS has_success_provider_payment_type,
     CONCAT(TRUNC(po.date, 'MM'), po.provider, po.payment_type, po.is_new_card_int) AS pp_id,
 
     IF(po.payment_type = 'card', IF(
@@ -187,7 +187,7 @@ SELECT
     ), po.payment_type) AS payment_type_extended,
     MAX(IF(po.cancel_reason_message = 'blacklist , reason sanctionList', 1, 0)) OVER
     (PARTITION BY po.user_id ORDER BY po.created_time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-        AS has_sanction_block_user,
+    AS has_sanction_block_user,
     cb.card_bank,
     cb.card_brand,
     cb.card_country,
