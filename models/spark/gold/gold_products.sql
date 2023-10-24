@@ -35,10 +35,10 @@ SELECT
     products.merchant_id,
 
     products.category_id AS merchant_category_id,
-    categories.l1_mechant_category_id,
-    categories.l1_mechant_category_name,
-    categories.l2_mechant_category_id,
-    categories.l2_mechant_category_name,
+    categories.l1_merchant_category_id,
+    categories.l1_merchant_category_name,
+    categories.l2_merchant_category_id,
+    categories.l2_merchant_category_name,
 
     products.product_name,
     products.brand_name,
