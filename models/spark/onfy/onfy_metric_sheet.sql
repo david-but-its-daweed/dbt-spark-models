@@ -51,8 +51,8 @@ select
         else 'day'
     end as mode,
     
-    coalesce(transaction_date, ads_spends_date) between current_date() - interval 8 day and current_date() - interval 1 day as last_7_days,
-    coalesce(transaction_date, ads_spends_date) between current_date() - interval 4 day and current_date() - interval 1 day as last_3_days,
+    coalesce(transaction_date, ads_spends_date) between current_date() - interval 7 day and current_date() - interval 1 day as last_7_days,
+    coalesce(transaction_date, ads_spends_date) between current_date() - interval 3 day and current_date() - interval 1 day as last_3_days,
     
     date_trunc('month', current_date()) = transaction_month as current_month,
     if(date_trunc('month', current_date()) = transaction_month, date_part('day', current_date() - interval 1 day), null) as max_date,
