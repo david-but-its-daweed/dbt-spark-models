@@ -29,23 +29,30 @@ WITH orders AS (
 )
 
 SELECT
-    a.product_id,
-    a.category_id AS merchant_category_id,
-    a.store_id,
-    a.brand_id,
-    a.merchant_id,
+    products.product_id,
+    products.store_id,
+    products.brand_id,
+    products.merchant_id,
 
-    a.product_name,
-    a.brand_name,
-    a.image_url,
+    products.category_id AS merchant_category_id,
+    categories.l1_mechant_category_id,
+    categories.l1_mechant_category_name,
+    categories.l2_mechant_category_id,
+    categories.l2_mechant_category_name,
 
-    b.last_purchase_datetime_utc,
-    b.total_number_of_purchases,
+    products.product_name,
+    products.brand_name,
+    products.image_url,
 
-    b.current_merchant_sale_price,
+    orders.last_purchase_datetime_utc,
+    orders.total_number_of_purchases,
 
-    a.is_public,
-    a.created_date AS created_date_utc,
-    a.rating AS product_rating
-FROM {{ source('mart', 'published_products_current') }} AS a
-LEFT JOIN orders AS b USING (product_id)
+    orders.current_merchant_sale_price,
+
+    products.is_public,
+    products.created_date AS created_date_utc,
+    products.rating AS product_rating
+FROM {{ source('mart', 'published_products_current') }} AS products
+LEFT JOIN orders USING (product_id)
+LEFT JOIN {{ ref('gold_merchant_categories') }} AS categories
+    ON categories.merchant_category_id = products.category_id

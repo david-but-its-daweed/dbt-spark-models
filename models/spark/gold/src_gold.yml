@@ -636,14 +636,22 @@ models:
   columns:
     - name: product_id
       description: Product ID
-    - name: merchant_category_id
-      description: Merchant category ID of the product
     - name: store_id
       description: Store ID (a single merchant can have multiple stores)
     - name: brand_id
       description: Brand ID
     - name: merchant_id
       description: Merchant ID
+    - name: merchant_category_id
+      description: Merchant category ID of the product
+    - name: l1_merchant_category_id
+      description: ID of the 1st-level merchant category of the product
+    - name: l1_merchant_category_name
+      description: Name of the 1st-level merchant category of the product
+    - name: l2_merchant_category_id
+      description: ID of the 2nd-level merchant category of the product
+    - name: l2_merchant_category_name
+      description: Name of the 2nd-level merchant category of the product
     - name: product_name
       description: Product name in English
     - name: brand_name
