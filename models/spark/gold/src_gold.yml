@@ -327,6 +327,42 @@ models:
     - name: l5_merchant_category_name
       description: Name of the 5th-level merchant category of the product
 
+- name: gold_customer_categories
+  description: Information about customer categories. Each row in the table corresponds to a `customer_category_id`.
+  columns:
+    - name: customer_category_id
+      description: ID of the customer category of the product
+    - name: customer_category_name
+      description: Name of the customer category of the product
+    - name: l1_customer_category_id
+      description: ID of the 1st-level customer category of the product
+    - name: l1_customer_category_name
+      description: Name of the 1st-level customer category of the product
+    - name: l2_customer_category_id
+      description: ID of the 2nd-level customer category of the product
+    - name: l2_customer_category_name
+      description: Name of the 2nd-level customer category of the product
+    - name: l3_customer_category_id
+      description: ID of the 3rd-level customer category of the product
+    - name: l3_customer_category_name
+      description: Name of the 3rd-level customer category of the product
+    - name: l4_customer_category_id
+      description: ID of the 4th-level customer category of the product
+    - name: l4_customer_category_name
+      description: Name of the 4th-level customer category of the product
+    - name: l5_customer_category_id
+      description: ID of the 5th-level customer category of the product
+    - name: l5_customer_category_name
+      description: Name of the 5th-level customer category of the product
+    - name: l6_customer_category_id
+      description: ID of the 6th-level customer category of the product
+    - name: l6_customer_category_name
+      description: Name of the 6th-level customer category of the product
+    - name: l7_customer_category_id
+      description: ID of the 7th-level customer category of the product
+    - name: l7_customer_category_name
+      description: Name of the 7th-level customer category of the product
+
 - name: gold_merchants
   description: Information about merchants. Each row in the table corresponds to a `merchant_id`.
   columns:
