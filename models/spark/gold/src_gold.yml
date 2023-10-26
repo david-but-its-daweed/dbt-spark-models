@@ -334,8 +334,6 @@ models:
       description: ID of the customer category of the product
     - name: customer_category_name
       description: Name of the customer category of the product
-    - name: business_line
-      description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
     - name: l1_customer_category_id
       description: ID of the 1st-level customer category of the product
     - name: l1_customer_category_name
