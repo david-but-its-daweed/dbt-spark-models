@@ -34,16 +34,23 @@ with source as (
 -- pre-selecting raw events
 --------------------------------------------------------------------------------------------------------------------------
 
-, session_start as (
+, session_start_raw as (
   select distinct
+    device_id,
+    event_ts_cet
+  from {{ source('onfy_mart', 'device_events')}}
+  where type in ('sessionConfigured', 'homeOpen')
+)
+
+, session_start as (
+  select
     device_id,
     event_ts_cet as session_dt,
     (event_ts_cet + INTERVAL 30 days) as session_dt_30d,
     (event_ts_cet + INTERVAL 7 days) as session_dt_7d,
     (event_ts_cet + INTERVAL 24 hours) as session_dt_24h,
     lead(event_ts_cet) over(partition by device_id order by event_ts_cet) as next_session_dt 
-  from {{ source('onfy_mart', 'device_events')}}
-  where type in ('sessionConfigured')
+  from session_start_raw
 )
 
 , minimal_involvement_temp as ( 
@@ -139,7 +146,7 @@ to cut "technical" session start events taking sessions only if:
     from session_start as sessions
     left join source as sources
         on sessions.device_id = sources.device_id
-        and sessions.session_dt between source_dt_minus_1min and least(next_source_dt, source_dt_30d)
+        and sessions.session_dt between source_dt_minus_1min and coalesce(next_source_dt, to_timestamp('2100-01-01 00:00:00'))
     group by
         sessions.device_id,
         sessions.session_dt,
@@ -151,22 +158,35 @@ to cut "technical" session start events taking sessions only if:
 -- only taking sessions with minimal involvement - to cut empty sessions, checking order status sessions and so on
 --------------------------------------------------------------------------------------------------------------------------
 
+, minimal_involvement_sessions_30_raw as (
+  select distinct
+    sessions.device_id,
+    session_dt,
+    session_dt_30d,
+    sessions.source,
+    sessions.campaign,
+    sessions.partner,
+    minimal_involvement.type,
+    rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk
+  from sourced_sessions_30 as sessions
+  join minimal_involvement
+    on sessions.device_id = minimal_involvement.device_id
+    and minimal_involvement_dt between session_dt and least(coalesce(next_session_dt, to_timestamp('2100-01-01 00:00:00')), session_dt_30d)
+)
+
 , minimal_involvement_sessions_30 as (
     select distinct
-      sessions.device_id,
+      device_id,
       session_dt as session_minenv_dt,
       session_dt_30d,
-      sessions.source,
-      sessions.campaign,
-      sessions.partner,
-      minimal_involvement.type,
-      rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk,
-      lag(session_dt) over(partition by sessions.device_id order by session_dt) as prev_session_minenv_dt
-      , lead(session_dt) over(partition by sessions.device_id order by session_dt) as next_session_minenv_dt
-    from sourced_sessions_30 as sessions
-    join minimal_involvement
-      on sessions.device_id = minimal_involvement.device_id
-      and minimal_involvement_dt between session_dt and least(next_session_dt, session_dt_30d)
+      source,
+      campaign,
+      partner,
+      type,
+      lag(session_dt) over(partition by device_id order by session_dt) as prev_session_minenv_dt
+      , lead(session_dt) over(partition by device_id order by session_dt) as next_session_minenv_dt
+    from minimal_involvement_sessions_30_raw
+    where type_rnk = 1
 )
 
 , sessions_with_payments_30 as (
@@ -179,8 +199,7 @@ to cut "technical" session start events taking sessions only if:
     from minimal_involvement_sessions_30 as sessions
     left join successful_payment as payment
       on sessions.device_id = payment.device_id
-      and payment_dt between session_minenv_dt and least(next_session_minenv_dt, session_dt_30d)
-    where type_rnk = 1
+      and payment_dt between session_minenv_dt and least(coalesce(next_session_minenv_dt, to_timestamp('2100-01-01 00:00:00')), session_dt_30d)
 )
 
 , sessions_counter_30 as (
@@ -243,7 +262,7 @@ to cut "technical" session start events taking sessions only if:
     select
       minim_env_add_to_cart_30.*,
       cart_open_dt,
-      row_number() over(partition by minim_env_add_to_cart_30.device_id, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
+      row_number() over(partition by minim_env_add_to_cart_30.device_id, session_minenv_dt, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
     from minim_env_add_to_cart_30
     left join cart_open
       on minim_env_add_to_cart_30.device_id = cart_open.device_id
@@ -255,7 +274,7 @@ to cut "technical" session start events taking sessions only if:
     select
       add_to_cart_cart_open_30.*,
       checkout_dt,
-      row_number() over(partition by add_to_cart_cart_open_30.device_id, cart_open_dt order by checkout_dt) as rnk_checkout
+      row_number() over(partition by add_to_cart_cart_open_30.device_id, session_minenv_dt, cart_open_dt order by checkout_dt) as rnk_checkout
     from add_to_cart_cart_open_30
     left join checkout_open
       on add_to_cart_cart_open_30.device_id = checkout_open.device_id
@@ -267,7 +286,7 @@ to cut "technical" session start events taking sessions only if:
     select
       cart_open_to_checkout_30.*,
       payment_start_dt,
-      row_number() over(partition by cart_open_to_checkout_30.device_id, checkout_dt order by payment_start_dt) as rnk_payment_start
+      row_number() over(partition by cart_open_to_checkout_30.device_id, session_minenv_dt, checkout_dt order by payment_start_dt) as rnk_payment_start
     from cart_open_to_checkout_30
     left join payment_start
       on cart_open_to_checkout_30.device_id = payment_start.device_id
@@ -279,7 +298,7 @@ to cut "technical" session start events taking sessions only if:
     select
       checkout_to_payment_start_30.*,
       payment_dt,
-      row_number() over(partition by checkout_to_payment_start_30.device_id, payment_start_dt order by payment_dt) as rnk_payment
+      row_number() over(partition by checkout_to_payment_start_30.device_id, session_minenv_dt, payment_start_dt order by payment_dt) as rnk_payment
     from checkout_to_payment_start_30
     left join successful_payment
       on checkout_to_payment_start_30.device_id = successful_payment.device_id
@@ -316,7 +335,7 @@ to cut "technical" session start events taking sessions only if:
     from session_start as sessions
     left join source as sources
         on sessions.device_id = sources.device_id
-        and sessions.session_dt between source_dt_minus_1min and least(next_source_dt, source_dt_7d)
+        and sessions.session_dt between source_dt_minus_1min and coalesce(next_source_dt, to_timestamp('2100-01-01 00:00:00'))
     group by
         sessions.device_id,
         sessions.session_dt,
@@ -328,22 +347,35 @@ to cut "technical" session start events taking sessions only if:
 -- only taking sessions with minimal involvement - to cut empty sessions, checking order status sessions and so on
 --------------------------------------------------------------------------------------------------------------------------
 
+, minimal_involvement_sessions_7_raw as (
+select distinct
+  sessions.device_id,
+  session_dt,
+  session_dt_7d,
+  sessions.source,
+  sessions.campaign,
+  sessions.partner,
+  minimal_involvement.type,
+  rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk
+from sourced_sessions_7 as sessions
+join minimal_involvement
+  on sessions.device_id = minimal_involvement.device_id
+  and minimal_involvement_dt between session_dt and least(coalesce(next_session_dt, to_timestamp('2100-01-01 00:00:00')), session_dt_7d)
+)
+
 , minimal_involvement_sessions_7 as (
-    select distinct
-      sessions.device_id,
-      session_dt as session_minenv_dt,
-      session_dt_7d,
-      sessions.source,
-      sessions.campaign,
-      sessions.partner,
-      minimal_involvement.type,
-      rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk,
-      lag(session_dt) over(partition by sessions.device_id order by session_dt) as prev_session_minenv_dt
-      , lead(session_dt) over(partition by sessions.device_id order by session_dt) as next_session_minenv_dt
-    from sourced_sessions_7 as sessions
-    join minimal_involvement
-      on sessions.device_id = minimal_involvement.device_id
-      and minimal_involvement_dt between session_dt and least(next_session_dt, session_dt_7d)
+select distinct
+  device_id,
+  session_dt as session_minenv_dt,
+  session_dt_7d,
+  source,
+  campaign,
+  partner,
+  type,
+  lag(session_dt) over(partition by device_id order by session_dt) as prev_session_minenv_dt
+  , lead(session_dt) over(partition by device_id order by session_dt) as next_session_minenv_dt
+from minimal_involvement_sessions_7_raw
+where type_rnk=1
 )
 
 , sessions_with_payments_7 as (
@@ -356,8 +388,7 @@ to cut "technical" session start events taking sessions only if:
     from minimal_involvement_sessions_7 as sessions
     left join successful_payment as payment
       on sessions.device_id = payment.device_id
-      and payment_dt between session_minenv_dt and least(next_session_minenv_dt, session_dt_7d)
-    where type_rnk = 1 
+      and payment_dt between session_minenv_dt and least(coalesce(next_session_minenv_dt, to_timestamp('2100-01-01 00:00:00')), session_dt_7d)
 )
 
 , sessions_counter_7 as (
@@ -420,7 +451,7 @@ to cut "technical" session start events taking sessions only if:
     select
       minim_env_add_to_cart_7.*,
       cart_open_dt,
-      row_number() over(partition by minim_env_add_to_cart_7.device_id, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
+      row_number() over(partition by minim_env_add_to_cart_7.device_id, session_minenv_dt, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
     from minim_env_add_to_cart_7
     left join cart_open
       on minim_env_add_to_cart_7.device_id = cart_open.device_id
@@ -432,7 +463,7 @@ to cut "technical" session start events taking sessions only if:
     select
       add_to_cart_cart_open_7.*,
       checkout_dt,
-      row_number() over(partition by add_to_cart_cart_open_7.device_id, cart_open_dt order by checkout_dt) as rnk_checkout
+      row_number() over(partition by add_to_cart_cart_open_7.device_id, session_minenv_dt, cart_open_dt order by checkout_dt) as rnk_checkout
     from add_to_cart_cart_open_7
     left join checkout_open
       on add_to_cart_cart_open_7.device_id = checkout_open.device_id
@@ -444,7 +475,7 @@ to cut "technical" session start events taking sessions only if:
     select
       cart_open_to_checkout_7.*,
       payment_start_dt,
-      row_number() over(partition by cart_open_to_checkout_7.device_id, checkout_dt order by payment_start_dt) as rnk_payment_start
+      row_number() over(partition by cart_open_to_checkout_7.device_id, session_minenv_dt, checkout_dt order by payment_start_dt) as rnk_payment_start
     from cart_open_to_checkout_7
     left join payment_start
       on cart_open_to_checkout_7.device_id = payment_start.device_id
@@ -456,7 +487,7 @@ to cut "technical" session start events taking sessions only if:
     select
       checkout_to_payment_start_7.*,
       payment_dt,
-      row_number() over(partition by checkout_to_payment_start_7.device_id, payment_start_dt order by payment_dt) as rnk_payment
+      row_number() over(partition by checkout_to_payment_start_7.device_id, session_minenv_dt, payment_start_dt order by payment_dt) as rnk_payment
     from checkout_to_payment_start_7
     left join successful_payment
       on checkout_to_payment_start_7.device_id = successful_payment.device_id
@@ -493,7 +524,7 @@ to cut "technical" session start events taking sessions only if:
     from session_start as sessions
     left join source as sources
         on sessions.device_id = sources.device_id
-        and sessions.session_dt between source_dt_minus_1min and least(next_source_dt, source_dt_24h)
+        and sessions.session_dt between source_dt_minus_1min and coalesce(next_source_dt, to_timestamp('2100-01-01 00:00:00'))
     group by
         sessions.device_id,
         sessions.session_dt,
@@ -505,22 +536,30 @@ to cut "technical" session start events taking sessions only if:
 -- only taking sessions with minimal involvement - to cut empty sessions, checking order status sessions and so on
 --------------------------------------------------------------------------------------------------------------------------
 
+
+, minimal_involvement_sessions_24_raw as (
+select distinct
+  sessions.device_id,
+  session_dt as session_minenv_dt,
+  session_dt_24h,
+  sessions.source,
+  sessions.campaign,
+  sessions.partner,
+  minimal_involvement.type,
+  rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk
+from sourced_sessions_24 as sessions
+join minimal_involvement
+  on sessions.device_id = minimal_involvement.device_id
+  and minimal_involvement_dt between session_dt and least(coalesce(next_session_dt, to_timestamp('2100-01-01 00:00:00')), session_dt_24h)
+)
+
 , minimal_involvement_sessions_24 as (
-    select distinct
-      sessions.device_id,
-      session_dt as session_minenv_dt,
-      session_dt_24h,
-      sessions.source,
-      sessions.campaign,
-      sessions.partner,
-      minimal_involvement.type,
-      rank() over(partition by minimal_involvement.device_id, session_dt order by minimal_involvement_dt) as type_rnk,
-      lag(session_dt) over(partition by sessions.device_id order by session_dt) as prev_session_minenv_dt
-      , lead(session_dt) over(partition by sessions.device_id order by session_dt) as next_session_minenv_dt
-    from sourced_sessions_24 as sessions
-    join minimal_involvement
-      on sessions.device_id = minimal_involvement.device_id
-      and minimal_involvement_dt between session_dt and least(next_session_dt, session_dt_24h)
+select distinct
+  *,
+  lag(session_minenv_dt) over(partition by device_id order by session_minenv_dt) as prev_session_minenv_dt
+  , lead(session_minenv_dt) over(partition by device_id order by session_minenv_dt) as next_session_minenv_dt
+from minimal_involvement_sessions_24_raw
+where type_rnk=1
 )
 
 , sessions_with_payments_24 as (
@@ -533,7 +572,7 @@ to cut "technical" session start events taking sessions only if:
     from minimal_involvement_sessions_24 as sessions
     left join successful_payment as payment
       on sessions.device_id = payment.device_id
-      and payment_dt between session_minenv_dt and least(next_session_minenv_dt, session_dt_24h)
+      and payment_dt between session_minenv_dt and least(coalesce(next_session_minenv_dt, to_timestamp('2100-01-01 00:00:00')), session_dt_24h)
     where type_rnk = 1 
 )
 
@@ -597,7 +636,7 @@ to cut "technical" session start events taking sessions only if:
     select
       minim_env_add_to_cart_24.*,
       cart_open_dt,
-      row_number() over(partition by minim_env_add_to_cart_24.device_id, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
+      row_number() over(partition by minim_env_add_to_cart_24.device_id, session_minenv_dt, add_to_cart_dt order by cart_open_dt) as rnk_cart_open
     from minim_env_add_to_cart_24
     left join cart_open
       on minim_env_add_to_cart_24.device_id = cart_open.device_id
@@ -609,7 +648,7 @@ to cut "technical" session start events taking sessions only if:
     select
       add_to_cart_cart_open_24.*,
       checkout_dt,
-      row_number() over(partition by add_to_cart_cart_open_24.device_id, cart_open_dt order by checkout_dt) as rnk_checkout
+      row_number() over(partition by add_to_cart_cart_open_24.device_id, session_minenv_dt, cart_open_dt order by checkout_dt) as rnk_checkout
     from add_to_cart_cart_open_24
     left join checkout_open
       on add_to_cart_cart_open_24.device_id = checkout_open.device_id
@@ -621,7 +660,7 @@ to cut "technical" session start events taking sessions only if:
     select
       cart_open_to_checkout_24.*,
       payment_start_dt,
-      row_number() over(partition by cart_open_to_checkout_24.device_id, checkout_dt order by payment_start_dt) as rnk_payment_start
+      row_number() over(partition by cart_open_to_checkout_24.device_id, session_minenv_dt, checkout_dt order by payment_start_dt) as rnk_payment_start
     from cart_open_to_checkout_24
     left join payment_start
       on cart_open_to_checkout_24.device_id = payment_start.device_id
@@ -633,7 +672,7 @@ to cut "technical" session start events taking sessions only if:
     select
       checkout_to_payment_start_24.*,
       payment_dt,
-      row_number() over(partition by checkout_to_payment_start_24.device_id, payment_start_dt order by payment_dt) as rnk_payment
+      row_number() over(partition by checkout_to_payment_start_24.device_id, session_minenv_dt, payment_start_dt order by payment_dt) as rnk_payment
     from checkout_to_payment_start_24
     left join successful_payment
       on checkout_to_payment_start_24.device_id = successful_payment.device_id
