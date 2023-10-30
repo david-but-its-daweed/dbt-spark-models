@@ -145,10 +145,17 @@ left join order_rates r on p.order_id = r.order_id and p.currency = r.from and r
 group by order_id, type, tag, stage
 ),
 
+country as (
+    select distinct user_id, coalesce(country, "RU") as country
+    from {{ ref('dim_user') }}
+    where next_effective_ts_msk is null
+),
+
 all_orders AS (
-  SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id, country
+  SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id, c.country
   FROM {{ ref('fact_order') }} u
-WHERE u.next_effective_ts_msk is null
+  LEFT JOIN country c USING(user_id)
+  WHERE u.next_effective_ts_msk is null
   and u.min_manufactured_ts_msk is not null and u.friendly_id != 'KXMZQ'
 ),
 
