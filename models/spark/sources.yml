@@ -156,7 +156,6 @@ sources:
       - name: google_campaign_insights
       - name: fbads_adset_country_insights
       - name: partners_insights
-      - name: checkout_promocode
   - name: onfy_mart
     tables:
       - name: device_events
