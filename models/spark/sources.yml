@@ -221,3 +221,8 @@ sources:
   - name: mi_analytics
     tables:
       - name: aliexpress_logistics_prices
+
+  - name: goods
+    tables:
+      - name: coolbe_product_labels
+

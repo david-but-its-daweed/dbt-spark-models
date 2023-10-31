@@ -16,18 +16,17 @@
 SELECT DISTINCT
     device_id,
     partition_date AS partition_date_msk,
-    DATE(from_unixtime(event_ts / 1000)) AS open_date_msk,
+    DATE(FROM_UNIXTIME(event_ts / 1000)) AS open_date_msk,
     device.os_type,
-    FIRST(payload.avail) OVER (PARTITION BY device_id, DATE(from_unixtime(event_ts / 1000)) ORDER BY from_unixtime(event_ts / 1000)) AS avail_flg,
-    FIRST(payload.productId) OVER (PARTITION BY device_id, DATE(from_unixtime(event_ts / 1000)) ORDER BY from_unixtime(event_ts / 1000)) AS product_id
+    FIRST(payload.avail) OVER (PARTITION BY device_id, DATE(FROM_UNIXTIME(event_ts / 1000)) ORDER BY FROM_UNIXTIME(event_ts / 1000)) AS avail_flg,
+    FIRST(payload.productid) OVER (PARTITION BY device_id, DATE(FROM_UNIXTIME(event_ts / 1000)) ORDER BY FROM_UNIXTIME(event_ts / 1000)) AS product_id
 FROM {{ source('mart', 'device_events') }}
 WHERE
-    `type` IN ('productOpenServer')
- --   AND device.os_type LIKE "%web%"
+    type IN ('productOpenServer')
     {% if is_incremental() %}
-        AND partition_date >= date'{{ var("start_date_ymd") }}'
-        AND partition_date < date'{{ var("end_date_ymd") }}'
+        AND partition_date >= DATE'{{ var("start_date_ymd") }}'
+        AND partition_date < DATE'{{ var("end_date_ymd") }}'
     {% else %}
-        AND partition_date >= date'2022-06-01'
+        AND partition_date >= DATE'2022-06-01'
     {% endif %}
 
