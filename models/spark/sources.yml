@@ -118,6 +118,7 @@ sources:
       - name: sat_store_performance
       - name: productsGroups_louvain
       - name: link_device_user
+      - name: link_device_real_user
   - name: b2b_mart
     tables:
       - name: device_events
