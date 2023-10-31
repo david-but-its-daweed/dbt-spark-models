@@ -142,6 +142,7 @@ sources:
   - name: recom
     tables:
       - name: context_device_counters_v5
+      - name: context_device_counters_v6
   - name: product
     tables:
       - name: diagnoses_changes
