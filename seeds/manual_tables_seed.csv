@@ -4,3 +4,4 @@ mart.focus_products
 mart.fact_table_update
 payments.country_filter
 mart.dim_date
+goods.coolbe_product_labels
