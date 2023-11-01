@@ -16,5 +16,5 @@
 SELECT
     product_id,
     label,
-    partition_date AS partition_date_msk
+    DATE(partition_date) AS partition_date_msk
 FROM {{ source('goods', 'coolbe_product_labels') }}
