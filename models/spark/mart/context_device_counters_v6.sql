@@ -8,8 +8,7 @@
       'priority_weight' : '150',
       'bigquery_clustering_columns' : ['type', 'context_name'],
       'bigquery_partitioning_date_column' : 'partition_date',
-      'bigquery_upload_horizon_days' : '3',
-      'bigquery_cast_types_dict' : {'partition_date': joom_bq.CastToTypeEnum.DATE}
+      'bigquery_upload_horizon_days' : '3'
     }
 ) }}
 
