@@ -75,7 +75,7 @@ customers as (
     first_deal_planning_volume,
     first_deal_planning_currency,
     first_deal_planning_volume_usd
-    from {{ ref('scd2_mongo_customer_main_info') }} m
+    from {{ ref('sat_customers') }} m
     left join grades on coalesce(m.grade, 0) = grades.value
     left join grades_prob on coalesce(m.grade_probability, 0) = grades_prob.value
     where TIMESTAMP(dbt_valid_to) is null
