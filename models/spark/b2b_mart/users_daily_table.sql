@@ -76,54 +76,16 @@ users AS (
     WHERE du.next_effective_ts_msk IS NULL
 ),
 
-grades AS (
-    SELECT
-        'unknown' AS grade,
-        0 AS value
-    UNION ALL
-    SELECT
-        'a' AS grade,
-        1 AS value
-    UNION ALL
-    SELECT
-        'b' AS grade,
-        2 AS value
-    UNION ALL
-    SELECT
-        'c' AS grade,
-        3 AS value
-),
-
-
-grades_prob AS (
-    SELECT
-        'unknown' AS grade_prob,
-        0 AS value
-    UNION ALL
-    SELECT
-        'low' AS grade_prob,
-        1 AS value
-    UNION ALL
-    SELECT
-        'medium' AS grade_prob,
-        2 AS value
-    UNION ALL
-    SELECT
-        'high' AS grade_prob,
-        3 AS value
-),
 
 customers AS (
     SELECT DISTINCT
-        c._id AS user_id,
-        c.companyName,
-        c.estimatedPurchaseVolume.from as volume_from,
-        c.estimatedPurchaseVolume.to as volume_to,
-        grades.grade as grade,
-        grades_prob.grade_prob as grade_probability
-    FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }} AS c
-    LEFT JOIN grades ON c.gradeInfo.grade = grades.value
-    LEFT JOIN grades_prob ON c.gradeInfo.prob = grades_prob.value
+        user_id,
+        c.company_name,
+        volume_from,
+        volume_to,
+        grade,
+        grade_probability
+    FROM {{ ref('fact_customers') }} AS c
 ),
 
 current_admin AS (
@@ -134,7 +96,7 @@ current_admin AS (
         u.reject_reason,
         a.email AS owner_email,
         a.owner_role,
-        c.companyName AS company_name,
+        c.company_name AS company_name,
         c.volume_from,
         c.volume_to,
         c.grade,
