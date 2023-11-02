@@ -43,38 +43,56 @@ ads_spends_data as
     from {{source('onfy_mart', 'ads_spends')}}
     group by 
         grouping sets ((campaign_date_utc, date_trunc('month', campaign_date_utc)), (date_trunc('month', campaign_date_utc)))
+),
+
+base as 
+(
+    select 
+        case
+            when coalesce(transaction_date, ads_spends_date) is null and coalesce(transaction_month, ads_spends_month) is not null then 'month'
+            else 'day'
+        end as mode,
+
+        date_trunc('month', current_date()) = transaction_month as current_month,
+        if(date_trunc('month', current_date()) = transaction_month, date_part('day', current_date() - interval 1 day), null) as max_date,
+
+        coalesce(transaction_date, ads_spends_date) as date,
+        coalesce(transaction_month, ads_spends_month) as month,
+        order_data.gmv_initial,
+        order_data.gross_profit_final,
+        order_data.promocode_discount,
+        order_data.orders,
+        order_data.first_orders,
+        order_data.first_gmv_initial,
+        order_data.first_gross_profit_final,
+        order_data.first_promocode_discount,
+        order_data.average_check,
+        order_data.first_average_check,
+        ads_spends_data.spend,
+        ads_spends_data.clicks,
+
+        ads_spends_data.spend / order_data.orders as general_cpo,
+        ads_spends_data.spend / order_data.first_orders as general_cppu
+    from order_data
+    full join ads_spends_data
+        on coalesce(order_data.transaction_date, '') = coalesce(ads_spends_data.ads_spends_date, '')
+        and order_data.transaction_month = ads_spends_data.ads_spends_month
 )
 
 select 
-    case
-        when coalesce(transaction_date, ads_spends_date) is null and coalesce(transaction_month, ads_spends_month) is not null then 'month'
-        else 'day'
-    end as mode,
-    
-    coalesce(transaction_date, ads_spends_date) between current_date() - interval 7 day and current_date() - interval 1 day as last_7_days,
-    coalesce(transaction_date, ads_spends_date) between current_date() - interval 3 day and current_date() - interval 1 day as last_3_days,
-    
-    date_trunc('month', current_date()) = transaction_month as current_month,
-    if(date_trunc('month', current_date()) = transaction_month, date_part('day', current_date() - interval 1 day), null) as max_date,
-    
-    coalesce(transaction_date, ads_spends_date) as date,
-    coalesce(transaction_month, ads_spends_month) as month,
-    order_data.gmv_initial,
-    order_data.gross_profit_final,
-    order_data.promocode_discount,
-    order_data.orders,
-    order_data.first_orders,
-    order_data.first_gmv_initial,
-    order_data.first_gross_profit_final,
-    order_data.first_promocode_discount,
-    order_data.average_check,
-    order_data.first_average_check,
-    ads_spends_data.spend,
-    ads_spends_data.clicks,
-    
-    ads_spends_data.spend / order_data.orders as general_cpo,
-    ads_spends_data.spend / order_data.first_orders as general_cppu
-from order_data
-full join ads_spends_data
-    on coalesce(order_data.transaction_date, '') = coalesce(ads_spends_data.ads_spends_date, '')
-    and order_data.transaction_month = ads_spends_data.ads_spends_month
+    *,
+    date between current_date() - interval 7 day and current_date() - interval 1 day as last_n_days,
+    '7 days' as forecast_base
+from base
+union all
+select 
+    *,
+    date between current_date() - interval 3 day and current_date() - interval 1 day as last_n_days,
+    '3 days' as forecast_base
+from base
+union all
+select 
+    *,
+    current_month as last_n_days,
+    'month' as forecast_base
+from base
