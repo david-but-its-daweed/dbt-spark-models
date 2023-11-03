@@ -132,7 +132,7 @@ past_admin AS (
         u.reject_reason,
         gua.owner_email,
         gua.owner_role,
-        c.companyName AS company_name,
+        c.company_name AS company_name,
         c.volume_from,
         c.volume_to,
         c.grade,
