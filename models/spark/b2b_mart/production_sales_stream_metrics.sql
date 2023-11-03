@@ -19,9 +19,9 @@ WITH requests AS (
 
 customers as (
     select distinct
-    _id as user_id,
-    grades.grade as grade,
-    grades_prob.grade_prob as grade_probability
+    user_id,
+    grade,
+    grade_probability
     from {{ ref('fact_customers') }}
 ),
 
