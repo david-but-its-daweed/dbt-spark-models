@@ -15,7 +15,6 @@ SELECT
     millis_to_ts_msk(utms) AS update_ts_msk,
     companyName AS company_name,
     est AS year_of_establishment,
-    purchaseVolumePerMonth as purchase_volume_per_month,
     hasLegalEntity AS legal_entity,
     monthlyTurnover.from AS monthly_turnover_from,
     monthlyTurnover.to AS monthly_turnover_to,
