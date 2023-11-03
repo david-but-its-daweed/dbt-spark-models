@@ -78,7 +78,7 @@ customers as (
     from {{ ref('sat_customers') }} m
     left join grades on coalesce(m.grade, 0) = grades.value
     left join grades_prob on coalesce(m.grade_probability, 0) = grades_prob.value
-    where TIMESTAMP(dbt_valid_to) is null
+    where next_effective_ts_msk is null
 ),
 
 users_hist as (
