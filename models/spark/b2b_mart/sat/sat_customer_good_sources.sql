@@ -20,7 +20,9 @@ FROM (
         concat_ws('-', customer_id, COALESCE(good_source_id,0), utms) AS id,
         customer_id,
         update_ts_msk,
-        good_source_id
+        good_source_id,
+        dbt_valid_from,
+        dbt_valid_to
     FROM (
         SELECT
             _id AS customer_id,
