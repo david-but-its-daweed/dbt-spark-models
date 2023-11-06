@@ -28,6 +28,7 @@ with order_data as
     from {{source('onfy', 'transactions')}}
     where 1=1
         and currency = 'EUR'
+        and date_trunc('day', transaction_date) < current_date() 
     group by
         grouping sets ((date_trunc('day', transaction_date), date_trunc('month', transaction_date)), (date_trunc('month', transaction_date)))
 ),
@@ -48,6 +49,7 @@ ads_spends_data as
 base as 
 (
     select 
+        current_date() as date_updated,
         case
             when coalesce(transaction_date, ads_spends_date) is null and coalesce(transaction_month, ads_spends_month) is not null then 'month'
             else 'day'
