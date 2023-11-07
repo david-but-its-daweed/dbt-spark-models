@@ -19,7 +19,7 @@ select
         op.manufacturer_id,
         op.type as product_type,
         op.disabled,
-        op.created_time_msk as order_product_created_time,
+        op.created_time_msk as offer_product_created_time,
         co.customer_request_id,
         co.deal_id,
         co.merchant_id,
