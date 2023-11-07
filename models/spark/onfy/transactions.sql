@@ -171,7 +171,7 @@ transactions_psp AS (
         order_data.source_corrected as source,
         order_data.campaign_corrected as campaign,
         order_data.order_created_time_cet,
-        onfy_mart.transactions.date as transaction_date,
+        from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') as transaction_date,
         onfy_mart.transactions.price,
         onfy_mart.transactions.currency
     FROM 
