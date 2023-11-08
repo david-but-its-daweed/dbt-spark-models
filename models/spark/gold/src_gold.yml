@@ -22,6 +22,8 @@ models:
       description: User device platform
     - name: legal_entity
       description: Legal entity through which payments will be made for `device_id`. Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main)
+    - name: app_entity
+      description: "The name of the online store where the order was placed. By 'online store,' we mean the distinction between 'Joom' (the main marketplace), 'Joom Geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'CoolBe' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019)"
     - name: join_date_msk
       description: Date of the user's first activity in UTC+3
     - name: real_user_segment
@@ -98,6 +100,8 @@ models:
       description: User device platform
     - name: legal_entity
       description: Legal entity through which payments will be made for `device_id`. Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main)
+    - name: app_entity
+      description: "The name of the online store where the order was placed. By 'online store,' we mean the distinction between 'Joom' (the main marketplace), 'Joom Geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'CoolBe' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019)"
     - name: join_date_msk
       description: Date of the user's first activity in UTC+3
     - name: real_user_segment
@@ -401,7 +405,7 @@ models:
     - name: legal_entity
       description: The legal entity through which payments will be made for `device_id`. Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main).
     - name: app_entity
-      description: "The name of the online store where the order was placed. This field is true for `order_group_id`. By 'online store,' we mean the distinction between 'Joom' (the main marketplace) and 'Joom Geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee)"
+      description: "The name of the online store where the order was placed. This field is true for `order_group_id`. By 'online store,' we mean the distinction between 'Joom' (the main marketplace), 'Joom Geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'CoolBe' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019)"
     - name: merchant_id
       description: Merchant ID.
     - name: business_line

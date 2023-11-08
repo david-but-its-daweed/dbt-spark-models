@@ -105,6 +105,9 @@ active_devices_ext1 AS (
         main.real_user_id,
         main.join_day as join_date_msk,
         main.legal_entity,
+        {% if device_or_user_id == 'device_id' %}
+            main.app_entity,
+        {% endif %}
         main.country as country_code,
         main.app_language,
         main.platform,
@@ -164,6 +167,9 @@ active_devices_ext3 AS (
         a.country_code,
         a.platform,
         a.legal_entity,
+        {% if device_or_user_id == 'device_id' %}
+            a.app_entity,
+        {% endif %}
         a.app_language,
         a.is_new_{{ naming_field }},
         a.join_date_msk,
@@ -281,6 +287,9 @@ SELECT
     app_language,
     platform,
     legal_entity,
+    {% if device_or_user_id == 'device_id' %}
+        app_entity,
+    {% endif %}
     join_date_msk,
     real_user_segment,
     is_new_{{ naming_field }},

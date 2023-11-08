@@ -28,6 +28,16 @@ WITH device_info AS (
         MIN(ephemeral) AS is_ephemeral,
         FIRST_VALUE(real_user_id) AS real_user_id,
         FIRST_VALUE(IF(legal_entity = 'jmt', 'JMT', 'Joom')) AS legal_entity,
+        FIRST_VALUE(
+            CASE
+                WHEN date_msk < '2023-07-01' OR app_entity = 'joom'
+                    THEN 'Joom'
+                WHEN app_entity = 'joom_geek'
+                    THEN 'Joom Geek'
+                WHEN app_entity = 'cool_be'
+                    THEN 'CoolBe'
+            END
+        ) AS app_entity,
         FIRST_VALUE(UPPER(language)) AS app_language
     FROM {{ source('mart', 'star_active_device') }}
     {% if is_incremental() %}
@@ -56,6 +66,7 @@ SELECT
     d.platform,
     d.os_version,
     d.app_version,
+    d.app_entity,
     d.is_ephemeral,
     d.day = join_day AS is_new_user,
     d.real_user_id,

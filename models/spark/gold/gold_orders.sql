@@ -48,6 +48,8 @@ orders_ext0 AS (
                 THEN 'Joom'
             WHEN app_entity = 'joom_geek'
                 THEN 'Joom Geek'
+            WHEN app_entity = 'cool_be'
+                THEN 'CoolBe'
         END AS app_entity,
         merchant_id,
         store_id,

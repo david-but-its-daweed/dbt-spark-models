@@ -24,6 +24,7 @@ SELECT
     app_language,
     platform,
     legal_entity,
+    app_entity,
     join_date_msk,
     real_user_segment,
     is_new_device,
