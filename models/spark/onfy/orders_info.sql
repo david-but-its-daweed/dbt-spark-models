@@ -13,8 +13,18 @@ WITH product_names AS (
     SELECT DISTINCT
         product_id,
         product_name
-    FROM onfy_mart.dim_product
+    FROM {{ source('onfy_mart', 'dim_product') }}
+),
+
+devices_mart AS (
+    SELECT
+        device_id,
+        app_device_type,
+        MIN(min_purchase_ts) AS min_purchase_ts
+    FROM {{ source('onfy_mart', 'devices_mart') }}
+    GROUP BY 1, 2
 )
+
 SELECT
     ord.user_id,
     ord.device_id,
@@ -54,7 +64,7 @@ INNER JOIN {{ source('pharmacy_landing', 'store_delivery') }} AS store_delivery
 LEFT JOIN {{ source('pharmacy_landing', 'medicine') }} AS medicine
     ON
         order_parcel_item.product_id = medicine.id
-INNER JOIN {{ source('onfy_mart', 'devices_mart') }} AS devices_mart
+INNER JOIN devices_mart
     ON
         ord.device_id = devices_mart.device_id
 INNER JOIN product_names
