@@ -15,7 +15,7 @@ WITH order_products AS (
         customer_request_id,
         offer_id,
         offer_product_id,
-        operational_product_id,
+        product_id,
         order_id,
         order_friendly_id,
         merchant_order_id,
@@ -31,7 +31,7 @@ WITH order_products AS (
 statuses as
 (SELECT
     merchant_order_id,
-    product_id as operational_product_id,
+    product_id,
     min(CASE WHEN status = 'formingOrder' THEN event_ts_msk END) AS forming_order,
     min(CASE WHEN status = 'signingWithMerch' THEN event_ts_msk END) AS signing_with_merchant,
     min(CASE WHEN status = 'awaitingManufacturing' THEN event_ts_msk END) AS awaiting_manufacturing,
@@ -60,7 +60,7 @@ select
   op.customer_request_id,
   op.offer_id,
   op.offer_product_id,
-  op.operational_product_id,
+  op.product_id,
   op.order_id,
   op.order_friendly_id,
   op.merchant_order_id,
@@ -79,4 +79,4 @@ select
   s.order_completed,
   s.cancelled
 from order_products op
-join statuses s using (merchant_order_id, operational_product_id)
+join statuses s using (merchant_order_id, product_id)
