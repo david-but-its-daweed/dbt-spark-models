@@ -121,7 +121,7 @@ select distinct
     cr.customer_request_id,
     off.offer_id,
     off.offer_product_id,
-    coalesce(off.product_id, p.product_id) as operational_product_id,
+    coalesce(off.product_id, p.product_id) as product_id,
     o.order_id,
     o.order_friendly_id,
     mo.merchant_order_id,
