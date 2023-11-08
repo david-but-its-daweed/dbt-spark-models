@@ -11,56 +11,36 @@
 
 
 WITH product_statuses AS (
-    SELECT *
+    SELECT DISTINCT *
     FROM {{ ref('fact_order_product_statuses') }}
 ),
 
 merchant_orders AS (
-    SELECT *
+    SELECT DISTINCT *
     FROM {{ ref('fact_merchant_order_statuses') }}
 ),
 
 order_statuses AS (
-    SELECT *
+    SELECT DISTINCT *
     FROM {{ ref('fact_order_statuses') }}
 ),
 
 psi AS (
-    SELECT
+    SELECT 
         merchant_order_id,
         product_id,
         max(running_time) AS psi_running_time,
         max(ready_time) AS psi_ready_time,
         max(failed_time) AS psi_failed_time,
         max(psi_end_time) AS psi_end_time,
-        max(psi_start) as date_of_inspection
+        max(psi_start) AS date_of_inspection
     FROM {{ ref('fact_psi') }}
     GROUP BY merchant_order_id, product_id
 ),
 
 pickup_orders as (
-    select 
-      pickup_id,
-      pickup_friendly_id,
-      merchant_order_id,
-      order_id,
-      arrived_date,
-      pickup_date,
-      planned_date,
-      shipped_date,
-      min(case when statuses.status = 'WaitingForConfirmation' then time end) as waiting_for_confirmation,
-      min(case when statuses.status = 'Requested' then time end) as pickup_requested,
-      min(case when statuses.status = 'PickedUp' then time end) as picked_up
-    from {{ ref('fact_pickup_order') }}
-    group by
-      pickup_id,
-      pickup_friendly_id,
-      merchant_order_id,
-      order_id,
-      arrived_date,
-      pickup_date,
-      planned_date,
-      shipped_date
+    SELECT DISTINCT *
+    FROM b2b_mart.fact_pickup_order
 ),
 
 order_products AS (
@@ -112,9 +92,9 @@ SELECT DISTINCT
     pickup_date,
     planned_date AS pickup_planned_date,
     waiting_for_confirmation AS pickup_waiting_for_confirmation,
-    pickup_requested,
-    mo.last_status as merchant_order_status,
-    op.last_status as product_status,
+    pu.requested AS pickup_requested,
+    mo.last_status AS merchant_order_status,
+    op.last_status AS product_status,
     current_status,
     current_sub_status
 FROM      order_products   AS op
