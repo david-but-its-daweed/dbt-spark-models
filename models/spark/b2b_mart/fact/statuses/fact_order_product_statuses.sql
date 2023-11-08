@@ -40,13 +40,14 @@ statuses as
     min(CASE WHEN status = 'pickUp' THEN event_ts_msk END) AS pick_up,
     min(CASE WHEN status = 'orderCompleted' THEN event_ts_msk END) AS order_completed,
     min(CASE WHEN status = 'cancelled' THEN event_ts_msk END) AS cancelled,
-    first_value(status) over (partition by product_id order by event_ts_msk desc) as last_status
+    min(last_status) as last_status
 FROM (
     SELECT
         merchant_order_id,
         product_id,
         status,
-        event_ts_msk
+        event_ts_msk,
+        first_value(status) over (partition by product_id order by event_ts_msk desc) as last_status
     FROM {{ ref('statuses_events') }}
     WHERE entity = 'product'
 )
