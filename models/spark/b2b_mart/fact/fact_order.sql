@@ -29,7 +29,7 @@ manufacturing AS
     from
     (
     select event_ts_msk, order_id, min(pr) over (partition by order_id, foc.status) min_pr, pr
-    from {{ ref('fact_order_statuses') }} foc left join sub_statuses s on foc.sub_status = s.status
+    from {{ ref('fact_order_statuses_change') }} foc left join sub_statuses s on foc.sub_status = s.status
     where foc.status = 'manufacturing'
     )
     where min_pr = pr or pr is null

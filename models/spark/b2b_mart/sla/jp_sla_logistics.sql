@@ -70,7 +70,7 @@ stg1 AS (
         LAG(o.event_ts_msk) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id, o.event_ts_msk) AS lag_sub_status_ts,
         LAG(o.status) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id,o.event_ts_msk) AS lag_status,
         LAG(o.sub_status) OVER (PARTITION BY o.order_id ORDER BY o.status_id, o.sub_status_id, o.event_ts_msk) AS lag_sub_status
-    FROM {{ ref('fact_order_statuses') }} AS o
+    FROM {{ ref('fact_order_statuses_change') }} AS o
     LEFT JOIN certified AS c ON o.order_id = c.order_id
     LEFT JOIN admin AS ao ON c.owner_moderator_id = ao.admin_id
 ),

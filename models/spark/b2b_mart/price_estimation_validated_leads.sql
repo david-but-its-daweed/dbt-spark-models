@@ -46,7 +46,7 @@ orders as (
       row_number() over (partition by user_id, fo.order_id order by event_ts_msk desc) as rn
     from {{ ref('fact_order') }} fo
     left join
-        {{ ref('fact_order_statuses') }} fos on fo.order_id = fos.order_id 
+        {{ ref('fact_order_statuses_change') }} fos on fo.order_id = fos.order_id 
     )
     where rn = 1
 )

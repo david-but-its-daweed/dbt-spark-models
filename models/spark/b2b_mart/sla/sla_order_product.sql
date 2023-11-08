@@ -161,7 +161,7 @@ order_statuses AS (
         max(CASE WHEN sub_status = 'brokerPaymentReceived' THEN event_ts_msk END) AS broker_payment_received,
         max(CASE WHEN sub_status = 'broker2JoomSIAPaymentSent' THEN event_ts_msk END) AS broker_to_sia_payment_sent,
         max(CASE WHEN status = 'cancelled' THEN event_ts_msk END) AS order_cancelled
-    FROM {{ ref('fact_order_statuses') }}
+    FROM {{ ref('fact_order_statuses_change') }}
     GROUP BY order_id
 ),
 

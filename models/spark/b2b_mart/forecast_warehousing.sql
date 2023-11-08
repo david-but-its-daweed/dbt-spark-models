@@ -301,7 +301,7 @@ from
             date(event_ts_msk) as date_status,
             status,
             sub_status
-        from {{ ref('fact_order_statuses') }}
+        from {{ ref('fact_order_statuses_change') }}
         where (
          status in (
             'manufacturing'
