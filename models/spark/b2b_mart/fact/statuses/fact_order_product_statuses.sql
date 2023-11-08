@@ -39,7 +39,8 @@ statuses as
     min(CASE WHEN status = 'psi' THEN event_ts_msk END) AS psi,
     min(CASE WHEN status = 'pickUp' THEN event_ts_msk END) AS pick_up,
     min(CASE WHEN status = 'orderCompleted' THEN event_ts_msk END) AS order_completed,
-    min(CASE WHEN status = 'cancelled' THEN event_ts_msk END) AS cancelled
+    min(CASE WHEN status = 'cancelled' THEN event_ts_msk END) AS cancelled,
+    first_value(status) over (partition by product_id order by event_ts_msk desc) as last_status
 FROM (
     SELECT
         merchant_order_id,
@@ -70,6 +71,7 @@ select
   op.product_friendly_id,
   op.owner_email,
   op.owner_role,
+  s.last_status,
   s.forming_order,
   s.signing_with_merchant,
   s.awaiting_manufacturing,
