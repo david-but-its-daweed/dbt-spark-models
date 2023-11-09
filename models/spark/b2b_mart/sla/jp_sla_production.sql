@@ -40,7 +40,7 @@ psi AS (
 
 pickup_orders as (
     SELECT DISTINCT *
-    FROM b2b_mart.fact_pickup_order
+    FROM {{ ref('fact_pickup_order') }}
 ),
 
 order_products AS (
@@ -96,7 +96,7 @@ SELECT DISTINCT
     waiting_for_confirmation AS pickup_waiting_for_confirmation,
     pu.requested AS pickup_requested,
     mo.last_status AS merchant_order_status,
-    op.last_status AS product_status,
+    ps.last_status AS product_status,
     os.current_status,
     os.current_sub_status,
     pu.current_status as pickup_status
