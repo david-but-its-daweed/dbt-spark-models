@@ -97,8 +97,9 @@ SELECT DISTINCT
     pu.requested AS pickup_requested,
     mo.last_status AS merchant_order_status,
     op.last_status AS product_status,
-    current_status,
-    current_sub_status
+    os.current_status,
+    os.current_sub_status,
+    pu.current_status as pickup_status
 FROM      order_products   AS op
 LEFT JOIN product_statuses AS ps   USING (product_id, merchant_order_id)
 LEFT JOIN psi                      USING (product_id, merchant_order_id)
