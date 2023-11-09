@@ -20,6 +20,12 @@ merchant_orders AS (
     FROM {{ ref('fact_merchant_order_statuses') }}
 ),
 
+merchant_order AS (
+    SELECT DISTINCT manufacturing_days, merchant_order_id
+    FROM {{ ref('fact_merchant_order') }}
+    WHERE next_effective_ts_msk is null
+),
+
 order_statuses AS (
     SELECT DISTINCT *
     FROM {{ ref('fact_order_statuses') }}
@@ -65,6 +71,7 @@ order_products AS (
 
 SELECT DISTINCT
     op.*,
+    manufacturing_days,
     pickup_id,
     pickup_friendly_id,
     signing_and_payment,
@@ -105,4 +112,5 @@ LEFT JOIN product_statuses AS ps   USING (product_id, merchant_order_id)
 LEFT JOIN psi                      USING (product_id, merchant_order_id)
 LEFT JOIN order_statuses   AS os   USING (order_id)
 LEFT JOIN merchant_orders  AS mo   USING (merchant_order_id)
+LEFT JOIN merchant_order   AS m    USING (merchant_order_id)
 LEFT JOIN pickup_orders    AS pu   USING (order_id, merchant_order_id)
