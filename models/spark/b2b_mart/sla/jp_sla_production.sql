@@ -47,7 +47,7 @@ psi AS (
 pickups as 
 (
     select distinct
-        boxes.operationalProductId as product_id,
+        boxes.operationalProductId as order_product_id,
         pickup_id
     from
     (
@@ -129,4 +129,4 @@ LEFT JOIN psi                      USING (product_id, merchant_order_id)
 LEFT JOIN order_statuses   AS os   USING (order_id)
 LEFT JOIN merchant_orders  AS mo   USING (merchant_order_id)
 LEFT JOIN merchant_order   AS m    USING (merchant_order_id)
-LEFT JOIN pickup_orders    AS pu   USING (order_id, merchant_order_id, product_id)
+LEFT JOIN pickup_orders    AS pu   USING (order_id, merchant_order_id, order_product_id)
