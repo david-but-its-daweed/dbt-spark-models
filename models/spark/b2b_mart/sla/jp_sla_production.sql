@@ -44,9 +44,25 @@ psi AS (
     GROUP BY merchant_order_id, product_id
 ),
 
+pickups as 
+(
+    select distinct
+        boxes.operationalProductId as product_id,
+        pickup_id
+    from
+    (
+    select 
+        explode(boxes) as boxes,
+        _id as pickup_id
+    from {{ ref('scd2_pick_up_orders_snapshot') }}
+    where dbt_valid_to is null
+    )
+),
+
 pickup_orders as (
-    SELECT DISTINCT *
-    FROM {{ ref('fact_pickup_order') }}
+    SELECT DISTINCT fpo.*, product_id
+    FROM {{ ref('fact_pickup_order') }} fpo
+    LEFT JOIN pickups USING (pickup_id)
 ),
 
 order_products AS (
@@ -113,4 +129,4 @@ LEFT JOIN psi                      USING (product_id, merchant_order_id)
 LEFT JOIN order_statuses   AS os   USING (order_id)
 LEFT JOIN merchant_orders  AS mo   USING (merchant_order_id)
 LEFT JOIN merchant_order   AS m    USING (merchant_order_id)
-LEFT JOIN pickup_orders    AS pu   USING (order_id, merchant_order_id)
+LEFT JOIN pickup_orders    AS pu   USING (order_id, merchant_order_id, product_id)
