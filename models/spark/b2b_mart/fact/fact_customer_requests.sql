@@ -10,26 +10,28 @@
 
 
 select 
-_id as customer_request_id,
-categoryId as category_id,
-category_name,
-millis_to_ts_msk(ctms) as created_time,
-dealId as deal_id,
-desc,
-expectedQuantity as expected_quantity,
-link,
-model,
-pricePerItem.amount as price_per_item,
-pricePerItem.ccy as currency,
-c.status as price_type,
-productName as product_name,
-questionnaire,
-rejectReason as reject_reason,
-k.status,
-userId as user_id,
-millis_to_ts_msk(utms) as updated_time,
-TIMESTAMP(dbt_valid_from) as effective_ts_msk,
-TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
+    _id as customer_request_id,
+    categoryId as category_id,
+    category_name,
+    millis_to_ts_msk(ctms) as created_time,
+    dealId as deal_id,
+    desc,
+    expectedQuantity as expected_quantity,
+    link,
+    model,
+    pricePerItem.amount as price_per_item,
+    pricePerItem.ccy as currency,
+    c.status as price_type,
+    productName as product_name,
+    questionnaire,
+    rejectReason as reject_reason,
+    k.status,
+    plannedOfferCost.amount as planned_offer_cost,
+    plannedOfferCost.ccy as planned_offer_currency,
+    userId as user_id,
+    millis_to_ts_msk(utms) as updated_time,
+    TIMESTAMP(dbt_valid_from) as effective_ts_msk,
+    TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
 from {{ ref('scd2_customer_requests_snapshot') }} rfq
 left join 
 (
