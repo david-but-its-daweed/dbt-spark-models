@@ -60,7 +60,7 @@ pickups as
 ),
 
 pickup_orders as (
-    SELECT DISTINCT fpo.*, product_id
+    SELECT DISTINCT fpo.*, order_product_id
     FROM {{ ref('fact_pickup_order') }} fpo
     LEFT JOIN pickups USING (pickup_id)
 ),
