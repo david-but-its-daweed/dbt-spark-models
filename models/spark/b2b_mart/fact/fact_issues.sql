@@ -8,7 +8,15 @@
     }
 ) }}
 
-WITH assigned AS (
+WITH admins AS (
+    SELECT DISTINCT
+        admin_id,
+        email,
+        role
+    FROM {{ ref('dim_user_admin') }}
+)
+,
+assigned AS (
     SELECT
         f._id,
         f.first_assignee_id,
@@ -37,21 +45,7 @@ WITH assigned AS (
             )
         )
     ) AS f
-    LEFT JOIN (
-        SELECT DISTINCT
-            admin_id,
-            email,
-            role
-        FROM {{ ref('dim_user_admin') }}
-    ) AS fa ON f.first_assignee_id = fa.admin_id
-),
-
-admins AS (
-    SELECT DISTINCT
-        admin_id,
-        email,
-        role
-    FROM {{ ref('dim_user_admin') }}
+    LEFT JOIN admins AS fa ON f.first_assignee_id = fa.admin_id
 )
 
 SELECT DISTINCT
@@ -81,7 +75,11 @@ SELECT DISTINCT
     assigned.first_assignee_role,
     assigned.first_time_assigned,
     assigned.last_time_assigned,
-    assigned.times_assigned
+    assigned.times_assigned,
+    team,
+    teams,
+    effective_ts_msk,
+    next_effective_ts_msk
 FROM (
     SELECT
         i._id AS issue_id,
@@ -101,12 +99,17 @@ FROM (
         i.history.moderatorId AS moderator_id,
         key.id AS status_id,
         key.status,
-        ROW_NUMBER() OVER (PARTITION BY i._id ORDER BY history.ctms DESC) AS rn
+        element_at(teamHistory, cast((array_position(teamHistory.ctms,
+                                       array_max(teamHistory.ctms))) as INTEGER)) as team,
+        size(teamHistory) as teams,
+        TIMESTAMP(dbt_valid_from) as effective_ts_msk,
+        TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
     FROM (
         SELECT
             i.*,
             millis_to_ts_msk(i.startTime) AS start_time,
-            explode(i.statusHistory) AS history,
+            element_at(statusHistory, cast((array_position(statusHistory.ctms,
+                                       array_max(statusHistory.ctms))) as INTEGER)) as history,
             t.type AS key_type
         FROM {{ ref('scd2_issues_snapshot') }} AS i
         LEFT JOIN {{ ref('key_issue_type') }} AS t ON i.type = t.id
@@ -121,4 +124,3 @@ FROM (
 LEFT JOIN admins AS assignee ON issues.assignee_id = assignee.admin_id
 LEFT JOIN admins AS reporter ON issues.assignee_id = reporter.admin_id
 LEFT JOIN assigned ON issues.issue_id = assigned._id
-WHERE issues.rn = 1
