@@ -28,7 +28,8 @@ rejectReason as reject_reason,
 k.status,
 userId as user_id,
 millis_to_ts_msk(utms) as updated_time
-
+TIMESTAMP(dbt_valid_from) as effective_ts_msk,
+TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
 from {{ ref('scd2_customer_requests_snapshot') }} rfq
 left join 
 (
@@ -37,4 +38,3 @@ select category_id, name as category_name
 ) cat on rfq.categoryId = cat.category_id
 left join {{ ref('key_customer_request_status') }} k on rfq.status = cast(k.id as int)
 left join {{ ref('key_calc_price_types') }} c on rfq.priceType = cast(c.id as int)
-where dbt_valid_to is null
