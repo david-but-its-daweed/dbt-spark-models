@@ -24,8 +24,17 @@ group by issue_id, team
 
 
 issues as (
-select issue_id, type, assignee_id, assignee_email, assignee_role, created_time,
-start_time, entity_id as customer_request_id, team.team
+select
+    issue_id,
+    type,
+    assignee_id,
+    assignee_email,
+    assignee_role,
+    created_time,
+    start_time,
+    entity_id as customer_request_id,
+    team.team,
+    issue_friendly_id
 from {{ ref('fact_issues') }}
 where type = 'FindOffer' and team.team is not null
 and next_effective_ts_msk is null
@@ -33,25 +42,40 @@ and next_effective_ts_msk is null
 
 customer_requests as 
 (
-  select deal_id, user_id, customer_request_id, status, reject_reason
+  select
+    deal_id,
+    user_id,
+    customer_request_id,
+    status,
+    reject_reason,
+    planned_offer_cost,
+    planned_offer_currency
   from {{ ref('fact_customer_requests') }}
   where next_effective_ts_msk is null
 ),
 
 deal as (
-select deal_id, status as deal_status, status_int as deal_status_int
+select
+    issue_friendly_id as deal_friendly_id,
+    deal_id,
+    status as deal_status,
+    status_int as deal_status_int
 from {{ ref('fact_deals') }}
 where next_effective_ts_msk is null)
 
 select distinct
     deal_id,
+    deal_friendly_id,
     user_id,
     customer_request_id,
+    planned_offer_cost,
+    planned_offer_currency,
     status as customer_request_status,
     reject_reason,
     deal_status,
     deal_status_int,
     issue_id,
+    issue_friendly_id,
     type,
     assignee_id,
     assignee_email,
