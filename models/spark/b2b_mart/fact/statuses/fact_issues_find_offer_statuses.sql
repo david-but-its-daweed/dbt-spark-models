@@ -16,7 +16,7 @@ min(case when status = 'New' then event_ts_msk end) as new_ts,
 min(case when status = 'Cancelled' then event_ts_msk end) as cancelled_ts,
 min(case when status = 'InProgress' then event_ts_msk end) as in_progress_ts,
 min(case when status = 'Completed' then event_ts_msk end) as completed_ts,
-min(case when status = 'Failed' then event_ts_msk end) as failed_ts,
+min(case when status = 'Failed' then event_ts_msk end) as failed_ts
 from {{ ref('fact_issues_statuses') }}
 where team is not null and type = 'FindOffer'
 group by issue_id, team
