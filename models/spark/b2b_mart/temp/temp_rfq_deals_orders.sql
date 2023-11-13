@@ -122,6 +122,7 @@ from
 left join (
     select customer_request_id, deal_id, user_id
     from {{ ref('fact_customer_requests') }}
+    where next_effective_ts_msk is null
 ) d on r.customer_request_id = d.customer_request_id
 group by 1, 2, 3, 4, 5, 6, 7, 8, 9),
 

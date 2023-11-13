@@ -25,7 +25,8 @@ select
     rfqid AS rfq_request_id,
     sent,
     status,
-    millis_to_ts_msk(utms) AS update_ts_msk
+    millis_to_ts_msk(utms) AS update_ts_msk,
+    TIMESTAMP(dbt_valid_from) as effective_ts_msk,
+    TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
 from {{ ref('scd2_customer_rfq_response_snapshot') }} rfq
 
-where dbt_valid_to is null

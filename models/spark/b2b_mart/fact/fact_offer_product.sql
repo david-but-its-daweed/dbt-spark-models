@@ -27,7 +27,12 @@ select
         co.order_id,
         co.status as offer_status,
         co.user_id,
-        co.created_time as offer_created_time
+        co.created_time as offer_created_time,
+        TIMESTAMP(dbt_valid_from) as effective_ts_msk,
+        TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
     from {{ ref('scd2_offer_products_snapshot') }} op
-    left join {{ ref('fact_customer_offers') }} co on op.offer_id = co.offer_id
-    where dbt_valid_to is null
+    left join (
+      select distinct *
+      from {{ ref('fact_customer_offers') }}
+      where next_effective_ts_msk is null
+      ) co on op.offer_id = co.offer_id

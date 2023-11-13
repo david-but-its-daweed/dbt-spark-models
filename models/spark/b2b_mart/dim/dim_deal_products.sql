@@ -103,7 +103,8 @@ offers as (
         user_id,
         offer_created_time
     from {{ ref('fact_offer_product') }} op
-    where not disabled or disabled is null
+    where (not disabled or disabled is null)
+    AND next_effective_ts_msk IS NULL
 ),
 
 customer_requests as (
@@ -111,6 +112,7 @@ customer_requests as (
         customer_request_id,
         deal_id
     from {{ ref('fact_customer_requests') }}
+    WHERE next_effective_ts_msk IS NULL
 
 )
 

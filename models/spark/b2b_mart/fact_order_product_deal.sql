@@ -169,7 +169,7 @@ offers as (
         co.created_time as offer_created_time
     from {{ ref('scd2_offer_products_snapshot') }} op
     left join {{ ref('fact_customer_offers') }} co on op.offer_id = co.offer_id
-    where dbt_valid_to is null
+    where dbt_valid_to is null and co.next_effective_ts_msk is null
 )
 
 select distinct

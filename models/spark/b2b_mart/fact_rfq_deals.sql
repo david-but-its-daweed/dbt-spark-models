@@ -38,6 +38,7 @@ with rfq_sent_deals as (
 left join (
     select customer_request_id, deal_id, user_id
     from {{ ref('fact_customer_requests') }}
+    WHERE next_effective_ts_msk IS NULL
 ) d on r.customer_request_id = d.customer_request_id
 group by 1, 2, 3, 4, 5, 6, 7, 8, 9),
 
@@ -87,7 +88,10 @@ rfq_deal as (
     sent_status,
     category_id
   from rfq_sent_deals o
-  left join {{ ref('fact_customer_rfq_response') }} rr on o.rfq_request_id = rr.rfq_request_id
+  left join (
+    select * from {{ ref('fact_customer_rfq_response') }}
+    where next_effective_ts_msk is null
+    ) rr on o.rfq_request_id = rr.rfq_request_id
   left join (
     select distinct
       type,

@@ -74,6 +74,7 @@ from {{ source('mongo', 'b2b_core_customer_rfq_request_daily_snapshot') }} r
 left join (
     select customer_request_id, deal_id, user_id
     from {{ ref('fact_customer_requests') }}
+    where next_effective_ts_msk is null
 ) d on r.customer_request_id = d.customer_request_id
 group by 1, 2, 3, 4, 5, 6, 7, 8),
 
@@ -140,7 +141,10 @@ from rfq_sent
 left join merchants using (merchant_id)
 left join rfq_rejected using (merchant_id, rfq_request_id)
 left join rfq_sent_deals o using (rfq_request_id)
-left join {{ ref ('fact_customer_rfq_response') }} rr using (rfq_request_id, merchant_id)
+left join (
+    select distinct * from {{ ref ('fact_customer_rfq_response') }}
+    where next_effective_ts_msk is null
+) rr using (rfq_request_id, merchant_id)
 left join offer_product op on o.customer_request_id = op.customer_request_id and rr.product_id = op.product_id
 left join (select distinct order_id, 1 as converted from b2b_mart.gmv_by_sources) g on op.order_id = g.order_id
 left join (

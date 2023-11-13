@@ -28,12 +28,13 @@ questionnaire,
 status,
 parentId as parent_id,
 millis_to_ts_msk(ctms) as created_time,
-millis_to_ts_msk(utms) as updated_time
-
+millis_to_ts_msk(utms) as updated_time,
+TIMESTAMP(dbt_valid_from) as effective_ts_msk,
+TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
 from {{ ref('scd2_customer_rfq_request_snapshot') }} rfq
 left join 
 (
 select category_id, name as category_name
     from {{ source('mart', 'category_levels') }}
 ) cat on rfq.categories[0] = cat.category_id
-where dbt_valid_to is null
+
