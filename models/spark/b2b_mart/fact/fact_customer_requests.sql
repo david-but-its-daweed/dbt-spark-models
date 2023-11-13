@@ -27,7 +27,7 @@ questionnaire,
 rejectReason as reject_reason,
 k.status,
 userId as user_id,
-millis_to_ts_msk(utms) as updated_time
+millis_to_ts_msk(utms) as updated_time,
 TIMESTAMP(dbt_valid_from) as effective_ts_msk,
 TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
 from {{ ref('scd2_customer_requests_snapshot') }} rfq
