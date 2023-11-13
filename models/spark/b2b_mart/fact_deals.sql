@@ -28,7 +28,7 @@ owner AS (
         ks.id as status_int
     FROM {{ ref('fact_issues') }} AS fi
     LEFT JOIN key_status AS ks ON fi.status = ks.status
-    WHERE type = 'CloseTheDeal'
+    WHERE type = 'CloseTheDeal' AND next_effective_ts_msk IS NULL
 ),
 
 purchase AS (
@@ -39,6 +39,7 @@ purchase AS (
         assignee_role AS purchaser_role
     FROM {{ ref('fact_issues') }}
     WHERE type = 'DealPurchaseSupport'
+    AND next_effective_ts_msk IS NULL
 ),
 
 
