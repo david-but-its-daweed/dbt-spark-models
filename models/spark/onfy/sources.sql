@@ -23,6 +23,8 @@ WITH sources AS (
                         CASE
                             WHEN LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%' AND onfy_mart.device_events.payload.params.utm_campaign IS NOT NULL
                                 THEN 'google'
+                            WHEN LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%billiger%'
+                                THEN 'billiger'
                             WHEN onfy_mart.device_events.payload.params.utm_source IS NOT NULL
                                 THEN onfy_mart.device_events.payload.params.utm_source
                             WHEN
@@ -52,7 +54,10 @@ WITH sources AS (
         ) AS utm_source,
         COALESCE(
             CASE
-                WHEN onfy_mart.device_events.type = 'externalLink' THEN onfy_mart.device_events.payload.params.utm_campaign
+                WHEN onfy_mart.device_events.type = 'externalLink' AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%billiger%'
+                    THEN 'billiger'
+                WHEN onfy_mart.device_events.type = 'externalLink'
+                    THEN onfy_mart.device_events.payload.params.utm_campaign
                 WHEN onfy_mart.device_events.type IN ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
                     THEN
                         CASE
