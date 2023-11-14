@@ -32,7 +32,7 @@ select
     rates,
     samplePriceOverridesV2 as sample_price_overrides,
     subsidy,
-    millis_to_ts_msk(ctms) as updated_ts_msk,
+    millis_to_ts_msk(ctms) as update_ts_msk,
     variantOverrides as variant_overrides
 from {{ source('mongo', 'b2b_core_calculations_daily_snapshot') }}
 
