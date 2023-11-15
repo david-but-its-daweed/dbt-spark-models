@@ -19,7 +19,10 @@ deletes AS (
     FROM {{ source('mart', 'babylone_events') }}
     WHERE
         1 = 1
-        AND type = 'ticketEntryDeleted'
+        AND (
+            type = 'ticketEntryDeleted'
+            OR type = 'ticketEntryHidden'
+        ) --чистим скрытые сообщения
 )
 ,
 
@@ -44,6 +47,27 @@ ranking_pre_pre AS (
         AND t.payload.entrytype = 'privateNote'
     GROUP BY 1, 2, 3, 4, 5, 6
     ORDER BY 1, 7, 8
+),
+
+ranking_pre_pre_reminders AS (
+    SELECT
+        t.payload.ticketid AS ticket_id,
+        t.payload.authorid AS author_id,
+        b.email,
+        t.payload.authortype AS author_type,
+        t.payload.entrytype AS entry_type,
+        'деактивация ремайндера' AS text,
+        t.partition_date,
+        t.event_ts_msk
+    FROM {{ source('mart', 'babylone_events') }} AS t
+    LEFT JOIN deletes AS c ON t.payload.entryid = c.entry_id
+    LEFT JOIN {{ source('mongo', 'babylone_joom_agents_daily_snapshot') }} AS b ON t.payload.authorid = b._id
+    WHERE
+        t.type = 'ticketEntryAddJoom'
+        AND t.payload.authortype = 'agent'
+        AND c.entry_id IS NULL
+        AND t.payload.entrytype = 'privateNote'
+        AND t.payload.remindercancelled
 ),
 
 --agents' and customers' messages    
@@ -74,6 +98,9 @@ ranking_pre AS (
     UNION ALL
     SELECT *
     FROM ranking_pre_pre_cust
+    UNION ALL
+    SELECT *
+    FROM ranking_pre_pre_reminders
 ),
 
 resolutions AS (
@@ -191,7 +218,98 @@ agent_support_actions AS (
         t.event_ts_msk,
         t.previous_text,
         t.text,
-        a.email AS email
+        a.email AS email,
+        CASE
+            WHEN ((t.previous_author_type = 'customer' OR t.previous_author_type IS NULL) AND t.author_id != '000000000000050001000001' AND t.entry_type = 'message') THEN 'reply to customer'
+            WHEN ((t.previous_author_type = 'customer' OR t.previous_author_type IS NULL) AND t.author_id != '000000000000050001000001' AND t.entry_type = 'privateNote') THEN 'note after customer'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_author_id != t.author_id
+                AND t.previous_author_id != '000000000000050001000001'
+                AND t.author_id != '000000000000050001000001'
+                AND t.entry_type = 'message'
+            ) THEN 'message after other agent'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_author_id != t.author_id
+                AND t.previous_author_id != '000000000000050001000001'
+                AND t.author_id != '000000000000050001000001'
+                AND t.entry_type = 'privateNote'
+                AND t.text != 'деактивация ремайндера'
+            ) THEN 'note after other agent'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_author_id != t.author_id
+                AND t.previous_author_id = '000000000000050001000001'
+                AND t.previous_text LIKE '%escalate to agen%'
+                AND t.entry_type = 'message'
+            ) THEN 'message after bot'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_author_id != t.author_id
+                AND t.previous_author_id = '000000000000050001000001'
+                AND t.previous_text LIKE '%escalate to agen%'
+                AND t.entry_type = 'privateNote'
+                AND t.text != 'деактивация ремайндера'
+            ) THEN 'note after bot'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_author_id = t.author_id
+                AND ((UNIX_TIMESTAMP(t.event_ts_msk) - UNIX_TIMESTAMP(t.previous_event_ts_msk)) / 60 > 3)
+                AND t.author_id != '000000000000050001000001'
+                AND t.entry_type = 'message'
+            ) THEN 'message after 3 minutes'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_author_id = t.author_id
+                AND ((UNIX_TIMESTAMP(t.event_ts_msk) - UNIX_TIMESTAMP(t.previous_event_ts_msk)) / 60 > 3)
+                AND t.author_id != '000000000000050001000001'
+                AND t.entry_type = 'privateNote'
+                AND t.text != 'деактивация ремайндера'
+            ) THEN 'note after 3 minutes'
+            WHEN (
+                t.author_type = 'Resolved'
+                AND t.previous_author_type = 'agent'
+                AND t.previous_author_id != t.author_id
+                AND t.author_id != '000000000000050001000001'
+                AND t.previous_author_id != '000000000000050001000001'
+                AND t.text != 'деактивация ремайндера'
+            ) THEN 'resolution after other agent'
+            WHEN (
+                t.author_type = 'Resolved'
+                AND t.previous_author_type = 'agent'
+                AND t.previous_author_id != t.author_id
+                AND t.author_id != '000000000000050001000001'
+                AND t.previous_author_id != '000000000000050001000001'
+                AND t.previous_text LIKE '%escalate to agen%'
+                AND t.text != 'деактивация ремайндера'
+            ) THEN 'resolution after bot'
+            WHEN (t.author_type = 'Resolved' AND t.previous_author_type = 'customer' AND t.author_id != '000000000000050001000001')
+                THEN 'resolution after customer'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_entry_type != t.entry_type
+                AND t.previous_entry_type = 'message'
+                AND t.entry_type = 'privateNote'
+                AND t.text != 'деактивация ремайндера'
+            ) THEN 'note after message'
+            WHEN (
+                t.previous_author_type = 'agent'
+                AND t.author_type = 'agent'
+                AND t.previous_entry_type != t.entry_type
+                AND t.previous_entry_type = 'privateNote'
+                AND t.entry_type = 'message'
+            ) THEN 'message after note'
+            WHEN t.author_type = 'Button_Resolved' THEN 'click on button resolved'
+            WHEN t.text = 'деактивация ремайндера' THEN 'deactivation of reminder'
+        END AS action_type
     FROM pre_ranking AS t
     LEFT JOIN {{ source('mongo', 'babylone_joom_agents_daily_snapshot') }} AS a ON t.author_id = a._id
     WHERE
@@ -294,7 +412,8 @@ escalations_to_queue AS (
         t.previous_event_ts_msk AS event_ts_msk,
         'эскалация в очередь' AS previous_text,
         'эскалация в очередь' AS text,
-        t.previous_email AS email
+        t.previous_email AS email,
+        'escalation to queue' AS action_type
     FROM ranking_pre_queue AS t
     WHERE
         1 = 1
@@ -304,15 +423,10 @@ escalations_to_queue AS (
         AND t.state_owner = 'Queue'
         AND t.previous_state_queue_id IS NOT NULL
         AND t.state_queue_id != t.previous_state_queue_id
-),
-
-agent_support_actions_t AS (
-    SELECT *
-    FROM agent_support_actions
-    UNION ALL
-    SELECT *
-    FROM escalations_to_queue
 )
 
 SELECT *
-FROM agent_support_actions_t
+FROM agent_support_actions
+UNION ALL
+SELECT *
+FROM escalations_to_queue
