@@ -21,7 +21,7 @@ WITH product_numbers AS (
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
         TRUE
-        AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
+        AND NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL)
 ),
 
 orders_ext0 AS (
@@ -160,7 +160,7 @@ orders_ext0 AS (
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
         TRUE
-        AND NOT (refund_reason IN ('fraud', 'cancelled_by_customer') AND refund_reason IS NOT NULL)
+        AND NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL)
 ),
 
 orders_ext1 AS (
