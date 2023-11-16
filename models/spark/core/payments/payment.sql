@@ -4,6 +4,7 @@
       'model_owner' : '@acherezova',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'date',
+      'bigquery_overwrite': 'true',
       'priority_weight': '1000',
     },
     materialized='table',

@@ -5,6 +5,7 @@
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'date',
       'priority_weight': '1000',
+      'bigquery_overwrite': 'true',
     },
     materialized='table',
     file_format='delta',
