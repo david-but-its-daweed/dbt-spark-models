@@ -20,19 +20,22 @@ devices_mart AS (
     SELECT
         device_id,
         app_device_type,
+        user_email_hash,
         MIN(min_purchase_ts) AS min_purchase_ts
     FROM {{ source('onfy_mart', 'devices_mart') }}
-    GROUP BY 1, 2
+    GROUP BY 1, 2, 3
 )
 
 SELECT
     ord.user_id,
     ord.device_id,
+    devices_mart.user_email_hash,
     devices_mart.app_device_type,
     CASE
         WHEN FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') > devices_mart.min_purchase_ts THEN 1
         ELSE 0
     END AS is_buyer,
+    RANK() OVER (PARTITION BY devices_mart.user_email_hash ORDER BY FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') ASC) AS purchase_num,
     ord.id AS order_id,
     FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') AS order_created_time_cet,
     ord.city,
