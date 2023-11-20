@@ -83,6 +83,7 @@ with deps as (SELECT output.tableName       as output_name,
 
      data as (select task_id,
                      dag_id,
+                     run_id,
                      to_date(CASE
                                  WHEN hour(start_date) >= 22 THEN date_trunc('Day', start_date) + interval 24 hours
                                  ELSE date_trunc('Day', start_date)
@@ -99,6 +100,7 @@ final_data as (
 
 select source_id,
        dates.id as date,
+       run_id,
        partition_date,
        dependencies.input_name,
        dependencies.input_type,
