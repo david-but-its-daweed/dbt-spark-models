@@ -77,6 +77,7 @@ SELECT
     date_msk,
     country_code,
     gmv_net_of_vat_14,
+    gmv_14,
     base_price_14,
     gross_profit_14,
     0.125 AS target_gmv_overhead_costs,
