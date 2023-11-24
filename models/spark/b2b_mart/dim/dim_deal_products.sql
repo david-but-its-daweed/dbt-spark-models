@@ -123,7 +123,7 @@ select distinct
     cr.customer_request_id,
     off.offer_id,
     off.offer_product_id,
-    coalesce(off.product_id, p.product_id) as product_id,
+    coalesce(p.product_id, off.product_id) as product_id,
     o.order_id,
     o.order_friendly_id,
     mo.merchant_order_id,
@@ -142,4 +142,3 @@ left join order_products p on p.merchant_order_id = mo.merchant_order_id
 join users u on coalesce(i.user_id, o.user_id) = u.user_id
 where 
     (fake is null or not fake)
-    and (off.product_id = p.product_id or off.product_id is null or p.product_id is null)
