@@ -11,7 +11,6 @@
 ) }}
 
 
-
 with source as (
 select cast(id as int) as id, 
 case when source = 'russia' then 'RU'
@@ -42,10 +41,12 @@ select distinct
         responsibleUser as admin_email,
         _id as owner_id,
         country,
-        current_status,
-        min(case when status in ('59912671', '60278571', '61650499', '59575366', '61529466', '59575418') then status_ts end) 
+        current_status as current_status_id,
+        max(case when status_id = current_status then status end) over (partition by coalesce(contactId, leadId)) as current_status,
+        max(case when status_id = current_status then status_ts end) over (partition by coalesce(contactId, leadId)) as current_status_ts,
+        min(case when status_id in ('59912671', '60278571', '61650499', '59575366', '61529466', '59575418') then status_ts end) 
             over (partition by coalesce(contactId, leadId)) as created_ts_msk,
-        min(case when status in ('59912675', '60278579', '61650503', '59575374', '61529470', '59575422') then status_ts end) 
+        min(case when status_id in ('59912675', '60278579', '61650503', '59575374', '61529470', '59575422') then status_ts end) 
             over (partition by coalesce(contactId, leadId)) as validated_ts_msk,
         max(funnel_status) over (partition by coalesce(contactId, leadId)) as funnel_status, 
         max(user_id) over (partition by coalesce(contactId, leadId)) as user_id
@@ -100,4 +101,4 @@ select distinct
     left join source s on amo.source = s.id
     left join (select distinct funnel_status, user_id, amo_id from b2b_mart.fact_customers) on leadId = amo_id
     )
-)
+    )
