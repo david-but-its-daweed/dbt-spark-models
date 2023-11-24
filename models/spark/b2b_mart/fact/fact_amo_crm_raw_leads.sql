@@ -10,16 +10,25 @@
     }
 ) }}
 
-
 with source as (
 select cast(id as int) as id, 
 case when source = 'russia' then 'RU'
 when source = 'brazil' then 'BR'
 when source = 'analytics' then 'Analytics'
 else source end as source
-from {{ ref('key_amocrm_source') }}
-)
+from {{ ref('key_amocrm_source') }}),
 
+loss_reasons as (
+select leadId,
+explode(lossReasons) as loss_reasons
+from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
+),
+
+statuses as (
+select leadId,
+explode(statusChangedEvents) as st
+from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
+)
 
 
 select distinct
@@ -29,7 +38,7 @@ select distinct
         companyId as company_id,
         companyName as company_name,
         coalesce(contactId, leadId) as contact_id,
-        createdAt as created_at,
+        millis_to_ts_msk(createdAt) as created_at,
         max(type) over (partition by coalesce(contactId, leadId)) as type, 
         max(source) over (partition by coalesce(contactId, leadId)) as source, 
         max(campaign) over (partition by coalesce(contactId, leadId)) as campaign,
@@ -43,11 +52,11 @@ select distinct
         country,
         current_status as current_status_id,
         max(case when status_id = current_status then status end) over (partition by coalesce(contactId, leadId)) as current_status,
-        max(case when status_id = current_status then status_ts end) over (partition by coalesce(contactId, leadId)) as current_status_ts,
-        min(case when status_id in ('59912671', '60278571', '61650499', '59575366', '61529466', '59575418', '59388859', '60278575' ) then status_ts end) 
-            over (partition by coalesce(contactId, leadId)) as created_ts_msk,
-        min(case when status_id in ('59912675', '60278579', '61650503', '59575374', '61529470', '59575422') then status_ts end) 
-            over (partition by coalesce(contactId, leadId)) as validated_ts_msk,
+        millis_to_ts_msk(max(case when status_id = current_status then status_ts end) over (partition by coalesce(contactId, leadId))) as current_status_ts,
+        millis_to_ts_msk(min(case when status_id in ('59912671', '60278571', '61650499', '59575366', '61529466', '59575418') then status_ts end) 
+            over (partition by coalesce(contactId, leadId))) as created_ts_msk,
+        millis_to_ts_msk(min(case when status_id in ('59912675', '60278579', '61650503', '59575374', '61529470', '59575422') then status_ts end) 
+            over (partition by coalesce(contactId, leadId))) as validated_ts_msk,
         max(funnel_status) over (partition by coalesce(contactId, leadId)) as funnel_status, 
         max(user_id) over (partition by coalesce(contactId, leadId)) as user_id
     from
@@ -63,20 +72,19 @@ select distinct
         source,
         type,
         leadId,
-        explode(lossReasons) as loss_reasons,
         pipeline_name,
         pipelineId,
         responsibleUser,
         _id,
         country,
         status as current_status,
-        col.createdAt as status_ts,
-        col.statuses[0]._id as status_id,
-        col.statuses[0].name as status,
+        st.createdAt as status_ts,
+        st.statuses[0]._id as status_id,
+        st.statuses[0].name as status,
         funnel_status, user_id
     from
     (
-    select 
+    select distinct
         AccountId,
         LossReasonId,
         companyId,
@@ -94,10 +102,10 @@ select distinct
         responsibleUser._id,
         s.source as country,
         status,
-        explode(statusChangedEvents),
         tags, funnel_status, user_id
     from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
     left join source s on amo.source = s.id
-    left join (select distinct funnel_status, user_id, amo_id from b2b_mart.fact_customers) on leadId = amo_id
-    )
-    )
+    left join (select distinct funnel_status, user_id, amo_id from {{ ref('fact_customers') }}) on leadId = amo_id
+    where leadId in (10865438, 10862122)
+    ) left join statuses using (leadId)
+    ) left join loss_reasons using (leadId)
