@@ -25,7 +25,7 @@ SELECT
     refund_order.comment,
     refund_parcel.order_parcel_id AS parcel_id,
     COALESCE(refund_parcel.delivery_refund_price, 0) AS delivery_refund_price,
-    refund_item.product_id AS product_id,
+    order_parcel_item.product_id AS product_id,
     medicine.country_local_id AS pzn,
     product_names.product_name,
     COALESCE(refund_item.quantity, 0) AS refunded_items_quantity,
