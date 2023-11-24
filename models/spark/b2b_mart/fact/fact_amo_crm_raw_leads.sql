@@ -21,9 +21,11 @@ from {{ ref('key_amocrm_source') }}
 )
 
 
+
 select distinct
         AccountId as account_id,
         LossReasonId as loss_reason_id,
+        max(case when LossReasonId = loss_reasons.id then loss_reasons.name end) over (partition by coalesce(contactId, leadId)) as loss_reason,
         companyId as company_id,
         companyName as company_name,
         coalesce(contactId, leadId) as contact_id,
@@ -32,8 +34,6 @@ select distinct
         max(source) over (partition by coalesce(contactId, leadId)) as source, 
         max(campaign) over (partition by coalesce(contactId, leadId)) as campaign,
         leadId as lead_id,
-        loss_reason_id,
-        loss_reason,
         pipeline_name,
         pipelineId as pipeline_id,
         case when pipeline_id in ('7249567', '7314451', '7553579', '7120174', '7403522', '7120186') 
@@ -63,8 +63,7 @@ select distinct
         source,
         type,
         leadId,
-        lossReasons[0].id as loss_reason_id,
-        lossReasons[0].name as loss_reason,
+        explode(lossReasons) as loss_reasons,
         pipeline_name,
         pipelineId,
         responsibleUser,
