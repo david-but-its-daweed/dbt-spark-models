@@ -37,6 +37,7 @@ sources:
   - name: cube
     tables:
       - name: event_counts_country_os_days
+      - name: time_orders_additional_cube_2_days
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
