@@ -17,7 +17,7 @@ select cast(id as int) as id,
 case when source = 'russia' then 'RU'
 when source = 'brazil' then 'BR'
 when source = 'analytics' then 'Analytics'
-else source end as souce
+else source end as source
 from {{ ref('key_amocrm_source') }}
 )
 
@@ -92,12 +92,12 @@ select distinct
         pipelineId,
         responsibleUser.name as responsibleUser,
         responsibleUser._id,
-        source.source as country,
+        s.source as country,
         status,
         explode(statusChangedEvents),
-        tags
+        tags, funnel_status, user_id
     from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
-    left join source on amo.source = source.id
-    left join (select distinct funnel_status, user_id, amo_id from {{ ref('fact_customers') }}) on lead_id = amo_id
+    left join source s on amo.source = s.id
+    left join (select distinct funnel_status, user_id, amo_id from b2b_mart.fact_customers) on leadId = amo_id
     )
-    )
+)
