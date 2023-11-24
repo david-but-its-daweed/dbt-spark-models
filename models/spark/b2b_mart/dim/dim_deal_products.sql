@@ -8,7 +8,7 @@
       'priority_weight': '150'
     }
 ) }}
-  
+    
 WITH 
 deals AS (
     SELECT DISTINCT
@@ -140,5 +140,5 @@ full join orders o on i.order_id = o.order_id
 left join merchant_order mo on mo.order_id = o.order_id
 left join order_products p on p.merchant_order_id = mo.merchant_order_id
 join users u on coalesce(i.user_id, o.user_id) = u.user_id
-where 
-    (fake is null or not fake)
+where (fake is null or not fake)
+    
