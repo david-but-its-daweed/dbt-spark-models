@@ -90,13 +90,13 @@ jobs:
           kube-deployment: "dbt-docs-spark"
           generate-docs: "false"
 
-#      - name: Slack Notification
-#        if: ${{ failure() }}
-#        uses: rtCamp/action-slack-notify@v2
-#        env:
-#          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
-#          SLACK_CHANNEL: dbt-spark-monitoring
-#          MSG_MINIMAL: Commit
-#          SLACK_COLOR: ${{ job.status }}
-#          SLACK_USERNAME: github
-#          SLACK_TITLE: Deploy of dbt spark jobs failed. Status ${{ job.status }}
+      - name: Slack Notification
+        if: ${{ failure() }}
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_CHANNEL: dbt-spark-monitoring
+          MSG_MINIMAL: Commit
+          SLACK_COLOR: ${{ job.status }}
+          SLACK_USERNAME: github
+          SLACK_TITLE: Deploy of dbt spark jobs failed. Status ${{ job.status }}
