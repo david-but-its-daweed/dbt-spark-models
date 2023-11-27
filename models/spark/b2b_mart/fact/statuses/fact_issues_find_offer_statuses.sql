@@ -67,6 +67,7 @@ select distinct
     deal_id,
     deal_friendly_id,
     user_id,
+    country,
     customer_request_id,
     planned_offer_cost,
     planned_offer_currency,
@@ -80,6 +81,7 @@ select distinct
     assignee_id,
     assignee_email,
     assignee_role,
+    assignee_ts,
     team,
     created_time,
     start_time,
@@ -95,4 +97,6 @@ issues
 left join statuses using (issue_id, team)
 left join customer_requests using (customer_request_id)
 left join deal using (deal_id)
-join (select distinct user_id from {{ ref('fact_customers') }}) using (user_id)
+join (select distinct user_id, country from {{ ref('fact_customers') }}) using (user_id)
+left join (select assignee_ts, issue_id from {{ ref('fact_issues_assignee_history') }}
+where current_assignee) using (issue_id)
