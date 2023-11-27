@@ -30,18 +30,19 @@ order_v2_mongo AS
 
 orders AS
 (       SELECT 
-      manufactured_date AS t,
+        manufactured_date AS t,
         CASE WHEN manufactured_date = first_order_date THEN 'first order' ELSE 'repeated order' END AS repeated_order,
         COUNT(DISTINCT order_id) AS orders,
         SUM(total_confirmed_price)  AS gmv_initial,
         SUM(initial_gross_profit)  AS initial_gross_profit,
         SUM(final_gross_profit)  AS final_gross_profit,
-        status, sub_status,
+        status, sub_status, country,
         current_status, current_sub_status
         FROM
 ( SELECT DISTINCT manufactured_date,
         first_order_date,
         order_id,
+        country,
         total_confirmed_price,
         initial_gross_profit,
         final_gross_profit,
@@ -53,6 +54,7 @@ orders AS
         DATE(MIN(p.event_ts_msk) OVER (PARTITION BY p.order_id, status, sub_status)) AS manufactured_date,
         DATE(MIN(p.event_ts_msk) OVER (PARTITION BY u.user_id, status, sub_status)) AS first_order_date,
         p.order_id,
+        c.country,
         FIRST_VALUE(total_confirmed_price) OVER (PARTITION BY p.order_id, status, sub_status ORDER BY p.event_ts_msk DESC) AS total_confirmed_price,
         FIRST_VALUE(final_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status ORDER BY p.event_ts_msk DESC) AS final_gross_profit,
         FIRST_VALUE(initial_gross_profit) OVER (PARTITION BY p.order_id, status, sub_status ORDER BY p.event_ts_msk DESC) AS initial_gross_profit,
@@ -61,6 +63,7 @@ orders AS
         status, sub_status
     FROM {{ ref('fact_order_change') }} AS p
     INNER JOIN order_v2_mongo AS u ON p.order_id = u.order_id
+    LEFT JOIN (SELECT DISTINCT country, user_id FROM b2b_mart.fact_customers) c ON u.user_id = c.user_id
     WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547')
 )
 )
@@ -69,7 +72,7 @@ GROUP BY manufactured_date,
         status, sub_status, current_status, current_sub_status
 )
 
-SELECT  t,
+SELECT  t, country,
         repeated_order,
         status, sub_status,
         current_status, current_sub_status,
@@ -80,5 +83,5 @@ SELECT  t,
 FROM (
     SELECT * from orders
 )
-GROUP BY 1, 2, 3, 4, 5, 6
+GROUP BY 1, 2, 3, 4, 5, 6, 7
 ORDER BY 1
