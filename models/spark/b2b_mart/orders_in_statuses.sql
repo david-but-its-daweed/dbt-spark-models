@@ -69,7 +69,7 @@ orders AS
 )
 GROUP BY manufactured_date,
         CASE WHEN manufactured_date = first_order_date THEN 'first order' ELSE 'repeated order' END,
-        status, sub_status, current_status, current_sub_status
+        status, sub_status, current_status, current_sub_status, country
 )
 
 SELECT  t, country,
