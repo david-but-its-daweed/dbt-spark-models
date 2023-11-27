@@ -106,6 +106,5 @@ select distinct
     from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
     left join source s on amo.source = s.id
     left join (select distinct funnel_status, user_id, amo_id from {{ ref('fact_customers') }}) on leadId = amo_id
-    where leadId in (10865438, 10862122)
     ) left join statuses using (leadId)
     ) left join loss_reasons using (leadId)
