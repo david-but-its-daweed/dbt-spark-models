@@ -41,7 +41,7 @@ from
 (
 select 
     issue_id,
-    explode(assignee_history) as assignee_history,
+    assignee_history,
     current_assignee_id,
     issue_created_time,
     entity_id,
@@ -56,8 +56,8 @@ select
 from    
 (
 select
+    _id,
     _id as issue_id,
-    assigneeHistory as assignee_history,
     assigneeId as current_assignee_id,
     ctms as issue_created_time,
     entityId as entity_id,
@@ -70,12 +70,25 @@ select
 from
 (
 select
-    *,
-    explode(teamHistory) as teams
+    *
 from {{ ref('scd2_issues_snapshot') }}
+left join (
+    select
+        _id,
+        explode(teamHistory) as teams
+    from {{ ref('scd2_issues_snapshot') }}
+    where type > 4 and dbt_valid_to is null
+    ) using (_id)
 where type > 4 and dbt_valid_to is null
 )
 )
+left join (
+    select
+        _id,
+        explode(assignee_history) as assignee_history
+    from {{ ref('scd2_issues_snapshot') }}
+    where type > 4 and dbt_valid_to is null
+) using (_id)
 )
 left join admin as assignee on assignee_history.assigneeId = assignee.admin_id
 left join admin as current_assignee on current_assignee_id = current_assignee.admin_id
