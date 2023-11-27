@@ -45,18 +45,42 @@ select distinct
         leadId as lead_id,
         pipeline_name,
         pipelineId as pipeline_id,
-        case when pipeline_id in ('7249567', '7314451', '7553579', '7120174', '7403522', '7120186') 
-            then true else false end as validation,
+        case when pipelineId in (
+            '7249567',
+            '7314451',
+            '7553579',
+            '7120174',
+            '7403522',
+            '7120186'
+        ) then true else false end as validation,
         responsibleUser as admin_email,
         _id as owner_id,
         country,
         current_status as current_status_id,
         max(case when status_id = current_status then status end) over (partition by coalesce(contactId, leadId)) as current_status,
         millis_to_ts_msk(max(case when status_id = current_status then status_ts end) over (partition by coalesce(contactId, leadId))) as current_status_ts,
-        millis_to_ts_msk(min(case when status_id in ('59912671', '60278571', '61650499', '59575366', '61529466', '59575418') then status_ts end) 
-            over (partition by coalesce(contactId, leadId))) as created_ts_msk,
-        millis_to_ts_msk(min(case when status_id in ('59912675', '60278579', '61650503', '59575374', '61529470', '59575422') then status_ts end) 
-            over (partition by coalesce(contactId, leadId))) as validated_ts_msk,
+        
+        millis_to_ts_msk(min(
+        case when 
+        pipelineId = '7314451'
+        or (pipelineId = '7249567' and status in ('59912671', '59419107'))
+        or (pipelineId = '7553579' and status = '61650499')
+        or pipelineId = '7120174'
+        or (pipelineId = '7403522' and status = 'Взят в работу')
+        or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
+        then status_ts end
+        ) over (partition by coalesce(contactId, leadId))) as created_ts_msk,
+        
+        millis_to_ts_msk(min(
+        case when 
+            (status in ('discussions', 'Discussions') and pipelineId = '7314451')
+            or (status = '59912675' and pipelineId = '7249567')
+            or (pipelineId = '7120174' and status in ('Квалифицирован', 'Лид квалифицирован'))
+            or (pipelineId = '7403522' and status in ('Квалифицирован', 'Лид квалифицирован'))
+            or (pipelineId = '7120186' and status in ('Квалифицирован', 'Лид квалифицирован'))
+        then status_ts end) 
+        
+        over (partition by coalesce(contactId, leadId))) as validated_ts_msk,
         max(funnel_status) over (partition by coalesce(contactId, leadId)) as funnel_status, 
         max(user_id) over (partition by coalesce(contactId, leadId)) as user_id
     from
