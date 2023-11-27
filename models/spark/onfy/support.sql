@@ -9,16 +9,71 @@
     }
 ) }}
 
-WITH ticket_create_predata AS (
-    SELECT DISTINCT
-        onfy_babylone_events.id,
-        onfy_babylone_events.payload.ticketid AS ticket_id,
-        FROM_UTC_TIMESTAMP(onfy_babylone_events.event_ts_utc, 'Europe/Berlin') AS event_ts_cet,
-        onfy_babylone_events.payload.messagesource
+WITH business_hours AS (
+    SELECT
+        all_hours.date_hour_cet,
+        ROW_NUMBER() OVER (ORDER BY all_hours.date_hour_cet) AS row_number
+    FROM
+        {{ ref("onfy_support_business_hours") }} AS all_hours
+),
+
+ticket_create_prev_hour AS (
+    SELECT
+        mart.onfy_babylone_events.payload.ticketid AS ticket_id,
+        FROM_UTC_TIMESTAMP(mart.onfy_babylone_events.event_ts_utc, 'Europe/Berlin') AS event_ts_cet,
+        mart.onfy_babylone_events.payload.messagesource,
+        MAX(prev_business_hour.date_hour_cet) AS prev_business_hour,
+        MAX_BY(prev_business_hour.row_number, prev_business_hour.date_hour_cet) AS prev_business_hour_row_number
     FROM
         {{ source('mart', 'onfy_babylone_events') }}
+    LEFT JOIN business_hours AS prev_business_hour
+        ON prev_business_hour.date_hour_cet <= FROM_UTC_TIMESTAMP(mart.onfy_babylone_events.event_ts_utc, 'Europe/Berlin')
     WHERE
-        onfy_babylone_events.type = 'ticketCreate'
+        mart.onfy_babylone_events.type = 'ticketCreate'
+    GROUP BY
+        mart.onfy_babylone_events.id,
+        mart.onfy_babylone_events.payload.ticketid,
+        mart.onfy_babylone_events.event_ts_utc,
+        mart.onfy_babylone_events.payload.messagesource
+),
+
+ticket_create_next_hour AS (
+    SELECT DISTINCT
+        ticket_create_prev_hour.ticket_id,
+        ticket_create_prev_hour.event_ts_cet,
+        ticket_create_prev_hour.messagesource,
+        ticket_create_prev_hour.prev_business_hour,
+        ticket_create_prev_hour.prev_business_hour_row_number,
+        next_hour.date_hour_cet AS next_business_hour
+    FROM
+        ticket_create_prev_hour
+    LEFT JOIN business_hours AS next_hour
+        ON next_hour.row_number = ticket_create_prev_hour.prev_business_hour_row_number + 1
+),
+
+ticket_create_predata AS (
+    SELECT DISTINCT
+        ticket_create_next_hour.ticket_id,
+        ticket_create_next_hour.event_ts_cet,
+        ticket_create_next_hour.messagesource,
+        ticket_create_next_hour.prev_business_hour,
+        ticket_create_next_hour.next_business_hour,
+        CASE
+            WHEN DATE_TRUNC('HOUR', ticket_create_next_hour.event_ts_cet) = ticket_create_next_hour.prev_business_hour
+                THEN TO_TIMESTAMP(UNIX_SECONDS(sla_8.date_hour_cet) + UNIX_SECONDS(ticket_create_next_hour.event_ts_cet) - UNIX_SECONDS(ticket_create_next_hour.prev_business_hour))
+            ELSE sla_8.date_hour_cet + INTERVAL 1 HOUR
+        END AS sla_8,
+        CASE
+            WHEN DATE_TRUNC('HOUR', ticket_create_next_hour.event_ts_cet) = ticket_create_next_hour.prev_business_hour
+                THEN TO_TIMESTAMP(UNIX_SECONDS(sla_22.date_hour_cet) + UNIX_SECONDS(ticket_create_next_hour.event_ts_cet) - UNIX_SECONDS(ticket_create_next_hour.prev_business_hour))
+            ELSE sla_22.date_hour_cet + INTERVAL 1 HOUR
+        END AS sla_22
+    FROM
+        ticket_create_next_hour
+    LEFT JOIN business_hours AS sla_8
+        ON ticket_create_next_hour.prev_business_hour_row_number + 8 = sla_8.row_number
+    LEFT JOIN business_hours AS sla_22
+        ON ticket_create_next_hour.prev_business_hour_row_number + 22 = sla_22.row_number
 ),
 
 last_tag_ids AS (
@@ -87,6 +142,8 @@ ticket_create AS (
         ticket_create_predata.ticket_id,
         ticket_create_predata.event_ts_cet,
         ticket_create_predata.messagesource,
+        ticket_create_predata.sla_8,
+        ticket_create_predata.sla_22,
         MIN(customer_message.event_ts_cet) AS first_customer_message_cet,
         MIN(agent_message.event_ts_cet) AS first_agent_message_cet,
         MIN(ticket_resolved.event_ts_cet) AS ticket_resolved_cet,
@@ -106,7 +163,9 @@ ticket_create AS (
     GROUP BY
         ticket_create_predata.ticket_id,
         ticket_create_predata.event_ts_cet,
-        ticket_create_predata.messagesource
+        ticket_create_predata.messagesource,
+        ticket_create_predata.sla_8,
+        ticket_create_predata.sla_22
 )
 
 SELECT DISTINCT
@@ -115,15 +174,21 @@ SELECT DISTINCT
     ticket_create.messagesource,
     ticket_create.first_customer_message_cet,
     ticket_create.first_agent_message_cet,
+    ticket_create.ticket_resolved_cet,
+    ticket_create_predata.sla_8,
+    ticket_create_predata.sla_22,
+    CASE WHEN ticket_create.first_agent_message_cet < ticket_create_predata.sla_8 THEN 1 ELSE 0 END AS agent_reply_sla,
+    CASE WHEN ticket_create.ticket_resolved_cet < ticket_create_predata.sla_22 THEN 1 ELSE 0 END AS resolution_sla,
+    /*
     (
         UNIX_SECONDS(TIMESTAMP(ticket_create.first_agent_message_cet))
         - UNIX_SECONDS(TIMESTAMP(ticket_created_cet))
     ) / 3600 AS time_to_first_reply,
-    ticket_create.ticket_resolved_cet,
     (
         UNIX_SECONDS(TIMESTAMP(ticket_create.ticket_resolved_cet))
         - UNIX_SECONDS(TIMESTAMP(ticket_created_cet))
     ) / 3600 AS time_to_resolution,
+    */
     ticket_create.resolution,
     CASE WHEN tag_customer.ticket_id IS NOT NULL THEN 1 ELSE 0 END AS tag_customer,
     CASE WHEN tag_pharmacy.ticket_id IS NOT NULL THEN 1 ELSE 0 END AS tag_pharmacy,
