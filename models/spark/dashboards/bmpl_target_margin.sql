@@ -62,10 +62,10 @@ main AS (
         date_msk,
         country_code,
         -- считаем метрики с окном в 14 дней для ислючения шума
-        SUM(gmv_per_day.gmv_net_of_vat) OVER (PARTITION BY 1, 2 ORDER BY date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_net_of_vat_14,
-        SUM(gmv_per_day.base_price) OVER (PARTITION BY 1, 2 ORDER BY date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS base_price_14,
-        SUM(gmv_per_day.gmv) OVER (PARTITION BY 1, 2 ORDER BY date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_14,
-        SUM(gmv_per_day.gross_profit + adtech.adtech_revenue) OVER (PARTITION BY 1, 2 ORDER BY date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gross_profit_14
+        SUM(gmv_per_day.gmv_net_of_vat) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_net_of_vat_14,
+        SUM(gmv_per_day.base_price) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS base_price_14,
+        SUM(gmv_per_day.gmv) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_14,
+        SUM(gmv_per_day.gross_profit + COALESCE(adtech.adtech_revenue, 0)) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gross_profit_14
     FROM
         gmv_per_day
     -- "LEFT JOIN" для того, чтобы не потерялись какие-то мелкие страны.
