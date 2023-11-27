@@ -16,12 +16,13 @@ with admin as (
 )
 
 
+
 select
     issue_id,
     assignee_history.assigneeId as assignee_id,
     assignee.email as assignee_email,
     assignee.role as assignee_role,
-    assignee_history.ctms as assignee_ts,
+    millis_to_ts_msk(assignee_history.ctms) as assignee_ts,
     row_number() over (partition by issue_id order by assignee_history.ctms desc) = 1 as current_assignee,
     current_assignee_id,
     current_assignee.email as current_assignee_email,
@@ -36,6 +37,8 @@ select
     reporter.role as reporter_role,
     issue_start_time,
     team_ts,
+    next_team_ts,
+    next_team,
     team
 from
 (
@@ -50,12 +53,13 @@ select
     priority,
     reporter_id,
     issue_start_time,
-    ctms as team_ts,
-    lead(ctms) over (partition by issue_id order by ctms) as next_team_ts,
+    team_ts,
+    next_team_ts,
+    next_team,
     team
 from    
 (
-select
+select distinct
     _id,
     _id as issue_id,
     assigneeId as current_assignee_id,
@@ -66,7 +70,10 @@ select
     priority,
     reporterId as reporter_id,
     startTime as issue_start_time,
-    teams.*
+    millis_to_ts_msk(teams.ctms) as team_ts,
+    lead(millis_to_ts_msk(teams.ctms)) over (partition by _id order by millis_to_ts_msk(teams.ctms)) as next_team_ts,
+    lead(teams.team) over (partition by _id order by millis_to_ts_msk(teams.ctms)) as next_team,
+    teams.team
 from
 (
 select
@@ -93,4 +100,5 @@ left join (
 left join admin as assignee on assignee_history.assigneeId = assignee.admin_id
 left join admin as current_assignee on current_assignee_id = current_assignee.admin_id
 left join admin as reporter on reporter_id = assignee.admin_id
-where (assignee_history.ctms >= team_ts or team_ts is null) and (assignee_history.ctms < next_team_ts or team_ts is null)
+where (millis_to_ts_msk(assignee_history.ctms) >= team_ts or team_ts is null) 
+    and (millis_to_ts_msk(assignee_history.ctms) < next_team_ts or next_team_ts is null)
