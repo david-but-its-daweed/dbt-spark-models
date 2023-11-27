@@ -85,7 +85,7 @@ where type > 4 and dbt_valid_to is null
 left join (
     select
         _id,
-        explode(assignee_history) as assignee_history
+        explode(assigneeHistory) as assignee_history
     from {{ ref('scd2_issues_snapshot') }}
     where type > 4 and dbt_valid_to is null
 ) using (_id)
