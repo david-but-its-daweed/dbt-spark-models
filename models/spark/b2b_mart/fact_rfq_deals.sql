@@ -89,7 +89,7 @@ rfq_deal as (
     category_id
   from rfq_sent_deals o
   left join (
-    select * from {{ ref('fact_customer_rfq_response') }}
+    select * from {{ ref('fact_customer_rfq_responses') }}
     where next_effective_ts_msk is null
     ) rr on o.rfq_request_id = rr.rfq_request_id
   left join (
