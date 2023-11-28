@@ -99,6 +99,6 @@ left join (
 )
 left join admin as assignee on assignee_history.assigneeId = assignee.admin_id
 left join admin as current_assignee on current_assignee_id = current_assignee.admin_id
-left join admin as reporter on reporter_id = assignee.admin_id
+left join admin as reporter on reporter_id = reporter.admin_id
 where (millis_to_ts_msk(assignee_history.ctms) >= team_ts or team_ts is null) 
     and (millis_to_ts_msk(assignee_history.ctms) < next_team_ts or next_team_ts is null)
