@@ -1,20 +1,16 @@
 {{ config(
     schema='coolbe',
-    incremental_strategy='insert_overwrite',
-    materialized='incremental',
+    materialized='table',
     file_format='parquet',
-    partition_by=['partition_date_msk'],
     meta = {
       'model_owner' : '@ekutynina',
       'team': 'clan',
-      'bigquery_load': 'true',
-      'bigquery_partitioning_date_column': 'partition_date_msk',
-      'bigquery_fail_on_missing_partitions': 'false'
+      'bigquery_load': 'true'
     }
 ) }}
 
 SELECT
     product_id,
     label,
-    CAST(partition_date as DATE) AS partition_date_msk
+    CAST(partition_date AS DATE) AS partition_date_msk
 FROM {{ source('goods', 'coolbe_product_labels') }}
