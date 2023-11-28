@@ -175,10 +175,10 @@ SELECT DISTINCT
     ticket_create.first_customer_message_cet,
     ticket_create.first_agent_message_cet,
     ticket_create.ticket_resolved_cet,
-    ticket_create_predata.sla_8,
-    ticket_create_predata.sla_22,
-    CASE WHEN ticket_create.first_agent_message_cet < ticket_create_predata.sla_8 THEN 1 ELSE 0 END AS agent_reply_sla,
-    CASE WHEN ticket_create.ticket_resolved_cet < ticket_create_predata.sla_22 THEN 1 ELSE 0 END AS resolution_sla,
+    ticket_create.sla_8,
+    ticket_create.sla_22,
+    CASE WHEN ticket_create.first_agent_message_cet < ticket_create.sla_8 THEN 1 ELSE 0 END AS agent_reply_sla,
+    CASE WHEN ticket_create.ticket_resolved_cet < ticket_create.sla_22 THEN 1 ELSE 0 END AS resolution_sla,
     /*
     (
         UNIX_SECONDS(TIMESTAMP(ticket_create.first_agent_message_cet))
