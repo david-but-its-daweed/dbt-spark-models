@@ -142,7 +142,7 @@ left join merchants using (merchant_id)
 left join rfq_rejected using (merchant_id, rfq_request_id)
 left join rfq_sent_deals o using (rfq_request_id)
 left join (
-    select distinct * from {{ ref('fact_customer_rfq_response') }}
+    select distinct * from {{ ref('fact_customer_rfq_responses') }}
     where next_effective_ts_msk is null
 ) rr using (rfq_request_id, merchant_id)
 left join offer_product op on o.customer_request_id = op.customer_request_id and rr.product_id = op.product_id
