@@ -90,6 +90,7 @@ from
 select 
     psi.product_id, 
     psi.merchant_order_id, 
+    psi._id as psi_id,
     psi_number,
     psis,
     min(case when status_id = 10 then time end) as waiting_time,
@@ -150,8 +151,17 @@ from
     )
     where col.type = 'date' and col.name = 'dateOfInspection' and col.datePayload is not null
 group by merchant_order_id, product_id
-    )
-    
+    ),
+
+solution as (
+    select col.enumPayload.selectedItems[0].value as solution, _id
+    from (
+    select explode(payloadNew), _id
+    from {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }}
+    where payloadNew is not Null)
+    where col.name = 'solution'
+)
+
 
 select 
     t.product_id, 
@@ -175,6 +185,8 @@ select
     int((ready_time/1000 - running_time/1000)/86400) as time_checking,
     date(from_unixtime(failed_time/1000)) as failed_time,
     psi_number,
+    psi_id,
+    solution as vtrust_solution,
     max(psi_number) over (partition by t.merchant_order_id, t.product_id) as psis,
     max(psi_number) over (partition by order_id) as psis_order,
     order_id,
@@ -201,4 +213,5 @@ from all_psi t
 left join {{ ref('fact_order_product_deal') }} a on a.merchant_order_id = t.merchant_order_id and a.product_id = t.product_id
 left join statuses on a.psi_status = statuses.s_id
 left join date_of_inspection d on d.merchant_order_id = t.merchant_order_id and d.product_id = t.product_id
+left join solution s on solution._id = psi_id
 left join products p on p.merchant_order_id = t.merchant_order_id and p.product_id = t.product_id
