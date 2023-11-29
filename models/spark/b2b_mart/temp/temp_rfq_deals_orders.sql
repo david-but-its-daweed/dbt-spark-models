@@ -71,8 +71,8 @@ rr._id as rfq_response_id,
 status,
 mId as merchant_id,
 pId as product_id,
-coalesce(order_product, 0) as order_product,
-null as offer_product,
+coalesce(signing_and_payment*order_product, 0) as order_product,
+coalesce(order_product, 0) as offer_product,
 case when converted = 1 and order_product = 1 and opp.product_id is not null then 1 else 0 end as converted,
 rejectReason as reject_reason,
 rejectReasonGroup as reject_reason_group,
@@ -86,6 +86,10 @@ left join (
     from {{ ref('fact_attribution_interaction') }}
     where last_interaction_type) a on o.user_id = a.user_id
 left join order_product op on o.order_id = op.order_id and rr.pId = op.product_id
+left join (
+  select distinct order_id, case when signing_and_payment is not null or manufacturing is not null
+  then 1 else 0 end as signing_and_payment from b2b_mart.fact_order_statuses
+) using (order_id)
 left join (select distinct order_id, 1 as converted from {{ ref('gmv_by_sources') }}) g on o.order_id = g.order_id
 left join (select distinct order_id, product_id from {{ ref('order_product_prices') }}) opp on opp.order_id = g.order_id and opp.product_id = rr.pId
 where created_time >= date('2022-06-01')
@@ -161,7 +165,7 @@ rr.mId as merchant_id,
 rr.pId as product_id,
 case when g.order_id is not null then 1 else 0 end as order_product,
 coalesce(offer_product, 0) as offer_product,
-coalesce(converted, 0) as converted,
+case when converted = 1 and opp.product_id is not null then 1 else 0 end as converted,
 rejectReason as reject_reason,
 rejectReasonGroup as reject_reason_group,
 sent_status,
@@ -175,6 +179,7 @@ left join (
     where last_interaction_type) a on o.user_id = a.user_id
 left join offer_product op on o.customer_request_id = op.customer_request_id and rr.pId = op.product_id
 left join (select distinct order_id, 1 as converted from {{ ref('gmv_by_sources') }}) g on op.order_id = g.order_id
+left join (select distinct order_id, product_id from {{ ref('order_product_prices') }}) opp on opp.order_id = g.order_id and opp.product_id = rr.pId
 where created_time >= date('2022-06-01')
 order by created_time desc
 )
