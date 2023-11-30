@@ -34,7 +34,7 @@ jobs:
       - name: Check all models have owners
         run: python3 .github/scripts/get_no_owner.py
       - name: Check no unused sources
-        run: python3 .github/scripts/get_no_owner.py
+        run: python3 .github/scripts/get_unused_sources.py
       - name: SQL fluff fix
         uses: joomcode/dbt-models/.github/actions/sqlfluff-fix@master
         with:
