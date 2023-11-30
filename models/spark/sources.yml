@@ -3,20 +3,15 @@ version: 2
 sources:
   - name: ads
     tables:
-      - name: ads_install
       - name: web_analytics_cohorts_v4
       - name: referral_payout_stats
-      - name: referral_reference_stats
       - name: referral_bloggers
-      - name: device_advertising_costs
       - name: web_analytics_pageviews_with_segments
   - name: mart
     tables:
       - name: dim_device_min
-      - name: dim_region
       - name: dim_product
       - name: device_events
-      - name: dim_published_variant
       - name: product_rating_counters
       - name: star_order_2020
       - name: star_active_device
@@ -25,7 +20,6 @@ sources:
       - name: core_review_quiz_answers_scd2
       - name: babylone_events
       - name: fact_order_2020
-      - name: link_device_real_user
       - name: published_products_current
       - name: onfy_babylone_events
       - name: dim_currency_rate
@@ -89,20 +83,15 @@ sources:
       - name: babylone_joom_tags_daily_snapshot
       - name: babylone_logistics_queues_daily_snapshot
       - name: babylone_logistics_tags_daily_snapshot
-      - name: babylone_joom_queues_daily_snapshot
-      - name: babylone_narwhal_queues_daily_snapshot
       - name: babylone_onfy_queues_daily_snapshot
-      - name: babylone_narwhal_tags_daily_snapshot
       - name: babylone_onfy_tags_daily_snapshot
       - name: babylone_joom_tag_categories_daily_snapshot
       - name: babylone_logistics_tag_categories_daily_snapshot
-      - name: babylone_narwhal_tag_categories_daily_snapshot
       - name: babylone_onfy_tag_categories_daily_snapshot
       - name: b2b_core_promocodes_daily_snapshot
       - name: b2b_core_issues_daily_snapshot
       - name: b2b_core_customer_plans_daily_snapshot
       - name: b2b_core_customer_offers_daily_snapshot
-      - name: b2b_core_customer_rfq_response_daily_snapshot
       - name: b2b_core_customer_rfq_response_v2_daily_snapshot
       - name: b2b_core_customer_rfq_request_daily_snapshot
       - name: b2b_core_customer_requests_daily_snapshot
@@ -110,9 +99,7 @@ sources:
       - name: babylone_joom_agents_daily_snapshot
       - name: points_points_transactions_daily_snapshot
       - name: finance_order_costs_daily_snapshot
-      - name: babylone_joompay_agents_daily_snapshot
       - name: babylone_logistics_agents_daily_snapshot
-      - name: babylone_narwhal_agents_daily_snapshot
       - name: babylone_onfy_agents_daily_snapshot
       - name: logistics_jl_obligatory_channels_daily_snapshot
       - name: abu_core_catalog_daily_snapshot
@@ -134,7 +121,6 @@ sources:
   - name: payments
     tables:
       - name: card_bins_snapshot
-      - name: checkout_data
       - name: country_filter
       - name: card_bins
       - name: chargeback
@@ -144,7 +130,6 @@ sources:
       - name: payment_order
   - name: recom
     tables:
-      - name: context_device_counters_v5
       - name: context_device_counters_v6
   - name: product
     tables:
@@ -152,7 +137,6 @@ sources:
   - name: platform
     tables:
       - name: aws_service_costs
-      - name: table_locations
       - name: s3_costs
       - name: s3_accesses_with_tables
       - name: s3_inventory_with_tables
@@ -160,9 +144,7 @@ sources:
       - name: fact_removed_device_event
   - name: pharmacy
     tables:
-      - name: google_campaign_insights
       - name: fbads_adset_country_insights
-      - name: partners_insights
   - name: onfy_mart
     tables:
       - name: device_events
@@ -199,25 +181,6 @@ sources:
         description: Main financial source
       - name: conversion_funnel
         description: Onfy main stages conversion rates
-  - name: merchant
-    tables:
-      - name: dim_merchant_payment_channel
-        description: Merchant payment channels
-        columns:
-          - name: id
-            description: Payment channel id
-          - name: merchant_id
-            description: Merchant id
-          - name: method_id
-            description: Selected payment method id
-          - name: type
-            description: Payment channel type( 0 - default, 1 - JoomUSA, 2 - Hyperwallet)
-          - name: status
-            description: Payment channel status (0 - not configured, 1 - error, 2 - pending external, 3 - configured, 4 - deactivated)
-          - name: error_reasons
-            description: Payment channel error reasons (0 - KYC error, 1 - payment method error)
-          - name: updated_time
-            description: Updated time
   - name: threat
     tables:
       - name: bot_factors_onfy

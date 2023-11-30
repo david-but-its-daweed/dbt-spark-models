@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: merchant
+    tables:
+      - name: dim_merchant_payment_channel
+        description: Merchant payment channels
+        columns:
+          - name: id
+            description: Payment channel id
+          - name: merchant_id
+            description: Merchant id
+          - name: method_id
+            description: Selected payment method id
+          - name: type
+            description: Payment channel type( 0 - default, 1 - JoomUSA, 2 - Hyperwallet)
+          - name: status
+            description: Payment channel status (0 - not configured, 1 - error, 2 - pending external, 3 - configured, 4 - deactivated)
+          - name: error_reasons
+            description: Payment channel error reasons (0 - KYC error, 1 - payment method error)
+          - name: updated_time
+            description: Updated time

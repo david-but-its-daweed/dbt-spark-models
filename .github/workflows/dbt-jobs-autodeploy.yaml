@@ -52,6 +52,10 @@ jobs:
       - name: Compile DBT
         run: |
           dbt compile --profiles-dir production/profiles --target prod --vars '{"start_date_ymd": "{start_date}", "end_date_ymd": "{end_date}", "table_name": "{table_name}"}'
+      - name: Check all models have owners
+        run: python3 .github/scripts/get_no_owner.py
+      - name: Check no unused sources
+        run: python3 .github/scripts/get_no_owner.py
       - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
           dbt-select: "--exclude tag:manual tag:platform tag:data_readiness"

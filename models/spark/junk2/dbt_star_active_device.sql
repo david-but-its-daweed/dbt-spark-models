@@ -13,7 +13,7 @@ select
 from {{ ref('dbt_fact_active_device') }} fad
 -- Intentionally forgot to use ref() here in order to ensure
 -- sensor dependency still works
-join mart.dim_device_min device using (device_id)
+join {{ source('mart', 'dim_device_min')}} device using (device_id)
 where
   effective_ts <= date_add(fad.partition_date_msk, 1)
   and date_add(fad.partition_date_msk, 1) < next_effective_ts
