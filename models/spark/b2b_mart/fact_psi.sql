@@ -120,6 +120,7 @@ group by
     psi.product_id, 
     psi.merchant_order_id, 
     psi_number,
+    psi._id,
     psis
     ) a 
     left join psi_stat b on a.product_id = b.product_id and a.merchant_order_id = b.merchant_order_id
