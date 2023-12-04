@@ -213,5 +213,5 @@ from all_psi t
 left join {{ ref('fact_order_product_deal') }} a on a.merchant_order_id = t.merchant_order_id and a.product_id = t.product_id
 left join statuses on a.psi_status = statuses.s_id
 left join date_of_inspection d on d.merchant_order_id = t.merchant_order_id and d.product_id = t.product_id
-left join solution s on solution._id = psi_id
+left join solution s on s._id = psi_id
 left join products p on p.merchant_order_id = t.merchant_order_id and p.product_id = t.product_id
