@@ -490,6 +490,8 @@ models:
       description: Logistics cost for one item that we expected when placing the order, added to the final sale price
     - name: jl_consolidation_profit_final
       description: Profit from consolidation logistics for a specific order. Distributed from the final consolidation group to logistics orders proportionally to the weight of the logistics order at check-in in Hackney, and then from the logistics order to Joom (order_id) proportionally to the merchant's price. This field can be summed.
+    - name: vat_markup
+      description: Money included in the item price to cover taxes.
     - name: marketplace_commission_initial
       description: Marketplace commission in USD, calculated based on the merchant's price, depending on the category and country
     - name: jm_markup
