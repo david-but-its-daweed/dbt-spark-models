@@ -190,7 +190,7 @@ sources:
   - name: experiments
     tables:
       - name: experiments_setup
-      - name: rollout_group
+      - name: rollout_group_2
   - name: mi_analytics
     tables:
       - name: aliexpress_logistics_prices

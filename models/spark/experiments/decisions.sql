@@ -37,8 +37,8 @@ rollout_group AS (
         experiment_id,
         group_id AS rollout_group,
         rollout_date
-    FROM {{ source('experiments', 'rollout_group') }}
-    WHERE start_date >= '2023-01-01'
+    FROM {{ source('experiments', 'rollout_group_2') }}
+    WHERE start >= '2023-01-01'
 )
 
 SELECT
