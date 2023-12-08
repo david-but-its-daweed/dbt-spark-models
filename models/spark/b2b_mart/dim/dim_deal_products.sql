@@ -68,13 +68,13 @@ merchant_order as (
 ),
 
 order_products as (
-    select 
-        order_product_id,
-        product_id,
-        deal_id,
-        product_friendly_id,
-        hs_code,
-        merchant_order_id
+    select
+      order_product_id,
+      product_id,
+      deal_id,
+      product_friendly_id,
+      hs_code,
+      merchant_order_id
     from {{ ref('fact_order_products') }}
 ),
 
@@ -114,16 +114,31 @@ customer_requests as (
     from {{ ref('fact_customer_requests') }}
     WHERE next_effective_ts_msk IS NULL
 
-)
+),
 
-select distinct
+deals_data as (
+  select distinct
     i.deal_id,
+    i.order_id,
     i.deal_friendly_id,
-    coalesce(i.user_id, o.user_id) as user_id,
+    i.user_id,
     cr.customer_request_id,
     off.offer_id,
     off.offer_product_id,
-    coalesce(p.product_id, off.product_id) as product_id,
+    off.product_id,
+    coalesce(i.owner_email) as owner_email,
+    coalesce(i.owner_role) as owner_role
+from deals i
+left join customer_requests cr on cr.deal_id = i.deal_id
+left join offers off on off.deal_id = i.deal_id and cr.customer_request_id = off.customer_request_id
+where i.deal_id is not null
+),
+
+orders_data as (
+  select distinct
+    o.user_id,
+    deals.deal_id,
+    p.product_id,
     o.order_id,
     o.order_friendly_id,
     mo.merchant_order_id,
@@ -131,14 +146,82 @@ select distinct
     mo.merchant_id,
     order_product_id,
     product_friendly_id,
-    coalesce(i.owner_email, o.owner_email) as owner_email,
-    coalesce(i.owner_role, o.owner_role) as owner_role
-from deals i
-left join customer_requests cr on cr.deal_id = i.deal_id
-left join offers off on off.deal_id = i.deal_id and cr.customer_request_id = off.customer_request_id
-full join orders o on i.order_id = o.order_id
+    o.owner_email as owner_email,
+    o.owner_role as owner_role
+from orders o
 left join merchant_order mo on mo.order_id = o.order_id
 left join order_products p on p.merchant_order_id = mo.merchant_order_id
-join users u on coalesce(i.user_id, o.user_id) = u.user_id
+left join deals on o.order_id = deals.order_id
+where o.order_id is not null
+),
+
+products_list as (
+select distinct *
+from
+(
+select distinct
+  deal_id,
+  product_id,
+  offer_product_id as order_offer_product_id
+from deals_data
+union all
+select distinct
+  deal_id,
+  product_id,
+  order_product_id as order_offer_product_id
+from orders_data
+where deal_id is not null
+)
+)
+
+
+select distinct
+  products_list.deal_id,
+  deals_data.deal_friendly_id,
+  coalesce(deals_data.user_id, orders_data.user_id) as user_id,
+  deals_data.customer_request_id,
+  deals_data.offer_id,
+  deals_data.offer_product_id,
+  products_list.product_id,
+  orders_data.order_id,
+  orders_data.order_friendly_id,
+  orders_data.merchant_order_id,
+  orders_data.merchant_order_friendly_id,
+  orders_data.merchant_id,
+  orders_data.order_product_id,
+  orders_data.product_friendly_id,
+  coalesce(deals_data.owner_email, orders_data.owner_email) as owner_email,
+  coalesce(deals_data.owner_role, orders_data.owner_role) as owner_role
+
+from products_list
+left join deals_data on products_list.deal_id = deals_data.deal_id
+  and coalesce(products_list.product_id, '') = coalesce(deals_data.product_id, '')
+  and coalesce(products_list.order_offer_product_id, '') = coalesce(deals_data.offer_product_id, '')
+left join orders_data on products_list.deal_id = orders_data.deal_id
+  and coalesce(products_list.product_id, '') = coalesce(orders_data.product_id, '')
+  and coalesce(products_list.order_offer_product_id, '') = coalesce(orders_data.order_product_id, '')
+join users u on coalesce(deals_data.user_id, orders_data.user_id) = u.user_id
 where (fake is null or not fake)
-    
+
+union all
+select distinct
+  '' as deal_id,
+  '' as deal_friendly_id,
+  orders_data.user_id,
+  '' as customer_request_id,
+  '' as offer_id,
+  '' as offer_product_id,
+  orders_data.product_id,
+  orders_data.order_id,
+  orders_data.order_friendly_id,
+  orders_data.merchant_order_id,
+  orders_data.merchant_order_friendly_id,
+  orders_data.merchant_id,
+  orders_data.order_product_id,
+  orders_data.product_friendly_id,
+  orders_data.owner_email,
+  orders_data.owner_role
+
+from orders_data 
+join users u on orders_data.user_id = u.user_id
+where (fake is null or not fake) and deal_id is null
