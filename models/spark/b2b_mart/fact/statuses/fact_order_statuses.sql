@@ -65,7 +65,11 @@ orders_hist AS (
         MAX(IF(status = 'shipping' AND sub_status = 'requestedClosingDocuments', event_ts_msk, NULL)) AS requested_closing_documents,
         MAX(IF(status = 'shipping' AND sub_status = 'receivedClosingDocuments', event_ts_msk, NULL)) AS received_closing_documents,
         
-        MAX(IF(status = 'cancelled', event_ts_msk, NULL)) AS cancelled
+        MAX(IF(status = 'cancelled', event_ts_msk, NULL)) AS cancelled,
+
+        MAX(IF(status = 'claim', event_ts_msk, NULL)) AS claim,
+
+        MAX(IF(status = 'done', event_ts_msk, NULL)) AS done
     
     FROM {{ ref('fact_order_statuses_change') }}
     GROUP BY 1
