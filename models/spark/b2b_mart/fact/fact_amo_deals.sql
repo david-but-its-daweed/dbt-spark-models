@@ -4,7 +4,7 @@
     file_format='parquet',
     meta = {
       'model_owner' : '@amitiushkina',
-      'bigquery_load': 'true',
+      'bigquery_load': 'false',
       'priority_weight': '150'
     }
 ) }}
