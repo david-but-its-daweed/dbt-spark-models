@@ -56,7 +56,7 @@ SELECT
        last_order_sub_status,
        m.min_manufactured_ts_msk,
        order_description,
-       CASE WHEN deliveryScheme = 0 THEN 'DAP' WHEN deliveryScheme = 1 THEN 'EXW' END AS delivery_scheme,
+       CASE WHEN delivery_scheme = 0 THEN 'DAP' WHEN delivery_scheme = 1 THEN 'EXW' END AS delivery_scheme,
        TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
        TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_order') }} t
