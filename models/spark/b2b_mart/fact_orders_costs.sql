@@ -105,6 +105,15 @@ where rn = 1 and col is not null
 )
 ),
 
+all_orders AS (
+  SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id, c.country,
+    coalesce(u.delivery_scheme, 'EXW') as delivery_scheme
+  FROM {{ ref('fact_order') }} u
+  LEFT JOIN country c USING(user_id)
+  WHERE u.next_effective_ts_msk is null
+  and u.min_manufactured_ts_msk is not null and u.friendly_id != 'KXMZQ'
+),
+
 other_prices as 
 (select order_id, type, tag, stage, col.amount as fee, col.ccy as currency
 from
@@ -130,7 +139,9 @@ where rn = 1 and col is not null
 ),
 
 all_prices as 
-(select order_id, replace(type, 'DDP', '') AS type, tag, stage, sum(fee_rub) as fee_rub
+(select order_id, replace(type, 'DDP', '') AS type, 
+    case when tag = 'dap' and type != 'qc' and delivery_scheme = 'EXW' then 'ddp' else tag end as tag,
+    stage, sum(fee_rub) as fee_rub
 from
 (
 select p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub
@@ -141,6 +152,7 @@ union all
 select distinct * from other_prices
 ) p
 left join order_rates r on p.order_id = r.order_id and p.currency = r.from and r.to = 'RUB'
+left join all_orders ao on ao.order_id = p.order_id
 )
 group by order_id, type, tag, stage
 ),
@@ -149,14 +161,6 @@ country as (
     select distinct user_id, coalesce(country, "RU") as country
     from {{ ref('dim_user') }}
     where next_effective_ts_msk is null
-),
-
-all_orders AS (
-  SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id, c.country, u.delivery_scheme
-  FROM {{ ref('fact_order') }} u
-  LEFT JOIN country c USING(user_id)
-  WHERE u.next_effective_ts_msk is null
-  and u.min_manufactured_ts_msk is not null and u.friendly_id != 'KXMZQ'
 ),
 
 admins as (
