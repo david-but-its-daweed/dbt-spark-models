@@ -152,7 +152,7 @@ country as (
 ),
 
 all_orders AS (
-  SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id, c.country
+  SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id, c.country, u.delivery_scheme
   FROM {{ ref('fact_order') }} u
   LEFT JOIN country c USING(user_id)
   WHERE u.next_effective_ts_msk is null
@@ -411,7 +411,7 @@ select distinct
         initial_gross_profit,
         final_gross_profit,
         c.company_name, c.grade, c.grade_probability,
-        o.country
+        o.country, o.delivery_scheme
 from prices p
 join all_orders o on o.order_id = p.order_id
 join order_owners u on u.order_id = o.order_id
