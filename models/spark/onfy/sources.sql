@@ -56,6 +56,11 @@ WITH sources AS (
             CASE
                 WHEN onfy_mart.device_events.type = 'externalLink' AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%billiger%'
                     THEN 'billiger'
+                WHEN
+                    onfy_mart.device_events.type = 'externalLink'
+                    AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%'
+                    AND LOWER(onfy_mart.device_events.payload.params.utm_campaign) LIKE '%shopping%'
+                    THEN 'shopping'
                 WHEN onfy_mart.device_events.type = 'externalLink'
                     THEN onfy_mart.device_events.payload.params.utm_campaign
                 WHEN onfy_mart.device_events.type IN ('adjustInstall', 'adjustReattribution', 'adjustReattributionReinstall', 'adjustReinstall')
