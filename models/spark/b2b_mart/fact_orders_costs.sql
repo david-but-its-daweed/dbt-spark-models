@@ -105,6 +105,12 @@ where rn = 1 and col is not null
 )
 ),
 
+country as (
+    select distinct user_id, coalesce(country, "RU") as country
+    from {{ ref('dim_user') }}
+    where next_effective_ts_msk is null
+),
+
 all_orders AS (
   SELECT DISTINCT u.user_id, u.order_id, u.min_manufactured_ts_msk as date, friendly_id, c.country,
     coalesce(u.delivery_scheme, 'EXW') as delivery_scheme
@@ -155,12 +161,6 @@ left join order_rates r on p.order_id = r.order_id and p.currency = r.from and r
 left join all_orders ao on ao.order_id = p.order_id
 )
 group by order_id, type, tag, stage
-),
-
-country as (
-    select distinct user_id, coalesce(country, "RU") as country
-    from {{ ref('dim_user') }}
-    where next_effective_ts_msk is null
 ),
 
 admins as (
