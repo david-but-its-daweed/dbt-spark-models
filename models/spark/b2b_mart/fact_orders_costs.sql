@@ -150,7 +150,7 @@ all_prices as
     stage, sum(fee_rub) as fee_rub
 from
 (
-select p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub
+select p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub, ao.delivery_scheme
 from
 (
 select distinct * from typed_prices 
