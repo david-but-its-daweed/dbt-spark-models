@@ -160,7 +160,7 @@ select distinct * from other_prices
 left join order_rates r on p.order_id = r.order_id and p.currency = r.from and r.to = 'RUB'
 left join all_orders ao on ao.order_id = p.order_id
 )
-group by order_id, type, tag, stage
+group by order_id, type, case when tag = 'dap' and type != 'qc' and delivery_scheme = 'EXW' then 'ddp' else tag end, stage
 ),
 
 admins as (
