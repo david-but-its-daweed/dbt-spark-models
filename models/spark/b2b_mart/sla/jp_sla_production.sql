@@ -102,6 +102,7 @@ SELECT DISTINCT
     remaining_payment_requested,
     remaining_payment_in_progress,
     remaining_payment_acquired,
+    merchant_acquired_payment,
     signing_with_merchant,
     awaiting_manufacturing,
     ps.manufacturing AS product_manufacturing,
