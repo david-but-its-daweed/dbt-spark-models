@@ -372,11 +372,11 @@ select distinct
     merchant_order_id,
     product_id,
     date_status,
-    case when status = 'readyForPsi' then 'PSI'
-        when status = 'pickupRequested' then 'pickupRequestSentToLogisticians'
+    case when status in ('readyForPsi', 'psi') then 'PSI'
+        when status = ('pickupRequested', 'pickUp') then 'pickupRequestSentToLogisticians'
         when status = 'pickupCompleted' then 'pickedUpByLogisticians' end as status,
-    case when status = 'readyForPsi' then 2070
-        when status = 'pickupRequested' then 3010
+    case when status in ('readyForPsi', 'psi') then 2070
+        when status in ('pickupRequested', 'pickUp') then 3010
         when status = 'pickupCompleted' then 3020 end as status_int
     from
     (
