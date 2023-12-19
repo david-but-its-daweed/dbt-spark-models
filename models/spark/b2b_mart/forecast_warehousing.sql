@@ -13,118 +13,11 @@
     }
 ) }}
 
-
 with 
 days as (
 
-select 'Auto' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
-union all 
-select 'Auto' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
-union all 
-select 'Auto' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
-union all 
-select 'Auto' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
-union all 
-select 'Auto' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
-union all 
-select 'Auto' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 2 as days
-union all 
-select 'Auto' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 7 as days
-union all 
-select 'Auto' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 7 as days
-union all 
-select 'Auto' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 5 as days
-union all 
-select 'Auto' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 1 as days
-union all 
-select 'Auto' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
-union all 
-select 'Auto' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 2 as days
-union all 
-select 'Auto' as linehaul_channel, 'delivering' as status, 3097 as status_int, 15 as days
+select * from {{ ref('sla_days') }}
 
-
-
-union all 
-select 'Aero' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
-union all 
-select 'Aero' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
-union all 
-select 'Aero' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
-union all 
-select 'Aero' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
-union all 
-select 'Aero' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
-union all 
-select 'Aero' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 2 as days
-union all 
-select 'Aero' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 7 as days
-union all 
-select 'Aero' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 6 as days
-union all 
-select 'Aero' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 2 as days
-union all 
-select 'Aero' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 1 as days
-union all 
-select 'Aero' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
-union all 
-select 'Aero' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 1 as days
-union all 
-select 'Aero' as linehaul_channel, 'delivering' as status, 3097 as status_int, 5 as days
-
-union all 
-select 'Sea' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
-union all 
-select 'Sea' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
-union all 
-select 'Sea' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
-union all 
-select 'Sea' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
-union all 
-select 'Sea' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
-union all 
-select 'Sea' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 5 as days
-union all 
-select 'Sea' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 5 as days
-union all 
-select 'Sea' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 10 as days
-union all 
-select 'Sea' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 21 as days
-union all 
-select 'Sea' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 3 as days
-union all 
-select 'Sea' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
-union all 
-select 'Sea' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 10 as days
-union all 
-select 'Sea' as linehaul_channel, 'delivering' as status, 3097 as status_int, 15 as days
-
-union all 
-select 'Rail' as linehaul_channel, 'clientPaymentSent' as status, 2010 as status_int, 4 as days
-union all 
-select 'Rail' as linehaul_channel, 'advancePaymentRequested' as status, 2050 as status_int, 4 as days
-union all 
-select 'Rail' as linehaul_channel, 'manufacturingAndQcInProgress' as status, 2060 as status_int, 0 as days
-union all 
-select 'Rail' as linehaul_channel, 'PSI' as status, 2070 as status_int, 6 as days
-union all 
-select 'Rail' as linehaul_channel, 'remainingPaymentRequested' as status, 2080 as status_int, 4 as days
-union all 
-select 'Rail' as linehaul_channel, 'pickupRequestSentToLogisticians' as status, 3010 as status_int, 2 as days
-union all 
-select 'Rail' as linehaul_channel, 'pickedUpByLogisticians' as status, 3020 as status_int, 7 as days
-union all 
-select 'Rail' as linehaul_channel, 'arrivedAtLogisticsWarehouse' as status, 3030 as status_int, 13 as days
-union all 
-select 'Rail' as linehaul_channel, 'departedFromLogisticsWarehouse' as status, 3040 as status_int, 23 as days
-union all 
-select 'Rail' as linehaul_channel, 'arrivedAtDestinations' as status, 3065 as status_int, 3 as days
-union all 
-select 'Rail' as linehaul_channel, 'customsDeclarationReleased' as status, 3090 as status_int, 1 as days
-union all 
-select 'Rail' as linehaul_channel, 'uploadToTemporaryWarehouse' as status, 3093 as status_int, 1 as days
-union all 
-select 'Rail' as linehaul_channel, 'delivering' as status, 3097 as status_int, 5 as days
 ),
 
 
@@ -254,6 +147,7 @@ dict as (
     select distinct
         o.order_id,
         o.friendly_id as order_friendly_id,
+        d.order_product_id,
         o.channel_type,
         o.partition_date_msk as order_created_time,
         o.min_manufacturing_time,
@@ -263,7 +157,8 @@ dict as (
         b.product_id,
         pickup_id,
         pickup_friendly_id
-    from orders o 
+    from {{ ref('dim_deal_products') }} d
+    left join orders o on d.order_id = o.order_id
     left join merchant_orders mo on o.order_id = mo.order_id
     left join boxes b on b.merchant_order_id = mo.merchant_order_id
     left join pickups p on o.order_id = p.order_id and mo.merchant_order_id = p.merchant_order_id
@@ -272,199 +167,73 @@ dict as (
     ),
     
 
-order_statuses as (
-select 
-    d.*,
-    date_status,
-    status, 
-    status_int,
-    1 as priority
-from
-    (
-    select 
-        order_id,
-        
-        date_status,
-        
-        case when s.sub_status = 'client2BrokerPaymentSent' then 'clientPaymentSent'
-        when s.sub_status = 'pickupRequestSentToLogisticians' then 'pickupRequestSentToLogisticians'
-        when s.sub_status = 'pickedUpByLogisticians' then 'pickedUpByLogisticians'
-        when s.sub_status = 'arrivedAtLogisticsWarehouse' then 'arrivedAtLogisticsWarehouse'
-        when s.sub_status = 'departedFromLogisticsWarehouse' then 'departedFromLogisticsWarehouse' 
-        when status = 'shipping' then s.sub_status end as status,
-
-        cast(id as int) as status_int
-        from
-    (
-        select distinct
-            order_id,
-            date(event_ts_msk) as date_status,
-            status,
-            sub_status
-        from {{ ref('fact_order_statuses_change') }}
-        where (
-         status in (
-            'manufacturing'
-            )
-        and sub_status in (
-            'client2BrokerPaymentSent',
-            'joomSIAPaymentReceived'
-            )
-        )
-        or status = 'shipping'
-        order by status
-    ) s
-    left join b2b_mart.key_order_substatus k on s.sub_status = k.sub_status
-    ) o
-    join dict d on o.order_id = d.order_id
-    where status is not null and date_status is not null
-),
-
-merchant_order_statuses as (
+statuses as (
     select 
         d.*,
         date_status,
         status, 
         status_int,
-        2 as priority
+        case when status = 'manufacturing' then manufacturing_days else days end as days
     from
-    (
-    select 
+    dict d
+    left join (select order_id,
         merchant_order_id,
-        
-        date(day) as date_status,
-        
-        case when status = 'advancePaymentRequested' then 'advancePaymentRequested'
-        when status = 'manufacturingAndQcInProgress' then 'manufacturingAndQcInProgress'
-        when status = 'remainingPaymentRequested' then 'remainingPaymentRequested' end as status,
-        
-        case when status = 'advancePaymentRequested' then 2010
-        when status = 'manufacturingAndQcInProgress' then 2050
-        when status = 'remainingPaymentRequested' then 2080 end as status_int
-        from
-    (
-    select payload.id as merchant_order_id,
-            case when payload.status = 'advancePaymentAcquired' then 'manufacturingAndQcInProgress'
-                else  payload.status end as status,
-            min(TIMESTAMP(millis_to_ts_msk(payload.updatedTime))) as day
-            from {{ source('b2b_mart', 'operational_events') }}
-            WHERE type  ='merchantOrderChanged'
-            and payload.status in ('advancePaymentRequested', 'advancePaymentAcquired', 
-                'manufacturingAndQcInProgress', 'remainingPaymentRequested')
-            group by payload.id,
-            case when payload.status = 'advancePaymentAcquired' then 'manufacturingAndQcInProgress'
-                else  payload.status end
-    )
-    ) o join dict d on o.merchant_order_id = d.merchant_order_id
-    where status is not null and date_status is not null
-),
-
-product_statuses as (
-select 
-        d.*,
-        date_status,
-        status, 
-        status_int,
-        3 as priority
+        order_product_id, 
+        manufacturing_days,
+        key as status,
+        value as date_status
     from
-(
-select distinct 
-    merchant_order_id,
-    product_id,
-    date_status,
-    case when status in ('readyForPsi', 'psi') then 'PSI'
-        when status = ('pickupRequested', 'pickUp') then 'pickupRequestSentToLogisticians'
-        when status = 'pickupCompleted' then 'pickedUpByLogisticians' end as status,
-    case when status in ('readyForPsi', 'psi') then 2070
-        when status in ('pickupRequested', 'pickUp') then 3010
-        when status = 'pickupCompleted' then 3020 end as status_int
-    from
-    (
-      select merchant_order_id,
-        product_id, status, date(min(event_ts_msk)) as date_status
-    from {{ ref('statuses_events') }}
-        where entity = 'product'
-        group by merchant_order_id,
-        product_id, status
-    )
-) o join dict d on o.merchant_order_id = d.merchant_order_id and o.product_id = d.product_id
-    where status is not null and date_status is not null
-),
-
-pickup_statuses as 
-(select 
-        d.*,
-        date_status,
-        status, 
-        status_int,
-        3 as priority
-    from
-(
-    select 
-    case when status = 'WaitingForConfirmation' then 'pickupRequestSentToLogisticians'
-        when status = 'Requested' then 'pickupRequestSentToLogisticians'
-        end as status,
-    case when status = 'WaitingForConfirmation' then 3010
-        when status = 'Requested' then 3010
-        end as status_int,
-        time as date_status,
-        pickup_id
-        from
-    (
-        select 
-        col.status as status,
-        date(millis_to_ts_msk(col.updatedTimeMs)) as time,
-        pickup_id
-        from
-        (
-        select distinct 
-        _id as pickup_id,
-        explode(state.statusHistory)
-        from {{ ref('scd2_pick_up_orders_snapshot') }}
-        where dbt_valid_to is null
+    (select
+       order_product_id,
+       manufacturing_days,
+       order_id, merchant_order_id,
+       explode(
+           map(
+               'clientPayment',
+               date(client_to_broker_payment_sent),
+               'advancePayment',
+               date(advance_payment_requested),
+               'manufacturing',
+               date(product_manufacturing),
+               'psi',
+               date(psi),
+               'fixingPsi',
+               date(psi_failed_time),
+               'remainingPayment',
+               date(remaining_payment_requested)
+           )
         )
-        )
-    union all
-    select 
-        'pickupCompleted' as status,
-        3020 as status_int,
-        planned_date as date_status,
-        pickup_id
-    from pickups
-    union all 
-    select 
-        'pickupCompleted' as status,
-        3020 as status_int,
-        shipped_date as date_status,
-        pickup_id
-    from pickups
-) o join dict d on o.pickup_id = d.pickup_id 
-    where status is not null and date_status is not null
-),
+    from {{ ref('jp_sla_production') }}
+    )
+    where value is not null) using (order_product_id,
+       manufacturing_days,
+       order_id)
+    left join days using (status)
+    
+    )
+,
 
-psi as (
-select 
+order_statuses as (
+    select 
         d.*,
         date_status,
         status, 
         status_int,
-        4 as priority
-        from
-(
-    select  
-        max(psi_start) as date_status,
-        'PSI' as status,
-        2070 as status_int,
-        product_id,
-        merchant_order_id
-    from {{ ref('fact_psi') }}
-    group by 
-        product_id,
-        merchant_order_id
-    ) o 
-    join dict d on o.merchant_order_id = d.merchant_order_id and o.product_id = d.product_id
-    where status is not null and date_status is not null
-),
+        days
+    from
+    dict d
+    left join 
+    (select
+        order_id,
+        date(event_ts_msk) as date_status,
+        sub_status as status
+    from {{ ref('fact_order_statuses_change') }}
+    where status = 'shipping'
+    ) using (order_id)
+    left join days using (status)
+)
+
+,
 
 all as (
 select 
@@ -495,23 +264,15 @@ select
 from
 (
 select * , 
-row_number() over (partition by order_id, merchant_order_id, product_id, pickup_id order by status_int desc, priority desc, date_status desc) as rn
+row_number() over (partition by order_id, merchant_order_id, product_id, pickup_id order by status_int desc, date_status desc) as rn
 from
 (
 select * from 
 order_statuses 
 union all 
 select * from 
-merchant_order_statuses
-union all 
-select * from 
-product_statuses
-union all 
-select * from 
-pickup_statuses
-union all 
-select * from 
-psi
+statuses
+
 )
 )
 where rn = 1
@@ -592,8 +353,8 @@ select distinct
     datediff(date_status, min_manufacturing_time) as total_time_spent,
     case when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days) else 0 end as current_status,
     case when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days)
-        when all.status_int = 2050 and all.status_int = days.status_int then greatest(datediff(current_date, date_status), manufacturing_days)
-        when days.status_int = 2050 then manufacturing_days
+    when all.status_int = 2050 and all.status_int = days.status_int then greatest(datediff(current_date, date_status), cast(manufacturing_days as int))
+    when days.status_int = 2050 then cast(manufacturing_days as int)
     else days end as days,
     all.status_int <= days.status_int and days.status_int < 3030 as future,
     all.status_int >= days.status_int as past
