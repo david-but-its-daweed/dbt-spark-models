@@ -183,7 +183,7 @@ statuses as (
         d.pickup_friendly_id,
         date_status,
         status, 
-        status_int,
+        case when status = 'manufacturing' then 2050 else status_int end as status_int,
         case when status = 'manufacturing' then manufacturing_days else days end as days
     from
     dict d
