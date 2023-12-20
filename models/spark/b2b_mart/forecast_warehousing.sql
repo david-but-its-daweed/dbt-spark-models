@@ -250,11 +250,11 @@ select
     order_id,
     order_friendly_id,
     channel_type,
-    order_created_time,
+    cast(order_created_time as timestamp) as order_created_time,
     min_manufacturing_time,
     merchant_order_id,
     merchant_order_friendly_id,
-    manufacturing_days,
+    cast(manufacturing_days as int) as manufacturing_days,
     product_id,
     pickup_id,
     pickup_friendly_id,
@@ -284,11 +284,11 @@ select
     order_id,
     order_friendly_id,
     channel_type,
-    order_created_time,
+    datetime(order_created_time),
     min_manufacturing_time,
     merchant_order_id,
     merchant_order_friendly_id,
-    manufacturing_days,
+    cast(manufacturing_days as int) as manufacturing_days,
     product_id,
     pickup_id,
     pickup_friendly_id,
@@ -360,4 +360,5 @@ select distinct
     all.status_int >= days.status_int as past
 from all left join days on all.channel_type = days.linehaul_channel
 )
+where order_id is not null
 )
