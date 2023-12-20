@@ -169,7 +169,18 @@ dict as (
 
 statuses as (
     select 
-        d.*,
+        d.order_id,
+        d.order_friendly_id,
+        d.order_product_id,
+        d.channel_type,
+        d.order_created_time,
+        d.min_manufacturing_time,
+        d.merchant_order_id,
+        d.merchant_order_friendly_id,
+        d.manufacturing_days,
+        d.product_id,
+        d.pickup_id,
+        d.pickup_friendly_id,
         date_status,
         status, 
         status_int,
@@ -215,7 +226,18 @@ statuses as (
 
 order_statuses as (
     select 
-        d.*,
+        d.order_id,
+        d.order_friendly_id,
+        d.order_product_id,
+        d.channel_type,
+        d.order_created_time,
+        d.min_manufacturing_time,
+        d.merchant_order_id,
+        d.merchant_order_friendly_id,
+        d.manufacturing_days,
+        d.product_id,
+        d.pickup_id,
+        d.pickup_friendly_id,
         date_status,
         status, 
         status_int,
