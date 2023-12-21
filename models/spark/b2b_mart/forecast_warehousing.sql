@@ -18,6 +18,15 @@ days as (
 
 select * from {{ ref('sla_days') }}
 
+union all
+    
+select distinct
+linehaul_channel, 'manufacturing' as status, 2050 as status_int, 0 as days
+from (
+    select distinct linehaul_channel
+    from {{ ref('sla_days') }}
+)
+
 ),
 
 
@@ -374,9 +383,11 @@ select distinct
     all.*,
     datediff(date_status, min_manufacturing_time) as total_time_spent,
     case when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days) else 0 end as current_status,
-    case when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days)
-    when all.status_int = 2050 and all.status_int = days.status_int then greatest(datediff(current_date, date_status), cast(manufacturing_days as int))
-    when days.status_int = 2050 then cast(manufacturing_days as int)
+    case 
+        when days.status_int = 2065 and all.status_int < days.status_int then days/2
+        when all.status_int = 2050 and all.status_int = days.status_int then greatest(datediff(current_date, date_status), cast(manufacturing_days as int))
+        when days.status_int = 2050 then cast(manufacturing_days as int)
+        when all.status_int = days.status_int then greatest(datediff(current_date, date_status), days)
     else days end as days,
     all.status_int <= days.status_int and days.status_int < 3030 as future,
     all.status_int >= days.status_int as past
