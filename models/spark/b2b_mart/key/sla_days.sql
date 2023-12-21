@@ -87,11 +87,11 @@ select 'clientPayment' as status, 1000 as status_int, 4 as days
 union all 
 select 'advancePayment' as status, 1010 as status_int, 4 as days
 union all 
-select 'psi' as status, 1020 as status_int, 3 as days
+select 'psi' as status, 2060 as status_int, 3 as days
 union all
-select 'fixingPsi', 1030 as status_int, 4 as days
+select 'fixingPsi', 2065 as status_int, 4 as days
 union all 
-select 'remainingPayment', 1040 as status_int, 4 as days
+select 'remainingPayment', 2070 as status_int, 4 as days
 )
 
 select 
