@@ -240,16 +240,14 @@ agent_support_actions AS (
                 AND t.text != 'деактивация ремайндера'
             ) THEN 'note after other agent'
             WHEN (
-                t.previous_author_type = 'agent'
-                AND t.author_type = 'agent'
+                t.author_type = 'agent'
                 AND t.previous_author_id != t.author_id
                 AND t.previous_author_id = '000000000000050001000001'
                 AND t.previous_text LIKE '%escalate to agen%'
                 AND t.entry_type = 'message'
             ) THEN 'message after bot'
             WHEN (
-                t.previous_author_type = 'agent'
-                AND t.author_type = 'agent'
+                t.author_type = 'agent'
                 AND t.previous_author_id != t.author_id
                 AND t.previous_author_id = '000000000000050001000001'
                 AND t.previous_text LIKE '%escalate to agen%'
@@ -263,6 +261,7 @@ agent_support_actions AS (
                 AND ((UNIX_TIMESTAMP(t.event_ts_msk) - UNIX_TIMESTAMP(t.previous_event_ts_msk)) / 60 > 3)
                 AND t.author_id != '000000000000050001000001'
                 AND t.entry_type = 'message'
+                AND t.previous_entry_type = 'message'
             ) THEN 'message after 3 minutes'
             WHEN (
                 t.previous_author_type = 'agent'
@@ -272,6 +271,7 @@ agent_support_actions AS (
                 AND t.author_id != '000000000000050001000001'
                 AND t.entry_type = 'privateNote'
                 AND t.text != 'деактивация ремайндера'
+                AND t.previous_entry_type = 'privateNote'
             ) THEN 'note after 3 minutes'
             WHEN (
                 t.author_type = 'Resolved'
@@ -283,7 +283,6 @@ agent_support_actions AS (
             ) THEN 'resolution after other agent'
             WHEN (
                 t.author_type = 'Resolved'
-                AND t.previous_author_type = 'agent'
                 AND t.previous_author_id != t.author_id
                 AND t.author_id != '000000000000050001000001'
                 AND t.previous_author_id != '000000000000050001000001'
