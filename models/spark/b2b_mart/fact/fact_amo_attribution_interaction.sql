@@ -16,7 +16,7 @@ select
     source,
     campaign,
     amo_id,
-    months_between(next_interaction_ts, interaction_created_at) >= 6 as incorrect_attribution,
+    months_between(next_interaction_ts, interaction_created_at) >= 6 OR next_interaction_ts IS NULL AS incorrect_attribution,
     next_interaction_ts is null as last_interaction_type,
     rn = 1 as first_interaction_type
 from
