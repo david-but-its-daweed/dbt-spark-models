@@ -15,7 +15,7 @@ SELECT
     activatedbymerchant AS activated_by_merchant,
     enabled,
     blockactiontime AS disabled_time,
-    disablingreason,
-    disablingnote,
+    disablingReason,
+    disablingNote,
     businesslines
 FROM {{ source('mongo', 'core_merchants_daily_snapshot') }}

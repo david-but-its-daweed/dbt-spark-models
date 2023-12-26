@@ -26,8 +26,8 @@ SELECT
     origin,
     enabled,
     activated_by_merchant,
-    disablingreason,
-    disablingnote,
+    disablingReason,
+    disablingNote,
     businesslines
 FROM {{ ref('merchant') }}
 
