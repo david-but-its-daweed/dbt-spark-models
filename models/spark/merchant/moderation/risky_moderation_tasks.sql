@@ -8,7 +8,8 @@
       'model_owner': '@abracadabrik',
       'bigquery_load': 'true',
       'bigquery_overwrite': 'true',
-      'bigquery_partitioning_date_column': 'queued_date'
+      'bigquery_partitioning_date_column': 'queued_date',
+      'bigquery_known_gaps': ['2023-11-19', '2023-11-18']
     },
 ) }}
 
