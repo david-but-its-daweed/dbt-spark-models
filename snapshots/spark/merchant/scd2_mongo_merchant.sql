@@ -16,15 +16,19 @@
 }}
 
 
-select merchant_id,
-       millis_to_ts(created_time)    as created_time,
-       millis_to_ts(updated_time)    as updated_time,
-       millis_to_ts(activation_time) as activation_time,
-       name,
-       origin,
-       enabled,
-       disablingReason,
-       disablingNote
-from {{ ref('merchant') }}
+SELECT
+    merchant_id,
+    MILLIS_TO_TS(created_time) AS created_time,
+    MILLIS_TO_TS(updated_time) AS updated_time,
+    MILLIS_TO_TS(activation_time) AS activation_time,
+    MILLIS_TO_TS(disabled_time) AS disabled_time,
+    name,
+    origin,
+    enabled,
+    activated_by_merchant,
+    disablingreason,
+    disablingnote,
+    businesslines
+FROM {{ ref('merchant') }}
 
 {% endsnapshot %}
