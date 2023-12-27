@@ -19,9 +19,10 @@ SELECT
     origin,
     enabled,
     activated_by_merchant,
-    disablingreason,
-    disablingnote,
-    businesslines,
+    disabling_reason,
+    disabling_note,
+    business_lines,
+    category_ids,
     dbt_valid_from AS effective_ts,
     COALESCE(dbt_valid_to, CAST('9999-12-31 23:59:59' AS TIMESTAMP)) AS next_effective_ts
 FROM {{ ref('scd2_mongo_merchant') }}

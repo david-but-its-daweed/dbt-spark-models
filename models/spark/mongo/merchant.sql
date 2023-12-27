@@ -7,15 +7,16 @@
 ) }}
 SELECT
     _id AS merchant_id,
-    createdtimems AS created_time,
-    updatedtimems AS updated_time,
-    activationtimems AS activation_time,
+    createdTimeMs AS created_time,
+    updatedTimeMs AS updated_time,
+    activationTimeMs AS activation_time,
     name,
     CAST(origin AS INTEGER) AS origin,
-    activatedbymerchant AS activated_by_merchant,
+    activatedByMerchant AS activated_by_merchant,
     enabled,
-    blockactiontime AS disabled_time,
-    disablingReason,
-    disablingNote,
-    businesslines
+    blockActionTime AS disabled_time,
+    disablingReason AS disabling_reason,
+    disablingNote AS disabling_note,
+    businessLines AS business_lines,
+    categoryids AS category_ids
 FROM {{ source('mongo', 'core_merchants_daily_snapshot') }}
