@@ -12,6 +12,7 @@ SELECT
     dashboards.dashboard_id,
     dashboards.dashboard_title,
     dashboards.dashboard_url,
+    dashboards.category_id,
     dashboards_widgets.widget_id,
     COALESCE(widgets.widget_title, "Text Widget") AS widget_title,
     widgets.widget_url,
