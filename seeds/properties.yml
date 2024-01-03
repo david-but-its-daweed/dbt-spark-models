@@ -36,3 +36,8 @@ seeds:
   - name: manual_tables_seed
     config:
       schema: platform
+
+  - name: holistics_cache_updater_wbl
+    config:
+      schema: holistics
+      alias: holistics_cache_updater_wbl
