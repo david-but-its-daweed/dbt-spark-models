@@ -300,7 +300,7 @@ models:
       description: Top country code (A2 code or 'Other')
     - name: national_currency_code
       description: Country's national currency code (If the country has more than one national currency, an arbitrary one is displayed)
-    - name: priority_type
+    - name: country_priority_type
       description: Focus priority type ('FOCUSED PERSPECTIVE', 'FOCUSED GROWING', 'BIG GOOD', 'BIG BAD', 'OTHER')
 
 - name: gold_merchant_categories
