@@ -14,7 +14,7 @@ WITH exp_decisions AS (
     SELECT
         CONCAT_WS('.', publicId, version) AS experiment_id,
         acceptanceType AS experiment_type,
-        author AS author_id,
+        coalesce(author.oid, author.value) AS author_id,
         state AS experiment_status,
         TO_DATE(TIMESTAMP_MILLIS(startTimeMs)) AS start_date,
         TO_DATE(TIMESTAMP_MILLIS(COALESCE(cancelledTimeMs, endTimeMs))) AS finish_date,
