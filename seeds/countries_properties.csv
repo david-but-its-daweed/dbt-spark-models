@@ -1,4 +1,4 @@
-country,country_code,currency,currency_code,country_priority_type
+﻿country,country_code,currency,currency_code,country_priority_type
 Afghanistan,AF,Afghani,AFN,OTHER
 Åland Islands,AX,Euro,EUR,OTHER
 Albania,AL,Lek,ALL,OTHER
@@ -18,7 +18,7 @@ Bahamas,BS,Bahamian Dollar,BSD,OTHER
 Bahrain,BH,Bahraini Dinar,BHD,OTHER
 Bangladesh,BD,Taka,BDT,OTHER
 Barbados,BB,Barbados Dollar,BBD,OTHER
-Belarus,BY,Belarusian Ruble,BYN,OTHER
+Belarus,BY,Belarusian Ruble,BYN,BIG GOOD
 Belgium,BE,Euro,EUR,BIG BAD
 Belize,BZ,Belize Dollar,BZD,OTHER
 Benin,BJ,CFA Franc BCEAO,XOF,OTHER
@@ -58,8 +58,8 @@ Côte d'Ivoire,CI,CFA Franc BCEAO,XOF,OTHER
 Croatia,HR,Euro,EUR,OTHER
 Cuba,CU,Cuban Peso,CUP,OTHER
 Curaçao,CW,Netherlands Antillean Guilder,ANG,OTHER
-Cyprus,CY,Euro,EUR,OTHER
-Czech Republic,CZ,Czech Koruna,CZK,OTHER
+Cyprus,CY,Euro,EUR,BIG GOOD
+Czech Republic,CZ,Czech Koruna,CZK,FOCUSED GROWING
 Denmark,DK,Danish Krone,DKK,OTHER
 Djibouti,DJ,Djibouti Franc,DJF,OTHER
 Dominica,DM,East Caribbean Dollar,XCD,OTHER
@@ -86,7 +86,7 @@ Georgia,GE,Lari,GEL,FOCUSED PERSPECTIVE
 Germany,DE,Euro,EUR,BIG BAD
 Ghana,GH,Ghana Cedi,GHS,OTHER
 Gibraltar,GI,Gibraltar Pound,GIP,OTHER
-Greece,GR,Euro,EUR,OTHER
+Greece,GR,Euro,EUR,BIG GOOD
 Greenland,GL,Danish Krone,DKK,OTHER
 Grenada,GD,East Caribbean Dollar,XCD,OTHER
 Guadeloupe,GP,Euro,EUR,OTHER
@@ -148,7 +148,7 @@ Mauritius,MU,Mauritius Rupee,MUR,OTHER
 Mayotte,YT,Euro,EUR,OTHER
 Mexico,MX,Mexican Peso,MXN,OTHER
 Micronesia Federated States of,FM,US Dollar,USD,OTHER
-Moldova Republic of,MD,Moldovan Leu,MDL,OTHER
+Moldova Republic of,MD,Moldovan Leu,MDL,FOCUSED GROWING
 Monaco,MC,Euro,EUR,OTHER
 Mongolia,MN,Tugrik,MNT,OTHER
 Montenegro,ME,Euro,EUR,OTHER
@@ -186,7 +186,7 @@ Puerto Rico,PR,US Dollar,USD,OTHER
 Qatar,QA,Qatari Rial,QAR,OTHER
 Réunion,RE,Euro,EUR,OTHER
 Romania,RO,Romanian Leu,RON,FOCUSED GROWING
-Russian Federation,RU,Russian Ruble,RUB,OTHER
+Russian Federation,RU,Russian Ruble,RUB,BIG GOOD
 Rwanda,RW,Rwanda Franc,RWF,OTHER
 Saint Barthélemy,BL,Euro,EUR,OTHER
 Saint Helena Ascension and Tristan da Cunha,SH,Saint Helena Pound,SHP,OTHER
