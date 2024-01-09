@@ -115,7 +115,7 @@ amo as (
                 cast(cast(current_status_ts as double) * 1000 as bigint) as validationStatusUtms,
                 phones,
                 partnerId
-            from {{ ref('fact_amo_crm_raw_leads amo_leads') }}
+            from {{ ref('fact_amo_crm_raw_leads') }} as amo_leads
             left join partners on lower(amo_leads.source) = lower(partners.partner_source)
             left join phone on (phone.lead_id) = (amo_leads.lead_id)
             where type = 'Partners' and validation
