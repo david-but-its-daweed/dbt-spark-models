@@ -144,7 +144,6 @@ dim_user as (
             from {{ ref('dim_user') }}
             )
             group by user_id
-            having min(next_effective_ts_msk) is null
         ),
 
 admin as (
