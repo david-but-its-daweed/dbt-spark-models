@@ -50,6 +50,7 @@ from {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }}
 rfq_sent_deals as (
 select 
 rfq_request_id,
+rfq_friendly_id,
 created_time,
 is_top,
 d.deal_id,
@@ -63,6 +64,7 @@ sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
 r._id as rfq_request_id,
+friendlyId as rfq_friendly_id,
 millis_to_ts_msk(r.ctms) as created_time,
 isTop as is_top,
 crid as customer_request_id,
@@ -76,7 +78,7 @@ left join (
     from {{ ref('fact_customer_requests') }}
     where next_effective_ts_msk is null
 ) d on r.customer_request_id = d.customer_request_id
-group by 1, 2, 3, 4, 5, 6, 7, 8),
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9),
 
 
 offer_product as (select order_id, customer_request_id, offer_id, product_id, deal_id, 
@@ -93,6 +95,7 @@ select *,
 from
 (select distinct
     rfq_request_id,
+    rfq_friendly_id,
     rfq_sent_time,
     merchant_id,
     company_name,
