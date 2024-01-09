@@ -14,7 +14,7 @@
 
 with partners as (
             select distinct partner_source, user_id as partnerId
-            from b2b_mart.dim_user
+            from {{ ref('dim_user') }}
             where partner_type = 'BigPartner'
         ),
 
@@ -73,12 +73,12 @@ deals as (
                     row_number() over (partition by deals.user_id order by gmv_initial is null, gmv_initial < 500, t)
                 end as rn
             from (select distinct user_id, deal_id, order_id from b2b_mart.dim_deal_products) dim
-            left join b2b_mart.fact_deals as deals on deals.deal_id = dim.deal_id
+            left join {{ ref('fact_deals') }} as deals on deals.deal_id = dim.deal_id
                 and deals.next_effective_ts_msk is null
                 and deals.status is not null
-            left join b2b_mart.fact_order_statuses_change as orders on orders.order_id = dim.order_id
+            left join {{ ref('fact_order_statuses_change') }} as orders on orders.order_id = dim.order_id
                 and orders.current_status
-            left join b2b_mart.gmv_by_sources as gmv on gmv.order_id = dim.order_id
+            left join {{ ref('gmv_by_sources') }} as gmv on gmv.order_id = dim.order_id
             )
             where statusUtms is not null
             )
@@ -88,7 +88,7 @@ phone as (
             select
                 lead_id,
                 collect_list(phone) as phones
-            from b2b_mart.fact_amo_crm_contacts_phones
+            from {{ ref('fact_amo_crm_contacts_phones') }}
             group by lead_id
         ),
 
@@ -115,7 +115,7 @@ amo as (
                 cast(cast(current_status_ts as double) * 1000 as bigint) as validationStatusUtms,
                 phones,
                 partnerId
-            from b2b_mart.fact_amo_crm_raw_leads amo_leads
+            from {{ ref('fact_amo_crm_raw_leads amo_leads') }}
             left join partners on lower(amo_leads.source) = lower(partners.partner_source)
             left join phone on (phone.lead_id) = (amo_leads.lead_id)
             where type = 'Partners' and validation
@@ -126,7 +126,7 @@ amo as (
 
 admin_phone as (
             select uid as user_id, collect_list(_id) as phones
-            from mongo.b2b_core_phone_credentials_daily_snapshot
+            from {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
             group by 1
         ),
 
@@ -141,7 +141,7 @@ dim_user as (
                 when funnel_status in ('Converting', 'ValidatedNoConversionAttempt', 'Converted', 'ConversionFailed', 'Lost') then 'Validated' else 'InProgress' end as validation_status,
                 next_effective_ts_msk,
                 cast(update_ts_msk as double)* (1000) as utms
-            from b2b_mart.dim_user
+            from {{ ref('dim_user') }}
             )
             group by user_id
             having min(next_effective_ts_msk) is null
@@ -171,7 +171,7 @@ admin as (
                 cast(cast(coalesce(validated_date, validation_ts) as double) * 1000 as bigint) as validationStatusUtms,
                 phones,
                 partnerId
-            from b2b_mart.fact_attribution_interaction i
+            from {{ ref('fact_attribution_interaction') }} i
             join dim_user using (user_id)
             left join admin_phone using (user_id)
             left join partners on lower(i.source) = lower(partners.partner_source)
