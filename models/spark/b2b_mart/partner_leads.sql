@@ -183,6 +183,7 @@ admin as (
 select 
             oid as partner_lead_id,
             struct(oid) as _id,
+            cast(current_timestamp() as double)*1000 as ctms,
             coalesce(partnerId, '000000000000000000000000') as partner_id,
             named_struct('oid', coalesce(partnerId, '000000000000000000000000')) partnerId,
             leadInfo.id.oid as lead_id,
