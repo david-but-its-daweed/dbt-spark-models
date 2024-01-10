@@ -181,7 +181,9 @@ admin as (
         
 select 
             oid as partner_lead_id,
-            struct(oid) as _id,
+            named_struct(
+                'oid', lower(hex(unix_timestamp(current_timestamp()))||right(md5(replace(uuid(), '-')), 16))
+            ) as _id,
             cast(cast(current_timestamp() as double)*1000 as bigint) as ctms,
             coalesce(partnerId, '000000000000000000000000') as partner_id,
             named_struct('oid', coalesce(partnerId, '000000000000000000000000')) partnerId,
@@ -198,10 +200,10 @@ select
             date('{{ var("start_date_ymd") }}') as partition_date_msk
             
 from (
-        select *, lower(hex(unix_timestamp(current_timestamp()))||right(md5(replace(uuid(), '-')), 16)) as oid
+        select *
         from amo
         union all
-        select *, lower(hex(unix_timestamp(current_timestamp()))||right(md5(replace(uuid(), '-')), 16)) as oid
+        select *
         from admin
 )
 left join deals using (user_id)
