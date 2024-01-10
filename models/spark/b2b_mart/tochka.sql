@@ -39,7 +39,7 @@ where tochka.lead_id != all_leads.lead_id
 and contact_id != 24268427
 and all_leads.lead_id not in (
   select distinct lead_id from {{ ref('fact_amo_crm_raw_leads') }}
-  where pipeline_name not in ('Квалификация Rocket', 'Специальные предложения Rocket')
+  where pipeline_name in ('Квалификация Rocket', 'Специальные предложения Rocket')
   )
 ),
 
