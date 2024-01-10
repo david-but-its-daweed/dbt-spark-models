@@ -16,6 +16,7 @@ with partners as (
             select distinct partner_source, user_id as partnerId
             from {{ ref('dim_user') }}
             where partner_type = 'BigPartner'
+            and next_effective_ts_msk is null
         ),
 
 deals as (
@@ -151,6 +152,7 @@ dim_user as (
                 next_effective_ts_msk,
                 cast(update_ts_msk as double)* (1000) as utms
             from {{ ref('dim_user') }}
+            where next_effective_ts_msk is null
             )
             group by user_id
         ),
@@ -183,7 +185,7 @@ admin as (
             join dim_user using (user_id)
             left join admin_phone using (user_id)
             left join partners on lower(i.source) = lower(partners.partner_source)
-            where type = 'Partners' and amo_id is null
+            where type = 'Partners' and amo_id is null and last_interaction_type
         )
         where ctms is not null
         )
