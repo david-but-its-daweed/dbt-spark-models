@@ -16,7 +16,7 @@ jobs:
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Ensure Python 3.8

@@ -28,20 +28,20 @@ jobs:
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
+        uses: aws-actions/configure-aws-credentials@v3
         with:
           aws-region: eu-central-1
           role-to-assume: arn:aws:iam::392166590300:role/github-hosted-runner
       - name: Login to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-      - uses: azure/setup-kubectl@v1
+      - uses: azure/setup-kubectl@v3
         with:
           version: 'v1.19.0'
       - name: Login to EKS
         run: aws eks --region eu-central-1 update-kubeconfig --name streaming-kube
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Ensure Python 3.8
         run: sudo amazon-linux-extras enable python3.8 && sudo yum -y install python3.8
       # Not using setup-python because of https://github.com/actions/setup-python/issues/162
