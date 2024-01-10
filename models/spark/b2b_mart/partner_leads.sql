@@ -185,7 +185,7 @@ admin as (
             join dim_user using (user_id)
             left join admin_phone using (user_id)
             left join partners on lower(i.source) = lower(partners.partner_source)
-            left join amo using (user_id)
+            left join (select distinct user_id from amo) using (user_id)
             where type = 'Partners' and amo.user_id is null and last_interaction_type
         )
         where ctms is not null
