@@ -24,7 +24,7 @@ select explode(col.phones) as phone,
 from concats
 )
 
-select lead_id,
+select distinct lead_id,
         col._id as contact_id,
         col.firstName as first_name,
         col.lastName as last_name,
