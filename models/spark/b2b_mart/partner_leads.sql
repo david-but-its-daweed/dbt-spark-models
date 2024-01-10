@@ -88,7 +88,11 @@ phone as (
             select
                 lead_id,
                 collect_list(phone) as phones
+            from 
+            (
+            select distinct lead_id, phone
             from {{ ref('fact_amo_crm_contacts_phones') }}
+            )
             group by lead_id
         ),
 
@@ -105,7 +109,7 @@ amo as (
             partnerId
             from
             (
-            select
+            select distinct
                 user_id as oid,
                 cast(amo_leads.lead_id as string) as amoLeadId,
                 cast((cast(created_ts_msk as double) * 1000) as bigint) as ctms,
@@ -126,7 +130,12 @@ amo as (
 
 admin_phone as (
             select uid as user_id, collect_list(_id) as phones
-            from {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
+            from 
+            (
+            select distinct uid, _id
+            from
+            {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
+            )
             group by 1
         ),
 
@@ -160,7 +169,7 @@ admin as (
             partnerId
             from
             (
-            select 
+            select distinct
                 i.user_id as oid,
                 '' as amoLeadId,
                 cast(cast(user_created_time as double)*1000 as bigint) as ctms,
