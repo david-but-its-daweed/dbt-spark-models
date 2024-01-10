@@ -42,12 +42,11 @@ chargebacks AS (
 refunds AS (
     SELECT
         payment_id,
-        MAX(1) AS has_refund,
-        SUM(amount_usd) AS refund_usd
+        MAX(1) AS has_refund_att,
+        MAX(is_success) AS has_success_refund,
+        SUM(amount_usd * is_success) AS success_refund_usd
     FROM
         {{ source('payments','fact_refund') }}
-    WHERE
-        is_success = 1
     GROUP BY
         payment_id
 ),
@@ -256,4 +255,4 @@ LEFT JOIN
     orders_info AS oi USING (payment_order_id)
 WHERE
     po.payment_type != 'points'
-    AND (YEAR(TO_DATE('{{ var("start_date_ymd") }}')) - YEAR(po.date)) < 2
+    AND (TO_DATE('{{ var("start_date_ymd") }}') - po.date) < 750
