@@ -39,9 +39,9 @@ deals as (
                 orderID,
                 status, statusUtms, rejectReason,
                 struct(amount, ccy) as price,
-                CAST(amount*0.05 as bigint) as amount,
+                CASE WHEN rn = 1 THEN CAST(amount*0.05 as bigint) END as amount,
                 ccy,
-                date_payed,
+                CASE WHEN rn = 1 THEN date_payed END AS date_payed,
                 rn
             from
             (
