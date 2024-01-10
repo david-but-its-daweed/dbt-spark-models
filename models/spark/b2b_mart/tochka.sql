@@ -143,24 +143,24 @@ tasks as (
 )
 
 select 
-  amo_id, 
-  phone,
-  created_at as user_created_time, 
-  validation_status,
-  validated_date,
-  reject_reason,
+  amo.amo_id, 
+  amo.phone,
+  amo.created_at as user_created_time, 
+  amo.validation_status,
+  amo.validated_date,
+  amo.reject_reason,
   campaign,
   deal_statuses.deal_id, loss_reason, status_name, 
   request_retrieval, info_clarification, find_retrieval, pricing_sent,
   negotiation, signing_and_payment, manufacturing,
-  note_1,
-  note_2,
-  note_3,
-  note_4,
-  note_5,
-  task_created_at, 
-  task_type,
-  text
+  coalesce(notes1.note_1, notes.note_1) as note_1,
+  coalesce(notes1.note_2, notes.note_2) as note_2,
+  coalesce(notes1.note_3, notes.note_3) as note_3,
+  coalesce(notes1.note_4, notes.note_4) as note_4,
+  coalesce(notes1.note_5, notes.note_5) as note_5,
+  coalesce(tasks1.task_created_at, tasks.task_created_at) as task_created_at,
+  coalesce(tasks1.task_type, tasks.task_type) as task_type,
+  coalesce(tasks1.text, tasks.text) as text
 from
 (
 select
@@ -190,9 +190,11 @@ left join (
   select lead_id as amo_id, max(phone) as phone from {{ ref('fact_amo_crm_contacts_phones') }} group by 1
   ) phone using (amo_id)
 where i.source = 'tochka' and validation
-)
-left join deals using (amo_id)
-left join deal_statuses using (deal_id)
-left join notes using (amo_id)
-left join tasks using (amo_id)
+) amo
+left join deals on amo.amo_id = deals.amo_id
+left join deal_statuses on deals.deal_id = deal_statuses.deal_id
+left join notes on notes.amo_id = amo.amo_id
+left join notes notes1 on notes1.amo_id = deals.deal_id
+left join tasks on tasks.amo_id = amo.amo_id
+left join tasks tasks1 on tasks1.amo_id = deals.deal_id
 where rn = 1
