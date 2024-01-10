@@ -51,6 +51,7 @@ rfq_sent_deals as (
 select 
 rfq_request_id,
 rfq_friendly_id,
+rfq_name,
 created_time,
 is_top,
 d.deal_id,
@@ -70,6 +71,7 @@ isTop as is_top,
 crid as customer_request_id,
 explode(productVariants) as variants,
 status as sent_status,
+name as rfq_name,
 categories[0] as category_id
 from {{ source('mongo', 'b2b_core_customer_rfq_request_daily_snapshot') }} r
 ) r
@@ -96,6 +98,7 @@ from
 (select distinct
     rfq_request_id,
     rfq_friendly_id,
+    rfq_name,
     rfq_sent_time,
     merchant_id,
     company_name,
