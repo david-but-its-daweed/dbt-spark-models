@@ -178,9 +178,10 @@ admin as (
         )
         where ctms is not null
         )
-        
-select 
-            oid as partner_lead_id,
+
+
+select _id.oid as partner_lead_id, * from
+(select 
             named_struct(
                 'oid', lower(hex(unix_timestamp(current_timestamp()))||right(md5(replace(uuid(), '-')), 16))
             ) as _id,
@@ -207,3 +208,4 @@ from (
         from admin
 )
 left join deals using (user_id)
+)
