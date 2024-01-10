@@ -119,7 +119,6 @@ from
 select leadId, explode(notes) from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
 where notes is not null
 )
-where col.entityId = 14662855
 )
 )
 group by amo_id),
