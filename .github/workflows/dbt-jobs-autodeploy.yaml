@@ -43,7 +43,7 @@ jobs:
         # ImportError: urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with OpenSSL 1.0.2k-fips  26 Jan 2017. See: https://github.com/urllib3/urllib3/issues/2168
         run: pip3.8 install dbt-core==1.7.2 dbt-spark[PyHive]==1.7.1 urllib3==1.26.6
       - name: Set up JDK 11
-        uses: actions/setup-java@v2
+        uses: actions/setup-java@v3
         with:
           java-version: '11'
           distribution: 'adopt'
