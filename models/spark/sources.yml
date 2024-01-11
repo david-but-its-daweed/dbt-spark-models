@@ -165,7 +165,6 @@ sources:
       - name: refund
       - name: refund_order_parcel
       - name: refund_order_parcel_item
-      - name: billing_operation
       - name: medicine
       - name: manufacturer
       - name: product

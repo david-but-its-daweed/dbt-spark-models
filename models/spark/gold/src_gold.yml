@@ -512,6 +512,10 @@ models:
       description: Discount amount due to points usage converted to USD
     - name: points_final
       description: Total discount amount due to points usage converted to USD. This field considers returns.
+    - name: is_with_special_price
+      description: Flag indicating whether the Special Price discount was used for a particular `order_id`. More details can be found here https://www.notion.so/joomteam/Special-Price-a33c18353de6458c8a300b95d7a3e51c
+    - name: special_price_discount
+      description: Discount amount due to Special Price converted to USD. More details can be found here https://www.notion.so/joomteam/Special-Price-a33c18353de6458c8a300b95d7a3e51c
     - name: discounts
       description: Dictionary storing applied discounts
     - name: is_refunded
