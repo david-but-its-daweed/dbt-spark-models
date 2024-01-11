@@ -22,9 +22,7 @@ with statuses as (
 
 psi as (
 select distinct
-    status, status_id, stms as time, _id, merchant_order_id, product_id, lag_status,
-    sum(case when lag_status = 40 or lag_status is null then 1 else 0 end) over (partition by merchant_order_id, product_id order by stms) as psi_number,
-    sum(case when lag_status = 40 or lag_status is null then 1 else 0 end) over (partition by merchant_order_id, product_id) as psis
+    status, status_id, stms as time, _id, merchant_order_id, product_id, lag_status
 from
 (
 select 
@@ -84,15 +82,15 @@ psi_stat as (
         ),
           
 all_psi as (
-select a.*, psi_waiting_time, psi_start_time, psi_ready_time, psi_failed_time, psi_end_time
+select a.*, row_number() over (partition by a.product_id, a.merchant_order_id order by a.psi_id) as psi_number,
+    count(a.psi_id) over (partition by a.product_id, a.merchant_order_id) as psis,
+    psi_waiting_time, psi_start_time, psi_ready_time, psi_failed_time, psi_end_time
 from 
 (
 select 
     psi.product_id, 
     psi.merchant_order_id, 
     psi._id as psi_id,
-    psi_number,
-    psis,
     min(case when status_id = 10 then time end) as waiting_time,
     min(case when status_id = 20 then time end) as running_time,
     min(case when status_id = 30 then time end) as ready_time,
@@ -119,9 +117,7 @@ left join problems pr on pr._id = psi._id
 group by 
     psi.product_id, 
     psi.merchant_order_id, 
-    psi_number,
-    psi._id,
-    psis
+    psi._id
     ) a 
     left join psi_stat b on a.product_id = b.product_id and a.merchant_order_id = b.merchant_order_id
 ),
