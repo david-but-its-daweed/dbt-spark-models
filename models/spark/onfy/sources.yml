@@ -1,0 +1,4 @@
+sources:
+  - name: onfy
+    tables:
+      - name: orders_info
