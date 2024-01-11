@@ -121,10 +121,12 @@ amo as (
                 user_id as oid,
                 cast(amo_leads.lead_id as string) as amoLeadId,
                 cast((cast(created_ts_msk as double) * 1000) as bigint) as ctms,
-                cast((cast(current_status_ts as double) * 1000) as bigint) as utms,
+                coalesce(cast((cast(current_status_ts as double) * 1000) as bigint),
+                        cast((cast(created_ts_msk as double) * 1000) as bigint)) as utms,
                 case when funnel_status is null or funnel_status = 'Validating' then 1
                     when funnel_status = 'Rejected' then 0 else 2 end as validationStatus,
-                cast(cast(current_status_ts as double) * 1000 as bigint) as validationStatusUtms,
+                coalesce(cast((cast(current_status_ts as double) * 1000) as bigint),
+                        cast((cast(created_ts_msk as double) * 1000) as bigint)) as validationStatusUtms,
                 phones,
                 partnerId
             from {{ ref('fact_amo_crm_raw_leads') }} as amo_leads
