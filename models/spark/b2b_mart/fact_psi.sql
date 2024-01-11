@@ -93,6 +93,7 @@ select
     psi.merchant_order_id, 
     psi_number,
     psis,
+    max(case when status_id = 30 then _id end) as psi_id,
     min(case when status_id = 10 then time end) as waiting_time,
     min(case when status_id = 20 then time end) as running_time,
     min(case when status_id = 30 then time end) as ready_time,
