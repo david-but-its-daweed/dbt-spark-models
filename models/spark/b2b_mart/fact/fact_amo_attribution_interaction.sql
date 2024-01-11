@@ -47,3 +47,5 @@ from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
 )
 )
 where not(source = 'action' and date(interaction_created_at) = '2023-12-28')
+and not(source = 'sdr' and date(interaction_created_at) = '2023-11-14')
+and not(source = 'sdr' and date(interaction_created_at) = '2023-11-15')
