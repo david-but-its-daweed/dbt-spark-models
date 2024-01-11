@@ -20,13 +20,6 @@ with statuses as (
     select "success" as status, 50 as s_id
 ),
 
-merchant_type as (
-select distinct
-    _id as merchant_id,
-    type as merchant_type
-from {{ source('mongo', 'b2b_core_merchant_appendixes_daily_snapshot') }}
-),
-
 psi as (
 select distinct
     status, status_id, stms as time, _id as psi_id, merchant_order_id, product_id, lag_status,
@@ -223,4 +216,3 @@ left join statuses on a.psi_status = statuses.s_id
 left join date_of_inspection d on d.merchant_order_id = t.merchant_order_id and d.product_id = t.product_id
 left join solution s on s._id = psi_id
 left join products p on p.merchant_order_id = t.merchant_order_id and p.product_id = t.product_id
-left join merchant_type mt using (merchant_id)
