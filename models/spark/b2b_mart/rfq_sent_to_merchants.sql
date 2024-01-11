@@ -80,7 +80,7 @@ left join (
     from {{ ref('fact_customer_requests') }}
     where next_effective_ts_msk is null
 ) d on r.customer_request_id = d.customer_request_id
-group by 1, 2, 3, 4, 5, 6, 7, 8, 9),
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
 
 
 offer_product as (select order_id, customer_request_id, offer_id, product_id, deal_id, 
