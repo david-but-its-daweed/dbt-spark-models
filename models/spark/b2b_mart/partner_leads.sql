@@ -19,6 +19,12 @@ with partners as (
             and next_effective_ts_msk is null
         ),
 
+order_number as (
+            select order_id, row_number() over (partition by user_id order by t) as rn
+            from {{ ref('gmv_by_sources') }}
+            where gmv_initial > 500
+        ),
+
 deals as (
             
             select
@@ -73,13 +79,14 @@ deals as (
                 case when gmv_initial > 500 then 
                     row_number() over (partition by deals.user_id order by gmv_initial is null, gmv_initial < 500, t)
                 end as rn
-            from (select distinct user_id, deal_id, order_id from b2b_mart.dim_deal_products) dim
+            from (select distinct user_id, deal_id, order_id from {{ ref('dim_deal_products') }} ) dim
             left join {{ ref('fact_deals') }} as deals on deals.deal_id = dim.deal_id
                 and deals.next_effective_ts_msk is null
                 and deals.status is not null
             left join {{ ref('fact_order_statuses_change') }} as orders on orders.order_id = dim.order_id
                 and orders.current_status
             left join {{ ref('gmv_by_sources') }} as gmv on gmv.order_id = dim.order_id
+            left join order_number on gmv.order_id = order_number.order_id
             )
             where statusUtms is not null
             )
