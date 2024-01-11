@@ -22,7 +22,7 @@ with statuses as (
 
 psi as (
 select distinct
-    status, status_id, stms as time, _id, merchant_order_id, product_id, lag_status,
+    status, status_id, stms as time, _id as psi_id, merchant_order_id, product_id, lag_status,
     sum(case when lag_status = 40 or lag_status is null then 1 else 0 end) over (partition by merchant_order_id, product_id order by stms) as psi_number,
     sum(case when lag_status = 40 or lag_status is null then 1 else 0 end) over (partition by merchant_order_id, product_id) as psis
 from
@@ -93,7 +93,7 @@ select
     psi.merchant_order_id, 
     psi_number,
     psis,
-    max(case when status_id = 30 then _id end) as psi_id,
+    max(case when status_id = 30 then psi.psi_id end) as psi_id,
     min(case when status_id = 10 then time end) as waiting_time,
     min(case when status_id = 20 then time end) as running_time,
     min(case when status_id = 30 then time end) as ready_time,
@@ -116,7 +116,7 @@ select
     max(client_other) as client_other,
     max(client_comment) as client_comment
 from psi 
-left join problems pr on pr._id = psi._id
+left join problems pr on pr._id = psi.psi_id
 group by 
     psi.product_id, 
     psi.merchant_order_id, 
