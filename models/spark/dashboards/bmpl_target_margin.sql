@@ -23,7 +23,6 @@ WITH gmv_per_day AS (
                 + COALESCE(jl_shipping_info.iteminfo.pricecomponents.weightcost.amount, 0)
                 -- осознанно не включаем jl_shipping_info.itemInfo.priceComponents.vat.amount
                 + COALESCE(jl_shipping_info.iteminfo.pricecomponents.customsduty.amount, 0)
-                + COALESCE(jl_shipping_info.iteminfo.pricecomponents.customsduty.amount, 0)
                 + COALESCE(jl_shipping_info.iteminfo.pricecomponents.refundmarkup.amount, 0)
                 + COALESCE(jl_shipping_info.iteminfo.pricecomponents.insurancefee.amount, 0)
                 + COALESCE(jl_shipping_info.iteminfo.pricecomponents.splitmarkup.amount, 0)
