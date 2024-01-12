@@ -11,11 +11,11 @@
 ) }}
 
 WITH merchants AS (
-    SELECT merchant_id, merchant_type,
+    SELECT merchant_id, max(merchant_type) as merchant_type,
             min(created_ts_msk) as first_order_created
         FROM {{ ref('scd2_mongo_merchant_order') }}
     WHERE dbt_valid_to IS NULL
-    GROUP BY merchant_id, merchant_type
+    GROUP BY merchant_id
 ),
 
 orders as (
