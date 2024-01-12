@@ -76,9 +76,7 @@ deals as (
                 cast(coalesce(round(gmv_initial*1000000), 0) as bigint) as amount,
                 cast(cast(cast(t as timestamp) as double)*1000 as bigint) as date_payed,
                 'USD' as ccy,
-                case when gmv_initial > 500 then 
-                    row_number() over (partition by deals.user_id order by gmv_initial is null, gmv_initial < 500, t)
-                end as rn
+                rn
             from (select distinct user_id, deal_id, order_id from {{ ref('dim_deal_products') }} ) dim
             left join {{ ref('fact_deals') }} as deals on deals.deal_id = dim.deal_id
                 and deals.next_effective_ts_msk is null
