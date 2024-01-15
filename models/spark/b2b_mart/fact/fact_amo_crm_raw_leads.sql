@@ -75,9 +75,9 @@ select distinct
         case when 
             (status in ('discussions', 'Discussions') and pipelineId = '7314451')
             or (status = '59912675' and pipelineId = '7249567')
-            or (pipelineId = '7120174' and status in ('Квалифицирован', 'Лид квалифицирован'))
+            or (pipelineId = '7120174' and status in ('Квалифицирован', 'Лид квалифицирован', 'Уточняем запрос клиента'))
             or (pipelineId = '7403522' and status in ('Квалифицирован', 'Лид квалифицирован'))
-            or (pipelineId = '7120186' and status in ('Квалифицирован', 'Лид квалифицирован'))
+            or (pipelineId = '7120186' and status in ('Квалифицирован', 'Лид квалифицирован', 'Предложение отправлено'))
         then status_ts end) 
         
         over (partition by coalesce(contactId, leadId))) as validated_ts_msk,
