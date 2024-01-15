@@ -12,7 +12,7 @@
 WITH dates AS (
     SELECT DISTINCT DATE(created) AS report_date
     FROM {{ source('pharmacy_landing', 'order') }}
-    WHERE DATE(created) >= '2023-01-01'
+    WHERE DATE(created) >= '2022-06-01'
 ),
 
 stocks_raw AS (
@@ -29,7 +29,7 @@ stocks_raw AS (
             dates.report_date >= DATE(DATE_FORMAT(product.effective_ts, 'yyyy-MM-dd HH:mm:ss'))
             AND dates.report_date < DATE(DATE_FORMAT(product.next_effective_ts, 'yyyy-MM-dd HH:mm:ss'))
     WHERE
-        DATE(product.effective_ts) >= '2023-01-01'
+        DATE(product.effective_ts) >= '2022-06-01'
         AND product.store_state = 'DEFAULT'
         AND product.product_state = 'DEFAULT'
     GROUP BY 1, 2, 3, 4
@@ -42,7 +42,7 @@ orders_info AS (
         pzn,
         product_name
     FROM {{ source('onfy', 'orders_info') }}
-    WHERE order_created_time_cet >= '2022-12-01'
+    WHERE order_created_time_cet >= '2022-06-01'
 ),
 
 pzns AS (
@@ -68,7 +68,7 @@ orders_daily AS (
             AND DATE(pzns.report_date) = DATE(orders_info.order_created_time_cet)
     WHERE
         orders_info.product_id IS NOT NULL
-        AND orders_info.order_created_time_cet >= '2022-12-01'
+        AND orders_info.order_created_time_cet >= '2022-06-01'
     GROUP BY 1, 2, 3
 ),
 
