@@ -126,9 +126,11 @@ models:
         description: Chargeback reason code from provider data
       - name: chb_reason_category
         description: fraud, dispute or unknown values, depend on chb_reason_code
-      - name: has_refund
-        description: 1 if payment order has refund, 0 - the otherwise
-      - name: refund_usd
+      - name: has_refund_att
+        description: 1 if payment order has refund attempt, 0 - the otherwise
+      - name: has_success_refund
+        description: 1 if payment order has success fisished refund attempt, 0 - the otherwise
+      - name: success_refund_usd
         description: refund amount in usd
       - name: amount_eur
         description: target amount in eur
@@ -154,6 +156,12 @@ models:
         description: psp refund fee for success payment order
       - name: psp_chargeback_fee
         description: psp chargeback fee for success payment order
+      - name: shipping_country
+        description: shipping country for payment order
+      - name: ads_source
+        description: advertisement source for device_id from ads.ads_install.ads_source
+      - name: ads_partner_id
+        description: advertisements parthner id for device_id from ads.ads_install.ads_partner_id
 
   - name: payment
     description: Table with payment info data without points, last 365 days

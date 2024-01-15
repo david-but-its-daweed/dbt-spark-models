@@ -95,6 +95,17 @@ orders_info AS (
         {{ source('payments','order_groups') }} AS og USING (order_group_id)
     GROUP BY
         1
+),
+
+ads_info AS (
+    SELECT
+        device_id,
+        source AS ads_source,
+        partner_id AS ads_partner_id
+    FROM
+        {{ source('ads','ads_install') }}
+    WHERE
+        join_date >= DATE_SUB(CURRENT_DATE(), 365)
 )
 
 SELECT
@@ -199,8 +210,9 @@ SELECT
     chb.chb_reason_code,
     chb.chb_reason_category,
     CONCAT(po.device_id, STRING(po.date)) AS dev_date,
-    r.has_refund,
-    r.refund_usd,
+    COALESCE(r.has_refund_att, 0) AS has_refund_att,
+    COALESCE(r.has_success_refund, 0) AS has_success_refund,
+    COALESCE(r.success_refund_usd, 0) AS success_refund_usd,
     po.amount_currency * cur.rate AS amount_eur,
     '<a href="https://admin.joom.it/payments/' || payment_id
     || '" target="_blank">' || payment_id || '</a>' AS p_id_to_admin_link,
@@ -231,7 +243,9 @@ SELECT
     oi.psp_initial,
     oi.psp_refund_fee,
     oi.psp_chargeback_fee,
-    COALESCE(oi.shipping_country, 'unknown') AS shipping_country
+    COALESCE(oi.shipping_country, 'unknown') AS shipping_country,
+    COALESCE(ai.ads_source, '-') AS ads_source,
+    COALESCE(ai.ads_partner_id, '-') AS ads_partner_id
 FROM
     {{ source('payments','payment_order') }} AS po
 LEFT JOIN
@@ -253,6 +267,8 @@ LEFT JOIN
     categories AS c USING (target_id)
 LEFT JOIN
     orders_info AS oi USING (payment_order_id)
+LEFT JOIN
+    ads_info AS ai USING (device_id)
 WHERE
-    po.payment_type != 'points'
-    AND (TO_DATE('{{ var("start_date_ymd") }}') - po.date) < 750
+    po.date >= DATE_SUB(CURRENT_DATE(), 750)
+    AND po.payment_type != 'points'
