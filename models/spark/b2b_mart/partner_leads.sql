@@ -69,7 +69,7 @@ deals as (
                 ) as bigint) as statusUtms,
                 
                 case
-                    when cast(deals.status_int as int) > 100 then deals.status
+                    when cast(deals.status_int as int) > 100 then issues.status_low
                     when orders.status = 'cancelled' then orders.sub_status
                 end as rejectReason,
                 
@@ -81,6 +81,7 @@ deals as (
             left join {{ ref('fact_deals') }} as deals on deals.deal_id = dim.deal_id
                 and deals.next_effective_ts_msk is null
                 and deals.status is not null
+            left join (select status, status_low from {{ ref('key_issue_status') }}) issues on deals.status = issues.status
             left join {{ ref('fact_order_statuses_change') }} as orders on orders.order_id = dim.order_id
                 and orders.current_status
             left join {{ ref('gmv_by_sources') }} as gmv on gmv.order_id = dim.order_id
