@@ -66,10 +66,10 @@ where pipeline.name = 'Продажи Rocket'
 status_history as (
     select
         leadId, 
-        max(case when status in ('Заявка на расчет') then created_at end) as request_retrieval,
-        max(case when status in ('Предварительный расчет', 'Уточнение информации у Клиента', 'Ожидание обратной связи') then created_at end) as info_clarification,
+        max(case when status in ('Заявка на расчет', 'Предварительный расчет') then created_at end) as request_retrieval,
+        max(case when status in ('Уточнение информации у Клиента') then created_at end) as info_clarification,
         max(case when status in ('Подготовка КП', 'Запрос на поиск', 'RFQ запрос отправлен') then created_at end) as find_retrieval,
-        max(case when status in ('КП отправлено/Ожидание ОС') then created_at end) as pricing_sent,
+        max(case when status in ('КП отправлено/Ожидание ОС', 'Ожидание обратной связи') then created_at end) as pricing_sent,
         max(case when status in ('Переговоры') then created_at end) as negotiation,
         max(case when status in ('Оформление сделки/Ожидание оплаты', 'Оформление сделки/Подписание и ожидание оплаты') then created_at end) as signing_and_payment,
         max(case when status in ('Производство и доставка') then created_at end) as manufacturing
@@ -146,9 +146,11 @@ select
   amo.amo_id, 
   amo.phone,
   amo.created_at as user_created_time, 
-  amo.validation_status,
+  CASE WHEN deal_statuses.deal_id IS NOT NULL THEN 'Validated'
+    ELSE amo.validation_status END AS validation_status,
   amo.validated_date,
-  amo.reject_reason,
+  CASE WHEN deal_statuses.deal_id IS NOT NULL THEN null
+    ELSE amo.reject_reason END AS reject_reason,
   campaign,
   deal_statuses.deal_id, loss_reason, status_name, 
   request_retrieval, info_clarification, find_retrieval, pricing_sent,
