@@ -26,7 +26,13 @@ from
 row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
-and payload.updatedTime is not null 
+    and payload.updatedTime is not null 
+    {% if is_incremental() %}
+       and partition_date >= date'{{ var("start_date_ymd") }}'
+       and partition_date < date'{{ var("end_date_ymd") }}'
+     {% else %}
+    and partition_date   >= date'2022-05-19'
+     {% endif %}
 )
 where rn = 1 
 )
