@@ -103,7 +103,7 @@ orders_ext0 AS (
         points_initial > 0 AS is_with_points,
         points_initial,
         points_final,
-        ARRAY_CONTAINS(discounts.type, 'specialPriceFinal') AS is_with_special_price,
+        COALESCE(ARRAY_CONTAINS(discounts.type, 'specialPriceFinal'), FALSE) AS is_with_special_price,
         ROUND(COALESCE(FILTER(discounts, x -> x.type = 'specialPriceFinal')[0].amount * 1e6, 0), 3) AS special_price_discount,
         discounts,
 
