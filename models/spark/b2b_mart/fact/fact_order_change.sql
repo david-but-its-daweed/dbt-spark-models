@@ -336,7 +336,7 @@ where type = 'orderChangedByAdmin'
 )
 ),
 
- a as (
+a as (
 select
 prices.event_id,
     partition_date_msk,
@@ -362,9 +362,9 @@ prices.event_id,
     tag, 
     stage,
     fee *
-        case when from.to = 'USD' then 1/from.rate/(1 - to.markup_rate)
-            when to.from = 'USD' then to.rate*(1 - to.markup_rate)
-        end as fee,
+        (case when from.to = 'USD' then from.rate*(1 - to.markup_rate)
+            when to.from = 'USD' then 1/to.rate/(1 - to.markup_rate)
+        end) as fee,
     fee as fee_original,
     from.rate as from_rate,
     to.rate as to_rate,
