@@ -28,7 +28,7 @@ SELECT
     COALESCE(is_success = 1, FALSE) AS is_success,
     COALESCE(has_cascade = 1, FALSE) AS is_with_cascade_of_payment_attempts,
     COALESCE(has_chb = 1, FALSE) AS is_with_chargeback,
-    COALESCE(has_refund = 1, FALSE) AS is_refunded,
+    COALESCE(has_success_refund = 1, FALSE) AS is_refunded,
 
     payment_type,
     payment_origin,
@@ -44,7 +44,7 @@ SELECT
     UPPER(currency) AS user_currency,
     amount_currency AS payment_amount_user_currency,
     amount_usd AS payment_amount,
-    refund_usd AS refund_amount,
+    success_refund_usd AS refund_amount,
 
     antifraud_status,
 
