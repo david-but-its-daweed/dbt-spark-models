@@ -376,7 +376,7 @@ union all
 select * from other_prices
 ) prices
 left join order_rates as from on from.event_id = prices.event_id and currency = from.from and from.to = 'USD'
-left join order_rates as to on from.event_id = prices.event_id and currency = to.to and to.from = 'USD'
+left join order_rates as to on to.event_id = prices.event_id and currency = to.to and to.from = 'USD'
 )
 
 SELECT a.event_id,
