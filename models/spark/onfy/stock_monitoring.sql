@@ -90,13 +90,13 @@ SELECT
     orders.event_date,
     orders.pzn,
     orders.product_name,
-    orders.quantity AS orders_number,
-    orders.rolling_sum_quantity AS 30d_orders_number,
+    orders.quantity AS items_quantity,
+    orders.rolling_sum_quantity AS 30d_items_quantity,
     orders.popularity_rank,
     stocks.manufacturer_name,
     stocks.store_name,
     COALESCE(stocks.stock_quantity, 0) AS stock_quantity,
-    stocks.price AS min_price
+    stocks.price AS item_price
 FROM popularity_ranks_orders AS orders
 LEFT JOIN stocks_raw AS stocks
     ON
