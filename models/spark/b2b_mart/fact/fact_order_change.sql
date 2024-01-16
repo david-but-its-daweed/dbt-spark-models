@@ -63,7 +63,7 @@ where type = 'orderChangedByAdmin'
 )
 ),
 
-order_rates_1 as (
+order_rates as (
 select * from
 (
 select event_id, 
@@ -75,31 +75,6 @@ cross join currencies_list
 order by event_id
 )
 where rate is not null
-),
-
-order_rates as (
-select *
-
-from order_rates_1
-
-union all 
-select 
-    event_id,
-    rate, 
-    markup_rate, 
-    case when from = 'CNY' then 'CNH' else from end as from,
-    case when to = 'CNY' then 'CNH' else to end as to
-from order_rates_1
-where from = 'CNY' or to = 'CNY'
-union all 
-select
-    event_id,
-    rate, 
-    markup_rate, 
-    case when from = 'CNH' then 'CNY' else from end as from,
-    case when to = 'CNH' then 'CNY' else to end as to
-from order_rates_1
-where from = 'CNH' or to = 'CNH' and not (from = 'CNY' or to = 'CNY')
 ),
 
 typed_prices as 
@@ -419,7 +394,7 @@ SELECT a.event_id,
         SUM(IF(type = 'certification' and stage = 'final', fee,  0)) AS certification_final_price,
         SUM(IF(type = 'vat' and stage = 'final', fee,  0)) AS vat_final_price,
         SUM(IF(type = 'generalCargo' and stage = 'final', fee,  0)) AS general_cargo_final_price,
-        SUM(case when tag = 'grant' and stage = 'final' then -fee when stage = 'final' then fee end) AS total_confirmed_price,
+        SUM(case when tag = 'grant' and stage = 'confirmed' then -fee when stage = 'final' then fee end) AS total_confirmed_price,
         SUM(IF(tag = 'ddp' and stage = 'confirmed', fee, 0)) AS ddp_confirmed_price,
         SUM(IF(tag = 'dap' and stage = 'confirmed', fee, 0)) AS dap_confirmed_price,
         SUM(IF(tag = 'ewx' and stage = 'confirmed', fee, 0)) AS ewx_confirmed_price,
