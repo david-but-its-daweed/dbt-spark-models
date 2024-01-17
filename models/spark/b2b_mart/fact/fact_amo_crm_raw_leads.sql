@@ -18,12 +18,6 @@ when source = 'analytics' then 'Analytics'
 else source end as source
 from {{ ref('key_amocrm_source') }}),
 
-loss_reasons as (
-select leadId,
-explode(lossReasons) as loss_reasons
-from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
-),
-
 statuses as (
 select leadId,
 explode(statusChangedEvents) as st
@@ -33,8 +27,8 @@ from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
 
 select distinct
         AccountId as account_id,
-        LossReasonId as loss_reason_id,
-        max(case when LossReasonId = loss_reasons.id then loss_reasons.name end) over (partition by coalesce(contactId, leadId)) as loss_reason,
+        null as loss_reason_id,
+        loss_reason,
         companyId as company_id,
         companyName as company_name,
         coalesce(contactId, leadId) as contact_id,
@@ -87,7 +81,7 @@ select distinct
     (
     select
         AccountId,
-        LossReasonId,
+        loss_reason,
         companyId,
         companyName,
         contactId,
@@ -110,7 +104,7 @@ select distinct
     (
     select distinct
         AccountId,
-        LossReasonId,
+        rejectReason as loss_reason,
         companyId,
         companyName,
         contactId,
@@ -131,4 +125,4 @@ select distinct
     left join source s on amo.source = s.id
     left join (select distinct funnel_status, user_id, amo_id from {{ ref('fact_customers') }}) on leadId = amo_id
     ) left join statuses using (leadId)
-    ) left join loss_reasons using (leadId)
+    )
