@@ -56,7 +56,7 @@ select
     count(distinct transactions.order_id) as payments,
     if(
         count(distinct transactions.order_id) = 0 or 
-        sum(gross_profit_initial + promocode_discount) / (count(distinct sessions.window_event_id) * 0.44 + sum(promocode_discount)) <= 0.35, 0, 
+        sum(gross_profit_initial + promocode_discount) / (count(distinct sessions.window_event_id) * 0.44) <= 0.35, 0, 
         count(distinct transactions.order_id) / count(distinct sessions.event_id)
     ) as cr,
     count(distinct sessions.event_id) * 0.44 as cost,
