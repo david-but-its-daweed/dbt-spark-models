@@ -27,7 +27,6 @@ from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
 
 select distinct
         AccountId as account_id,
-        null as loss_reason_id,
         loss_reason,
         companyId as company_id,
         companyName as company_name,
