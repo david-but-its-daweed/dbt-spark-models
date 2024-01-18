@@ -2,3 +2,7 @@ sources:
   - name: onfy
     tables:
       - name: orders_info
+  - name: pharmacy_landing
+    tables:
+      - name: product_category_flat
+      - name: category
