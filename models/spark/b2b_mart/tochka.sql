@@ -137,7 +137,7 @@ select
   amo.created_at as user_created_time, 
   CASE WHEN deal_statuses.deal_id IS NOT NULL THEN 'Validated'
     ELSE amo.validation_status END AS validation_status,
-  amo.validated_date,
+  coalesce(amo.validated_date, request_retrieval) as validated_date,
   CASE WHEN deal_statuses.deal_id IS NOT NULL THEN null
     ELSE amo.reject_reason END AS reject_reason,
   campaign,
