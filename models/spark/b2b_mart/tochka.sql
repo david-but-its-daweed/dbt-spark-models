@@ -44,16 +44,6 @@ and all_leads.lead_id not in (
 ),
 
 
-loss_reasons as (
-    select distinct col.id as loss_reason_id, col.name as loss_reason
-    from
-    (
-    select explode(lossReasons)
-    
-    from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
-    )
-),
-
 statuses as (
 select distinct col._id as status_id, col.name as status_name
 from
@@ -92,11 +82,10 @@ status_history as (
 ),
 
 deal_statuses as (
-select leadId as deal_id, loss_reason, status_name, 
+select leadId as deal_id, rejectReason as loss_reason, status_name, 
         request_retrieval, info_clarification, find_retrieval, pricing_sent,
         negotiation, signing_and_payment, manufacturing
 from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
-left join loss_reasons on lossReasonId = loss_reason_id
 left join statuses on status = status_id
 left join status_history using (leadId)
 ),
