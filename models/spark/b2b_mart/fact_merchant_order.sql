@@ -98,7 +98,7 @@ select
 orderId, _id, 
 advancePercent, 
 merchantId,
-paymentType, history.paymentStatus as status, from_unixtime(history.utms/1000) as time, 
+paymentType, history.paymentStatus as status, coalesce(from_unixtime(history.statusDate/1000), from_unixtime(history.utms/1000)) as time, 
 history.requestedPrice.amount, history.requestedPrice.ccy, 
 coalesce(order_rates.rate, 1/order_rates_1.rate) as rate
 from
