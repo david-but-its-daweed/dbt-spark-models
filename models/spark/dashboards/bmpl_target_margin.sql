@@ -3,7 +3,7 @@
     materialized='table',
     meta = {
       'model_owner' : '@gusev',
-      'priority_weight': '100'
+      'priority_weight': '1000',
       'bigquery_load': 'true'
     }
   )
