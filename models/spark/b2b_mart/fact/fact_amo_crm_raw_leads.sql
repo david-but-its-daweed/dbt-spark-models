@@ -56,8 +56,8 @@ select distinct
         millis_to_ts_msk(min(
         case when 
         pipelineId = '7314451'
-        or (pipelineId = '7249567' and status_id in ('59912671', '59419107'))
-        or (pipelineId = '7553579' and status_id = '61650499')
+        or (pipelineId = '7249567' and status in ('IN PROGRESS', 'In progress'))
+        or (pipelineId = '7553579' and status = 'In progress')
         or pipelineId = '7120174'
         or (pipelineId = '7403522' and status = 'Взят в работу')
         or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
@@ -66,8 +66,8 @@ select distinct
         
         millis_to_ts_msk(min(
         case when 
-            (status in ('discussions', 'Discussions') and pipelineId = '7314451')
-            or (status = '59912675' and pipelineId = '7249567')
+            (pipelineId = '7314451' and status in ('discussions', 'Discussions', 'DISCUSSIONS'))
+            or (pipelineId = '7249567' and status in ('discussions', 'Discussions', 'DISCUSSIONS'))
             or (pipelineId = '7120174' and status in ('Квалифицирован', 'Лид квалифицирован', 'Уточняем запрос клиента'))
             or (pipelineId = '7403522' and status in ('Квалифицирован', 'Лид квалифицирован'))
             or (pipelineId = '7120186' and status in ('Квалифицирован', 'Лид квалифицирован', 'Предложение отправлено'))
