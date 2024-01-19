@@ -10,71 +10,9 @@
 ) }}
 with 
 statuses as 
-(select 'RequestRetrieval' as status,
-10 as status_int
-union all
-select 'TrialPricing' as status,
-20 as status_int
-union all
-select 'WaitingTrialPricingFeedback' as status,
-30 as status_int
-union all
-select 'RFQ' as status,
-40 as status_int
-union all
-select 'PreparingSalesQuote' as status,
-50 as status_int
-union all
-select 'WaitingSalesQuoteFeedback' as status,
-60 as status_int
-union all
-select 'FormingOrder' as status,
-70 as status_int
-union all
-select 'SigningAndWaitingForPayment' as status,
-80 as status_int
-union all
-select 'ManufacturingAndDelivery' as status,
-90 as status_int
-union all
-select 'DealCompleted' as status,
-100 as status_int
-union all
-select 'PriceTooHigh' as status,
-110 as status_int
-union all
-select 'ClientNoResponse' as status,
-120 as status_int
-union all
-select 'ProductNotFound' as status,
-130 as status_int
-union all
-select 'ImpossibleToDeliver' as status,
-140 as status_int
-union all
-select 'UnsuitablePartnershipTerms' as status,
-150 as status_int
-union all
-select 'Other' as status,
-160 as status_int
-union all
-select 'GoingIntoDetails' as status,
-170 as status_int
-union all
-select 'InProgress' as status,
-180 as status_int
-union all
-select 'Completed' as status,
-190 as status_int
-union all
-select 'Failed' as status,
-200 as status_int
-union all
-select 'Cancelled' as status,
-210 as status_int
-union all
-select 'UnableToWork' as status,
-220 as status_int),
+(select status,
+    id as status_int
+from {{ ref('key_issue_status')}}),
 
 t as (select distinct 
 deal_id, 
