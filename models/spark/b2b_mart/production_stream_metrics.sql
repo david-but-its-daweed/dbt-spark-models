@@ -9,15 +9,18 @@
 ) }}
 
 with statuses as (
-  select payload.id as id,
-    payload.status,
-    min(TIMESTAMP(millis_to_ts_msk(payload.updatedTime))) as day
-    from {{ source('b2b_mart', 'operational_events') }}
-    WHERE `type`  ='merchantOrderChanged'
-    group by payload.id,
-        payload.status
-    
-),
+    select _id as id, 
+        status.status as status,
+        min(TIMESTAMP(millis_to_ts_msk(coalesce(col.statusDate, col.utms)))) as day
+        from
+        (
+        select _id, explode(payment.paymentStatusHistory)
+        from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
+        ) history
+        left join {{ ref('key_payment_status') }} status on col.paymentStatus = status.status_int
+        group by 1, 2
+    )
+,
 
 added_orders as (
     select 
