@@ -56,8 +56,8 @@ select distinct
         millis_to_ts_msk(min(
         case when 
         pipelineId = '7314451'
-        or (pipelineId = '7249567' and status in ('59912671', '59419107'))
-        or (pipelineId = '7553579' and status = '61650499')
+        or (pipelineId = '7249567' and status_id in ('59912671', '59419107'))
+        or (pipelineId = '7553579' and status_id = '61650499')
         or pipelineId = '7120174'
         or (pipelineId = '7403522' and status = 'Взят в работу')
         or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
