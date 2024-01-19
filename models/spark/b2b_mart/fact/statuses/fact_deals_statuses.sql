@@ -37,9 +37,9 @@ select
   max(case when status = 'DealCompleted' then min_date end) as deal_completed
 from 
 (select deal_id, status, min_date, next_status, next_status_date, user_id, country, owner_email, owner_id, owner_role
-from `b2b_mart.fact_deals_statuses_change`
+from {{ ref('fact_deals_statuses_change') }}
 left join (
-  select distinct deal_id, user_id, country, owner_email, owner_id, owner_role from b2b_mart.fact_deals
+  select distinct deal_id, user_id, country, owner_email, owner_id, owner_role from {{ ref('fact_deals') }}
   ) using (deal_id)
 )
 group by deal_id, 
