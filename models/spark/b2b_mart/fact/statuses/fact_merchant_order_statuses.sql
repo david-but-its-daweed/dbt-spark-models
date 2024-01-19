@@ -66,13 +66,17 @@ from
         select *, first_value(payment_status) over (partition by merchant_order_id order by event_ts_msk desc) as last_status
         from
     (
-    SELECT distinct
-        merchant_order_id,
-        status as payment_status,
-        event_ts_msk
-    FROM {{ ref('statuses_events') }}
-    WHERE entity = 'merchant order'
-)
+    select _id as merchant_order_id, 
+        status.status as payment_status,
+        min(TIMESTAMP(millis_to_ts_msk(coalesce(col.statusDate, col.utms)))) as event_ts_msk
+        from
+        (
+        select _id, explode(payment.paymentStatusHistory)
+        from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
+        ) history
+        left join {{ ref('key_payment_status') }} status on col.paymentStatus = status.status_int
+        group by 1, 2
+    )
     )
 group by merchant_order_id
 )
