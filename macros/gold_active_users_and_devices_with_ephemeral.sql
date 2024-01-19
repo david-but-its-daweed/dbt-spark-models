@@ -55,7 +55,7 @@ uniq_regions AS (
 first_order_dates AS (
     SELECT
         {{ device_or_user_id }},
-        min(order_date_msk) as dt
+        MIN(order_date_msk) as dt
     FROM {{ ref('gold_orders') }}
     GROUP BY 1
 ),

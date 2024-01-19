@@ -59,13 +59,13 @@ models:
     - name: is_converted
       description: Flag indicating whether `device_id` made a purchase on the considered date
     - name: is_rd1
-      description: Flag indicating whether `device_id` returned to the service after 1 calendar day (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `device_id` returned to the service after 3 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `device_id` returned to the service after 7 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `device_id` returned to the service after 14 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `device_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -135,13 +135,13 @@ models:
     - name: is_converted
       description: Flag indicating whether `device_id` made a purchase on the considered date
     - name: is_rd1
-      description: Flag indicating whether `device_id` returned to the service after 1 calendar day (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `device_id` returned to the service after 3 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `device_id` returned to the service after 7 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `device_id` returned to the service after 14 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `device_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -173,7 +173,7 @@ models:
     - name: app_language
       description: User device language
     - name: platform
-      description: User device platform
+      description: User device platform (random value across all device_ids)
     - name: legal_entity
       description: Legal entity through which payments will be made for `device_id` (ANY value is taken for `user_id`). Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main)
     - name: join_date_msk
@@ -201,13 +201,13 @@ models:
     - name: is_converted
       description: Flag indicating whether `user_id` made a purchase on the considered date
     - name: is_rd1
-      description: Flag indicating whether `user_id` returned to the service after 1 calendar day (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `user_id` returned to the service after 3 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `user_id` returned to the service after 7 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `user_id` returned to the service after 14 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -239,7 +239,7 @@ models:
     - name: app_language
       description: User device language
     - name: platform
-      description: User device platform
+      description: User device platform (random value across all device_ids)
     - name: legal_entity
       description: Legal entity through which payments will be made for `device_id` (ANY value is taken for `user_id`). Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main)
     - name: join_date_msk
@@ -267,13 +267,13 @@ models:
     - name: is_converted
       description: Flag indicating whether `user_id` made a purchase on the considered date
     - name: is_rd1
-      description: Flag indicating whether `user_id` returned to the service after 1 calendar day (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `user_id` returned to the service after 3 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `user_id` returned to the service after 7 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `user_id` returned to the service after 14 calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -286,6 +286,70 @@ models:
       description: Flag indicating whether `user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `user_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+
+- name: gold_active_real_users
+  description: Key metrics of a real_user on a specific date. Primary key - `real_user_id` and `date_msk`
+  columns:
+    - name: date_msk
+      description: Date of activity in UTC+3
+    - name: real_user_id
+      description: "Unique user ID, not account ID [`user_id`] (solves the problem that the same user can have multiple `user_id` and have multiple devices). All devices within each connected graph are merged into one user. More details can be found here: https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c"
+    - name: country_code
+      description: Country code (A2 code). In case the user requests the deletion of their personal data from our storage, the field will have an empty string '' (random value across all device_ids)
+    - name: top_country_code
+      description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other' (random value across all device_ids)
+    - name: region_name
+      description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other' (random value across all device_ids)
+    - name: app_language
+      description: Real User device language (random value across all device_ids)
+    - name: legal_entity
+      description: Legal entity through which payments will be made for `device_id` (ANY value is taken for `user_id`). Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main) (random value across all device_ids)
+    - name: app_entity
+      description: "The name of the online store where the order was placed. By 'online store,' we mean the distinction between 'Joom' (the main marketplace), 'Joom Geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'CoolBe' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019) (random value across all device_ids)"
+    - name: join_date_msk
+      description: Date of the real_user's first activity in UTC+3
+    - name: real_user_segment
+      description: Segment name, true for `real_user_id`. Possible values - `Non-buyers` - no orders in the last 3 months, `Occasional buyers` - 1 or 2 months with orders in the last 3 months, `Regular buyers` - 3/3 last months with orders or 4+/6, `Constant buyers` - 10+/12 last months with orders
+    - name: is_new_real_user
+      description: Flag indicating whether the user is new (considered as `date_msk = join_date_msk`)
+    - name: real_user_lifetime
+      description: Calendar lifetime of `real_user_id` in days
+    - name: previous_activity_real_user_group
+      description: Type of `real)user_id` based on time of absence. Takes 3 states. 'new' - date of activity is equal to the date of the first activity. 'regular' - previous activity occurred in the interval [1 ; 28]. 'reactivated' - previous activity was more than 28 days ago.
+    - name: prev_date_msk_lag
+      description: Number of calendar days elapsed for `real_user_id` since the previous activity in UTC+3 (If there is none, it will be calculated based on `join_date_msk`)
+    - name: next_date_msk_lag
+      description: Number of calendar days until the next activity of `real_user_id` in UTC+3
+    - name: gmv_per_day_initial
+      description: Sum of GMV Initial for user orders on the considered date
+    - name: gmv_per_day_final
+      description: Sum of GMV Final for user orders on the considered date
+    - name: number_of_orders
+      description: Number of `order_group_id` for the real_user on the considered date
+    - name: is_payer
+      description: Flag indicating whether `real_user_id` is a payer on the current date (whether they made any purchases <= `date_msk` in the current row)
+    - name: is_converted
+      description: Flag indicating whether `real_user_id` made a purchase on the considered date
+    - name: is_rd1
+      description: Flag indicating whether `real_user_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
+    - name: is_rd3
+      description: Flag indicating whether `real_user_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
+    - name: is_rd7
+      description: Flag indicating whether `real_user_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
+    - name: is_rd14
+      description: Flag indicating whether `real_user_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
+    - name: is_rw1
+      description: Flag indicating whether `real_user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+    - name: is_rw2
+      description: Flag indicating whether `real_user_id` returned to the service within the 2nd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+    - name: is_rw3
+      description: Flag indicating whether `real_user_id` returned to the service within the 3rd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+    - name: is_rw4
+      description: Flag indicating whether `real_user_id` returned to the service within the 4th calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+    - name: is_churned_14
+      description: Flag indicating whether `real_user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: is_churned_28
+      description: Flag indicating whether `real_user_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
 
 - name: gold_countries
   description: Information about countries. Primary key - `country_code` or `country_code`
