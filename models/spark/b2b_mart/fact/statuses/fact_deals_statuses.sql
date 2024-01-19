@@ -14,6 +14,7 @@ select
   user_id,
   country,
   owner_email, owner_id, owner_role,
+  created_ts_msk,
   max(case when next_status is null then status end) as current_status,
   max(case when next_status is null then min_date end) as current_status_date,
   max(case when status = 'RequestRetrieval' then min_date end) as request_retrieval,
@@ -36,13 +37,13 @@ select
   max(case when status = 'ManufacturingAndDelivery' then next_status_date end) as manufacturing_and_delivery_end,
   max(case when status = 'DealCompleted' then min_date end) as deal_completed
 from 
-(select deal_id, status, min_date, next_status, next_status_date, user_id, country, owner_email, owner_id, owner_role
+(select deal_id, created_ts_msk, status, min_date, next_status, next_status_date, user_id, country, owner_email, owner_id, owner_role
 from {{ ref('fact_deals_statuses_change') }}
 left join (
-  select distinct deal_id, user_id, country, owner_email, owner_id, owner_role from {{ ref('fact_deals') }}
+  select distinct deal_id, user_id, country, owner_email, owner_id, owner_role, created_ts_msk from {{ ref('fact_deals') }}
   ) using (deal_id)
 )
 group by deal_id, 
   user_id,
   country,
-  owner_email, owner_id, owner_role
+  owner_email, owner_id, owner_role, created_ts_msk
