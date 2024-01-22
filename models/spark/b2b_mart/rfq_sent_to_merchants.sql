@@ -57,6 +57,7 @@ is_top,
 d.deal_id,
 d.customer_request_id,
 d.user_id,
+country,
 sent_status,
 category_id,
 max(variants.price.amount/1000000) as price_rfq,
@@ -65,6 +66,7 @@ sum(variants.price.amount/1000000*variants.quantity) as sum_price
 from
 (select 
 r._id as rfq_request_id,
+country,
 friendlyId as rfq_friendly_id,
 millis_to_ts_msk(r.ctms) as created_time,
 isTop as is_top,
@@ -76,11 +78,11 @@ categories[0] as category_id
 from {{ source('mongo', 'b2b_core_customer_rfq_request_daily_snapshot') }} r
 ) r
 left join (
-    select customer_request_id, deal_id, user_id
+    select customer_request_id, deal_id, user_id, country
     from {{ ref('fact_customer_requests') }}
     where next_effective_ts_msk is null
 ) d on r.customer_request_id = d.customer_request_id
-group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10),
+group by 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11),
 
 
 offer_product as (select order_id, customer_request_id, offer_id, product_id, deal_id, 
@@ -119,6 +121,7 @@ from
     o.deal_id,
     o.customer_request_id,
     user_id,
+    country,
     sent_status,
     o.category_id,
     price_rfq,
