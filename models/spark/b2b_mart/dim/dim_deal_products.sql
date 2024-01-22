@@ -79,9 +79,8 @@ order_products as (
 ),
 
 users as (
-    select distinct user_id, fake
-    from {{ ref('dim_user') }}
-    where next_effective_ts_msk is null
+    select distinct user_id, country
+    from {{ ref('fact_customers') }}
 ),
 
 offers as (
@@ -179,6 +178,7 @@ select distinct
   products_list.deal_id,
   deals_data.deal_friendly_id,
   coalesce(deals_data.user_id, orders_data.user_id) as user_id,
+  u.country,
   deals_data.customer_request_id,
   deals_data.offer_id,
   deals_data.offer_product_id,
@@ -201,13 +201,13 @@ left join orders_data on products_list.deal_id = orders_data.deal_id
   and coalesce(products_list.product_id, '') = coalesce(orders_data.product_id, '')
   and coalesce(products_list.order_offer_product_id, '') = coalesce(orders_data.order_product_id, '')
 join users u on coalesce(deals_data.user_id, orders_data.user_id) = u.user_id
-where (fake is null or not fake)
 
 union all
 select distinct
   '' as deal_id,
   '' as deal_friendly_id,
   orders_data.user_id,
+  u.country,
   '' as customer_request_id,
   '' as offer_id,
   '' as offer_product_id,
@@ -224,4 +224,4 @@ select distinct
 
 from orders_data 
 join users u on orders_data.user_id = u.user_id
-where (fake is null or not fake) and deal_id is null
+where deal_id is null
