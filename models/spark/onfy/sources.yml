@@ -6,3 +6,4 @@ sources:
     tables:
       - name: product_category_flat
       - name: category
+      - name: checkout
