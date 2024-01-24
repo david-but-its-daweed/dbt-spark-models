@@ -97,8 +97,9 @@ t as (
 
             from
             (select entityId as deal_id, explode(statusHistory) as statuses, ctms
-                from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
-                where type = 4 
+                from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }} i
+                left join {{ ref('key_issue_type') }} it ON CAST(i.type AS INT) =  CAST(it.id AS INT)
+                where it.type like '%CloseTheDeal%'
                 )
                 order by date desc, deal_id
             )
