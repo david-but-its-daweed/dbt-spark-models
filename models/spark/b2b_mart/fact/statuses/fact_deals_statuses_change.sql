@@ -40,8 +40,9 @@ select deal_id, millis_to_ts_msk(statuses.ctms) as date,
 statuses.status as status, statuses.moderatorId as owner_id
 from
 (select entityId as deal_id, explode(statusHistory) as statuses, etms
-    from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
-    where type = 4 
+    from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }} i
+    left join {{ ref('key_issue_type') }} it ON CAST(i.type AS INT) =  CAST(it.id AS INT)
+    where it.type like '%CloseTheDeal%'
     )
     order by date desc, deal_id
 )
