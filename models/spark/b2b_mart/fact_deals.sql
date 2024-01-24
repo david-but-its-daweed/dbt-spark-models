@@ -28,7 +28,7 @@ owner AS (
         ks.id as status_int
     FROM {{ ref('fact_issues') }} AS fi
     LEFT JOIN key_status AS ks ON fi.status = ks.status
-    WHERE type = 'CloseTheDeal' AND next_effective_ts_msk IS NULL
+    WHERE type like '%CloseTheDeal%' AND next_effective_ts_msk IS NULL
 ),
 
 purchase AS (
