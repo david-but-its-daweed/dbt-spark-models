@@ -44,6 +44,7 @@ SELECT
     order_parcel.store_id,
     store.name AS store_name,
     store_delivery.express,
+    COALESCE (order_paketshop.order_id IS NOT NULL, FALSE) AS is_packetshop,
     order_parcel.delivery_price AS parcel_delivery_price,
     order_parcel_item.product_id,
     medicine.country_local_id AS pzn,
@@ -73,3 +74,6 @@ INNER JOIN devices_mart
 INNER JOIN product_names
     ON
         product_names.product_id = order_parcel_item.product_id
+LEFT JOIN {{ source('pharmacy_landing', 'order_paketshop') }} AS order_paketshop
+    ON
+        ord.id = order_paketshop.order_id
