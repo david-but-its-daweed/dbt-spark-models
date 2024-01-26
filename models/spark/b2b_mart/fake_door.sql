@@ -17,7 +17,7 @@ row_number() over (partition by user_id order by interaction_create_time) as rn
 from {{ ref('fact_attribution_interaction') }}
 where interaction_type = 10
 and country = 'BR'
-and interaction_create_date >= '2024-01-21'
+and interaction_create_date >= '2024-01-19'
 ),
 
 requests as (
