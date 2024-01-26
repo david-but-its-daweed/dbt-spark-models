@@ -200,3 +200,7 @@ sources:
     tables:
       - name: coolbe_product_labels
 
+  - name: joompro_mart
+    tables:
+      - name: mercadolibre_products_snapshot
+      - name: mercadolibre_categories
