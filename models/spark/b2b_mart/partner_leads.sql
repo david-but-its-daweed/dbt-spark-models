@@ -103,6 +103,23 @@ phone as (
             group by lead_id
         ),
 
+dim_user as (
+            select user_id, min(effective_ts_msk) as validation_ts,
+            max(utms) as utms
+            from
+            (
+                select 
+                user_id, effective_ts_msk,
+                case when funnel_status in ('Rejected') then 'Rejected'
+                when funnel_status in ('Converting', 'ValidatedNoConversionAttempt', 'Converted', 'ConversionFailed', 'Lost') then 'Validated' else 'InProgress' end as validation_status,
+                next_effective_ts_msk,
+                cast(update_ts_msk as double)* (1000) as utms
+            from {{ ref('dim_user') }}
+            where next_effective_ts_msk is null
+            )
+            group by user_id
+        ),
+
 amo as (
             select oid as user_id, 
             named_struct(
@@ -119,18 +136,30 @@ amo as (
             select distinct
                 user_id as oid,
                 cast(amo_leads.lead_id as string) as amoLeadId,
-                cast((cast(created_ts_msk as double) * 1000) as bigint) as ctms,
-                coalesce(cast((cast(current_status_ts as double) * 1000) as bigint),
-                        cast((cast(created_ts_msk as double) * 1000) as bigint)) as utms,
+                cast((cast(
+                    coalesce(
+                        amo_leads.created_ts_msk, dim_user.created_ts_msk
+                    ) as double) * 1000) as bigint) as ctms,
+                coalesce(
+                        cast((cast(current_status_ts as double) * 1000) as bigint),
+                        cast((cast(
+                            coalesce(
+                                amo_leads.created_ts_msk, dim_user.created_ts_msk
+                            ) as double) * 1000) as bigint)) as utms,
                 case when funnel_status is null or funnel_status = 'Validating' then 1
                     when funnel_status = 'Rejected' then 0 else 2 end as validationStatus,
                 coalesce(cast((cast(current_status_ts as double) * 1000) as bigint),
-                        cast((cast(created_ts_msk as double) * 1000) as bigint)) as validationStatusUtms,
+                        cast((cast(
+                        coalesce(
+                            amo_leads.created_ts_msk, dim_user.created_ts_msk
+                        )
+                        as double) * 1000) as bigint)) as validationStatusUtms,
                 phones,
                 partnerId
             from {{ ref('fact_amo_crm_raw_leads') }} as amo_leads
             left join partners on lower(amo_leads.source) = lower(partners.partner_source)
             left join phone on (phone.lead_id) = (amo_leads.lead_id)
+            left join dim_user using (user_id)
             where type = 'Partners' and validation
             )
             where ctms is not null
@@ -148,22 +177,6 @@ admin_phone as (
             group by 1
         ),
 
-dim_user as (
-            select user_id, min(effective_ts_msk) as validation_ts,
-            max(utms) as utms
-            from
-            (
-                select 
-                user_id, effective_ts_msk,
-                case when funnel_status in ('Rejected') then 'Rejected'
-                when funnel_status in ('Converting', 'ValidatedNoConversionAttempt', 'Converted', 'ConversionFailed', 'Lost') then 'Validated' else 'InProgress' end as validation_status,
-                next_effective_ts_msk,
-                cast(update_ts_msk as double)* (1000) as utms
-            from {{ ref('dim_user') }}
-            where next_effective_ts_msk is null
-            )
-            group by user_id
-        ),
 
 admin as (
         select 
