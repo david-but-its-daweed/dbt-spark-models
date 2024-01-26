@@ -36,6 +36,7 @@ select
     plannedOfferCost.amount as planned_offer_cost,
     plannedOfferCost.ccy as planned_offer_currency,
     userId as user_id,
+    case when request.type = 1 then TRUE else FALSE end as fake_door,
     millis_to_ts_msk(utms) as updated_time,
     TIMESTAMP(dbt_valid_from) as effective_ts_msk,
     TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
