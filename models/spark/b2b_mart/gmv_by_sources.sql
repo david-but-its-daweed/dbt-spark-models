@@ -11,4 +11,4 @@
 
 SELECT *
 FROM {{ ref('gmv_by_sources_wo_filters') }}
-WHERE order_id NOT IN ('657c58febbbdb8729dd7d39e', '658d3fc317e10341173c1f20', '659d3c4dddc19670cf999989')
+WHERE order_id NOT IN ('657c58febbbdb8729dd7d39e', '658d3fc317e10341173c1f20', '659d3c4dddc19670cf999989', '65aa2a7ff11499f63900def9')
