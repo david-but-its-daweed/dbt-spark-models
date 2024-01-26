@@ -18,5 +18,7 @@ SELECT
     disablingReason,
     disablingNote,
     businessLines AS business_lines,
-    categoryIds AS category_ids
+    categoryIds AS category_ids,
+    createdBy,
+    disabledBy
 FROM {{ source('mongo', 'core_merchants_daily_snapshot') }}

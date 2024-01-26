@@ -29,7 +29,9 @@ SELECT
     disablingReason,
     disablingNote,
     business_lines,
-    category_ids
+    category_ids,
+    createdBy,
+    disabledBy
 FROM {{ ref('merchant') }}
 
 {% endsnapshot %}

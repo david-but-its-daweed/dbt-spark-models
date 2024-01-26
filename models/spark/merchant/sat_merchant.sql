@@ -13,6 +13,8 @@ SELECT
     merchant_id,
     created_time,
     updated_time,
+    createdBy,
+    disabledBy,
     activation_time,
     disabled_time,
     name,
