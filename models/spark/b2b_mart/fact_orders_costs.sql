@@ -8,77 +8,73 @@
     }
 ) }}
 
-with currencies_list_v1 as 
-(
-select 'USD' as from, 1 as for_join
-union all
-select 'RUB' as from, 1 as for_join
-union all
-select 'EUR' as from, 1 as for_join
-union all
-select 'CNY' as from, 1 as for_join
+WITH currencies_list_v1 AS (
+    SELECT DISTINCT EXPLODE(SPLIT(key, '-')) AS currency
+    FROM (
+        SELECT EXPLODE(rates)
+        FROM (
+            SELECT
+                payload.currencies.*,
+                ROW_NUMBER() OVER (PARTITION BY payload.orderId ORDER BY payload.updatedTime DESC) AS rn 
+            FROM {{ source('b2b_mart', 'operational_events') }}
+            WHERE
+                type = 'orderChangedByAdmin'
+                AND payload.updatedTime IS NOT NULL
+                {% if is_incremental() %}
+                AND partition_date >= date'{{ var("start_date_ymd") }}'
+                AND partition_date < date'{{ var("end_date_ymd") }}'
+                {% else %}
+                and partition_date   >= date'2022-05-19'
+                {% endif %}
+        )
+        WHERE rn = 1
+    )
 ),
 
-currencies_list as (
-    select t1.from, t2.from as to, t1.from||'-'||t2.from as currency, 1 as for_join
-    from currencies_list_v1 as t1 left join currencies_list_v1 as t2 on t1.for_join = t2.for_join
+currencies_list AS (
+    SELECT
+        t1.currency AS from,
+        t2.currency AS to,
+        t1.currency||'-'||t2.currency as currency
+    FROM currencies_list_v1 AS t1
+    CROSS JOIN currencies_list_v1 AS t2
 ),
 
 
-currencies as 
-(
-select order_id, currencies.rates as rates, currencies.companyRates as company_rates, 1 as for_join
-from
-(
-select orderId as order_id, currencies, row_number() over (
-    partition by orderId order by currencies.rates is not null desc, currencies.companyRates is not null desc, updatedTime) as rn
-from
-(select payload.* from {{ source('b2b_mart', 'operational_events') }}
-where type = 'orderChangedByAdmin'
-and payload.updatedTime is not null and payload.status = 'manufacturing'
-order by updatedTime desc
-)
-)
-where rn = 1
-),
-
-order_rates_1 as (
-select * from
-(
-select order_id, 
-case when from = to then 1 else rates[currency]['exchangeRate'] end as rate, 
-case when from = to then 0 else rates[currency]['markupRate'] end as markup_rate, 
-case when from = to then 1 else company_rates[currency]['exchangeRate'] end as company_rate,
-from, to
-from currencies t1 
-left join currencies_list t2 on t1.for_join = t2.for_join
-order by order_id
-)
-where rate is not null
+currencies AS (
+    SELECT
+        event_id,
+        currencies.rates AS rates,
+        currencies.companyRates AS company_rates
+    FROM (
+        SELECT
+            event_id,
+            payload.currencies
+        FROM {{ source('b2b_mart', 'operational_events') }}
+        WHERE
+            type = 'orderChangedByAdmin'
+            AND payload.updatedTime IS NOT NULL
+            {% if is_incremental() %}
+            AND partition_date >= date'{{ var("start_date_ymd") }}'
+            AND partition_date < date'{{ var("end_date_ymd") }}'
+            {% else %}
+            AND partition_date   >= date'2022-05-19'
+            {% endif %}
+    )
 ),
 
 order_rates as (
-select * from order_rates_1
-union all 
-select 
-    order_id,
-    rate, 
-    markup_rate, 
-    company_rate,
-    case when from = 'CNY' then 'CNH' else from end as from,
-    case when to = 'CNY' then 'CNH' else to end as to
-from order_rates_1
-where from = 'CNY' or to = 'CNY'
-union all 
-select
-    order_id,
-    rate, 
-    markup_rate, 
-    company_rate,
-    case when from = 'CNH' then 'CNY' else from end as from,
-    case when to = 'CNH' then 'CNY' else to end as to
-from order_rates_1
-where from = 'CNH' or to = 'CNH' and not (from = 'CNY' or to = 'CNY')
+select * from
+(
+select event_id,
+case when from = to then 1 else rates[currency]['exchangeRate'] end as rate, 
+case when from = to then 0 else rates[currency]['markupRate'] end as markup_rate, 
+from, to
+from currencies t1 
+cross join currencies_list
+order by event_id
+)
+where rate is not null
 ),
     
 typed_prices as 
@@ -347,7 +343,7 @@ gmv as
         gmv_initial,
         initial_gross_profit,
         final_gross_profit
-    FROM {{ ref('gmv_by_sources') }}
+    FROM {{ ref('gmv_by_sources_wo_filters') }}
 )
 
 select distinct
