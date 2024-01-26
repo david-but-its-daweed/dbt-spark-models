@@ -81,10 +81,10 @@ left join categories_merchado using (category_id)
 
 select distinct
 user_id, interaction_create_time, 
-customer_request_id, created_time as customer_request_create_time,
+customer_request_id, requests.created_time as customer_request_create_time,
 deal_id, link, shop, product_id, expected_quantity, 
 price_amount, cate_lv1, cate_lv2, cate_lv3, cate_lv4, cate_lv5, cate_lv6,
-row_number() over (partition by user_id order by customer_request_create_time) as request_number
+row_number() over (partition by user_id order by requests.created_time) as request_number
 from 
 users
 left join requests using (user_id)
