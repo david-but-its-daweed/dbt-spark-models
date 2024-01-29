@@ -78,18 +78,18 @@ where rate is not null
 ),
     
 typed_prices as 
-(select order_id, type, tag, stage, col.amount as fee, col.ccy as currency
+(select order_id, type, tag, stage, col.amount as fee, col.ccy as currency, event_id
 from
 (
-select order_id, type, tag, explode(col.multiPrice), col.stage as stage
+select order_id, type, tag, explode(col.multiPrice), col.stage as stage, event_id
 from
 (
-select order_id, col.type as type, col.tag as tag, explode(col.stagedPrices)
+select order_id, col.type as type, col.tag as tag, explode(col.stagedPrices), event_id
 from
 (
-select orderId as order_id, explode(typedPricesOriginal), rn
+select event_id, orderId as order_id, explode(typedPricesOriginal), rn
 from
-(select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
+(select event_id, payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
 and payload.updatedTime is not null and payload.status in ('manufacturing', 'shipping', 'claim', 'done')
@@ -117,18 +117,18 @@ all_orders AS (
 ),
 
 other_prices as 
-(select order_id, type, tag, stage, col.amount as fee, col.ccy as currency
+(select order_id, type, tag, stage, col.amount as fee, col.ccy as currency, event_id
 from
 (
-select order_id, type, tag, explode(col.multiPrice), col.stage as stage
+select order_id, type, tag, explode(col.multiPrice), col.stage as stage, event_id
 from
 (
-select order_id, col.type as type, col.tag as tag, explode(col.stagedPrices)
+select order_id, col.type as type, col.tag as tag, explode(col.stagedPrices), event_id
 from
 (
-select orderId as order_id, explode(otherPricesOriginal), rn
+select event_id, orderId as order_id, explode(otherPricesOriginal), rn
 from
-(select payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
+(select event_id, payload.*, row_number() over (partition by payload.orderId order by payload.updatedTime desc) as rn 
 from {{ source('b2b_mart', 'operational_events') }}
 where type = 'orderChangedByAdmin'
 and payload.updatedTime is not null and payload.status in ('manufacturing', 'shipping', 'claim', 'done')
@@ -141,12 +141,12 @@ where rn = 1 and col is not null
 ),
 
 all_prices as 
-(select order_id, replace(type, 'DDP', '') AS type, 
+(select event_id, order_id, replace(type, 'DDP', '') AS type, 
     case when tag = 'dap' and type != 'qc' and delivery_scheme = 'EXW' then 'ddp' else tag end as tag,
     stage, sum(fee_rub) as fee_rub
 from
 (
-select p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub, ao.delivery_scheme
+select event_id, p.order_id, type, tag, stage, fee*(rate*(1+markup_rate)) as fee_rub, ao.delivery_scheme
 from
 (
 select distinct * from typed_prices 
@@ -156,7 +156,7 @@ select distinct * from other_prices
 left join order_rates r on p.order_id = r.order_id and p.currency = r.from and r.to = 'RUB'
 left join all_orders ao on ao.order_id = p.order_id
 )
-group by order_id, type, case when tag = 'dap' and type != 'qc' and delivery_scheme = 'EXW' then 'ddp' else tag end, stage
+group by event_id, order_id, type, case when tag = 'dap' and type != 'qc' and delivery_scheme = 'EXW' then 'ddp' else tag end, stage
 ),
 
 admins as (
@@ -214,7 +214,7 @@ select p.order_id,
         from all_prices p
         left join 
         (
-        select order_id, 
+        select event_id, 
         max(case when from = 'USD' and to = 'RUB' then rate end) as usd_rate,
         max(case when from = 'USD' and to = 'RUB' then company_rate end) as usd_company_rate,
         max(case when from = 'USD' and to = 'RUB' then markup_rate end) as usd_markup_rate,
@@ -224,8 +224,8 @@ select p.order_id,
         max(case when from = 'CNY' and to = 'RUB' then markup_rate end) as cny_markup_rate,
         max(case when from = 'CNY' and to = 'RUB' then rate*(1+markup_rate) end) as cny_rate_with_markup
         from order_rates
-        group by order_id
-        ) r on p.order_id = r.order_id
+        group by event_id
+        ) r on p.event_id = r.event_id
         where fee_rub is not null and stage = 'final'
         group by p.order_id
 ),
@@ -266,7 +266,7 @@ select p.order_id,
         from all_prices p
         left join 
         (
-        select order_id, 
+        select event_id, 
         max(case when from = 'USD' and to = 'RUB' then rate end) as usd_rate,
         max(case when from = 'USD' and to = 'RUB' then company_rate end) as usd_company_rate,
         max(case when from = 'USD' and to = 'RUB' then markup_rate end) as usd_markup_rate,
@@ -276,8 +276,8 @@ select p.order_id,
         max(case when from = 'CNY' and to = 'RUB' then markup_rate end) as cny_markup_rate,
         max(case when from = 'CNY' and to = 'RUB' then rate*(1+markup_rate) end) as cny_rate_with_markup
         from order_rates
-        group by order_id
-        ) r on p.order_id = r.order_id
+        group by event_id
+        ) r on p.event_id = r.event_id
         where fee_rub is not null and stage = 'confirmed'
         group by p.order_id
 ),
@@ -298,8 +298,8 @@ select p.order_id,
         max(case when from = 'CNY' and to = 'RUB' then markup_rate end) as cny_markup_rate,
         max(case when from = 'CNY' and to = 'RUB' then rate*(1+markup_rate) end) as cny_rate_with_markup
         from order_rates
-        group by order_id
-        ) r on p.order_id = r.order_id
+        group by event_id
+        ) r on p.event_id = r.event_id
         where fee_rub is not null and stage in ('confirmed', 'grant')
         group by p.order_id
 ),
