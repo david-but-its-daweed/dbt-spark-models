@@ -105,11 +105,13 @@ phone as (
 
 dim_user as (
             select user_id, min(effective_ts_msk) as validation_ts,
+            min(created_ts_msk) as created_ts_msk,
             max(utms) as utms
             from
             (
                 select 
                 user_id, effective_ts_msk,
+                created_ts_msk,
                 case when funnel_status in ('Rejected') then 'Rejected'
                 when funnel_status in ('Converting', 'ValidatedNoConversionAttempt', 'Converted', 'ConversionFailed', 'Lost') then 'Validated' else 'InProgress' end as validation_status,
                 next_effective_ts_msk,
