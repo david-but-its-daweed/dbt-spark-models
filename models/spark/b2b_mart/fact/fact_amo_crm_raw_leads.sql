@@ -61,7 +61,7 @@ select distinct
         or pipelineId = '7120174'
         or (pipelineId = '7403522' and status = 'Взят в работу')
         or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
-        then status_ts end
+        then coalesce(status_ts, createdAt) end
         ) over (partition by coalesce(contactId, leadId))) as created_ts_msk,
         
         millis_to_ts_msk(min(
