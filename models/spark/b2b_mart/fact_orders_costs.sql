@@ -153,7 +153,7 @@ select distinct * from typed_prices
 union all 
 select distinct * from other_prices
 ) p
-left join order_rates r on p.order_id = r.order_id and p.currency = r.from and r.to = 'RUB'
+left join order_rates r on p.event_id = r.event_id and p.currency = r.from and r.to = 'RUB'
 left join all_orders ao on ao.order_id = p.order_id
 )
 group by event_id, order_id, type, case when tag = 'dap' and type != 'qc' and delivery_scheme = 'EXW' then 'ddp' else tag end, stage
