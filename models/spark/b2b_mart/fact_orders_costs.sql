@@ -44,11 +44,13 @@ currencies_list AS (
 currencies AS (
     SELECT
         event_id,
+        order_id,
         currencies.rates AS rates,
         currencies.companyRates AS company_rates
     FROM (
         SELECT
             event_id,
+            payload.orderId as order_id,
             payload.currencies
         FROM {{ source('b2b_mart', 'operational_events') }}
         WHERE
@@ -66,9 +68,12 @@ currencies AS (
 order_rates as (
 select * from
 (
-select event_id,
+select 
+order_id,
+event_id,
 case when from = to then 1 else rates[currency]['exchangeRate'] end as rate, 
 case when from = to then 0 else rates[currency]['markupRate'] end as markup_rate, 
+case when from = to then 1 else company_rates[currency]['exchangeRate'] end as company_rate,
 from, to
 from currencies t1 
 cross join currencies_list
@@ -288,7 +293,9 @@ select p.order_id,
         from all_prices p
         left join 
         (
-        select order_id, 
+        select 
+        event_id,
+        order_id, 
         max(case when from = 'USD' and to = 'RUB' then rate end) as usd_rate,
         max(case when from = 'USD' and to = 'RUB' then company_rate end) as usd_company_rate,
         max(case when from = 'USD' and to = 'RUB' then markup_rate end) as usd_markup_rate,
@@ -298,7 +305,7 @@ select p.order_id,
         max(case when from = 'CNY' and to = 'RUB' then markup_rate end) as cny_markup_rate,
         max(case when from = 'CNY' and to = 'RUB' then rate*(1+markup_rate) end) as cny_rate_with_markup
         from order_rates
-        group by event_id
+        group by order_id, event_id
         ) r on p.event_id = r.event_id
         where fee_rub is not null and stage in ('confirmed', 'grant')
         group by p.order_id
