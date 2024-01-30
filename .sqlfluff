@@ -3,7 +3,7 @@ sql_file_exts = .sql
 max_line_length = 200
 dialect = sparksql
 exclude_rules = ST06, LT12, RF01, RF03, RF04, AL07, ST07, AM06, AL06
-templater = jinja
+templater = dbt
 
 [sqlfluff:indentation]
 indent_unit = space
@@ -48,7 +48,7 @@ group_by_and_order_by_style = consistent
 force_enable = True
 prefer_quoted_identifiers = False
 
-[sqlfluff:templater:jinja]
-apply_dbt_builtins = true
-load_macros_from_path = macros
-ignore_templated_areas = True
+[sqlfluff:templater:dbt]
+project_dir = .
+profiles_dir = ./production/profiles
+profile = spark
