@@ -1,0 +1,52 @@
+version: 2
+
+sources:
+  - name: mongo
+    tables:
+      - name: b2b_core_users_daily_snapshot
+      - name: b2b_core_admin_users_daily_snapshot
+      - name: b2b_core_variant_appendixes_daily_snapshot
+      - name: b2b_core_published_products_daily_snapshot
+      - name: b2b_core_published_variants_daily_snapshot
+      - name: b2b_core_product_states_daily_snapshot
+      - name: b2b_core_product_appendixes_daily_snapshot
+      - name: b2b_core_orders_v2_daily_snapshot
+      - name: b2b_core_merchant_orders_v2_daily_snapshot
+      - name: b2b_core_popup_requests_daily_snapshot
+      - name: b2b_core_rfq_request_daily_snapshot
+      - name: b2b_core_rfq_response_daily_snapshot
+      - name: b2b_core_customers_daily_snapshot
+      - name: b2b_core_merchant_appendixes_daily_snapshot
+      - name: b2b_core_amo_crm_calls_daily_snapshot
+      - name: b2b_core_merchants_daily_snapshot
+      - name: b2b_core_rfq_media_uploads_daily_snapshot
+      - name: b2b_core_stores_daily_snapshot
+      - name: b2b_core_admin_user_plans_daily_snapshot
+      - name: b2b_core_admin_user_sdr_plans_daily_snapshot
+      - name: b2b_core_pick_up_orders_v2_daily_snapshot
+      - name: b2b_core_amo_crm_raw_leads_daily_snapshot
+      - name: b2b_core_enumregistry_daily_snapshot
+      - name: b2b_core_merchant_attributes_daily_snapshot
+      - name: b2b_core_deals_daily_snapshot
+      - name: b2b_core_analytics_users_daily_snapshot
+      - name: b2b_core_analytics_users_extras_daily_snapshot
+      - name: b2b_core_blog_subscriptions_daily_snapshot
+      - name: b2b_core_calculations_daily_snapshot
+      - name: b2b_core_interactions_daily_snapshot
+      - name: b2b_core_form_with_status_daily_snapshot
+      - name: b2b_core_order_products_daily_snapshot
+      - name: b2b_core_phone_credentials_daily_snapshot
+      - name: b2b_core_promocodes_daily_snapshot
+      - name: b2b_core_issues_daily_snapshot
+      - name: b2b_core_customer_plans_daily_snapshot
+      - name: b2b_core_customer_offers_daily_snapshot
+      - name: b2b_core_customer_rfq_response_v2_daily_snapshot
+      - name: b2b_core_customer_rfq_request_daily_snapshot
+      - name: b2b_core_customer_requests_daily_snapshot
+      - name: b2b_core_offer_products_daily_snapshot
+  - name: b2b_mart
+    tables:
+      - name: device_events
+      - name: operational_events
+      - name: dim_merchant
+  

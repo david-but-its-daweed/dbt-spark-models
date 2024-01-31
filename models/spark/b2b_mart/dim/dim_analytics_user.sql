@@ -10,17 +10,20 @@
 ) }}
 
 WITH phone_number AS (
-  SELECT DISTINCT 
-    _id AS phone,
-    uid AS user_id
-  FROM {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
+    SELECT DISTINCT
+        _id AS phone,
+        uid AS user_id
+    FROM {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
 )
 
 SELECT
-  t._id,
-  millis_to_ts_msk(t.ctms) as created_ts_msk,
-  millis_to_ts_msk(t.utms) as updated_ts_msk,
-  coalesce(t.phone, pn.phone) as phone_number,
-  email
-FROM {{ source('mongo', 'b2b_core_analytics_users_daily_snapshot') }} t
-left join phone_number pn on t._id = pn.user_id
+    t._id,
+    MILLIS_TO_TS_MSK(t.ctms) AS created_ts_msk,
+    MILLIS_TO_TS_MSK(t.utms) AS updated_ts_msk,
+    COALESCE(t.phone, pn.phone) AS phone_number,
+    t.email,
+    u_extra.has_store,
+    u_extra.store_link
+FROM {{ source('mongo', 'b2b_core_analytics_users_daily_snapshot') }} AS t
+LEFT JOIN phone_number AS pn ON t._id = pn.user_id
+LEFT JOIN {{ ref('dim_analytics_users_extras') }} AS u_extra ON t._id = u_extra.user_id
