@@ -61,21 +61,31 @@ main AS (
     SELECT
         date_msk,
         country_code,
+        -- считаем метрики по дням
+        SUM(gmv_per_day.gmv_net_of_vat) AS gmv_net_of_vat_per_day,
+        SUM(gmv_per_day.base_price) AS base_price_per_day,
+        SUM(gmv_per_day.gmv) AS gmv_per_day,
+        SUM(gmv_per_day.gross_profit + COALESCE(adtech.adtech_revenue, 0)) AS gross_profit_per_day,
         -- считаем метрики с окном в 14 дней для ислючения шума
-        SUM(gmv_per_day.gmv_net_of_vat) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_net_of_vat_14,
-        SUM(gmv_per_day.base_price) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS base_price_14,
-        SUM(gmv_per_day.gmv) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_14,
-        SUM(gmv_per_day.gross_profit + COALESCE(adtech.adtech_revenue, 0)) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gross_profit_14
+        SUM(SUM(gmv_per_day.gmv_net_of_vat)) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_net_of_vat_14,
+        SUM(SUM(gmv_per_day.base_price)) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS base_price_14,
+        SUM(SUM(gmv_per_day.gmv)) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gmv_14,
+        SUM(SUM(gmv_per_day.gross_profit + COALESCE(adtech.adtech_revenue, 0))) OVER (PARTITION BY 1, 2 ORDER BY country_code, date_msk ROWS BETWEEN 13 PRECEDING AND 0 FOLLOWING) AS gross_profit_14
     FROM
         gmv_per_day
     -- "LEFT JOIN" для того, чтобы не потерялись какие-то мелкие страны.
-    -- При этом в кубе хранятся не только страны, они попасть не должны
+    -- При этом в кубе хранятся не только страны, другие значение попасть не должны
     LEFT JOIN adtech USING (date_msk, country_code)
+    GROUP BY 1, 2
 )
 
 SELECT
     date_msk,
     country_code,
+    gmv_net_of_vat_per_day,
+    gmv_per_day,
+    base_price_per_day,
+    gross_profit_per_day,
     gmv_net_of_vat_14,
     gmv_14,
     base_price_14,
@@ -83,4 +93,4 @@ SELECT
     0.125 AS target_gmv_overhead_costs,
     0.2 AS target_margin
 FROM main
-ORDER BY 1
+ORDER BY 1, 2
