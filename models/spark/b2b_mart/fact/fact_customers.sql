@@ -95,9 +95,6 @@ sources as (
     (
     select 
         uid as user_id, 
-        map_from_entries(utmLabels)["utm_campaign"] as utm_campaign,
-        map_from_entries(utmLabels)["utm_source"] as utm_source,
-        map_from_entries(utmLabels)["utm_medium"] as utm_medium,
         min(source) over (partition by lower(source)) as source, 
         min(type) over (partition by lower(type)) as type,
         min(campaign) over (partition by lower(campaign)) as campaign,
