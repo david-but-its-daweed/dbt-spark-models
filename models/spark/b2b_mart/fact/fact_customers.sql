@@ -84,10 +84,27 @@ customers as (
 users_hist as (
   select
     user_id,
-    min(partition_date_msk) as validated_date
+    min(event_ts_msk) as validated_date
     from {{ ref('fact_user_change') }}
     where validation_status = 'validated'
     group by user_id
+),
+
+sources as (
+    select 
+    uid as user_id, 
+    map_from_entries(utmLabels)["utm_campaign"] as utm_campaign,
+    map_from_entries(utmLabels)["utm_source"] as utm_source,
+    map_from_entries(utmLabels)["utm_medium"] as utm_medium,
+    min(source) over (partition by lower(source)) as source, 
+    min(type) over (partition by lower(type)) as type,
+    min(campaign) over (partition by lower(campaign)) as campaign
+
+from b2b_mart.scd2_interactions_snapshot m
+where dbt_valid_to is null
+    and (incorrectAttribution is null or not incorrectAttribution)
+    and row_number() over (partition by user_id order by case when incorrectAttribution
+        then 1 else 0 end, coalesce(interactionType, 100), ctms desc) = 1 
 )
 
 select distinct
@@ -101,6 +118,7 @@ select distinct
     u.reject_reason,
     funnel_status,
     funnel_reject_reason,
+    type, source, campaign,
     u.owner_id,
     a.email as owner_email,
     a.owner_role,
@@ -126,3 +144,4 @@ select distinct
     left join admin as a on u.owner_id = a.admin_id
     left join customers as c on u.user_id = c.user_id
     left join users_hist as uh on u.user_id = uh.user_id
+    left join sources
