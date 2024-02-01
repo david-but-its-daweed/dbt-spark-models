@@ -22,6 +22,11 @@ statuses as (
 select leadId,
 explode(statusChangedEvents) as st
 from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
+),
+
+phone as (
+    select lead_id, phone
+    from {{ ('fact_amo_crm_contacts_phones') }}
 )
 
 
@@ -31,6 +36,7 @@ select distinct
     validation,
     pipeline_name,
     lead_id,
+    phone,
     company_id,
     company_name,
     contact_id,
@@ -66,6 +72,7 @@ select distinct
         ) then true else false end as validation,
         pipeline_name,
         leadId as lead_id,
+        phone.phone,
         companyId as company_id,
         companyName as company_name,
         coalesce(contactId, leadId) as contact_id,
@@ -156,4 +163,5 @@ select distinct
     left join (select distinct funnel_status, user_id, amo_id from {{ ref('fact_customers') }}) on leadId = amo_id
     ) left join statuses using (leadId)
     )
+    left join phone using (lead_id)
 )
