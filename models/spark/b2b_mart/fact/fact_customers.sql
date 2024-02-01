@@ -101,7 +101,7 @@ sources as (
         min(source) over (partition by lower(source)) as source, 
         min(type) over (partition by lower(type)) as type,
         min(campaign) over (partition by lower(campaign)) as campaign,
-        row_number() over (partition by user_id order by case when incorrectAttribution
+        row_number() over (partition by uid order by case when incorrectAttribution
             then 1 else 0 end, coalesce(interactionType, 100), ctms desc) = 1 as filter
     from {{ ref('scd2_interactions_snapshot') }} m
     where dbt_valid_to is null
