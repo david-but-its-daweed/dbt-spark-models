@@ -164,5 +164,5 @@ select distinct
     left join (select distinct funnel_status, user_id, amo_id from {{ ref('fact_customers') }}) on leadId = amo_id
     ) left join statuses using (leadId)
     )
-    left join phone using (lead_id)
+    left join phone on leadId = lead_id
 )
