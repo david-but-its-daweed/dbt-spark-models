@@ -25,8 +25,9 @@ from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
 ),
 
 phone as (
-    select lead_id, phone
+    select lead_id, min(phone) as phone
     from {{ ('fact_amo_crm_contacts_phones') }}
+    group by lead_id
 )
 
 
