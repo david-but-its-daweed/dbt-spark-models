@@ -91,20 +91,23 @@ users_hist as (
 ),
 
 sources as (
+    select * from
+    (
     select 
-    uid as user_id, 
-    map_from_entries(utmLabels)["utm_campaign"] as utm_campaign,
-    map_from_entries(utmLabels)["utm_source"] as utm_source,
-    map_from_entries(utmLabels)["utm_medium"] as utm_medium,
-    min(source) over (partition by lower(source)) as source, 
-    min(type) over (partition by lower(type)) as type,
-    min(campaign) over (partition by lower(campaign)) as campaign
-
-from b2b_mart.scd2_interactions_snapshot m
-where dbt_valid_to is null
-    and (incorrectAttribution is null or not incorrectAttribution)
-    and row_number() over (partition by user_id order by case when incorrectAttribution
-        then 1 else 0 end, coalesce(interactionType, 100), ctms desc) = 1 
+        uid as user_id, 
+        map_from_entries(utmLabels)["utm_campaign"] as utm_campaign,
+        map_from_entries(utmLabels)["utm_source"] as utm_source,
+        map_from_entries(utmLabels)["utm_medium"] as utm_medium,
+        min(source) over (partition by lower(source)) as source, 
+        min(type) over (partition by lower(type)) as type,
+        min(campaign) over (partition by lower(campaign)) as campaign,
+        row_number() over (partition by user_id order by case when incorrectAttribution
+            then 1 else 0 end, coalesce(interactionType, 100), ctms desc) = 1 as filter
+    from {{ ref('scd2_interactions_snapshot') }} m
+    where dbt_valid_to is null
+        and (incorrectAttribution is null or not incorrectAttribution)
+    )
+    where filter
 )
 
 select distinct
