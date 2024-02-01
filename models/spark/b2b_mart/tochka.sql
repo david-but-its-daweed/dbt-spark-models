@@ -177,9 +177,6 @@ i.campaign,
 row_number() over (partition by amo_id order by 1) as rn
 from {{ ref('fact_amo_attribution_interaction') }} i
 left join {{ ref('fact_amo_crm_raw_leads') }} AS amo ON i.amo_id = amo.lead_id
-left join (
-  select lead_id as amo_id, max(phone) as phone from {{ ref('fact_amo_crm_contacts_phones') }} group by 1
-  ) phone using (amo_id)
 where i.source = 'tochka' and validation
 ) amo
 left join deals on amo.amo_id = deals.amo_id
