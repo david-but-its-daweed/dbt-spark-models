@@ -65,6 +65,7 @@ sources:
       - name: babylone_onfy_agents_daily_snapshot
       - name: logistics_jl_obligatory_channels_daily_snapshot
       - name: abu_core_catalog_daily_snapshot
+      - name: product_merchant_joom_select_proposals_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance

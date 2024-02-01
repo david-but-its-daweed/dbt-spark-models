@@ -1,0 +1,22 @@
+models:
+  - name: mart
+    tables:
+      - name: dim_joom_select_proposal
+        description: Joom select proposals
+        columns:
+          - name: proposal_id
+            description: Joom select proposal id
+          - name: created_time
+            description: Propposal created time
+          - name: updated_time
+            description: Propposal updated time
+          - name: product_id
+            description: Proposal product id
+          - name: merchant_id
+            description: Proposal product merchant id
+          - name: status_history
+            description: Proposal status history in descending order of updated time
+          - name: target_variant_prices
+            description: Target variant prices proposed to merchant
+          - name: cancel_info
+            description: Proposal cancel info - reason and source 

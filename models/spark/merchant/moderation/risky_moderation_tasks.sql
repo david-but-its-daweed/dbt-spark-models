@@ -11,7 +11,8 @@
       'bigquery_partitioning_date_column': 'queued_date',
       'bigquery_known_gaps': ['2023-11-19', '2023-11-18']
     },
-) }}
+) 
+}}
 
 WITH category_levels AS (
 
