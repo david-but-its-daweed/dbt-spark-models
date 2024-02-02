@@ -144,4 +144,4 @@ select distinct
     left join admin as a on u.owner_id = a.admin_id
     left join customers as c on u.user_id = c.user_id
     left join users_hist as uh on u.user_id = uh.user_id
-    left join sources
+    left join sources as s on s.user_id = c.user_id
