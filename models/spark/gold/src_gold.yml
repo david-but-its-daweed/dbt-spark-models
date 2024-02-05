@@ -564,6 +564,8 @@ models:
       description: Additional markup, depends on the user, product, etc. (does not include coupons and points, i.e., added to the merchant's price + logistics price)
     - name: jl_markup
       description: Additional markup, in most cases related to logistics, managed on the marketplace team's side
+    - name: jl_cost_final_estimated
+      description: Expected Joom Logistics cost from a specific Joom Group order (not Joom). This is a component of order_gross_profit_final_estimated.
     - name: is_with_coupon
       description: Flag indicating whether a coupon was used in the order
     - name: coupon_discount
