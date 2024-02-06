@@ -21,7 +21,7 @@ SELECT
     city,
     user_agent,
     request_path
-FROM {{ source('threat', 'bot_factors_joompro') }}
+FROM {{ source('threat', 'bot_factors_joompro') }} bf
 INNER JOIN (
     SELECT
         DISTINCT
