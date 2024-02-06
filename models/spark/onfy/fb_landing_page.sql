@@ -57,7 +57,7 @@ transactions as
 select
     pzn,
     count(distinct transactions.order_id) as payments,
-    sum(if(sessions.partition_date_cet >= current_date() - interval 31 days, spend / campaign_sessions, 0)) as spend,
+    --sum(if(sessions.partition_date_cet >= current_date() - interval 31 days, spend / campaign_sessions, 0)) as spend,
     count(distinct if(sessions.partition_date_cet >= current_date() - interval 31 days, sessions.event_id, null)) as sessions,
     sum(gmv_initial) as gmv_initial,
     sum(cast(promocode_discount as float)) as promocode_discount,
@@ -67,16 +67,16 @@ left join transactions
     on sessions.device_id = transactions.device_id
     and transactions.transaction_date between sessions.session_ts_cet and coalesce(next_session_ts_cet, current_timestamp())
     and to_unix_timestamp(transactions.transaction_date) - to_unix_timestamp(sessions.session_ts_cet) <= 86400
-left join {{ source('onfy_mart', 'ads_spends') }} as ads_spends
+/*left join {{ source('onfy_mart', 'ads_spends') }} as ads_spends
     on sessions.partition_date_cet = ads_spends.campaign_date_utc
     and sessions.utm_source = lower(ads_spends.source)
     and sessions.utm_medium = lower(ads_spends.medium)
-    and sessions.utm_campaign = lower(split_part(ads_spends.campaign_name, ' ', 1))
+    and sessions.utm_campaign = lower(split_part(ads_spends.campaign_name, ' ', 1))*/
 group by 
     pzn
 having 
     count(distinct transactions.order_id) = 0
-    or 
+ /*   or 
         (
             sum(if(sessions.partition_date_cet >= current_date() - interval 31 days, spend / campaign_sessions, 0)) 
             / count(distinct if(transaction_date >= current_date() - interval 31 days, transactions.order_id, null)) >= 40
@@ -89,4 +89,4 @@ having
             
             count(distinct if(transaction_date >= current_date() - interval 31 days, transactions.order_id, null)) > 0
             
-        )
+        ) */
