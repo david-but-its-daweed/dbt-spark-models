@@ -141,6 +141,7 @@ sources:
   - name: threat
     tables:
       - name: bot_factors_onfy
+      - name: bot_factors_joompro
   - name: push
     tables:
       - name: sale_dates_v1
@@ -160,3 +161,4 @@ sources:
     tables:
       - name: mercadolibre_products_snapshot
       - name: mercadolibre_categories
+      - name: auth_proxy_dim_devices
