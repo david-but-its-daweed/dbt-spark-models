@@ -81,7 +81,8 @@ order_products AS (
         order_product_id,
         product_friendly_id,
         owner_email,
-        owner_role
+        owner_role,
+        country
     FROM {{ ref('dim_deal_products') }}
 )
 
