@@ -79,16 +79,15 @@ select distinct
         coalesce(contactId, leadId) as contact_id,
         millis_to_ts_msk(createdAt) as created_at,
         millis_to_ts_msk(
-            min(
+            case when pipelineId in ('7314451', '7249567', '7553579', '7120174') then createdAt
+            when pipelineId in ('7403522', '7120186') then 
+                min(
                 case when 
-                pipelineId = '7314451'
-                or pipelineId = '7249567'
-                or pipelineId = '7553579'
-                or pipelineId = '7120174'
-                or (pipelineId = '7403522' and status = 'Взят в работу')
-                or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
+                   (pipelineId = '7403522' and status = 'Взят в работу')
+                    or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
                 then coalesce(status_ts, createdAt) end
             ) over (partition by coalesce(contactId, leadId))
+            end
         ) as created_ts_msk,
 
         millis_to_ts_msk(
