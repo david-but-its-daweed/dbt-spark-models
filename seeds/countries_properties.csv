@@ -1,253 +1,253 @@
 ﻿country,country_code,currency,currency_code,country_priority_type
-Afghanistan,AF,Afghani,AFN,OTHER
-Åland Islands,AX,Euro,EUR,OTHER
-Albania,AL,Lek,ALL,OTHER
-Algeria,DZ,Algerian Dinar,DZD,OTHER
-American Samoa,AS,US Dollar,USD,OTHER
-Andorra,AD,Euro,EUR,OTHER
-Angola,AO,Kwanza,AOA,OTHER
-Anguilla,AI,East Caribbean Dollar,XCD,OTHER
-Antigua and Barbuda,AG,East Caribbean Dollar,XCD,OTHER
-Argentina,AR,Argentine Peso,ARS,OTHER
-Armenia,AM,Armenian Dram,AMD,OTHER
-Aruba,AW,Aruban Florin,AWG,OTHER
-Australia,AU,Australian Dollar,AUD,BIG GOOD
-Austria,AT,Euro,EUR,BIG BAD
-Azerbaijan,AZ,Azerbaijan Manat,AZN,OTHER
-Bahamas,BS,Bahamian Dollar,BSD,OTHER
-Bahrain,BH,Bahraini Dinar,BHD,OTHER
-Bangladesh,BD,Taka,BDT,OTHER
-Barbados,BB,Barbados Dollar,BBD,OTHER
-Belarus,BY,Belarusian Ruble,BYN,BIG GOOD
-Belgium,BE,Euro,EUR,BIG BAD
-Belize,BZ,Belize Dollar,BZD,OTHER
-Benin,BJ,CFA Franc BCEAO,XOF,OTHER
-Bermuda,BM,Bermudian Dollar,BMD,OTHER
-Bhutan,BT,Indian Rupee,INR,OTHER
-Bhutan,BT,Ngultrum,BTN,OTHER
-Bolivia Plurinational State of,BO,Boliviano,BOB,OTHER
-Bolivia Plurinational State of,BO,Mvdol,BOV,OTHER
-Bonaire Sint Eustatius and Saba,BQ,US Dollar,USD,OTHER
-Bosnia and Herzegovina,BA,Convertible Mark,BAM,OTHER
-Botswana,BW,Pula,BWP,OTHER
-Bouvet Island,BV,Norwegian Krone,NOK,OTHER
-Brazil,BR,Brazilian Real,BRL,OTHER
-British Indian Ocean Territory,IO,US Dollar,USD,OTHER
-Brunei Darussalam,BN,Brunei Dollar,BND,OTHER
-Bulgaria,BG,Bulgarian Lev,BGN,OTHER
-Burkina Faso,BF,CFA Franc BCEAO,XOF,OTHER
-Burundi,BI,Burundi Franc,BIF,OTHER
-Cape Verde,CV,Cabo Verde Escudo,CVE,OTHER
-Cambodia,KH,Riel,KHR,OTHER
-Cameroon,CM,CFA Franc BEAC,XAF,OTHER
-Canada,CA,Canadian Dollar,CAD,OTHER
-Cayman Islands,KY,Cayman Islands Dollar,KYD,OTHER
-Central African Republic,CF,CFA Franc BEAC,XAF,OTHER
-Chad,TD,CFA Franc BEAC,XAF,OTHER
-Chile,CL,Chilean Peso,CLP,OTHER
-China,CN,Yuan Renminbi,CNY,OTHER
-Christmas Island,CX,Australian Dollar,AUD,OTHER
-Cocos (Keeling) Islands,CC,Australian Dollar,AUD,OTHER
-Colombia,CO,Colombian Peso,COP,OTHER
-Comoros,KM,Comorian Franc,KMF,OTHER
-Congo the Democratic Republic of the,CD,Congolese Franc,CDF,OTHER
-Congo,CG,CFA Franc BEAC,XAF,OTHER
-Cook Islands,CK,New Zealand Dollar,NZD,OTHER
-Costa Rica,CR,Costa Rican Colon,CRC,OTHER
-Côte d'Ivoire,CI,CFA Franc BCEAO,XOF,OTHER
-Croatia,HR,Euro,EUR,OTHER
-Cuba,CU,Cuban Peso,CUP,OTHER
-Curaçao,CW,Netherlands Antillean Guilder,ANG,OTHER
-Cyprus,CY,Euro,EUR,BIG GOOD
-Czech Republic,CZ,Czech Koruna,CZK,FOCUSED GROWING
-Denmark,DK,Danish Krone,DKK,OTHER
-Djibouti,DJ,Djibouti Franc,DJF,OTHER
-Dominica,DM,East Caribbean Dollar,XCD,OTHER
-Dominican Republic,DO,Dominican Peso,DOP,OTHER
-Ecuador,EC,US Dollar,USD,OTHER
-Egypt,EG,Egyptian Pound,EGP,OTHER
-El Salvador,SV,US Dollar,USD,OTHER
-Equatorial Guinea,GQ,CFA Franc BEAC,XAF,OTHER
-Eritrea,ER,Nakfa,ERN,OTHER
-Estonia,EE,Euro,EUR,FOCUSED GROWING
-Swaziland,SZ,Lilangeni,SZL,OTHER
-Ethiopia,ET,Ethiopian Birr,ETB,OTHER
-Falkland Islands (Malvinas),FK,Falkland Islands Pound,FKP,OTHER
-Faroe Islands,FO,Danish Krone,DKK,OTHER
-Fiji,FJ,Fiji Dollar,FJD,OTHER
-Finland,FI,Euro,EUR,OTHER
-France,FR,Euro,EUR,BIG BAD
-French Guiana,GF,Euro,EUR,OTHER
-French Polynesia,PF,CFP Franc,XPF,OTHER
-French Southern Territories,TF,Euro,EUR,OTHER
-Gabon,GA,CFA Franc BEAC,XAF,OTHER
-Gambia,GM,Dalasi,GMD,OTHER
-Georgia,GE,Lari,GEL,FOCUSED PERSPECTIVE
-Germany,DE,Euro,EUR,BIG BAD
-Ghana,GH,Ghana Cedi,GHS,OTHER
-Gibraltar,GI,Gibraltar Pound,GIP,OTHER
-Greece,GR,Euro,EUR,BIG GOOD
-Greenland,GL,Danish Krone,DKK,OTHER
-Grenada,GD,East Caribbean Dollar,XCD,OTHER
-Guadeloupe,GP,Euro,EUR,OTHER
-Guam,GU,US Dollar,USD,OTHER
-Guatemala,GT,Quetzal,GTQ,OTHER
-Guernsey,GG,Pound Sterling,GBP,OTHER
-Guinea,GN,Guinean Franc,GNF,OTHER
-Guinea-Bissau,GW,CFA Franc BCEAO,XOF,OTHER
-Guyana,GY,Guyana Dollar,GYD,OTHER
-Haiti,HT,Gourde,HTG,OTHER
-Haiti,HT,US Dollar,USD,OTHER
-Heard Island and McDonald Islands,HM,Australian Dollar,AUD,OTHER
-Holy See (Vatican City State),VA,Euro,EUR,OTHER
-Honduras,HN,Lempira,HNL,OTHER
-Hong Kong,HK,Hong Kong Dollar,HKD,OTHER
-Hungary,HU,Forint,HUF,FOCUSED GROWING
-Iceland,IS,Iceland Krona,ISK,OTHER
-India,IN,Indian Rupee,INR,OTHER
-Indonesia,ID,Rupiah,IDR,OTHER
-Iran Islamic Republic of,IR,Iranian Rial,IRR,OTHER
-Iraq,IQ,Iraqi Dinar,IQD,OTHER
-Ireland,IE,Euro,EUR,BIG BAD
-Isle of Man,IM,Pound Sterling,GBP,OTHER
-Israel,IL,New Israeli Sheqel,ILS,BIG GOOD
-Italy,IT,Euro,EUR,BIG BAD
-Jamaica,JM,Jamaican Dollar,JMD,OTHER
-Japan,JP,Yen,JPY,OTHER
-Jersey,JE,Pound Sterling,GBP,OTHER
-Jordan,JO,Jordanian Dinar,JOD,OTHER
-Kazakhstan,KZ,Tenge,KZT,FOCUSED GROWING
-Kenya,KE,Kenyan Shilling,KES,OTHER
-Kiribati,KI,Australian Dollar,AUD,OTHER
-Korea Democratic People's Republic of,KP,North Korean Won,KPW,OTHER
-Korea Republic of,KR,Won,KRW,OTHER
-Kuwait,KW,Kuwaiti Dinar,KWD,OTHER
-Kyrgyzstan,KG,Som,KGS,OTHER
-Lao People's Democratic Republic,LA,Lao Kip,LAK,OTHER
-Latvia,LV,Euro,EUR,FOCUSED GROWING
-Lebanon,LB,Lebanese Pound,LBP,OTHER
-Lesotho,LS,Loti,LSL,OTHER
-Lesotho,LS,Rand,ZAR,OTHER
-Liberia,LR,Liberian Dollar,LRD,OTHER
-Libya,LY,Libyan Dinar,LYD,OTHER
-Liechtenstein,LI,Swiss Franc,CHF,OTHER
-Lithuania,LT,Euro,EUR,FOCUSED PERSPECTIVE
-Luxembourg,LU,Euro,EUR,OTHER
-Macao,MO,Pataca,MOP,OTHER
-Macedonia the Former Yugoslav Republic of,MK,Denar,MKD,OTHER
-Madagascar,MG,Malagasy Ariary,MGA,OTHER
-Malawi,MW,Malawi Kwacha,MWK,OTHER
-Malaysia,MY,Malaysian Ringgit,MYR,OTHER
-Maldives,MV,Rufiyaa,MVR,OTHER
-Mali,ML,CFA Franc BCEAO,XOF,OTHER
-Malta,MT,Euro,EUR,BIG GOOD
-Marshall Islands,MH,US Dollar,USD,OTHER
-Martinique,MQ,Euro,EUR,OTHER
-Mauritania,MR,Ouguiya,MRU,OTHER
-Mauritius,MU,Mauritius Rupee,MUR,OTHER
-Mayotte,YT,Euro,EUR,OTHER
-Mexico,MX,Mexican Peso,MXN,OTHER
-Micronesia Federated States of,FM,US Dollar,USD,OTHER
-Moldova Republic of,MD,Moldovan Leu,MDL,FOCUSED GROWING
-Monaco,MC,Euro,EUR,OTHER
-Mongolia,MN,Tugrik,MNT,OTHER
-Montenegro,ME,Euro,EUR,OTHER
-Montserrat,MS,East Caribbean Dollar,XCD,OTHER
-Morocco,MA,Moroccan Dirham,MAD,OTHER
-Mozambique,MZ,Mozambique Metical,MZN,OTHER
-Myanmar,MM,Kyat,MMK,OTHER
-Namibia,NA,Namibia Dollar,NAD,OTHER
-Namibia,NA,Rand,ZAR,OTHER
-Nauru,NR,Australian Dollar,AUD,OTHER
-Nepal,NP,Nepalese Rupee,NPR,OTHER
-Netherlands,NL,Euro,EUR,BIG BAD
-New Caledonia,NC,CFP Franc,XPF,OTHER
-New Zealand,NZ,New Zealand Dollar,NZD,OTHER
-Nicaragua,NI,Cordoba Oro,NIO,OTHER
-Niger,NE,CFA Franc BCEAO,XOF,OTHER
-Nigeria,NG,Naira,NGN,OTHER
-Niue,NU,New Zealand Dollar,NZD,OTHER
-Norfolk Island,NF,Australian Dollar,AUD,OTHER
-Northern Mariana Islands,MP,US Dollar,USD,OTHER
-Norway,NO,Norwegian Krone,NOK,BIG GOOD
-Oman,OM,Rial Omani,OMR,OTHER
-Pakistan,PK,Pakistan Rupee,PKR,OTHER
-Palau,PW,US Dollar,USD,OTHER
-Panama,PA,Balboa,PAB,OTHER
-Panama,PA,US Dollar,USD,OTHER
-Papua New Guinea,PG,Kina,PGK,OTHER
-Paraguay,PY,Guarani,PYG,OTHER
-Peru,PE,Sol,PEN,OTHER
-Philippines,PH,Philippine Peso,PHP,OTHER
-Pitcairn,PN,New Zealand Dollar,NZD,OTHER
-Poland,PL,Zloty,PLN,FOCUSED GROWING
-Portugal,PT,Euro,EUR,BIG BAD
-Puerto Rico,PR,US Dollar,USD,OTHER
-Qatar,QA,Qatari Rial,QAR,OTHER
-Réunion,RE,Euro,EUR,OTHER
-Romania,RO,Romanian Leu,RON,FOCUSED GROWING
-Russian Federation,RU,Russian Ruble,RUB,BIG GOOD
-Rwanda,RW,Rwanda Franc,RWF,OTHER
-Saint Barthélemy,BL,Euro,EUR,OTHER
-Saint Helena Ascension and Tristan da Cunha,SH,Saint Helena Pound,SHP,OTHER
-Saint Kitts and Nevis,KN,East Caribbean Dollar,XCD,OTHER
-Saint Lucia,LC,East Caribbean Dollar,XCD,OTHER
-Saint Martin (French part),MF,Euro,EUR,OTHER
-Saint Pierre and Miquelon,PM,Euro,EUR,OTHER
-Saint Vincent and the Grenadines,VC,East Caribbean Dollar,XCD,OTHER
-Samoa,WS,Tala,WST,OTHER
-San Marino,SM,Euro,EUR,OTHER
-Sao Tome and Principe,ST,Dobra,STN,OTHER
-Saudi Arabia,SA,Saudi Riyal,SAR,OTHER
-Senegal,SN,CFA Franc BCEAO,XOF,OTHER
-Serbia,RS,Serbian Dinar,RSD,OTHER
-Seychelles,SC,Seychelles Rupee,SCR,OTHER
-Sierra Leone,SL,Leone,SLL,OTHER
-Singapore,SG,Singapore Dollar,SGD,OTHER
-Sint Maarten (Dutch part),SX,Netherlands Antillean Guilder,ANG,OTHER
-Slovakia,SK,Euro,EUR,FOCUSED PERSPECTIVE
-Slovenia,SI,Euro,EUR,OTHER
-Solomon Islands,SB,Solomon Islands Dollar,SBD,OTHER
-Somalia,SO,Somali Shilling,SOS,OTHER
-South Africa,ZA,Rand,ZAR,OTHER
-South Sudan,SS,South Sudanese Pound,SSP,OTHER
-Spain,ES,Euro,EUR,BIG BAD
-Sri Lanka,LK,Sri Lanka Rupee,LKR,OTHER
-Sudan,SD,Sudanese Pound,SDG,OTHER
-Suriname,SR,Surinam Dollar,SRD,OTHER
-Svalbard and Jan Mayen,SJ,Norwegian Krone,NOK,OTHER
-Sweden,SE,Swedish Krona,SEK,BIG BAD
-Switzerland,CH,Swiss Franc,CHF,FOCUSED GROWING
-Syrian Arab Republic,SY,Syrian Pound,SYP,OTHER
-Taiwan Province of China,TW,New Taiwan Dollar,TWD,OTHER
-Tajikistan,TJ,Somoni,TJS,OTHER
-Tanzania United Republic of,TZ,Tanzanian Shilling,TZS,OTHER
-Thailand,TH,Baht,THB,OTHER
-Timor-Leste,TL,US Dollar,USD,OTHER
-Togo,TG,CFA Franc BCEAO,XOF,OTHER
-Tokelau,TK,New Zealand Dollar,NZD,OTHER
-Tonga,TO,Pa'anga,TOP,OTHER
-Trinidad and Tobago,TT,Trinidad and Tobago Dollar,TTD,OTHER
-Tunisia,TN,Tunisian Dinar,TND,OTHER
-Turkey,TR,Turkish Lira,TRY,OTHER
-Turkmenistan,TM,Turkmenistan New Manat,TMT,OTHER
-Turks and Caicos Islands,TC,US Dollar,USD,OTHER
-Tuvalu,TV,Australian Dollar,AUD,OTHER
-Uganda,UG,Uganda Shilling,UGX,OTHER
-Ukraine,UA,Hryvnia,UAH,FOCUSED GROWING
-United Arab Emirates,AE,UAE Dirham,AED,OTHER
-United Kingdom,GB,Pound Sterling,GBP,BIG BAD
-United States Minor Outlying Islands,UM,US Dollar,USD,OTHER
-United States,US,US Dollar,USD,OTHER
-Uruguay,UY,Peso Uruguayo,UYU,OTHER
-Uzbekistan,UZ,Uzbekistan Sum,UZS,OTHER
-Vanuatu,VU,Vatu,VUV,OTHER
-Venezuela Bolivarian Republic of,VE,Bol√≠var Soberano,VES,OTHER
-Viet Nam,VN,Dong,VND,OTHER
-Virgin Islands British,VG,US Dollar,USD,OTHER
-Virgin Islands U.S.,VI,US Dollar,USD,OTHER
-Wallis and Futuna,WF,CFP Franc,XPF,OTHER
-Western Sahara,EH,Moroccan Dirham,MAD,OTHER
-Yemen,YE,Yemeni Rial,YER,OTHER
-Zambia,ZM,Zambian Kwacha,ZMW,OTHER
-Zimbabwe,ZW,Zimbabwe Dollar,ZWL,OTHER
+Afghanistan,AF,Afghani,AFN,Other
+Åland Islands,AX,Euro,EUR,Other
+Albania,AL,Lek,ALL,Other
+Algeria,DZ,Algerian Dinar,DZD,Other
+American Samoa,AS,US Dollar,USD,Other
+Andorra,AD,Euro,EUR,Other
+Angola,AO,Kwanza,AOA,Other
+Anguilla,AI,East Caribbean Dollar,XCD,Other
+Antigua and Barbuda,AG,East Caribbean Dollar,XCD,Other
+Argentina,AR,Argentine Peso,ARS,Other
+Armenia,AM,Armenian Dram,AMD,Other
+Aruba,AW,Aruban Florin,AWG,Other
+Australia,AU,Australian Dollar,AUD,Big Good
+Austria,AT,Euro,EUR,Big Bad
+Azerbaijan,AZ,Azerbaijan Manat,AZN,Other
+Bahamas,BS,Bahamian Dollar,BSD,Other
+Bahrain,BH,Bahraini Dinar,BHD,Other
+Bangladesh,BD,Taka,BDT,Other
+BarBados,BB,BarBados Dollar,BBD,Other
+Belarus,BY,Belarusian Ruble,BYN,Big Good
+Belgium,BE,Euro,EUR,Big Bad
+Belize,BZ,Belize Dollar,BZD,Other
+Benin,BJ,CFA Franc BCEAO,XOF,Other
+Bermuda,BM,Bermudian Dollar,BMD,Other
+Bhutan,BT,Indian Rupee,INR,Other
+Bhutan,BT,Ngultrum,BTN,Other
+Bolivia Plurinational State of,BO,Boliviano,BOB,Other
+Bolivia Plurinational State of,BO,Mvdol,BOV,Other
+Bonaire Sint Eustatius and Saba,BQ,US Dollar,USD,Other
+Bosnia and Herzegovina,BA,Convertible Mark,BAM,Other
+Botswana,BW,Pula,BWP,Other
+Bouvet Island,BV,Norwegian Krone,NOK,Other
+Brazil,BR,Brazilian Real,BRL,Other
+British Indian Ocean Territory,IO,US Dollar,USD,Other
+Brunei Darussalam,BN,Brunei Dollar,BND,Other
+Bulgaria,BG,Bulgarian Lev,BGN,Other
+Burkina Faso,BF,CFA Franc BCEAO,XOF,Other
+Burundi,BI,Burundi Franc,BIF,Other
+Cape Verde,CV,Cabo Verde Escudo,CVE,Other
+Cambodia,KH,Riel,KHR,Other
+Cameroon,CM,CFA Franc BEAC,XAF,Other
+Canada,CA,Canadian Dollar,CAD,Other
+Cayman Islands,KY,Cayman Islands Dollar,KYD,Other
+Central African Republic,CF,CFA Franc BEAC,XAF,Other
+Chad,TD,CFA Franc BEAC,XAF,Other
+Chile,CL,Chilean Peso,CLP,Other
+China,CN,Yuan Renminbi,CNY,Other
+Christmas Island,CX,Australian Dollar,AUD,Other
+Cocos (Keeling) Islands,CC,Australian Dollar,AUD,Other
+Colombia,CO,Colombian Peso,COP,Other
+Comoros,KM,Comorian Franc,KMF,Other
+Congo the Democratic Republic of the,CD,Congolese Franc,CDF,Other
+Congo,CG,CFA Franc BEAC,XAF,Other
+Cook Islands,CK,New Zealand Dollar,NZD,Other
+Costa Rica,CR,Costa Rican Colon,CRC,Other
+Côte d'Ivoire,CI,CFA Franc BCEAO,XOF,Other
+Croatia,HR,Euro,EUR,Other
+Cuba,CU,Cuban Peso,CUP,Other
+Curaçao,CW,Netherlands Antillean Guilder,ANG,Other
+Cyprus,CY,Euro,EUR,Big Good
+Czech Republic,CZ,Czech Koruna,CZK,Focused Growing
+Denmark,DK,Danish Krone,DKK,Other
+Djibouti,DJ,Djibouti Franc,DJF,Other
+Dominica,DM,East Caribbean Dollar,XCD,Other
+Dominican Republic,DO,Dominican Peso,DOP,Other
+Ecuador,EC,US Dollar,USD,Other
+Egypt,EG,Egyptian Pound,EGP,Other
+El Salvador,SV,US Dollar,USD,Other
+Equatorial Guinea,GQ,CFA Franc BEAC,XAF,Other
+Eritrea,ER,Nakfa,ERN,Other
+Estonia,EE,Euro,EUR,Focused Growing
+Swaziland,SZ,Lilangeni,SZL,Other
+Ethiopia,ET,Ethiopian Birr,ETB,Other
+Falkland Islands (Malvinas),FK,Falkland Islands Pound,FKP,Other
+Faroe Islands,FO,Danish Krone,DKK,Other
+Fiji,FJ,Fiji Dollar,FJD,Other
+Finland,FI,Euro,EUR,Other
+France,FR,Euro,EUR,Big Bad
+French Guiana,GF,Euro,EUR,Other
+French Polynesia,PF,CFP Franc,XPF,Other
+French Southern Territories,TF,Euro,EUR,Other
+Gabon,GA,CFA Franc BEAC,XAF,Other
+Gambia,GM,Dalasi,GMD,Other
+Georgia,GE,Lari,GEL,Focused Perspective
+Germany,DE,Euro,EUR,Big Bad
+Ghana,GH,Ghana Cedi,GHS,Other
+Gibraltar,GI,Gibraltar Pound,GIP,Other
+Greece,GR,Euro,EUR,Big Good
+Greenland,GL,Danish Krone,DKK,Other
+Grenada,GD,East Caribbean Dollar,XCD,Other
+Guadeloupe,GP,Euro,EUR,Other
+Guam,GU,US Dollar,USD,Other
+Guatemala,GT,Quetzal,GTQ,Other
+Guernsey,GG,Pound Sterling,GBP,Other
+Guinea,GN,Guinean Franc,GNF,Other
+Guinea-Bissau,GW,CFA Franc BCEAO,XOF,Other
+Guyana,GY,Guyana Dollar,GYD,Other
+Haiti,HT,Gourde,HTG,Other
+Haiti,HT,US Dollar,USD,Other
+Heard Island and McDonald Islands,HM,Australian Dollar,AUD,Other
+Holy See (Vatican City State),VA,Euro,EUR,Other
+Honduras,HN,Lempira,HNL,Other
+Hong Kong,HK,Hong Kong Dollar,HKD,Other
+Hungary,HU,Forint,HUF,Focused Growing
+Iceland,IS,Iceland Krona,ISK,Other
+India,IN,Indian Rupee,INR,Other
+Indonesia,ID,Rupiah,IDR,Other
+Iran Islamic Republic of,IR,Iranian Rial,IRR,Other
+Iraq,IQ,Iraqi Dinar,IQD,Other
+Ireland,IE,Euro,EUR,Big Bad
+Isle of Man,IM,Pound Sterling,GBP,Other
+Israel,IL,New Israeli Sheqel,ILS,Big Good
+Italy,IT,Euro,EUR,Big Bad
+Jamaica,JM,Jamaican Dollar,JMD,Other
+Japan,JP,Yen,JPY,Other
+Jersey,JE,Pound Sterling,GBP,Other
+Jordan,JO,Jordanian Dinar,JOD,Other
+Kazakhstan,KZ,Tenge,KZT,Focused Growing
+Kenya,KE,Kenyan Shilling,KES,Other
+Kiribati,KI,Australian Dollar,AUD,Other
+Korea Democratic People's Republic of,KP,North Korean Won,KPW,Other
+Korea Republic of,KR,Won,KRW,Other
+Kuwait,KW,Kuwaiti Dinar,KWD,Other
+Kyrgyzstan,KG,Som,KGS,Other
+Lao People's Democratic Republic,LA,Lao Kip,LAK,Other
+Latvia,LV,Euro,EUR,Focused Growing
+Lebanon,LB,Lebanese Pound,LBP,Other
+Lesotho,LS,Loti,LSL,Other
+Lesotho,LS,Rand,ZAR,Other
+Liberia,LR,Liberian Dollar,LRD,Other
+Libya,LY,Libyan Dinar,LYD,Other
+Liechtenstein,LI,Swiss Franc,CHF,Other
+Lithuania,LT,Euro,EUR,Focused Perspective
+Luxembourg,LU,Euro,EUR,Other
+Macao,MO,Pataca,MOP,Other
+Macedonia the Former Yugoslav Republic of,MK,Denar,MKD,Other
+Madagascar,MG,Malagasy Ariary,MGA,Other
+Malawi,MW,Malawi Kwacha,MWK,Other
+Malaysia,MY,Malaysian Ringgit,MYR,Other
+Maldives,MV,Rufiyaa,MVR,Other
+Mali,ML,CFA Franc BCEAO,XOF,Other
+Malta,MT,Euro,EUR,Big Good
+Marshall Islands,MH,US Dollar,USD,Other
+Martinique,MQ,Euro,EUR,Other
+Mauritania,MR,Ouguiya,MRU,Other
+Mauritius,MU,Mauritius Rupee,MUR,Other
+Mayotte,YT,Euro,EUR,Other
+Mexico,MX,Mexican Peso,MXN,Other
+Micronesia Federated States of,FM,US Dollar,USD,Other
+Moldova Republic of,MD,Moldovan Leu,MDL,Focused Growing
+Monaco,MC,Euro,EUR,Other
+Mongolia,MN,Tugrik,MNT,Other
+Montenegro,ME,Euro,EUR,Other
+Montserrat,MS,East Caribbean Dollar,XCD,Other
+Morocco,MA,Moroccan Dirham,MAD,Other
+Mozambique,MZ,Mozambique Metical,MZN,Other
+Myanmar,MM,Kyat,MMK,Other
+Namibia,NA,Namibia Dollar,NAD,Other
+Namibia,NA,Rand,ZAR,Other
+Nauru,NR,Australian Dollar,AUD,Other
+Nepal,NP,Nepalese Rupee,NPR,Other
+Netherlands,NL,Euro,EUR,Big Bad
+New Caledonia,NC,CFP Franc,XPF,Other
+New Zealand,NZ,New Zealand Dollar,NZD,Other
+Nicaragua,NI,Cordoba Oro,NIO,Other
+Niger,NE,CFA Franc BCEAO,XOF,Other
+Nigeria,NG,Naira,NGN,Other
+Niue,NU,New Zealand Dollar,NZD,Other
+Norfolk Island,NF,Australian Dollar,AUD,Other
+Northern Mariana Islands,MP,US Dollar,USD,Other
+Norway,NO,Norwegian Krone,NOK,Big Good
+Oman,OM,Rial Omani,OMR,Other
+Pakistan,PK,Pakistan Rupee,PKR,Other
+Palau,PW,US Dollar,USD,Other
+Panama,PA,Balboa,PAB,Other
+Panama,PA,US Dollar,USD,Other
+Papua New Guinea,PG,Kina,PGK,Other
+Paraguay,PY,Guarani,PYG,Other
+Peru,PE,Sol,PEN,Other
+Philippines,PH,Philippine Peso,PHP,Other
+Pitcairn,PN,New Zealand Dollar,NZD,Other
+Poland,PL,Zloty,PLN,Focused Growing
+Portugal,PT,Euro,EUR,Big Bad
+Puerto Rico,PR,US Dollar,USD,Other
+Qatar,QA,Qatari Rial,QAR,Other
+Réunion,RE,Euro,EUR,Other
+Romania,RO,Romanian Leu,RON,Focused Growing
+Russian Federation,RU,Russian Ruble,RUB,Big Good
+Rwanda,RW,Rwanda Franc,RWF,Other
+Saint Barthélemy,BL,Euro,EUR,Other
+Saint Helena Ascension and Tristan da Cunha,SH,Saint Helena Pound,SHP,Other
+Saint Kitts and Nevis,KN,East Caribbean Dollar,XCD,Other
+Saint Lucia,LC,East Caribbean Dollar,XCD,Other
+Saint Martin (French part),MF,Euro,EUR,Other
+Saint Pierre and Miquelon,PM,Euro,EUR,Other
+Saint Vincent and the Grenadines,VC,East Caribbean Dollar,XCD,Other
+Samoa,WS,Tala,WST,Other
+San Marino,SM,Euro,EUR,Other
+Sao Tome and Principe,ST,Dobra,STN,Other
+Saudi Arabia,SA,Saudi Riyal,SAR,Other
+Senegal,SN,CFA Franc BCEAO,XOF,Other
+Serbia,RS,Serbian Dinar,RSD,Other
+Seychelles,SC,Seychelles Rupee,SCR,Other
+Sierra Leone,SL,Leone,SLL,Other
+Singapore,SG,Singapore Dollar,SGD,Other
+Sint Maarten (Dutch part),SX,Netherlands Antillean Guilder,ANG,Other
+Slovakia,SK,Euro,EUR,Focused Perspective
+Slovenia,SI,Euro,EUR,Other
+Solomon Islands,SB,Solomon Islands Dollar,SBD,Other
+Somalia,SO,Somali Shilling,SOS,Other
+South Africa,ZA,Rand,ZAR,Other
+South Sudan,SS,South Sudanese Pound,SSP,Other
+Spain,ES,Euro,EUR,Big Bad
+Sri Lanka,LK,Sri Lanka Rupee,LKR,Other
+Sudan,SD,Sudanese Pound,SDG,Other
+Suriname,SR,Surinam Dollar,SRD,Other
+Svalbard and Jan Mayen,SJ,Norwegian Krone,NOK,Other
+Sweden,SE,Swedish Krona,SEK,Big Bad
+Switzerland,CH,Swiss Franc,CHF,Focused Growing
+Syrian Arab Republic,SY,Syrian Pound,SYP,Other
+Taiwan Province of China,TW,New Taiwan Dollar,TWD,Other
+Tajikistan,TJ,Somoni,TJS,Other
+Tanzania United Republic of,TZ,Tanzanian Shilling,TZS,Other
+Thailand,TH,Baht,THB,Other
+Timor-Leste,TL,US Dollar,USD,Other
+Togo,TG,CFA Franc BCEAO,XOF,Other
+Tokelau,TK,New Zealand Dollar,NZD,Other
+Tonga,TO,Pa'anga,TOP,Other
+Trinidad and Tobago,TT,Trinidad and Tobago Dollar,TTD,Other
+Tunisia,TN,Tunisian Dinar,TND,Other
+Turkey,TR,Turkish Lira,TRY,Other
+Turkmenistan,TM,Turkmenistan New Manat,TMT,Other
+Turks and Caicos Islands,TC,US Dollar,USD,Other
+Tuvalu,TV,Australian Dollar,AUD,Other
+Uganda,UG,Uganda Shilling,UGX,Other
+Ukraine,UA,Hryvnia,UAH,Focused Growing
+United Arab Emirates,AE,UAE Dirham,AED,Other
+United Kingdom,GB,Pound Sterling,GBP,Big Bad
+United States Minor Outlying Islands,UM,US Dollar,USD,Other
+United States,US,US Dollar,USD,Other
+Uruguay,UY,Peso Uruguayo,UYU,Other
+Uzbekistan,UZ,Uzbekistan Sum,UZS,Other
+Vanuatu,VU,Vatu,VUV,Other
+Venezuela Bolivarian Republic of,VE,Bol√≠var Soberano,VES,Other
+Viet Nam,VN,Dong,VND,Other
+Virgin Islands British,VG,US Dollar,USD,Other
+Virgin Islands U.S.,VI,US Dollar,USD,Other
+Wallis and Futuna,WF,CFP Franc,XPF,Other
+Western Sahara,EH,Moroccan Dirham,MAD,Other
+Yemen,YE,Yemeni Rial,YER,Other
+Zambia,ZM,Zambian Kwacha,ZMW,Other
+Zimbabwe,ZW,Zimbabwe Dollar,ZWL,Other

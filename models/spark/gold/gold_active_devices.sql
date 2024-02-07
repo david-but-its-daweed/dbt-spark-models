@@ -20,6 +20,7 @@ SELECT
     real_user_id,
     country_code,
     top_country_code,
+    country_priority_type,
     region_name,
     app_language,
     platform,

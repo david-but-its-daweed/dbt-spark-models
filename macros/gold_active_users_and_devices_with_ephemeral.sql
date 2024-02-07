@@ -255,7 +255,8 @@ active_devices_ext5 AS (
     -- добавляем основной регион
     SELECT
         a.*,
-        c.top_country_code,
+        COALESCE(c.top_country_code, 'Other') AS top_country_code,
+        COALESCE(c.country_priority_type, 'Other') AS country_priority_type,
         COALESCE(b.region_name, 'Other') AS region_name
     FROM active_devices_ext4 AS a
     LEFT JOIN uniq_regions AS b USING(country_code)
@@ -283,6 +284,7 @@ SELECT
 
     country_code,
     top_country_code,
+    country_priority_type,
     region_name,
     app_language,
     platform,

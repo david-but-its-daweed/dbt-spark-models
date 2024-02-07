@@ -354,6 +354,7 @@ orders_ext4 AS (
     SELECT
         a.*,
         COALESCE(c.top_country_code, 'Other') AS top_country_code,
+        COALESCE(c.country_priority_type, 'Other') AS country_priority_type,
         COALESCE(c.region_name, 'Other') AS region_name,
         COALESCE(b.is_new_user, FALSE) AS is_new_device,
         DATEDIFF(a.order_date_msk, b.join_day) AS device_lifetime,
@@ -446,6 +447,7 @@ orders_ext5 AS (
         a.real_user_orders_number,
         a.support_ticket_id,
         a.top_country_code,
+        a.country_priority_type,
         a.region_name,
         a.is_new_device,
         a.device_lifetime,
@@ -508,6 +510,7 @@ SELECT
 
     country_code,
     top_country_code,
+    country_priority_type,
     region_name,
     origin_name,
     platform,

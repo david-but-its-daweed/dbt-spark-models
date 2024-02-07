@@ -14,6 +14,8 @@ models:
       description: Country code (A2 code). In case the user requests the deletion of their personal data from our storage, the field will have an empty string ''
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -92,6 +94,8 @@ models:
       description: Country code (A2 code). In case the user requests the deletion of their personal data from our storage, the field will have an empty string ''
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -168,6 +172,8 @@ models:
       description: Country code (A2 code). In case the user requests the deletion of their personal data from our storage, the field will have an empty string ''
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -234,6 +240,8 @@ models:
       description: Country code (A2 code). In case the user requests the deletion of their personal data from our storage, the field will have an empty string ''
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -298,6 +306,8 @@ models:
       description: Country code (A2 code). In case the user requests the deletion of their personal data from our storage, the field will have an empty string '' (random value across all device_ids)
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other' (random value across all device_ids)
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other' (random value across all device_ids)
     - name: app_language
@@ -365,7 +375,7 @@ models:
     - name: national_currency_code
       description: Country's national currency code (If the country has more than one national currency, an arbitrary one is displayed)
     - name: country_priority_type
-      description: Focus priority type ('FOCUSED PERSPECTIVE', 'FOCUSED GROWING', 'BIG GOOD', 'BIG BAD', 'OTHER')
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
 
 - name: gold_merchant_categories
   description: Information about merchant categories. Each row in the table corresponds to a `merchant_category_id`.
@@ -488,6 +498,8 @@ models:
       description: Country code (A2 code). In case a user requests the deletion of their personal data from our storage, this field will take an empty string ''.
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case a user requests the deletion of their personal data from our storage, this field will take the value 'Other'.
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of the region unique to the country (`Other` is assigned in cases where there is no corresponding region for the country with the `is_uniq` flag). In case a user requests the deletion of their personal data from our storage, this field will take the value 'Other'.
     - name: origin_name
@@ -658,6 +670,8 @@ models:
       description: Country code (A2 code). In case a user requests the deletion of their personal data from our storage, the field will be set to an empty string ('').
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case a user requests the deletion of their personal data from our storage, the field will be set to 'Other.'
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of a region unique to the country (`Other` is set if there is no corresponding region for the country with the 'is_uniq' flag). In case a user requests the deletion of their personal data from our storage, the field will be set to 'Other.'
     - name: is_new_device
@@ -826,6 +840,8 @@ models:
       description: Country code (A2 code). In case a user requests the deletion of their personal data from our storage, the field will be set to NULL.
     - name: top_country_code
       description: Code of the top country (A2-code or 'Other'). In case a user requests the removal of their personal data from our storage, this field will have the value 'Other'.
+    - name: country_priority_type
+      description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
     - name: region_name
       description: Name of a region unique to the country ('Other' is assigned in cases where there is no corresponding region with the 'is_uniq' flag for the country). In case a user requests the removal of their personal data from our storage, this field will have the value 'Other'.
     - name: origin_name

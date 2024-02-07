@@ -26,6 +26,7 @@ SELECT
 
     IF(a.country = '', NULL, a.country) AS country_code,
     COALESCE(c.top_country_code, 'Other') AS top_country_code,
+    COALESCE(c.country_priority_type, 'Other') AS country_priority_type,
     COALESCE(c.region_name, 'Other') AS region_name,
     a.origin_name,
     a.is_online_shipping AS is_delivered_by_jl,
