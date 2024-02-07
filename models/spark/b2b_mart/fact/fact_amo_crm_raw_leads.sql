@@ -82,8 +82,8 @@ select distinct
             min(
                 case when 
                 pipelineId = '7314451'
-                or (pipelineId = '7249567' and status in ('IN PROGRESS', 'In progress'))
-                or (pipelineId = '7553579' and status = 'In progress')
+                or pipelineId = '7249567'
+                or pipelineId = '7553579'
                 or pipelineId = '7120174'
                 or (pipelineId = '7403522' and status = 'Взят в работу')
                 or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
