@@ -103,6 +103,7 @@ sources as (
     from {{ ref('scd2_interactions_snapshot') }} m
     where dbt_valid_to is null
         and (incorrectAttribution is null or not incorrectAttribution)
+        and interactionType = 0
     )
     where filter
 )
