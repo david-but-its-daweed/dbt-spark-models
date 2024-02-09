@@ -43,6 +43,10 @@ select distinct
     contact_id,
     created_at,
     created_ts_msk,
+    legal_entity,
+    CASE WHEN country = 'BR' and legal_entity THEN 'Validated' 
+        WHEN country = 'BR' and not legal_entity THEN 'Rejected'
+        WHEN country = 'BR' then 'In Progress' END as marketing_validation_status,
     validated_ts_msk,
     case when validated_ts_msk is not null then 'Validated'
         when current_status_id = 143 then 'Rejected'
@@ -72,6 +76,7 @@ select distinct
             '7120186'
         ) then true else false end as validation,
         pipeline_name,
+        hasLegalEntity as legal_entity,
         leadId as lead_id,
         phone.phone,
         companyId as company_id,
@@ -118,6 +123,7 @@ select distinct
     (
     select
         AccountId,
+        hasLegalEntity,
         loss_reason,
         companyId,
         companyName,
@@ -142,6 +148,7 @@ select distinct
     select distinct
         AccountId,
         rejectReason as loss_reason,
+        hasLegalEntity,
         companyId,
         companyName,
         contactId,
