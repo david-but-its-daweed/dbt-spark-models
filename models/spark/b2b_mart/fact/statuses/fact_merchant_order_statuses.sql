@@ -53,7 +53,7 @@ select
     min(date(case when payment_status = "advancePaymentRequested" then event_ts_msk end)) as advance_payment_requested,
     min(date(case when payment_status = "advancePaymentInProgress" then event_ts_msk end)) as advance_payment_in_progress,
     min(date(case when payment_status = "advancePaymentAcquired" then event_ts_msk end)) as advance_payment_acquired,
-    min(date(case when payment_status = "manufacturingAndQcInProgress" then event_ts_msk end)) as manufacturing_and_qc_in_progress,
+    min(date(case when payment_status = "manufacturingAndQCInProgress" then event_ts_msk end)) as manufacturing_and_qc_in_progress,
     min(date(case when payment_status = "remainingPaymentRequested" then event_ts_msk end)) as remaining_payment_requested,
     min(date(case when payment_status = "remainingPaymentInProgress" then event_ts_msk end)) as remaining_payment_in_progress,
     min(date(case when payment_status = "remainingPaymentAcquired" then event_ts_msk end)) as remaining_payment_acquired,
