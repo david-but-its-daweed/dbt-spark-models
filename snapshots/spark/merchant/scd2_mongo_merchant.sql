@@ -26,12 +26,12 @@ SELECT
     origin,
     enabled,
     activated_by_merchant,
-    'disablingReason',
-    'disablingNote',
+    `disablingReason`,
+    `disablingNote`,
     business_lines,
     category_ids,
-    'createdBy',
-    'disabledBy'
+    `createdBy`,
+    `disabledBy`
 FROM {{ ref('merchant') }}
 
 {% endsnapshot %}
