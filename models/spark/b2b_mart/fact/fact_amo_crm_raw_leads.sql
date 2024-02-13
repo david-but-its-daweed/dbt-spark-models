@@ -37,6 +37,7 @@ select distinct
     validation,
     pipeline_name,
     lead_id,
+    case when validation then lead_id else validation_lead_id end as validation_lead_id,
     phone,
     company_id,
     company_name,
@@ -67,14 +68,7 @@ from
 (
 select distinct
         pipelineId as pipeline_id,
-        case when pipelineId in (
-            '7249567',
-            '7314451',
-            '7553579',
-            '7120174',
-            '7403522',
-            '7120186'
-        ) then true else false end as validation,
+        validation,
         pipeline_name,
         hasLegalEntity as legal_entity,
         leadId as lead_id,
@@ -82,6 +76,7 @@ select distinct
         companyId as company_id,
         companyName as company_name,
         coalesce(contactId, leadId) as contact_id,
+        min(case when validation then leadId end) over (partition by coalesce(contactId, leadId)) as validation_lead_id,
         millis_to_ts_msk(createdAt) as created_at,
         millis_to_ts_msk(
             case when pipelineId in ('7314451', '7249567', '7553579', '7120174') then createdAt
@@ -122,6 +117,14 @@ select distinct
     from
     (
     select
+        case when pipelineId in (
+            '7249567',
+            '7314451',
+            '7553579',
+            '7120174',
+            '7403522',
+            '7120186'
+        ) then true else false end as validation,
         AccountId,
         hasLegalEntity,
         loss_reason,
