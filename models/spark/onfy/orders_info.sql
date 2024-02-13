@@ -9,23 +9,31 @@
     }
 ) }}
 
-WITH product_names AS (
+WITH product_names_cte AS (
     SELECT DISTINCT
         product_id,
         product_name
     FROM {{ source('onfy_mart', 'dim_product') }}
 ),
 
-devices_mart AS (
+devices_mart_cte AS (
     SELECT
-        device_id,
-        app_device_type,
-        user_email_hash,
-        MIN(min_purchase_ts) AS min_purchase_ts
-    FROM {{ source('onfy_mart', 'devices_mart') }}
-    GROUP BY 1, 2, 3
+        ord.device_id,
+        ord.user_id,
+        ord.user_email_hash,
+        CASE
+            WHEN device.app_type = 'WEB' AND device.device_type = 'DESKTOP' THEN 'web_desktop'
+            WHEN device.app_type = 'WEB' AND device.device_type IN ('PHONE', 'TABLET') THEN 'web_mobile'
+            WHEN device.app_type = 'ANDROID' THEN 'android'
+            WHEN device.app_type = 'IOS' THEN 'ios'
+            ELSE device.app_type || '_' || device.device_type
+        END AS app_device_type,
+        ord.created AS order_dt,
+        MIN(ord.created) OVER (PARTITION BY ord.user_email_hash) AS min_purchase_ts
+    FROM {{ source('pharmacy_landing', 'order') }} AS ord
+    INNER JOIN {{ source('pharmacy_landing', 'device') }} AS device
+        ON device.id = ord.device_id
 )
-
 SELECT
     ord.user_id,
     ord.device_id,
@@ -35,7 +43,7 @@ SELECT
         WHEN FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') > devices_mart.min_purchase_ts THEN 1
         ELSE 0
     END AS is_buyer,
-    RANK() OVER (PARTITION BY devices_mart.user_email_hash ORDER BY FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') ASC) AS purchase_num,
+    DENSE_RANK() OVER (PARTITION BY devices_mart.user_email_hash ORDER BY FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') ASC) AS purchase_num,
     ord.id AS order_id,
     FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') AS order_created_time_cet,
     ord.city,
@@ -44,7 +52,7 @@ SELECT
     order_parcel.store_id,
     store.name AS store_name,
     store_delivery.express,
-    COALESCE (order_paketshop.order_id IS NOT NULL, FALSE) AS is_packetshop,
+    COALESCE(order_paketshop.order_id IS NOT NULL, FALSE) AS is_packetshop,
     order_parcel.delivery_price AS parcel_delivery_price,
     order_parcel_item.product_id,
     medicine.country_local_id AS pzn,
@@ -68,10 +76,10 @@ INNER JOIN {{ source('pharmacy_landing', 'store_delivery') }} AS store_delivery
 LEFT JOIN {{ source('pharmacy_landing', 'medicine') }} AS medicine
     ON
         order_parcel_item.product_id = medicine.id
-INNER JOIN devices_mart
+INNER JOIN devices_mart_cte
     ON
         ord.device_id = devices_mart.device_id
-INNER JOIN product_names
+INNER JOIN product_names_cte
     ON
         product_names.product_id = order_parcel_item.product_id
 LEFT JOIN {{ source('pharmacy_landing', 'order_paketshop') }} AS order_paketshop
