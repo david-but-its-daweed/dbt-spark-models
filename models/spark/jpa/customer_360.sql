@@ -4,7 +4,8 @@
     meta = {
       'model_owner': '@aplotnikov',
       'bigquery_load': 'true',
-      'bigquery_project_id': 'joom-analytics-joompro-public'
+      'bigquery_project_id': 'joom-analytics-joompro-public',
+      'bigquery_check_counts': 'false'
     }
 ) }}
 
