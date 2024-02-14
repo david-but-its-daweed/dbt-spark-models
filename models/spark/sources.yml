@@ -66,6 +66,7 @@ sources:
       - name: logistics_jl_obligatory_channels_daily_snapshot
       - name: abu_core_catalog_daily_snapshot
       - name: product_merchant_joom_select_proposals_daily_snapshot
+      - name: b2b_core_analytics_users_extras_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
