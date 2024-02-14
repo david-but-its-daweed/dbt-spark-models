@@ -5,7 +5,7 @@
       'model_owner': '@aplotnikov',
       'bigquery_load': 'true',
       'bigquery_project_id': 'joom-analytics-joompro-public',
-      'bigquery_table_name': 'joompro_analytics_internal_mart.customer_360',
+      'bigquery_override_dataset_id': 'joompro_analytics_internal_mart',
     }
 ) }}
 
