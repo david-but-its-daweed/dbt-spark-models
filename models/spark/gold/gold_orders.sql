@@ -73,7 +73,6 @@ orders_ext0 AS (
         ) AS is_finalized,
 
         product_quantity,
-        ROUND((gmv_initial + coupon + points_initial) / product_quantity, 3) AS item_price,
         ROUND(gmv_initial, 3) AS gmv_initial,
         ROUND(gmv_final, 3) AS gmv_final,
         ROUND(refund, 3) AS gmv_refunded,
@@ -97,7 +96,6 @@ orders_ext0 AS (
         ROUND(merchant_sale_price - merchant_revenue_initial, 3) AS marketplace_commission_initial,
         ROUND(gmv_initial + coupon + points_initial - logistics_price_initial - logistics_extra_charge - merchant_sale_price - vat_markup, 3) AS jm_markup,
         ROUND(logistics_extra_charge, 3) AS jl_markup,
-
         used_coupon_id IS NOT NULL AS is_with_coupon,
         ROUND(coupon, 3) AS coupon_discount,
         used_coupon_id,
@@ -266,7 +264,7 @@ orders_ext2 AS (
         contexts,
         is_finalized,
         product_quantity,
-        item_price,
+        ROUND((gmv_initial + coupon_discount + points_initial + special_price_discount) / product_quantity, 3) AS item_price,
         gmv_initial,
         gmv_final,
         gmv_refunded,

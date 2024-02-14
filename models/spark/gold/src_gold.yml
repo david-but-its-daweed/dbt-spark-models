@@ -527,7 +527,7 @@ models:
     - name: product_quantity
       description: Quantity of `product_variant_id` in the order.
     - name: item_price
-      description: Cost of one `product_variant_id` before discounts and coupons are applied
+      description: Cost of one `product_variant_id` before points, coupons and Special Price are applied
     - name: gmv_initial
       description: How much the user paid in USD
     - name: gmv_final
