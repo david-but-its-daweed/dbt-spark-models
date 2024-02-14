@@ -1,11 +1,10 @@
 {{ config(
-    schema='joompro_analytics',
+    schema='joompro_analytics_internal_mart',
     materialized='view',
     meta = {
       'model_owner': '@aplotnikov',
       'bigquery_load': 'true',
-      'bigquery_project_id': 'joom-analytics-joompro-public',
-      'bigquery_override_dataset_id': 'joompro_analytics_internal_mart',
+      'bigquery_project_id': 'joom-analytics-joompro-public'
     }
 ) }}
 
