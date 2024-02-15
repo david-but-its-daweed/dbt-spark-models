@@ -68,8 +68,8 @@ from
     (
     select _id as merchant_order_id, 
         status.status as payment_status,
-        min(TIMESTAMP(millis_to_ts_msk(coalesce(col.statusDate, col.utms)))) as event_ts_msk
-        from
+        min(COALESCE(TIMESTAMP(to_date(col.statusDate, "yyyyMMdd")), TIMESTAMP(millis_to_ts_msk(col.utms)))) as event_ts_msk
+    from
         (
         select _id, explode(payment.paymentStatusHistory)
         from {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
