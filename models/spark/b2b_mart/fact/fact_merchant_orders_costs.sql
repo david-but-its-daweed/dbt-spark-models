@@ -31,7 +31,7 @@ from
      payload.total.ccy as total_currency,
      event_ts_msk,
      partition_date,
-     row_number() over (partition by id order by event_ts_msk desc) as rn
+     row_number() over (partition by payload.id order by event_ts_msk desc) as rn
  from {{ source('b2b_mart', 'operational_events') }}
  where type = 'merchantOrderPaymentPriceUpdated'
  )
