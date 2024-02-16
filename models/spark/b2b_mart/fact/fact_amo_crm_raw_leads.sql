@@ -103,9 +103,9 @@ select distinct
         ) as validated_ts_msk,
         loss_reason,
     
-        max(type) over (partition by coalesce(contactId, leadId)) as type, 
-        max(source) over (partition by coalesce(contactId, leadId)) as source, 
-        max(campaign) over (partition by coalesce(contactId, leadId)) as campaign,
+        type, 
+        source, 
+        campaign,
         responsibleUser as admin_email,
         _id as owner_id,
         country,
