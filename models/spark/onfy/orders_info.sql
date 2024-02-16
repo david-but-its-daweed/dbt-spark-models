@@ -19,8 +19,6 @@ WITH product_names_cte AS (
 devices_mart_cte AS (
     SELECT
         order.device_id,
-        order.user_id,
-        order.user_email_hash,
         CASE
             WHEN device.app_type = 'WEB' AND device.device_type = 'DESKTOP' THEN 'web_desktop'
             WHEN device.app_type = 'WEB' AND device.device_type IN ('PHONE', 'TABLET') THEN 'web_mobile'
@@ -28,22 +26,22 @@ devices_mart_cte AS (
             WHEN device.app_type = 'IOS' THEN 'ios'
             ELSE device.app_type || '_' || device.device_type
         END AS app_device_type,
-        order.created AS order_dt,
-        MIN(order.created) OVER (PARTITION BY order.user_email_hash) AS min_purchase_ts
+        MIN(order.created) AS min_purchase_ts
     FROM {{ source('pharmacy_landing', 'order') }} AS order
     INNER JOIN {{ source('pharmacy_landing', 'device') }} AS device
         ON device.id = order.device_id
+    GROUP BY 1, 2
 )
 SELECT
     ord.user_id,
     ord.device_id,
-    devices_mart_cte.user_email_hash,
+    ord.user_email_hash,
     devices_mart_cte.app_device_type,
     CASE
         WHEN FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') > devices_mart_cte.min_purchase_ts THEN 1
         ELSE 0
     END AS is_buyer,
-    DENSE_RANK() OVER (PARTITION BY devices_mart_cte.user_email_hash ORDER BY FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') ASC) AS purchase_num,
+    DENSE_RANK() OVER (PARTITION BY ord.user_email_hash ORDER BY FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') ASC) AS purchase_num,
     ord.id AS order_id,
     FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') AS order_created_time_cet,
     ord.city,
