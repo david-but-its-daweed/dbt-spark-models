@@ -3,7 +3,7 @@
     materialized='incremental',
     alias='initial_metrics_set',
     file_format='parquet',
-    schema='joom_select',
+    schema='category_management',
     incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
     meta = {
@@ -66,7 +66,7 @@ orders_stats_60_days AS (
     SELECT
         o.product_id,
         o.merchant_id,
-        c.l1_merchant_category_name AS main_category,
+        LAST(c.l1_merchant_category_name) AS main_category,
         SUM(o.gmv_initial) AS gmv_60_days,
         COUNT(o.order_id) AS orders_60_days,
         ROUND(AVG(o.product_rating), 2) AS product_rating_60_days
@@ -78,24 +78,22 @@ orders_stats_60_days AS (
         AND o.order_date_msk <= DATE('{{ var("start_date_ymd") }}') - INTERVAL 1 DAY
         AND o.order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 61 DAY
     {% endif %}
-    GROUP BY 1, 2, 3
+    GROUP BY 1, 2
 ),
 
 orders_negative_feedback_stats AS (
     SELECT
         o.product_id,
-        c.l1_merchant_category_name AS main_category,
         COUNT(o.order_id) AS orders,
         ROUND(COUNT(IF(o.is_negative_feedback = 1, o.order_id, NULL)) / COUNT(o.order_id), 3) AS orders_with_nf_share_360_days
     FROM gold.orders AS o
-    INNER JOIN gold.merchant_categories AS c ON o.merchant_category_id = c.merchant_category_id
     WHERE
         NOT (o.refund_reason IN ('fraud', 'cancelled_by_customer') AND o.refund_reason IS NOT NULL)
     {% if is_incremental() %}
         AND order_date_msk <= DATE('{{ var("start_date_ymd") }}') - INTERVAL 91 DAY
         AND order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 360 DAY
     {% endif %}
-    GROUP BY 1, 2
+    GROUP BY 1
 )
 
     SELECT 
