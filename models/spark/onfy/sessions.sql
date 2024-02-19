@@ -134,6 +134,9 @@ sessions_calculation AS (
         COUNT(session_starter) OVER (PARTITION BY device_id ORDER BY event_ts_cet) AS session_num,
         *
     FROM first_sessions
+    ORDER BY
+        device_id,
+        event_ts_cet
 ),
 
 output AS (
@@ -145,10 +148,10 @@ output AS (
         IF(FIRST_VALUE(source_corrected) IN ('facebook', 'google', 'idealo', 's24', 'billiger', 'tiktok', 'bing', 'criteo', 'apomio', 'geizhals'), 'paid', 'free') AS channel_type,
         FIRST_VALUE(campaign_corrected, TRUE) AS campaign,
         FIRST_VALUE(utm_medium, TRUE) AS medium,
-        FIRST_VALUE(event_ts_cet) AS session_start,
-        LAST_VALUE(event_ts_cet) AS session_end,
-        FIRST_VALUE(type) AS starting_session_event,
-        LAST_VALUE(type) AS ending_session_event,
+        MIN(event_ts_cet) AS session_start,
+        MAX(event_ts_cet) AS session_end,
+        MIN_BY(type, event_ts_cet) AS starting_session_event,
+        MAX_BY(type, event_ts_cet) AS ending_session_event,
         COUNT(type) AS events_in_session,
         COUNT(DISTINCT type) AS unique_events_in_session,
         ARRAY_AGG(order_id) AS orders_ids,
