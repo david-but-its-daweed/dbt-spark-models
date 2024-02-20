@@ -23,7 +23,7 @@ WITH interaction_events AS (
         AND (
             type IN (
                 'addToCart', 'cartInitiateCheckout', 'cartOpen', 'catalogOpen',
-                'homeOpen', 'paymentComplete', 'paymentStart', 'productOpen', 'search'
+                'homeOpen', 'paymentComplete', 'paymentStart', 'productOpen', 'search', 'searchServer'
             ) -- funnel events
             OR
             type IN (
