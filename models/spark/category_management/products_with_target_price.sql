@@ -23,7 +23,10 @@ WITH edlp_products AS (----------- a temporary filter: only for non edlp product
     FROM goods.product_labels
     WHERE
         label = "EDLP"
-        AND partition_date >= CURRENT_DATE() - INTERVAL 90 DAY
+        AND partition_date >= DATE("2024-02-19") - INTERVAL 90 DAY
+    {% if is_incremental() %}
+        AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 90 DAY
+    {% endif %}
 ),
 
 filtered_products AS (
@@ -74,6 +77,7 @@ filtered_products AS (
     {% if is_incremental() %}
         AND m.partition_date >= DATE('{{ var("start_date_ymd") }}')
     {% endif %}
+        AND m.partition_date >= DATE("2024-02-19")
 ),
 --------------------------------------------------------------------------
 -----------------------Forming target price------------------------
@@ -122,7 +126,10 @@ prices AS (
     FROM gold.orders
     WHERE
         NOT (refund_reason IN ("fraud", "cancelled_by_customer") AND refund_reason IS NOT NULL)
-        AND order_date_msk >= CURRENT_DATE() - INTERVAL 360 DAY
+    {% if is_incremental() %}
+        AND order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 360 DAY
+    {% endif %}    
+        AND order_date_msk >= DATE("2024-02-19") - INTERVAL 360 DAY
         AND merchant_list_price > 0
         AND merchant_sale_price > 0
     GROUP BY 1, 2, 3

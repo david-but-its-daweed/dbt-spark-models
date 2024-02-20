@@ -28,6 +28,7 @@ WITH price_index_stg_1 AS (
     {% if is_incremental() %}
         AND a.partition_date = DATE('{{ var("start_date_ymd") }}') - INTERVAL 1 DAY
     {% endif %}
+        AND a.partition_date >= DATE("2024-02-19") - INTERVAL 1 DAY 
 ),
 
 price_index_stg_2 AS (
@@ -56,9 +57,11 @@ merchant_cancel_rate AS (
         merchant_cancel_rate_1y AS merchant_cancel_rate_1_year
     FROM merchant.merchant_performance
     WHERE
+        partition_date >= DATE("2024-02-19") 
     {% if is_incremental() %}
-        partition_date = DATE('{{ var("start_date_ymd") }}') - INTERVAL 2 DAY
+       AND partition_date = DATE('{{ var("start_date_ymd") }}')  - INTERVAL 1 DAY 
     {% endif %}
+         
 ),
 
 orders_stats_60_days AS (
@@ -77,6 +80,8 @@ orders_stats_60_days AS (
         AND o.order_date_msk <= DATE('{{ var("start_date_ymd") }}') - INTERVAL 1 DAY
         AND o.order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 61 DAY
     {% endif %}
+        AND o.order_date_msk >= DATE("2024-02-19") - INTERVAL 61 DAY
+        AND o.order_date_msk <= DATE(CURRENT_DATE()) - INTERVAL 1 DAY
     GROUP BY 1, 2
 ),
 
@@ -92,6 +97,8 @@ orders_negative_feedback_stats AS (
         AND order_date_msk <= DATE('{{ var("start_date_ymd") }}') - INTERVAL 91 DAY
         AND order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 360 DAY
     {% endif %}
+        AND o.order_date_msk <= DATE(CURRENT_DATE()) - INTERVAL 91 DAY
+        AND o.order_date_msk >= DATE("2024-02-19") - INTERVAL 360 DAY
     GROUP BY 1
 )
 
