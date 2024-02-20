@@ -207,7 +207,7 @@ target_price_stg AS (
 )
 
 SELECT
-    SHA(CONCAT(variant_id, partition_date)) AS proposal_id,
+    SHA(CONCAT(product_id, partition_date)) AS proposal_id,
     product_id,
     partition_date,
     main_category,

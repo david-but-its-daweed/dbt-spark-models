@@ -23,11 +23,10 @@ WITH price_index_stg_1 AS (
     FROM mi_analytics.aliexpress_joom_price_index AS a
     LEFT JOIN gold.products AS d ON a.joom_product_id = d.product_id
     WHERE
-        a.partition_date = CURRENT_DATE() - INTERVAL 1 DAY
-        AND a.aliexpress_merchant_price_usd IS NOT NULL
+        a.aliexpress_merchant_price_usd IS NOT NULL
         AND a.aliexpress_merchant_price_usd >= 0
     {% if is_incremental() %}
-        AND partition_date = DATE('{{ var("start_date_ymd") }}') - INTERVAL 1 DAY
+        AND a.partition_date = DATE('{{ var("start_date_ymd") }}') - INTERVAL 1 DAY
     {% endif %}
 ),
 
@@ -56,7 +55,7 @@ merchant_cancel_rate AS (
         merchant_id,
         merchant_cancel_rate_1y AS merchant_cancel_rate_1_year
     FROM merchant.merchant_performance
-    WHERE partition_date = CURRENT_DATE() - INTERVAL 2 DAY
+    WHERE
     {% if is_incremental() %}
         partition_date = DATE('{{ var("start_date_ymd") }}') - INTERVAL 2 DAY
     {% endif %}
