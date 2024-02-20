@@ -23,9 +23,12 @@ WITH t AS (
 )
 SELECT
     t.*,
-    welcome_form.mlhs as welcome_form_is_selling,
-    welcome_form.mlsl as welcome_form_shop_url
+    user.first_name,
+    user.phone_number,
+    user.email,
+    user.has_store AS welcome_form_is_selling,
+    user.store_link AS welcome_form_shop_url
 FROM t
-LEFT JOIN {{ source('mongo', 'b2b_core_analytics_users_extras_daily_snapshot') }} welcome_form
+LEFT JOIN {{ ref('dim_analytics_user') }} user
     ON user_id = _id
 
