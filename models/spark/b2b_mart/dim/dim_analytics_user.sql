@@ -20,6 +20,7 @@ SELECT
     t._id,
     MILLIS_TO_TS_MSK(t.ctms) AS created_ts_msk,
     MILLIS_TO_TS_MSK(t.utms) AS updated_ts_msk,
+    t.fn AS first_name,
     COALESCE(t.phone, pn.phone) AS phone_number,
     t.email,
     u_extra.has_store,
