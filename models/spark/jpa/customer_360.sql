@@ -15,7 +15,9 @@ WITH t AS (
         COUNT(DISTINCT partition_date) user_activity_days,
         APPROX_COUNT_DISTINCT(request_id) user_activity_total_requests,
         MIN(partition_date) first_activity,
-        MAX(partition_date) last_activity
+        MAX(partition_date) last_activity,
+        SUM(IF(request_path = '/dashboard/checkout', 1, 0)) AS checkout_page_visits,
+        SUM(IF(request_path = '/dashboard/plans', 1, 0)) AS plans_page_visits
     FROM {{ ref('fact_user_activity') }}
     GROUP BY 1
 )
