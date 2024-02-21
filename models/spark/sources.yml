@@ -29,6 +29,7 @@ sources:
       - name: dim_merchant
       - name: dim_date
       - name: dim_pair_currency_rate
+      - name: dim_published_variant_with_merchant
   - name: cube
     tables:
       - name: event_counts_country_os_days
@@ -152,13 +153,23 @@ sources:
   - name: mi_analytics
     tables:
       - name: aliexpress_logistics_prices
+      - name: aliexpress_joom_price_index      
 
   - name: goods
     tables:
       - name: coolbe_product_labels
+      - name: product_labels
 
   - name: joompro_mart
     tables:
       - name: mercadolibre_products_snapshot
       - name: mercadolibre_categories
       - name: auth_proxy_dim_devices
+
+  - name: category_management
+    tables:
+      - name: joom_select_manual_criteria
+
+  - name: merchant
+    tables:
+      - name: merchant_performance

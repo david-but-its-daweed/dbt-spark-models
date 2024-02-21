@@ -20,7 +20,7 @@ WITH edlp_products AS (----------- a temporary filter: only for non edlp product
     SELECT
         product_id,
         partition_date
-    FROM goods.product_labels
+    FROM {{ source('goods', 'product_labels') }}
     WHERE
         label = "EDLP"
         AND partition_date >= DATE("2024-02-19") - INTERVAL 90 DAY
@@ -47,9 +47,9 @@ filtered_products AS (
         c.business_line,
         d.name AS merchant_name,
         "automatically" AS reason_of_participation
-    FROM category_management.initial_metrics_set AS m
-    LEFT JOIN category_management.joom_select_manual_criteria AS c ON m.main_category = c.category
-    LEFT JOIN mart.dim_merchant AS d ON m.merchant_id = d.merchant_id
+    FROM {{ ref('initial_metrics_set') }} AS m
+    LEFT JOIN {{ source('category_management', 'joom_select_manual_criteria') }} AS c ON m.main_category = c.category
+    LEFT JOIN {{ source('mart', 'dim_merchant') }} AS d ON m.merchant_id = d.merchant_id
     LEFT JOIN edlp_products AS e
         ON
             m.product_id = e.product_id
@@ -89,7 +89,7 @@ variants AS (
         product_id,
         price / 1000000 AS price,
         currency
-    FROM mart.dim_published_variant_with_merchant
+    FROM {{ source('mart', 'dim_published_variant_with_merchant') }}
     WHERE next_effective_ts > "9999-12-31"
 ),
 
@@ -123,7 +123,7 @@ prices AS (
         order_date_msk,
         MIN(merchant_list_price / product_quantity) AS min_merchant_list_price,
         MIN(merchant_sale_price / product_quantity) AS min_merchant_sale_price
-    FROM gold.orders
+    FROM {{ ref('gold_orders') }}
     WHERE
         NOT (refund_reason IN ("fraud", "cancelled_by_customer") AND refund_reason IS NOT NULL)
     {% if is_incremental() %}
