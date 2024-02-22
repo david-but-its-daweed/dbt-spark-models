@@ -35,6 +35,12 @@ jobs:
         run: python3 .github/scripts/get_no_owner.py
       - name: Check no unused sources
         run: python3 .github/scripts/get_unused_sources.py
+      - name: Check manual tables
+        uses: joomcode/dbt-models/.github/actions/check-manual-tables
+        with:
+          platform: spark
+          manual-tables-filepath: seeds/manual_tables_seed.csv
+          manifest-filepath: target/manifest.json
       - name: SQL fluff fix
         uses: joomcode/dbt-models/.github/actions/sqlfluff-fix@master
         with:
