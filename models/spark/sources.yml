@@ -101,9 +101,6 @@ sources:
       - name: s3_inventory_with_tables
       - name: context_product_counters_v5
       - name: fact_removed_device_event
-  - name: pharmacy
-    tables:
-      - name: fbads_adset_country_insights
   - name: onfy_mart
     tables:
       - name: device_events
