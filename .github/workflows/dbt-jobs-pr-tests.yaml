@@ -36,7 +36,7 @@ jobs:
       - name: Check no unused sources
         run: python3 .github/scripts/get_unused_sources.py
       - name: Check manual tables
-        uses: joomcode/dbt-models/.github/actions/check-manual-tables
+        uses: joomcode/dbt-models/.github/actions/check-manual-tables@master
         with:
           platform: spark
           manual-tables-filepath: seeds/manual_tables_seed.csv
