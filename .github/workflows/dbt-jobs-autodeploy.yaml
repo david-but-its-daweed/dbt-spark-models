@@ -31,6 +31,12 @@ jobs:
         run: aws eks --region eu-central-1 update-kubeconfig --name streaming-kube
       - name: Check out repository code
         uses: actions/checkout@v3
+      - name: Checkout reusable workflow dir
+        uses: actions/checkout@v3
+        with:
+          repository: joomcode/dbt-models
+          token: ${{ secrets.GIT_ACCESS_TOKEN }}
+          path: dbt-models-repo
       - name: Ensure Python 3.8
         run: sudo amazon-linux-extras enable python3.8 && sudo yum -y install python3.8
       # Not using setup-python because of https://github.com/actions/setup-python/issues/162
@@ -62,6 +68,7 @@ jobs:
           platform: spark
           manual-tables-filepath: seeds/manual_tables_seed.csv
           manifest-filepath: target/manifest.json
+          script-filepath: dbt-models-repo/.github/scripts/check_manual_tables.py
       - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
         with:
           dbt-select: "--exclude tag:manual tag:platform tag:data_readiness"
