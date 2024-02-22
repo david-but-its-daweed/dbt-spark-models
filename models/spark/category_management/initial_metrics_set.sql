@@ -13,7 +13,6 @@
   )
 }}
 
-
 WITH price_index_stg_1 AS (
     SELECT
         a.joom_product_id AS product_id,
