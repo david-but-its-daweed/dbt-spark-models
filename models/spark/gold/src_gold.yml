@@ -573,7 +573,7 @@ models:
     - name: marketplace_commission_initial
       description: Marketplace commission in USD, calculated based on the merchant's price, depending on the category and country
     - name: jm_markup
-      description: Additional markup, depends on the user, product, etc. (does not include coupons and points, i.e., added to the merchant's price + logistics price)
+      description: Additional markup, depends on the user, product, etc. (does not include coupons, points and special price; i.e., added to the merchant's price + logistics price)
     - name: jl_markup
       description: Additional markup, in most cases related to logistics, managed on the marketplace team's side
     - name: jl_cost_final_estimated
@@ -731,7 +731,7 @@ models:
     - name: marketplace_commission_initial
       description: Marketplace commission in USD, calculated based on the merchant's price, depends on the category and country.
     - name: jm_markup
-      description: Additional markup, depends on the user, product, etc. (does not include coupons and points, i.e., added to the merchant's price + logistics price).
+      description: Additional markup, depends on the user, product, etc. (does not include coupons, points and special price; i.e., added to the merchant's price + logistics price).
     - name: jl_markup
       description: Additional markup, mostly related to logistics, managed by the pricing team of the marketplace.
     - name: coupon_discount
