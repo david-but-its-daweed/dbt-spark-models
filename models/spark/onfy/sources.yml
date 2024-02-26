@@ -9,3 +9,6 @@ sources:
       - name: category
       - name: checkout
       - name: order_paketshop
+      - name: medicine_ingredient
+      - name: ingredient
+      - name: dosage_form
