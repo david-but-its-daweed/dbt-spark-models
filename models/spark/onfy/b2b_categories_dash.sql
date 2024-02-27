@@ -158,12 +158,17 @@ products_info as
         manufacturer.name as manufacturer_name,
         medicine.quantity as medicine_quantity,
         medicine.unit as medicine_unit,
-        product.slug as product_slug
+        product.slug as product_slug,
+        onfy_medicine_analogs.actives as actives_list,
+        onfy_medicine_analogs.analog_pzns as analog_pzns,
+        coalesce(onfy_medicine_analogs.analogs_count, 0) as analogs_count
     from {{source('pharmacy_landing', 'product')}} as product
     left join {{source('pharmacy_landing', 'manufacturer')}} as manufacturer
         on product.manufacturer_id = manufacturer.id
     left join {{source('pharmacy_landing', 'medicine')}} as medicine
         on product.id = medicine.id
+    left join {{source('onfy', 'onfy_medicine_analogs')}} as onfy_medicine_analogs
+        on medicine.country_local_id = onfy_medicine_analogs.pzn
 )
 
 select 
@@ -196,7 +201,11 @@ select
     concat('https://onfy.de/katalog/', product_category, "/", product_category_slug) as catalog_url,
     concat('https://onfy.de/artikel/', pzn, '/', product_slug) as product_url,
     
-    count(product_category) over (partition by order_day, pzn, manufacturer_id) as categories_number
+    count(product_category) over (partition by order_day, pzn, manufacturer_id) as categories_number,
+
+    actives_list,
+    analog_pzns,
+    analogs_count
 from sold_products
 join products_info
     using(product_id)
