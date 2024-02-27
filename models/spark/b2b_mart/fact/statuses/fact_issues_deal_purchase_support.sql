@@ -11,12 +11,12 @@
 
 
 with 
-statuses as (select issue_id, team,
+statuses as (select issue_id,
 min(case when status = 'InProgress' then event_ts_msk end) as in_progress_ts,
 min(case when status = 'Done' then event_ts_msk end) as done_ts
 from {{ ref('fact_issues_statuses') }}
-where team is not null and type = 'DealPurchaseSupport'
-group by issue_id, team
+where type = 'DealPurchaseSupport'
+group by issue_id
 ),
 
 
@@ -30,10 +30,9 @@ select
     created_time,
     start_time,
     entity_id as customer_request_id,
-    team.team,
     issue_friendly_id
 from {{ ref('fact_issues') }}
-where type = 'FindOffer' and team.team is not null
+where type = 'DealPurchaseSupport'
 and next_effective_ts_msk is null
 ), 
 
@@ -85,7 +84,7 @@ select distinct
     done_ts
 from
 issues 
-left join statuses using (issue_id, team)
+left join statuses using (issue_id)
 left join customer_requests using (customer_request_id)
 left join deal using (deal_id)
 join (select distinct user_id, country from {{ ref('fact_customers') }}) using (user_id)
