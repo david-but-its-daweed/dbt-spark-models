@@ -29,46 +29,30 @@ select
     assignee_role,
     created_time,
     start_time,
-    entity_id as customer_request_id,
+    entity_id as deal_id,
     issue_friendly_id
 from {{ ref('fact_issues') }}
 where type = 'DealPurchaseSupport'
 and next_effective_ts_msk is null
 ), 
 
-customer_requests as 
-(
-  select
-    deal_id,
-    user_id,
-    customer_request_id,
-    status,
-    reject_reason,
-    planned_offer_cost,
-    planned_offer_currency
-  from {{ ref('fact_customer_requests') }}
-  where next_effective_ts_msk is null
-),
 
 deal as (
 select
     issue_friendly_id as deal_friendly_id,
     deal_id,
+    user_id,
     status as deal_status,
     status_int as deal_status_int
 from {{ ref('fact_deals') }}
 where next_effective_ts_msk is null)
+
 
 select distinct
     deal_id,
     deal_friendly_id,
     user_id,
     country,
-    customer_request_id,
-    planned_offer_cost,
-    planned_offer_currency,
-    status as customer_request_status,
-    reject_reason,
     deal_status,
     deal_status_int,
     issue_id,
@@ -85,7 +69,6 @@ select distinct
 from
 issues 
 left join statuses using (issue_id)
-left join customer_requests using (customer_request_id)
 left join deal using (deal_id)
 join (select distinct user_id, country from {{ ref('fact_customers') }}) using (user_id)
 left join (select assignee_ts, issue_id from {{ ref('fact_issues_assignee_history') }}
