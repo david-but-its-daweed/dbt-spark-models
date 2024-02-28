@@ -86,7 +86,7 @@ select distinct
                    (pipelineId = '7403522' and status = 'Взят в работу')
                     or (pipelineId = '7120186' and status in ('Взят в работу', 'Взяли в работу'))
                 then coalesce(status_ts, createdAt) end
-            ) over (partition by coalesce(contactId, leadId))
+            ) over (partition by coalesce(leadId))
             end
         ) as created_ts_msk,
 
@@ -99,7 +99,7 @@ select distinct
                 or (pipelineId = '7403522' and status in ('Квалифицирован', 'Лид квалифицирован'))
                 or (pipelineId = '7120186' and status in ('Квалифицирован', 'Лид квалифицирован', 'Предложение отправлено'))
             then status_ts end) 
-            over (partition by coalesce(contactId, leadId))
+            over (partition by coalesce(leadId))
         ) as validated_ts_msk,
         loss_reason,
     
