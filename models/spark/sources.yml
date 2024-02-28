@@ -151,7 +151,7 @@ sources:
   - name: mi_analytics
     tables:
       - name: aliexpress_logistics_prices
-      - name: aliexpress_joom_price_index      
+      - name: aliexpress_joom_price_index
 
   - name: goods
     tables:
@@ -162,7 +162,12 @@ sources:
     tables:
       - name: mercadolibre_products_snapshot
       - name: mercadolibre_categories
+      - name: mercadolibre_shops
       - name: auth_proxy_dim_devices
+
+  - name: joompro_analytics
+    tables:
+      - name: mercadolibre_product_measurements
 
   - name: category_management
     tables:
