@@ -30,6 +30,7 @@ sources:
       - name: dim_date
       - name: dim_pair_currency_rate
       - name: dim_published_variant_with_merchant
+      - name: dim_joom_select_proposal
   - name: cube
     tables:
       - name: event_counts_country_os_days

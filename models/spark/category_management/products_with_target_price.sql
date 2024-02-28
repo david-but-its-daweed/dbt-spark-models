@@ -55,10 +55,6 @@ filtered_products AS (
         ON
             m.product_id = e.product_id
             AND e.partition_date = m.partition_date - INTERVAL 1 DAY
-    INNER JOIN ekutynina.js_technicallaunch_products AS tl -- filter only for tecnical launch
-        ON
-            m.product_id = tl.product_id
-            AND m.merchant_id = tl.merchant_id
     WHERE
         m.gmv_60_days >= c.days_gmv_minimum_60         --from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
         AND m.orders_60_days >= c.days_orders_minimum_60 --from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
@@ -67,18 +63,13 @@ filtered_products AS (
         AND m.product_rating_60_days >= 4.3        -- this parameter from https://joom-team.atlassian.net/browse/AN-2985
         AND d.origin_name = "Chinese"              -- a temporary filter: only chinese origin            
         -- a filter for the first launch
-        AND m.merchant_id IN (
-            "5effe5ebc24e2f0b0623e77e", "621e26f5dc27724f0bc46c1e", "1510770926014486775-107-11-709-2088178538", "60b788c5e68365c96bf9e35a",
-            "5cb6f20d6ecda80b01b39608", "1482223842694985483-168-11-26312-1078175402", "1481623505174558053-240-11-629-1881556930", "1515013786717211647-27-11-26193-3983838569",
-            "5d1586788b45130b0122226f", "60cc9cff3ab7320b9fcfc134", "5c48202e8b45130b015b4e30", "5ba7a16c8b2c370bcc0cc0c1", "5c3c0a1f8b45130b01d28acb", "62c55fc41649da5a212ed30f",
-            "1510945977073183125-13-11-26193-588585207", "5ad9c38a8b45130b59fa77ae", "1521655194930946012-6-11-39131-1938131666", "1520647475183396773-20-11-709-4164857933",
-            "6103aaa6d527af18e5ae7aa2", "617bbe56ebf6a381d074e7b7"
-        )
         AND e.product_id IS NULL
     {% if is_incremental() %}
         AND m.partition_date >= DATE('{{ var("start_date_ymd") }}')
-    {% endif %}
+    {% else %}
         AND m.partition_date >= DATE("2024-02-19")
+    {% endif %}
+        
 ),
 --------------------------------------------------------------------------
 -----------------------Forming target price------------------------
@@ -100,7 +91,7 @@ currency_rates AS (
         rate / 1000000 AS rate,
         effective_date,
         next_effective_date
-    FROM mart.dim_currency_rate
+    FROM {{ source('mart', 'dim_currency_rate') }}
 ),
 
 products_n_variants AS (
@@ -129,8 +120,9 @@ prices AS (
         NOT (refund_reason IN ("fraud", "cancelled_by_customer") AND refund_reason IS NOT NULL)
     {% if is_incremental() %}
         AND order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 360 DAY
-    {% endif %}    
+    {% else %}
         AND order_date_msk >= DATE("2024-02-19") - INTERVAL 360 DAY
+    {% endif %}    
         AND merchant_list_price > 0
         AND merchant_sale_price > 0
     GROUP BY 1, 2, 3
