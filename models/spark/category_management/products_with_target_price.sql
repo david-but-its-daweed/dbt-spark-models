@@ -167,40 +167,40 @@ target_price_stg AS (
         ROUND(current_price_usd / merchant_price_index, 3) AS merchant_price_index_price,
         CASE
             WHEN
-                current_price_usd < min_merchant_list_price
-                AND current_price_usd < min_merchant_sale_price
+                current_price_usd < COALESCE(min_merchant_list_price, 1000000000)
+                AND current_price_usd < COALESCE(min_merchant_sale_price, 1000000000)
                 AND current_price_usd < COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
                 THEN current_price_usd * 0.95
             WHEN
-                min_merchant_list_price <= min_merchant_sale_price
+                min_merchant_list_price <= COALESCE(min_merchant_sale_price, 1000000000)
                 AND min_merchant_list_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
                 THEN min_merchant_list_price * 0.95
             WHEN
-                min_merchant_sale_price <= min_merchant_list_price
+                min_merchant_sale_price <= COALESCE(min_merchant_list_price, 1000000000)
                 AND min_merchant_sale_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
                 THEN min_merchant_sale_price * 0.95
             WHEN
-                COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000) <= min_merchant_list_price
-                AND COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000) <= min_merchant_sale_price
+                ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_list_price, 1000000000)
+                AND ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_sale_price, 1000000000)
                 THEN ROUND(current_price_usd / merchant_price_index, 3) * 0.95
         END AS target_price_stg,     -- take minimum price current_price_usd, among min_merchant_list_price, min_merchant_sale_price, price_index_price
         CASE
             WHEN
-                current_price_usd < min_merchant_list_price
-                AND current_price_usd < min_merchant_sale_price
+                current_price_usd < COALESCE(min_merchant_list_price, 1000000000)
+                AND current_price_usd < COALESCE(min_merchant_sale_price, 1000000000)
                 AND current_price_usd < COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
                 THEN "current_price_usd"
             WHEN
-                min_merchant_list_price <= min_merchant_sale_price
+                min_merchant_list_price <= COALESCE(min_merchant_sale_price, 1000000000)
                 AND min_merchant_list_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
                 THEN "min_merchant_list_price"
             WHEN
-                min_merchant_sale_price <= min_merchant_list_price
+                min_merchant_sale_price <= COALESCE(min_merchant_list_price, 1000000000)
                 AND min_merchant_sale_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
                 THEN "min_merchant_sale_price"
             WHEN
-                COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000) <= min_merchant_list_price
-                AND COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000) <= min_merchant_sale_price
+                ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_list_price, 1000000000)
+                AND ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_sale_price, 1000000000)
                 THEN "price_index"
         END AS target_price_reason
     FROM products_n_variants_n_prices
