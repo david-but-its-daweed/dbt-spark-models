@@ -52,6 +52,9 @@ select distinct
     case when validated_ts_msk is not null then 'Validated'
         when current_status_id = 143 then 'Rejected'
         else 'In Progress' end as validation_status,
+    amo_request_ts_msk,
+    case when amo_request_ts_msk is not null then 'Amo Request'
+        else 'No Request' end as amo_request_status,
     loss_reason,
     type,
     source,
@@ -101,6 +104,14 @@ select distinct
             then status_ts end) 
             over (partition by coalesce(leadId))
         ) as validated_ts_msk,
+
+        millis_to_ts_msk(
+            min(
+            case when status in ('Заявка на расчет')
+            then status_ts end) 
+            over (partition by coalesce(leadId))
+        ) as amo_request_ts_msk,
+    
         loss_reason,
     
         type, 
