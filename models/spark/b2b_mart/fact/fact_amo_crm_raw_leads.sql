@@ -108,7 +108,7 @@ select distinct
         millis_to_ts_msk(
             min(
             case when status in ('Заявка на расчет')
-            or status = 'Закрыто и не реализовано' and loss_reason in ('Передали Sales', 'Передали КАМам')
+            or (status = 'Закрыто и не реализовано' and loss_reason in ('Передали Sales', 'Передали КАМам'))
             then status_ts end) 
             over (partition by coalesce(leadId))
         ) as amo_request_ts_msk,
