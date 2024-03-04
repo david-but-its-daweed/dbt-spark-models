@@ -31,8 +31,11 @@ SELECT DISTINCT
         FIRST_VALUE(gr.region_name) OVER (PARTITION BY gr.country_code ORDER BY gr.is_uniq DESC),
         'Other'
     ) AS region_name,
-    gr.top_country_code,
+    COALESCE(gr.top_country_code, 'Other') AS top_country_code,
     cc.currency_code AS national_currency_code,
-    cc.country_priority_type
+    COALESCE(cc.country_priority_type, 'Other') AS country_priority_type
 FROM {{ ref('gold_regions') }} AS gr
-LEFT JOIN countries_properties AS cc ON cc.country_code = gr.country_code AND cc.row_num = 1
+LEFT JOIN countries_properties AS cc
+    ON
+        gr.country_code = cc.country_code
+        AND cc.row_num = 1
