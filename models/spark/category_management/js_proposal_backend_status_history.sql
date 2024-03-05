@@ -136,7 +136,10 @@ LEFT JOIN {{ ref('products_with_target_price') }} AS p
     ON
         p.proposal_id = b.proposal_id
         AND p.variant_id = b.variant_id
-LEFT JOIN variants AS v ON p.product_id = v.product_id
+LEFT JOIN variants AS v
+    ON
+        p.product_id = v.product_id
+        AND p.variant_id = v.variant_id
 LEFT JOIN currency_rates AS c
     ON
         v.currency = c.currency_code
