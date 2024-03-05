@@ -32,7 +32,6 @@ gmv as (
           where partition_date_msk = (select max(partition_date_msk) from {{ ref('users_daily_table') }})
         and date_payed is not null
         ) u on u.user_id = g.user_id
-    where g.owner_role != 'Dev'
 )
 
 
