@@ -13,9 +13,10 @@ WITH
 
 manufacturing AS
 (
-    select order_id, manufacturing as min_manufactured_ts_msk
+    select order_id, MIN(IF(status = 'manufacturing', event_ts_msk, NULL)) as min_manufactured_ts_msk
     from
-    {{ ref('fact_order_statuses') }}
+    {{ ref('fact_order_statuses_change') }}
+    group by order_id
 )
 
 SELECT
