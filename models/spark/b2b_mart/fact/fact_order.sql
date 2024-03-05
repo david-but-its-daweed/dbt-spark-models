@@ -10,30 +10,12 @@
 ) }}
 
 WITH 
-sub_statuses as (
-    select 
-    'client2BrokerPaymentSent' as status,  2010 as pr
-    union all
-    select 
-	'brokerPaymentReceived', 2020 as pr
-    union all
-    select 
-	'broker2JoomSIAPaymentSent', 2030 as pr
-    union all
-    select 
-	'joomSIAPaymentReceived', 2049 as pr
-                 ),
+
 manufacturing AS
 (
-    select order_id, min(event_ts_msk) as min_manufactured_ts_msk
+    select order_id, manufacturing as min_manufactured_ts_msk
     from
-    (
-    select event_ts_msk, order_id, min(pr) over (partition by order_id, foc.status) min_pr, pr
-    from {{ ref('fact_order_statuses_change') }} foc left join sub_statuses s on foc.sub_status = s.status
-    where foc.status = 'manufacturing'
-    )
-    where min_pr = pr or pr is null
-    group by order_id
+    {{ ref('fact_order_statuses') }}
 )
 
 SELECT
