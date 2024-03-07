@@ -185,6 +185,7 @@ SELECT
     po.reason_3ds,
     po.date,
     po.target_id AS order_group_id,
+    po.has_linked_card,
 
     ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int ORDER BY po.created_time)
     AS number_attempt_provider_payment_type,

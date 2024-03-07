@@ -162,6 +162,8 @@ models:
         description: advertisement source for device_id from ads.ads_install.ads_source
       - name: ads_partner_id
         description: advertisements parthner id for device_id from ads.ads_install.ads_partner_id
+      - name: has_linked_card
+        description: 1 if user had linked card before the payment start and 0 if no (1st checkout session on the day)
 
   - name: payment
     description: Table with payment info data without points, last 365 days
