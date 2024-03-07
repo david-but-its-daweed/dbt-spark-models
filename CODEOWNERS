@@ -1,9 +1,10 @@
-* @lexx-a @g00sek
 b2b_mart/ @NastiaMitiushkina
 onfy/ @anyazay @ea-sal @BartolomeuD
-/deploy/ @dmgburg
-/infra/ @dmgburg
-/macros/ @dmgburg
-/tests/ @dmgburg
-/analytics/ @dmgburg
+/deploy/ @msafonov
+/infra/ @msafonov
+/macros/ @msafonov @g00sek
+/tests/ @msafonov
+/analytics/ @msafonov
 /models/spark/gold/ @msafonov @g00sek
+/models/spark/base @g00sek
+/models/spark/core @g00sek
