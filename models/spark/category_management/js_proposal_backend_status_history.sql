@@ -6,8 +6,10 @@
     schema='category_management',
     meta = {
         'model_owner' : '@ekutynina',
-        'bigquery_load': 'false'
-    },
+        'bigquery_load': 'true',
+        'bigquery_partitioning_date_column': 'created_date',
+        'bigquery_fail_on_missing_partitions': 'false'
+    }
   )
 }}
 
