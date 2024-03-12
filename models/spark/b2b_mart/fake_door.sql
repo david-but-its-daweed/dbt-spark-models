@@ -72,7 +72,7 @@ from
 (
 select product_id, min(category_id) as category_id, min(price_amount) as price_amount
 from
-{{ source('joompro_mart', 'mercadolibre_products_snapshot') }}
+{{ source('joompro_analytics_mart', 'mercadolibre_products_snapshot') }}
 where product_id in (select distinct product_id from requests)
 group by product_id
 )

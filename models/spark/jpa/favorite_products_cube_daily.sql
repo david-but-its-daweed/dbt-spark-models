@@ -84,7 +84,7 @@ SELECT
     COALESCE(kube.price_amount_1da, 0) AS price_amount_1da,
     COALESCE(p.original_price_amount, 0) AS original_price_amount
 FROM kube
-INNER JOIN {{ source('joompro_mart', 'mercadolibre_products_snapshot') }} AS p USING (product_id, shop_id)
+INNER JOIN {{ source('joompro_analytics_mart', 'mercadolibre_products_snapshot') }} AS p USING (product_id, shop_id)
 LEFT JOIN {{ source('joompro_mart', 'mercadolibre_shops') }} AS s USING (shop_id)
 LEFT JOIN {{ ref('mercadolibre_categories_view') }} AS c USING (category_id)
 WHERE
