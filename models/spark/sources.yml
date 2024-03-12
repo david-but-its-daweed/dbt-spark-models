@@ -175,6 +175,7 @@ sources:
   - name: category_management
     tables:
       - name: joom_select_manual_criteria
+      - name: js_merchant_discount_rate
 
   - name: merchant
     tables:

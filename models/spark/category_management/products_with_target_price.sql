@@ -62,7 +62,7 @@ filtered_products AS (
         AND m.orders_with_nf_share_1_year <= 0.05  -- this parameter from https://joom-team.atlassian.net/browse/AN-2985
         AND m.product_rating_60_days >= 4.3        -- this parameter from https://joom-team.atlassian.net/browse/AN-2985
         AND d.origin_name = "Chinese"              -- a temporary filter: only chinese origin            
-        -- a filter for the first launch
+        -- a temporary filter: exclude the edlp products
         AND e.product_id IS NULL
     {% if is_incremental() %}
         AND m.partition_date >= DATE('{{ var("start_date_ymd") }}')
@@ -143,14 +143,14 @@ products_n_variants_n_prices AS (
         MIN(v.orders_60_days) AS orders_60_days,
         MIN(v.orders_with_nf_share_1_year) AS orders_with_nf_share_1_year,
         MIN(v.merchant_cancel_rate_1_year) AS merchant_cancel_rate_1_year,
-        MAX(v.merchant_cancel_rate_1_year) AS merchant_cancel_rate_1_year1,
         MIN(v.merchant_price_index) AS merchant_price_index,
         MIN(v.criteria_days_orders_minimum_60) AS criteria_days_orders_minimum_60,
         MIN(v.criteria_days_gmv_minimum_60) AS criteria_days_gmv_minimum_60,
         MIN(v.criteria_merchant_cancel_rate_maximum) AS criteria_merchant_cancel_rate_maximum,
         MIN(v.current_price_usd) AS current_price_usd,
         MIN(p.min_merchant_list_price) AS min_merchant_list_price,
-        MIN(p.min_merchant_sale_price) AS min_merchant_sale_price
+        MIN(p.min_merchant_sale_price) AS min_merchant_sale_price,
+        MIN(d.rate) AS discount_rate -- The rate of an additional discount from the handbook https://docs.google.com/spreadsheets/d/1JXqKXvYhJcaZWf69e1G5EXB0sZady_EEM6pfeGk6JHU/edit#gid=0
     FROM products_n_variants AS v
     LEFT JOIN prices AS p
         ON
@@ -158,6 +158,7 @@ products_n_variants_n_prices AS (
             AND v.variant_id = p.product_variant_id
             AND v.partition_date >= p.order_date_msk
             AND p.order_date_msk >= v.partition_date - INTERVAL 90 DAY
+    LEFT JOIN {{ source('category_management', 'js_merchant_discount_rate') }} AS d ON v.merchant_id = d.merchant_id    
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 ),
 
@@ -170,15 +171,15 @@ target_price_stg AS (
                 current_price_usd < COALESCE(min_merchant_list_price, 1000000000)
                 AND current_price_usd < COALESCE(min_merchant_sale_price, 1000000000)
                 AND current_price_usd < COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
-                THEN current_price_usd * 0.95
+                THEN current_price_usd * COALESCE(discount_rate, 0.95)
             WHEN
                 min_merchant_list_price <= COALESCE(min_merchant_sale_price, 1000000000)
                 AND min_merchant_list_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
-                THEN min_merchant_list_price * 0.95
+                THEN min_merchant_list_price * COALESCE(discount_rate, 0.95)
             WHEN
                 min_merchant_sale_price <= COALESCE(min_merchant_list_price, 1000000000)
                 AND min_merchant_sale_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
-                THEN min_merchant_sale_price * 0.95
+                THEN min_merchant_sale_price * COALESCE(discount_rate, 0.95)
             WHEN
                 ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_list_price, 1000000000)
                 AND ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_sale_price, 1000000000)
@@ -203,7 +204,7 @@ target_price_stg AS (
                 AND ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_sale_price, 1000000000)
                 THEN "price_index"
         END AS target_price_reason
-    FROM products_n_variants_n_prices
+    FROM products_n_variants_n_prices AS p
 )
 
 SELECT
