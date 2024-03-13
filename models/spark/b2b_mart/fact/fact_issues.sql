@@ -122,5 +122,5 @@ FROM (
     ) AS key ON i.history.status = key.id
 ) AS issues
 LEFT JOIN admins AS assignee ON issues.assignee_id = assignee.admin_id
-LEFT JOIN admins AS reporter ON issues.assignee_id = reporter.admin_id
+LEFT JOIN admins AS reporter ON issues.reporter_id = reporter.admin_id
 LEFT JOIN assigned ON issues.issue_id = assigned._id
