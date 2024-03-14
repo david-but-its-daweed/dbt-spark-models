@@ -63,7 +63,7 @@ dates AS (
 
 SELECT
     dates.partition_date,
-    COALESCE(kube.is_current, FALSE),
+    COALESCE(kube.is_current, FALSE) AS is_current,
     dates.id,
     dates.product_id,
     dates.shop_id,
