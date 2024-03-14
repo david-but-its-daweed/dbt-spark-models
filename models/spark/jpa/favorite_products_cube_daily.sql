@@ -21,7 +21,9 @@ favorite_product_ids AS (
 favorite_product_measurements AS (
     SELECT
         p.*,
-        p.partition_date = MAX(p.partition_date) OVER () AS is_current
+        MIN(partition_date) OVER (PARTITION BY id, product_id, shop_id) as min_pt,
+        MAX(partition_date) OVER (PARTITION BY id, product_id, shop_id) as max_pt,
+        p.partition_date = MAX(partition_date) OVER (PARTITION BY id, product_id, shop_id) AS is_current
     FROM favorite_product_ids
     INNER JOIN {{ source('joompro_analytics', 'mercadolibre_product_measurements') }} AS p USING (product_id, shop_id)
     WHERE p.partition_date >= ADD_MONTHS(CURRENT_DATE, -1)
@@ -34,6 +36,8 @@ kube AS (
         id,
         product_id,
         shop_id,
+        min_pt,
+        max_pt,
         orders AS orders_1d,
         LAG(orders, 1) OVER (PARTITION BY id, product_id, shop_id ORDER BY partition_date) AS orders_1da,
         gmv AS gmv_1d,
@@ -45,14 +49,24 @@ kube AS (
         price_amount,
         LAG(price_amount, 1) OVER (PARTITION BY id, product_id, shop_id ORDER BY partition_date) AS price_amount_1da
     FROM favorite_product_measurements
+),
+
+dates AS (
+  SELECT
+    DISTINCT
+    EXPLODE(sequence(TO_DATE(min_pt), TO_DATE(max_pt), interval '1' day)) as partition_date,
+    id,
+    product_id,
+    shop_id
+  FROM kube k
 )
 
 SELECT
-    kube.partition_date,
-    kube.is_current,
-    p.id,
-    p.product_id,
-    p.shop_id,
+    dates.partition_date,
+    COALESCE(kube.is_current, FALSE),
+    dates.id,
+    dates.product_id,
+    dates.shop_id,
     p.title,
     p.image_url,
     p.brand_name,
@@ -80,15 +94,15 @@ SELECT
     COALESCE(kube.reviews_count_1da, 0) AS reviews_count_1da,
     COALESCE(kube.reviews_rating, 0) AS reviews_rating,
     COALESCE(kube.reviews_rating_1da, 0) AS reviews_rating_1da,
-    COALESCE(kube.price_amount, 0) AS price_amount,
-    COALESCE(kube.price_amount_1da, 0) AS price_amount_1da,
-    COALESCE(p.original_price_amount, 0) AS original_price_amount
-FROM kube
-INNER JOIN {{ source('joompro_analytics_mart', 'mercadolibre_products_snapshot') }} AS p USING (product_id, shop_id)
+    LAST_VALUE(CASE WHEN kube.price_amount IS NOT NULL THEN kube.price_amount END) OVER (PARTITION BY id ORDER BY dates.partition_date ROWS BETWEEN
+UNBOUNDED PRECEDING AND CURRENT ROW) AS price_amount,
+    LAST_VALUE(CASE WHEN kube.price_amount_1da IS NOT NULL THEN kube.price_amount_1da END) OVER (PARTITION BY id ORDER BY dates.partition_date ROWS BETWEEN
+UNBOUNDED PRECEDING AND CURRENT ROW) AS price_amount_1da,
+    LAST_VALUE(CASE WHEN p.original_price_amount IS NOT NULL THEN p.original_price_amount END) OVER (PARTITION BY id ORDER BY dates.partition_date ROWS BETWEEN
+UNBOUNDED PRECEDING AND CURRENT ROW) AS original_price_amount
+FROM dates
+INNER JOIN {{ source('joompro_analytics_mart', 'mercadolibre_products_snapshot') }} AS p USING (id, product_id, shop_id)
+LEFT JOIN kube USING (partition_date, id, product_id, shop_id)
 LEFT JOIN {{ source('joompro_mart', 'mercadolibre_shops') }} AS s USING (shop_id)
 LEFT JOIN {{ ref('mercadolibre_categories_view') }} AS c USING (category_id)
-WHERE
-    p.product_id IS NOT NULL
-    AND p.id IS NOT NULL
-    AND p.shop_id IS NOT NULL
-    AND p.category_id IS NOT NULL
+
