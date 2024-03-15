@@ -33,7 +33,8 @@ jobs:
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Install development tools
         run: sudo yum -y install gcc gcc-c++ python3-devel python38-devel cyrus-sasl-devel
-
+      - name: Install protobuf
+        run: pip3.8 install protobuf==4.25.3
       - name: Install DBT
         run: pip3.8 install dbt-core==1.7.6 dbt-spark[PyHive]==1.7.1 urllib3==1.26.6
       - name: test DBT models
