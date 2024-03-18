@@ -107,6 +107,16 @@ products_n_variants AS (
             AND pt.partition_date >= c.effective_date
             AND pt.partition_date < c.next_effective_date
 ),
+---- we need to exclude periods, when proposal was approved
+---- otherwise we will demand discount from JS price over and over again
+approved_proposals_periods AS (
+    SELECT
+        product_id,
+        status_effective_from,
+        COALESCE(status_effective_to, "2999-01-01") AS status_effective_to
+    FROM {{ ref('js_proposal_backend_status_history_raw') }}
+    WHERE status = "approved"
+),
 
 prices AS (
     SELECT
@@ -115,16 +125,22 @@ prices AS (
         order_date_msk,
         MIN(merchant_list_price / product_quantity) AS min_merchant_list_price,
         MIN(merchant_sale_price / product_quantity) AS min_merchant_sale_price
-    FROM {{ ref('gold_orders') }}
+    FROM {{ ref('gold_orders') }} AS o
+    LEFT JOIN approved_proposals AS a
+        ON
+            a.product_id = o.product_id
+            AND o.order_datetime_utc <= a.status_effective_to
+            AND o.order_datetime_utc >= a.status_effective_from
     WHERE
-        NOT (refund_reason IN ("fraud", "cancelled_by_customer") AND refund_reason IS NOT NULL)
+        1 = 1
     {% if is_incremental() %}
-        AND order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 360 DAY
+        AND o.order_date_msk >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 360 DAY
     {% else %}
-        AND order_date_msk >= DATE("2024-02-19") - INTERVAL 360 DAY
+        AND o.order_date_msk >= DATE("2024-02-19") - INTERVAL 360 DAY
     {% endif %}    
-        AND merchant_list_price > 0
-        AND merchant_sale_price > 0
+        AND o.merchant_list_price > 0
+        AND o.merchant_sale_price > 0
+        AND a.product_id IS NULL
     GROUP BY 1, 2, 3
 ),
 

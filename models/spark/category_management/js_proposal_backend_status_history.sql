@@ -11,80 +11,7 @@
   )
 }}
 
-WITH backend_tab_stg_1 AS (
-    SELECT
-        SUBSTRING_INDEX(SUBSTRING_INDEX(proposal_id, '"', 2), '"', -1) AS proposal_id,
-        created_time,
-        updated_time,
-        product_id,
-        merchant_id,
-        effective_ts,
-        next_effective_ts,
-        status_history,
-        EXPLODE(target_variant_prices) AS col,
-        cancel_info.reason,
-        cancel_info.source
-    FROM {{ source('mart', 'dim_joom_select_proposal') }}
-),
-
-backend_tab_stg_2 AS (
-    SELECT
-        proposal_id,
-        created_time,
-        updated_time,
-        product_id,
-        merchant_id,
-        effective_ts,
-        next_effective_ts,
-        col.variant_id,
-        col.price,
-        reason,
-        source,
-        EXPLODE(status_history) AS col
-    FROM backend_tab_stg_1
-),
-
-backend_tab_stg_3 AS (
-    SELECT
-        proposal_id,
-        created_time,
-        product_id,
-        merchant_id,
-        effective_ts,
-        next_effective_ts,
-        variant_id,
-        price,
-        reason,
-        source,
-        col.status,
-        col.updated_time,
-        EXPLODE(col.merchant_variant_prices) AS col
-    FROM backend_tab_stg_2
-),
-
-backend_tab_final AS (
-    SELECT
-        proposal_id,
-        DATE(created_time) AS created_date,
-        created_time AS created_ts,
-        product_id,
-        merchant_id,
-        variant_id,
-        price / 1000000 AS proposal_price,
-        reason,
-        source,
-        status,
-        updated_time AS status_effective_from,
-        LEAD(updated_time) OVER (PARTITION BY proposal_id, product_id, variant_id ORDER BY updated_time) AS status_effective_to,
-        col.price / 1000000 AS current_price,
-        FIRST(status) OVER (PARTITION BY proposal_id, product_id, variant_id ORDER BY updated_time DESC) AS current_status
-    FROM backend_tab_stg_3
-    WHERE
-        col.variant_id = variant_id
-        AND next_effective_ts IS NULL
-),
-
-variants AS (
+WITH variants AS (
     SELECT
         variant_id,
         product_id,
@@ -131,7 +58,7 @@ SELECT
     p.target_price_reason,
     p.target_price AS target_price_usd,
     ROUND(p.target_price / p.current_price_usd, 3) AS discount_koef
-FROM backend_tab_final AS b
+FROM {{ ref('js_proposal_backend_status_history_raw') }} AS b
 LEFT JOIN {{ ref('products_with_target_price') }} AS p
     ON
         p.proposal_id = b.proposal_id
