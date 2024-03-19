@@ -158,6 +158,7 @@ sources:
     tables:
       - name: coolbe_product_labels
       - name: product_labels
+      - name: coolbe_jl_cost_ratio_corrections
 
   - name: joompro_mart
     tables:
