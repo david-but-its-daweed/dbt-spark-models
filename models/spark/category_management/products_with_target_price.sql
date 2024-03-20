@@ -120,11 +120,11 @@ approved_proposals_periods AS (
 
 prices AS (
     SELECT
-        a.product_id,
-        product_variant_id,
-        order_date_msk,
-        MIN(merchant_list_price / product_quantity) AS min_merchant_list_price,
-        MIN(merchant_sale_price / product_quantity) AS min_merchant_sale_price
+        o.product_id,
+        o.product_variant_id,
+        o.order_date_msk,
+        MIN(o.merchant_list_price / o.product_quantity) AS min_merchant_list_price,
+        MIN(o.merchant_sale_price / o.product_quantity) AS min_merchant_sale_price
     FROM {{ ref('gold_orders') }} AS o
     LEFT JOIN approved_proposals_periods AS a
         ON
