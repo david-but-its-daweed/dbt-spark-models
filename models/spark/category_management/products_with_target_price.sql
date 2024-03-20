@@ -126,7 +126,7 @@ prices AS (
         MIN(merchant_list_price / product_quantity) AS min_merchant_list_price,
         MIN(merchant_sale_price / product_quantity) AS min_merchant_sale_price
     FROM {{ ref('gold_orders') }} AS o
-    LEFT JOIN approved_proposals AS a
+    LEFT JOIN approved_proposals_periods AS a
         ON
             a.product_id = o.product_id
             AND o.order_datetime_utc <= a.status_effective_to
