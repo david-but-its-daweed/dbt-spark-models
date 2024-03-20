@@ -120,7 +120,7 @@ approved_proposals_periods AS (
 
 prices AS (
     SELECT
-        product_id,
+        a.product_id,
         product_variant_id,
         order_date_msk,
         MIN(merchant_list_price / product_quantity) AS min_merchant_list_price,
