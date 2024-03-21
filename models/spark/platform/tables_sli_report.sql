@@ -14,7 +14,7 @@ with data (
            target_sli,
            owner,
            description,
-           max(ready_time_hours) as ready_time_hours,
+           min(ready_time_hours) as ready_time_hours,
            max(expected_time_utc_hours) as expected_time_utc_hours
     from platform.data_readiness
         left join platform_slo.slo_details on source_id = slo_details.slo_id
