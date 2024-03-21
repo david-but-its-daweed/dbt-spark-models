@@ -1,6 +1,6 @@
 {{ config(
     meta = {
-      'model_owner' : '@gburg'
+      'model_owner' : '@analytics.duty'
     },
     schema='platform',
     materialized='view'
@@ -11,10 +11,11 @@ with deps as (SELECT output.tableName       as output_name,
                      output.tableType       as output_type,
                      input.table.tableName  as input_name,
                      input.table.tableType  as input_type,
+                     input.table.isSeed     as input_is_seed,
                      input.input_path       as input_path,
                      size(input.input_path) as input_rank
               FROM platform.table_dependencies_v2
-              WHERE (input.table.tableName, input.table.tableType)
+              WHERE not input.table.isSeed and (input.table.tableName, input.table.tableType)
                     not in (
                         SELECT full_table_name, type
                         from platform.manual_tables)
