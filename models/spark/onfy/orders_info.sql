@@ -47,6 +47,7 @@ SELECT
     ord.city,
     ord.payment_method,
     order_parcel.id AS parcel_id,
+    order_parcel.status as parcel_status,
     order_parcel.store_id,
     store.name AS store_name,
     store_delivery.express,
