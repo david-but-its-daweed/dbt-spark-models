@@ -32,6 +32,7 @@ devices_mart_cte AS (
         ON device.id = order.device_id
     GROUP BY 1, 2
 )
+
 SELECT
     ord.user_id,
     ord.device_id,
@@ -47,7 +48,8 @@ SELECT
     ord.city,
     ord.payment_method,
     order_parcel.id AS parcel_id,
-    order_parcel.status as parcel_status,
+    order_parcel.status AS parcel_status,
+    order_parcel_delivery.status AS parcel_delivery_status,
     order_parcel.store_id,
     store.name AS store_name,
     store_delivery.express,
@@ -62,6 +64,8 @@ SELECT
 FROM {{ source('pharmacy_landing', 'order') }} AS ord
 INNER JOIN {{ source('pharmacy_landing', 'order_parcel') }} AS order_parcel
     ON ord.id = order_parcel.order_id
+LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_delivery') }} AS order_parcel_delivery
+    ON order_parcel.id = order_parcel_delivery.id
 LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_item') }} AS order_parcel_item
     ON
         order_parcel.id = order_parcel_item.order_parcel_id
