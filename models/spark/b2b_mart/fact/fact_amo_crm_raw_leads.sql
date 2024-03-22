@@ -39,13 +39,13 @@ sales as (
         select
         contactId,
         case when users_admin_role not in ('Support', 'SDR') then users_admin_role
-            else max(case when createdAt = max_sales_time then task_admin_role end) end as sales_role,
+            else max(case when max_sales_time = 1 then task_admin_role end) end as sales_role,
         case when users_admin_role not in ('Support', 'SDR') then users_admin_name
-            else max(case when createdAt = max_sales_time then task_admin_name end) end as sales_name,
+            else max(case when max_sales_time = 1 then task_admin_name end) end as sales_name,
         case when users_admin_role not in ('Support', 'SDR') then users_admin_email
-            else max(case when createdAt = max_sales_time then task_admin_email end) end as sales_email,
+            else max(case when max_sales_time = 1 then task_admin_email end) end as sales_email,
         case when users_admin_role not in ('Support', 'SDR') then users_admin_id
-            else max(case when createdAt = max_sales_time then task_admin_id end) end as sales_id
+            else max(case when max_sales_time = 1 then task_admin_id end) end as sales_id
             
     from
     (
@@ -61,7 +61,8 @@ sales as (
         task.admin_role as task_admin_role,
         task.admin_name as task_admin_name,
         task.admin_email as task_admin_email,
-        max(case when task.admin_role not in ('Support', 'SDR') then createdAt end) over (partition by contactId) as max_sales_time
+        case when task.admin_role not in ('Support', 'SDR')
+            then row_number() over (partition by contactId, task.admin_role in ('Support', 'SDR') order by createdAt desc) as max_sales_time
     from
     (
     select 
@@ -82,13 +83,13 @@ sales as (
     select
         leadId,
         case when users_admin_role in ('Support', 'SDR') then users_admin_role
-            else max(case when createdAt = max_support_time then task_admin_role end) end as support_role,
+            else max(case when max_support_time = 1 then task_admin_role end) end as support_role,
         case when users_admin_role in ('Support', 'SDR') then users_admin_name
-            else max(case when createdAt = max_support_time then task_admin_name end) end as support_name,
+            else max(case when max_support_time = 1 then task_admin_name end) end as support_name,
         case when users_admin_role in ('Support', 'SDR') then users_admin_email
-            else max(case when createdAt = max_support_time then task_admin_email end) end as support_email,
+            else max(case when max_support_time = 1 then task_admin_email end) end as support_email,
         case when users_admin_role in ('Support', 'SDR') then users_admin_id
-            else max(case when createdAt = max_support_time then task_admin_id end) end as support_id,
+            else max(case when max_support_time = 1 then task_admin_id end) end as support_id,
             
         sales_role,
         sales_name,
@@ -109,7 +110,8 @@ sales as (
         task.admin_role as task_admin_role,
         task.admin_name as task_admin_name,
         task.admin_email as task_admin_email,
-        max(case when task.admin_role in ('Support', 'SDR') then createdAt end) over (partition by leadId) as max_support_time
+        case when task.admin_role in ('Support', 'SDR')
+            then row_number() over (partition by contactId, task.admin_role in ('Support', 'SDR') order by createdAt desc) as max_support_time
     from
     (
     select 
