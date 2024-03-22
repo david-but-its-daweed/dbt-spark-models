@@ -48,7 +48,6 @@ sources:
       - name: product_merchant_document_product_links_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: core_store_specializations_daily_snapshot
-      - name: product_fast_delivery_info_daily_snapshot
       - name: logistics_customer_features_daily_snapshot
       - name: product_products_daily_snapshot
       - name: abu_core_brands_daily_snapshot
