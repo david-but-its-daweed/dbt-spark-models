@@ -28,7 +28,113 @@ phone as (
     select lead_id, min(phone) as phone
     from {{ ref('fact_amo_crm_contacts_phones') }}
     group by lead_id
-)
+),
+
+amo_admins as (
+        select *
+        from {{ ref('key_amo_admin') }}
+    ),
+    
+sales as (
+        select
+        contactId,
+        case when users_admin_role not in ('Support', 'SDR') then users_admin_role
+            else max(case when createdAt = max_sales_time then task_admin_role end) end as sales_role,
+        case when users_admin_role not in ('Support', 'SDR') then users_admin_name
+            else max(case when createdAt = max_sales_time then task_admin_name end) end as sales_name,
+        case when users_admin_role not in ('Support', 'SDR') then users_admin_email
+            else max(case when createdAt = max_sales_time then task_admin_email end) end as sales_email,
+        case when users_admin_role not in ('Support', 'SDR') then users_admin_id
+            else max(case when createdAt = max_sales_time then task_admin_id end) end as sales_id
+            
+    from
+    (
+    select
+        contactId,
+        leadId,
+        createdAt,
+        users.admin_id as users_admin_id,
+        users.admin_role as users_admin_role,
+        users.admin_name as users_admin_name,
+        users.admin_email as users_admin_email,
+        task.admin_id as task_admin_id,
+        task.admin_role as task_admin_role,
+        task.admin_name as task_admin_name,
+        task.admin_email as task_admin_email,
+        max(case when task.admin_role not in ('Support', 'SDR') then createdAt end) over (partition by contactId) as max_sales_time
+    from
+    (
+    select 
+        contactId,
+        leadId,
+        createdAt,
+        responsibleUser.*,
+        explode(tasks)
+    from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
+    )
+    left join amo_admins task on col.responsibleUserId = task.admin_id
+    left join amo_admins users on _id = users.admin_id
+    )
+    group by contactId, users_admin_role, users_admin_name, users_admin_email, users_admin_id
+    ),
+    
+    support as (
+    select
+        leadId,
+        case when users_admin_role in ('Support', 'SDR') then users_admin_role
+            else max(case when createdAt = max_support_time then task_admin_role end) end as support_role,
+        case when users_admin_role in ('Support', 'SDR') then users_admin_name
+            else max(case when createdAt = max_support_time then task_admin_name end) end as support_name,
+        case when users_admin_role in ('Support', 'SDR') then users_admin_email
+            else max(case when createdAt = max_support_time then task_admin_email end) end as support_email,
+        case when users_admin_role in ('Support', 'SDR') then users_admin_id
+            else max(case when createdAt = max_support_time then task_admin_id end) end as support_id,
+            
+        sales_role,
+        sales_name,
+        sales_email,
+        sales_id
+            
+    from
+    (
+    select
+        contactId,
+        leadId,
+        createdAt,
+        users.admin_id as users_admin_id,
+        users.admin_role as users_admin_role,
+        users.admin_name as users_admin_name,
+        users.admin_email as users_admin_email,
+        task.admin_id as task_admin_id,
+        task.admin_role as task_admin_role,
+        task.admin_name as task_admin_name,
+        task.admin_email as task_admin_email,
+        max(case when task.admin_role in ('Support', 'SDR') then createdAt end) over (partition by leadId) as max_support_time
+    from
+    (
+    select 
+        contactId,
+        leadId,
+        createdAt,
+        responsibleUser.*,
+        explode(tasks)
+    from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }}
+    )
+    left join amo_admins task on col.responsibleUserId = task.admin_id
+    left join amo_admins users on _id = users.admin_id
+    )
+    left join sales using (contactId)
+    group by
+        leadId,
+        users_admin_role,
+        users_admin_name,
+        users_admin_email,
+        users_admin_id,
+        sales_role,
+        sales_name,
+        sales_email,
+        sales_id
+    )
 
 
 
@@ -59,14 +165,31 @@ select distinct
     type,
     source,
     campaign,
-    admin_email,
-    owner_id,
+
+
+    
+    case when owner_email is not null then '' else admin_name end as admin_name,
+    coalesce(owner_email, admin_email) as admin_email,
+    coalesce(owner_id, admin_id) as owner_id,
+    coalesce(owner_role, admin_role) as admin_role,
+    
     country,
     current_status_id,
     current_status,
     current_status_ts,
     funnel_status,
-    user_id
+    user_id,
+    
+    support_role,
+    support_name,
+    support_email,
+    support_id,
+
+
+    case when owner_email is not null then '' else sales_name end as sales_name,
+    coalesce(owner_email, sales_email) as sales_email,
+    coalesce(owner_id, sales_id) as sales_id,
+    coalesce(owner_role, sales_role) as sales_role
 from
 (
 select distinct
@@ -118,8 +241,10 @@ select distinct
         type, 
         source, 
         campaign,
-        responsibleUser as admin_email,
-        _id as owner_id,
+        admin_name, admin_email, admin_id, admin_role,
+
+        owner_id, owner_email, owner_role,
+    
         country,
         current_status as current_status_id,
         max(case when status_id = current_status then status end) over (partition by coalesce(contactId, leadId)) as current_status,
@@ -150,8 +275,10 @@ select distinct
         leadId,
         pipeline_name,
         pipelineId,
-        responsibleUser,
-        _id,
+        admin_name, admin_email, admin_id, admin_role,
+
+        owner_id, owner_email, owner_role,
+    
         country,
         status as current_status,
         st.createdAt as status_ts,
@@ -175,15 +302,24 @@ select distinct
         lossReasons,
         pipeline.name as pipeline_name,
         pipelineId,
-        responsibleUser.name as responsibleUser,
-        responsibleUser._id,
+        admin_name, admin_email, admin_id, admin_role,
+        
+        owner_id, owner_email, owner_role,
+
         s.source as country,
         status,
         tags, funnel_status, user_id
     from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
     left join source s on amo.source = s.id
-    left join (select distinct funnel_status, user_id, amo_id from {{ ref('fact_customers') }}) on leadId = amo_id
+    left join (
+        select distinct
+            funnel_status, user_id, amo_id, 
+            owner_id, owner_email, owner_role
+        from {{ ref('fact_customers') }}
+    ) on leadId = amo_id
+    left join amo_admins on admin_id = responsibleUser._id
     ) left join statuses using (leadId)
     )
     left join phone on leadId = lead_id
 )
+left join support on leadId = lead_id
