@@ -62,7 +62,8 @@ sales as (
         task.admin_name as task_admin_name,
         task.admin_email as task_admin_email,
         case when task.admin_role not in ('Support', 'SDR')
-            then row_number() over (partition by contactId, task.admin_role in ('Support', 'SDR') order by createdAt desc) as max_sales_time
+            then row_number() over (partition by contactId, task.admin_role in ('Support', 'SDR') order by createdAt desc)
+            end as max_sales_time
     from
     (
     select 
@@ -111,7 +112,8 @@ sales as (
         task.admin_name as task_admin_name,
         task.admin_email as task_admin_email,
         case when task.admin_role in ('Support', 'SDR')
-            then row_number() over (partition by contactId, task.admin_role in ('Support', 'SDR') order by createdAt desc) as max_support_time
+            then row_number() over (partition by contactId, task.admin_role in ('Support', 'SDR') order by createdAt desc)
+            end as max_support_time
     from
     (
     select 
