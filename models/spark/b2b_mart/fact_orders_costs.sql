@@ -175,7 +175,7 @@ order_owners as (
     from
     (select distinct 
         order_id,
-        first_value(owner_moderator_id) over (partition by order_id order by event_ts_msk) as owner_id
+        first_value(owner_moderator_id) over (partition by order_id order by event_ts_msk desc) as owner_id
         from {{ ref('fact_order_change') }}
         where status = 'manufacturing'
     ) o
