@@ -13,7 +13,7 @@
       'segment_description': 'Occasional buyers',
       'segment_ttl_days': 28,
       'segment_upload_cassandra': 'true',
-      'segment_upload_spark': 'false'
+      'segment_upload_spark': 'true'
     }
 ) }}
 
