@@ -11,7 +11,7 @@
       'segment_author_email': 'evstvia@joom.com',
       'segment_name': 'reg_buyers',
       'segment_description': 'Regular buyers',
-      'segment_ttl_days': 28,
+      'segment_ttl_days': '28',
       'segment_upload_cassandra': 'true',
       'segment_upload_spark': 'true'
     }
@@ -29,6 +29,7 @@ with users as (
 )
 
 select distinct
-    d.device_id
+    link.device_id
 from users as u
-join mart.link_device_real_user as d using (real_user_id)
+join {{ ref('link_device_real_user') }} as link using (real_user_id)
+left semi join {{ source('mart', 'dim_device_min') }} as d using(device_id)
