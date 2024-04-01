@@ -25,17 +25,14 @@ requests AS (
         c.mid AS merchant_id,
         c.pid AS product_id,
         CASE
-            WHEN c.s = 0 THEN "pending"
-            WHEN c.s = 1 THEN "selected"
-            WHEN c.s = 2 THEN "paid"
-            WHEN c.s = 3 THEN "approved"
-            WHEN c.s = 4 THEN "shipped"
-            WHEN c.s = 5 THEN "delivered"
+            WHEN c.s = 1 THEN "published"
+            WHEN c.s = 2 THEN "bidSelected"
+            WHEN c.s = 3 THEN "paid"
+            WHEN c.s = 4 THEN "approved"
+            WHEN c.s = 5 THEN "shipped"
+            WHEN c.s = 6 THEN "delivered"
             WHEN c.s = 10 THEN "completed"
-            WHEN c.s = 11 THEN "discarded"
-            WHEN c.s = 12 THEN "canceled"
-            WHEN c.s = 13 THEN "expired"
-            WHEN c.s = 14 THEN "refunded"
+            WHEN c.s = 11 THEN "canceled"
         END AS request_status,
         c.bidid AS bid_id,
         c.postid AS post_id,
@@ -61,7 +58,19 @@ bids AS (
         s._id AS bid_id,
         s.pid AS product_id,
         s.suid AS social_user_id,
-        s.s AS bid_status,
+        CASE
+            WHEN s.s = 0 THEN "pending"
+            WHEN s.s = 1 THEN "selected"
+            WHEN s.s = 2 THEN "paid"
+            WHEN s.s = 3 THEN "approved"
+            WHEN s.s = 4 THEN "shipped"
+            WHEN s.s = 5 THEN "delivered"
+            WHEN s.s = 10 THEN "completed"
+            WHEN s.s = 11 THEN "discarded"
+            WHEN s.s = 12 THEN "canceled"
+            WHEN s.s = 13 THEN "expired"
+            WHEN s.s = 14 THEN "refunded"
+        END AS bid_status,
         s.oid AS order_id,
         m.countrycode AS influencer_country_code
     FROM {{ source('mongo', 'user_paid_post_bids_daily_snapshot') }} AS s
@@ -83,6 +92,7 @@ SELECT
     r.is_recomnded_product,
     r.review_images_cnt,
     r.text_length,
+    r.is_review_active,
     b.social_user_id,
     b.bid_status,
     b.order_id,
