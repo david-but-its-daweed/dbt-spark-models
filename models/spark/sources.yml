@@ -31,6 +31,8 @@ sources:
       - name: dim_pair_currency_rate
       - name: dim_published_variant_with_merchant
       - name: dim_joom_select_proposal
+      - name: dim_product_review
+      
   - name: cube
     tables:
       - name: event_counts_country_os_days
@@ -68,6 +70,11 @@ sources:
       - name: logistics_jl_obligatory_channels_daily_snapshot
       - name: abu_core_catalog_daily_snapshot
       - name: product_merchant_joom_select_proposals_daily_snapshot
+      - name: core_paid_post_tenders_daily_snapshot
+      - name: user_paid_post_bids_daily_snapshot
+      - name: social_social_users_daily_snapshot
+
+
   - name: default
     tables:
       - name: sat_store_performance
