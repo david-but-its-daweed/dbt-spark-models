@@ -8,3 +8,4 @@ mart.dim_date
 goods.coolbe_product_labels
 onfy_mart.ads_spends
 mongo.product_fast_delivery_info_daily_snapshot
+mongo.b2b_core_product_appendixes_daily_snapshot

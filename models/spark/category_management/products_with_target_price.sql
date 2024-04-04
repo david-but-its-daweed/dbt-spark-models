@@ -191,15 +191,15 @@ target_price_stg AS (
             WHEN
                 min_merchant_list_price <= COALESCE(min_merchant_sale_price, 1000000000)
                 AND min_merchant_list_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
-                THEN min_merchant_list_price * COALESCE(discount_rate, 0.95)
+                THEN min_merchant_list_price -- * COALESCE(discount_rate, 0.95)
             WHEN
                 min_merchant_sale_price <= COALESCE(min_merchant_list_price, 1000000000)
                 AND min_merchant_sale_price <= COALESCE(ROUND(current_price_usd / merchant_price_index, 3), 1000000000)
-                THEN min_merchant_sale_price * COALESCE(discount_rate, 0.95)
+                THEN min_merchant_sale_price -- * COALESCE(discount_rate, 0.95)
             WHEN
                 ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_list_price, 1000000000)
                 AND ROUND(current_price_usd / merchant_price_index, 3) <= COALESCE(min_merchant_sale_price, 1000000000)
-                THEN ROUND(current_price_usd / merchant_price_index, 3) * 0.95
+                THEN ROUND(current_price_usd / merchant_price_index, 3) -- * 0.95
         END AS target_price_stg,     -- take minimum price current_price_usd, among min_merchant_list_price, min_merchant_sale_price, price_index_price
         CASE
             WHEN
