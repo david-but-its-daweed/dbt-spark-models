@@ -14,3 +14,13 @@ sources:
       - name: ingredient
       - name: dosage_form
       - name: order_parcel_delivery
+  - name: pharmacy
+    tables:
+      - name: bing_partner_insights
+      - name: adjust_raw_cohort_insights
+      - name: adjust_raw_deliverables_insights
+      - name: criteo_insights
+      - name: google_campaign_insights
+      - name: fbads_adset_country_insights
+      - name: adjust_raw_network_insights
+      - name: partners_insights

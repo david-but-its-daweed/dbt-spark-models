@@ -1,0 +1,371 @@
+{{ config(
+    schema='onfy_mart',
+    materialized='table',
+    meta = {
+      'model_owner' : '@annzaychik',
+      'team': 'onfy',
+      'bigquery_load': 'true',
+      'alerts_channel': 'onfy-etl-monitoring'
+    }
+) }}
+
+----------------------------------------------------
+-- facebook, bing & google (including partner data from OHM)
+----------------------------------------------------
+
+with fb_google_bing_base as 
+(
+    select
+        campaign_id,
+        campaign_name,
+        adset_name as medium,
+        'facebook' as source,
+        date,
+        spend,
+        clicks
+    from {{source('pharmacy', 'fbads_adset_country_insights')}}
+    union all
+    select
+        campaign_id,
+        campaign_name,
+        null as medium,
+        'google' as source,
+        effective_date,
+        spend,
+        clicks
+    from {{source('pharmacy', 'google_campaign_insights')}}
+    union all 
+    select 
+        campaign_id,
+        campaign_name,
+        null as medium,
+        'bing' as source,
+        date,
+        spend,
+        clicks
+    from {{source('pharmacy', 'bing_partner_insights')}}
+),
+
+----------------------------------------------------
+-- calculating adchampagne: 2 * GMV 0 week
+----------------------------------------------------
+
+adchampagne_total as 
+(
+    select *,
+        explode(gmv1w_per_date)
+    from {{source('pharmacy', 'adjust_raw_cohort_insights')}}
+    where 1=1
+        and lower(campaign_name) like '%adcha%'
+),
+
+adchampagne_costs as 
+(
+    select distinct
+        null as campaign_id,
+        campaign_name as campaign_name,
+        null as medium,
+        'adchampagne' as source,
+        'adchampagne' as partner,
+        case 
+            when lower(campaign_name) like '%ios%' then 'ios'
+            when lower(campaign_name) like '%android%' then 'android'
+            when lower(campaign_name) like '%web%' then 'web'
+            else 'other'
+         end as campaign_platform,
+        join_date as join_date,
+        round(sum(value*2), 2) as spend
+    from adchampagne_total
+    where 1=1
+        and (date(join_date) + interval 5 day) >= date(key) 
+    group by 
+        join_date,
+        campaign_name,
+        case 
+            when lower(campaign_name) like '%ios%' then 'ios'
+            when lower(campaign_name) like '%android%' then 'android'
+            when lower(campaign_name) like '%web%' then 'web'
+            else 'other'
+         end
+        
+),
+
+----------------------------------------------------
+-- adding sum of clicks to adchampagne
+----------------------------------------------------
+
+adchampagne_costs_with_clicks as
+(
+    select distinct
+        adchampagne_costs.*,
+        sum(adjust_raw_deliverables_insights.clicks) as clicks
+    from adchampagne_costs
+    left join {{source('pharmacy', 'adjust_raw_deliverables_insights')}} as adjust_raw_deliverables_insights
+        on adchampagne_costs.campaign_name = adjust_raw_deliverables_insights.campaign_name
+        and adchampagne_costs.join_date = adjust_raw_deliverables_insights.join_date
+    group by 
+        adchampagne_costs.campaign_id,
+        adchampagne_costs.campaign_name,
+        adchampagne_costs.medium,
+        adchampagne_costs.source,
+        adchampagne_costs.partner,
+        adchampagne_costs.campaign_platform,
+        adchampagne_costs.join_date,
+        adchampagne_costs.spend
+),
+
+----------------------------------------------------
+-- define partners in facebook, google & bing
+----------------------------------------------------
+
+fb_google_bing_with_partners as 
+(
+    select
+        campaign_id,
+        campaign_name,
+        medium,
+        source,
+        case 
+           when lower(campaign_name) like '%rocket%' then 'rocket10'
+           when lower(campaign_name) like '%whiteleads%' then 'whiteleads'
+           when lower(campaign_name) like '%ohm%' then 'ohm'
+             else 'onfy'
+        end as partner,
+        case when platform is not null then platform
+             when platform is null and lower(campaign_name) like '%ios%' then 'ios'
+             when platform is null and lower(campaign_name) like '%android%' then 'android'
+             when platform is null and lower(campaign_name) like '%web%' then 'web'
+             else 'other'
+        end as campaign_platform,
+        date as campaign_date_utc,
+        spend,
+        clicks
+    from fb_google_bing_base
+    left join pharmacy.ads_campaign_exceptions as exclusions 
+      using(campaign_name)
+    where 1=1
+        and lower(campaign_name) not like '%adcha%'
+),
+ 
+----------------------------------------------------
+-- calculate OHM comission separately (10% of ads spends)
+----------------------------------------------------
+
+ohm as 
+(
+    select 
+        null as campaign_id,
+        null as campaign_name,
+        null as medium, 
+        'ohm' as source,
+        partner,
+        campaign_platform,
+        campaign_date_utc,
+        sum(spend) * 0.1 as spend,
+        0 as clicks
+    from fb_google_bing_with_partners
+    where 1=1
+        and partner = 'ohm'
+    group by 
+        partner,
+        campaign_platform,
+        campaign_date_utc
+),
+        
+----------------------------------------------------
+-- union all of the "main" channels together
+----------------------------------------------------
+
+united_spends as
+(
+    select
+        campaign_id,
+        campaign_name,
+        medium,
+        source,
+        partner,
+        campaign_platform as campaign_platform,
+        campaign_date_utc as partition_date,
+        spend,
+        clicks
+    from fb_google_bing_with_partners
+    union all
+    select
+        campaign_id,
+        campaign_name,
+        null as medium,
+        case
+          when source = 'adwords' then 'google'
+          else source
+        end as source,
+        case 
+          when partner = 'billiger' 
+          then 'onfy' 
+          else partner 
+        end as partner,
+        case when os_type = 'android' then os_type
+             when os_type = 'ios'     then os_type
+             when os_type = 'web'     then os_type
+             else 'other'
+        end as campaign_platform,
+        join_date,
+        if(spend = 0 and source = 'idealo', clicks * 0.44, spend) as spend,
+        clicks
+    from {{source('pharmacy', 'partners_insights')}} 
+    union all 
+    select 
+        campaign_id,
+        campaign_name,
+        medium,
+        source,
+        partner,
+        campaign_platform,
+        join_date,
+        spend,
+        clicks
+    from adchampagne_costs_with_clicks
+    union all 
+    select
+        campaign_id,
+        campaign_name,
+        null as medium,
+        'criteo' as source,
+        'onfy' as partner,
+        case
+            when lower(os_type) = 'ios' then 'ios'
+            when lower(os_type) = 'android' then 'android'
+            when lower(os_type) in ('macos', 'windows') then 'web'
+            else 'other'
+        end as campaign_platform,
+        join_date,
+        sum(spend) as spend,
+        sum(clicks) as clicks
+    from {{source('pharmacy', 'criteo_insights')}}
+    group by 
+        campaign_id,
+        campaign_name,
+        case
+            when lower(os_type) = 'ios' then 'ios'
+            when lower(os_type) = 'android' then 'android'
+            when lower(os_type) in ('macos', 'windows') then 'web'
+            else 'other'
+        end,
+        join_date
+    union all
+    select *
+    from ohm
+),
+
+----------------------------------------------------
+-- working on some "left out" partners: we're figuring out what's left in adjust tables that we previously filtered
+----------------------------------------------------
+     
+to_filter_out as
+(
+    select distinct
+        coalesce(cast(campaign_id as string), campaign_name, partition_date) as full_filter,
+        coalesce(cast(campaign_id as string), partition_date) as partial_filter
+    from united_spends
+    where spend > 1
+),
+    
+new_costs as 
+(
+    select 
+        campaign_id,
+        split(campaign_name, " ")[0] as campaign_name,
+        case when 
+            partner = 'adwords' then 'google'
+            else partner
+        end as source,
+        null as medium,
+        'onfy' as partner,
+        os_type as app_device_type,
+        os_type as campaign_platform,
+        join_date,
+        sum(network_cost) as cost,
+        0 as clicks
+    from {{source('pharmacy', 'adjust_raw_network_insights')}}
+    where 1=1
+        and (
+                (lower(campaign_name) not like '%adcha%')
+                or (lower(campaign_name) not like '%ohm%')
+                or (lower(campaign_name) not like '%mobihunter%')
+                or (lower(campaign_name) not like '%s24%')
+            ) 
+        and 
+            (
+                coalesce(cast(campaign_id as string), campaign_name, join_date) not in (select distinct full_filter from to_filter_out)
+            or
+                coalesce(cast(campaign_id as string), join_date) not in (select distinct partial_filter from to_filter_out)
+            )
+    group by
+        campaign_id,
+        split(campaign_name, " ")[0],
+        case when 
+            partner = 'adwords' then 'google'
+            else partner
+        end,
+        os_type,
+        partner,
+        join_date
+)
+
+----------------------------------------------------
+-- adding it all together & adding manual spends (performance & non-performance)
+----------------------------------------------------
+
+select
+    'performance' as type,
+    campaign_id,
+    campaign_name,
+    source,
+    medium,
+    partner,
+    lower(campaign_platform) as campaign_platform,
+    lower(campaign_platform) as app_device_type,
+    partition_date as campaign_date_utc,
+    sum(spend) as spend,
+    sum(clicks) as clicks
+from united_spends
+    group by
+    campaign_id,
+    campaign_name,
+    source,
+    medium,
+    partner,
+    lower(campaign_platform),
+    partition_date
+union all
+select 
+    'performance' as type,
+    *
+from new_costs
+union all
+select 
+    'performance' as type,
+    campaign_id,
+    campaign,
+    source,
+    medium,
+    partner, 
+    campaign_platform,
+    app_device_type,
+    cast(campaign_date_utc as date) as campaign_date_utc,
+    spend,
+    clicks
+from pharmacy.tmp_onfy_gmbh_spend
+union all
+select 
+    'non-performance' as type,
+    campaign_id,
+    campaign_name,
+    source,
+    medium,
+    partner, 
+    campaign_platform,
+    app_device_type,
+    cast(campaign_date_utc as date) as campaign_date_utc,
+    spend,
+    clicks
+from pharmacy.manual_ads_spends
