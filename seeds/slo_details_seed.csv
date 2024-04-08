@@ -8,7 +8,7 @@ slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6
 slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,8,used in Overview report in analytics.joom.ai for Pro columns,platform,0,2,#analytics-achtung
 slo_pnl,PnL report,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,9,PnL report data https://analytics.joom.ai/pnl/profit_by_day,platform,80,1,#analytics-achtung
 slo_pivots,Pivot tables,@leonid.enov,#slo-monitoring,10,Data for pivot tables,mart,0,1,#category-analytics-alerts
-slo_gold,Gold,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,8,Gold-dataset,mart,80,2,
+slo_gold,Gold,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,8,Gold-dataset,mart,80,1,
 slo_jm_base_tables,JM Main Tables,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,8,Joom Marketplace main tables,mart,80,1,
 slo_jl_base_tables,JL Main Tables,@e.kotsegubov,#slo-monitoring,8,Joom Logistics main tables,mart,80,2,
 slo_jpro_base_tables,JPro Main Tables,@amitiushkina,#slo-monitoring,8,JoomPro main tables,mart,80,2,
@@ -20,6 +20,6 @@ slo_gmv_structure_report,GMV Structure,@yatsushko,#slo-monitoring,8,Data for GMV
 slo_real_user_segments_tables,Real User Segments | Main,@evstvia,#slo-monitoring,8,Data for Real User Segments report https://secure.holistics.io/dashboards/v3/70708-user-segments-main,report,80,2,
 slo_jm_plan_fact_business_lines,JM Plan-Fact | Business lines,@yatsushko,#slo-monitoring,8,Data for JM Plan-Fact | Business lines report https://secure.holistics.io/dashboards/v3/71745-jm-plan-fact-business-lines,report,90,2,
 slo_jm_plan_fact_weekly,JM Plan-Fact | Weekly,@yatsushko,#slo-monitoring,8,Data for JM Plan-Fact | Weekly report https://secure.holistics.io/dashboards/v3/71280-jm-plan-fact-weekly,report,90,2,
-slo_real_user_segments_retention_tables,Real User Segments | Retention,@evstvia,#slo-monitoring,8,Data for Real User Segments Retention report https://secure.holistics.io/dashboards/v3/71319-real-user-segments-retention,report,80,1,
+slo_real_user_segments_retention_tables,Real User Segments | Retention,@evstvia,#slo-monitoring,8,Data for Real User Segments Retention report https://secure.holistics.io/dashboards/v3/71319-real-user-segments-retention,report,80,2,
 slo_main_report,⭐ Main,@yatsushko,#slo-monitoring,8,Data for Main dashboard https://secure.holistics.io/dashboards/v3/16602-main,report,80,2,
 slo_logistics_stages_report,⭐ Logistics stages by tracking checkpoints,@e.kotsegubov,#slo-monitoring,8,Data for Logistics stages by tracking checkpoints dashboard https://secure.holistics.io/dashboards/v3/76520-logistics-stages-by-tracking-checkpoints,report,80,2,
