@@ -83,6 +83,7 @@ data_week as (
 
 select source_id,
     data_3_month.business_name,
+    priority,
     data_week.successes / data_week.days * 100 as sli_last_week,
     data_month.successes / data_month.days * 100 as sli_last_month,
     data_3_month.successes / data_3_month.days * 100 as sli__3_months,
@@ -94,4 +95,5 @@ select source_id,
 from data_3_month
     left join data_month using (source_id)
     left join data_week using (source_id)
+    left join platform_slo.slo_details on source_id = slo_details.slo_id
 order by source_id
