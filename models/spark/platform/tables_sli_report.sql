@@ -7,7 +7,16 @@
     materialized='view',
 ) }}
 
-with data (
+with data_readiness_aggregate (
+    select source_id, input_name, input_type, date, min(ready_time_hours) ready_time_hours
+    from platform.data_readiness
+    where 
+        date > NOW() - interval 3 months
+        and date <= to_date(NOW())
+        and input_rank = 1
+    group by source_id, input_name, input_type, date
+),
+data (
            select source_id,
            business_name,
            date,
@@ -17,13 +26,9 @@ with data (
            description,
            min(ready_time_hours) as ready_time_hours,
            max(expected_time_utc_hours) as expected_time_utc_hours
-    from platform.data_readiness
+    from data_readiness_aggregate
         left join platform_slo.slo_details on source_id = slo_details.slo_id
-    where 1=1
-        and expected_time_utc_hours is not null
-        and date > NOW() - interval 3 months
-        and date <= to_date(NOW())
-        and input_rank = 1
+    where expected_time_utc_hours is not null
     group by source_id, business_name, target_sli, date, alert_channels, owner, description
     ),
 
