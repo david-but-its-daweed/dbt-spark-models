@@ -1,4 +1,5 @@
 {{ config(
+    tags=['data_readiness'],
     meta = {
       'model_owner' : '@gburg'
     },
