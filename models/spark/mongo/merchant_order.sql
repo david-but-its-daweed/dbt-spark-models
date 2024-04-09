@@ -11,7 +11,8 @@ SELECT
     fid AS friendly_id,
     ogid AS order_group_id,
     NAMED_STRUCT(
-        'kind', src.k
+        'kind', src.k,
+        'id', src.id
     ) AS source,
     IF(mpid IS NOT NULL, NAMED_STRUCT(
         'marketplace', mpid.m,
