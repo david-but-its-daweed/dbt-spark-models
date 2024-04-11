@@ -117,7 +117,7 @@ session_precalc as
         split_part(
             case 
                 when lower(source_corrected) like '%tiktok%' then 'tiktok' 
-                when lower(campaign_corrected) like 'ohm%' then 'ohm'
+            --    when lower(campaign_corrected) like 'ohm%' then 'ohm'
                 else campaign_corrected
             end
             , " ", 1) as campaign_corrected,
