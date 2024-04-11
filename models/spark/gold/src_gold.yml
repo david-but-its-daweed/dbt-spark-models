@@ -43,9 +43,9 @@ models:
     - name: next_date_msk_lag
       description: Number of calendar days until the next activity of `device_id` in UTC+3
     - name: order_gross_profit_per_day_final
-      description: Total profit from Joom Group orders (not Joom) on `date_msk`. The field can be adjusted according to changes in the order. To calculate it, subtract all expenses - including payments to logistic partners.
+      description: Total profit from Joom Group orders (not Joom) on `date_msk`. The field can be adjusted according to changes in the order. To calculate it, subtract all expenses - including payments to logistic partners. Final value is our best known data today, and it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: order_gross_profit_per_day_final_estimated
-      description: Total profit from Joom Group orders (not Joom) on `date_msk`. To calculate it, subtract all expenses - including payments to logistic partners.
+      description: Total profit from Joom Group orders (not Joom) on `date_msk`. To calculate it, subtract all expenses - including payments to logistic partners. final_estimated is our attempt to predict where the final value converge, as for now it depends only from date and country, it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: ecgp_per_day_initial
       description: Total profit from Joom orders (not Joom Group) on `date_msk`, the field does not include logistics and adtech profit. Use with caution! Calculated as `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. It can also be calculated as `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
     - name: ecgp_per_day_final
@@ -121,9 +121,9 @@ models:
     - name: next_date_msk_lag
       description: Number of calendar days until the next activity of `device_id` in UTC+3
     - name: order_gross_profit_per_day_final
-      description: Total profit from Joom Group orders (not Joom) on `date_msk`. The field can be adjusted according to changes in the order. To calculate it, subtract all expenses - including payments to logistic partners.
+      description: Total profit from Joom Group orders (not Joom) on `date_msk`. The field can be adjusted according to changes in the order. To calculate it, subtract all expenses - including payments to logistic partners. Final value is our best known data today, and it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: order_gross_profit_per_day_final_estimated
-      description: Total profit from Joom Group orders (not Joom) on `date_msk`. To calculate it, subtract all expenses - including payments to logistic partners.
+      description: Total profit from Joom Group orders (not Joom) on `date_msk`. To calculate it, subtract all expenses - including payments to logistic partners. final_estimated is our attempt to predict where the final value converge, as for now it depends only from date and country, it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: ecgp_per_day_initial
       description: Total profit from Joom orders (not Joom Group) on `date_msk`, the field does not include logistics and adtech profit. Use with caution! Calculated as `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. It can also be calculated as `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
     - name: ecgp_per_day_final
@@ -549,9 +549,9 @@ models:
     - name: ecgp_final
       description: Profit from a specific Joom order (not Joom Group), the field does not include logistics and adtech profit. Use with caution! This field may be adjusted according to order changes. Calculated as `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. It can also be calculated as `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
     - name: order_gross_profit_final
-      description: Profit from a specific Joom Group order (not Joom). This field may be adjusted according to order changes. To calculate it, subtract all expenses from GMV - including payments to logistics partners.
+      description: Profit from a specific Joom Group order (not Joom). This field may be adjusted according to order changes. To calculate it, subtract all expenses from GMV - including payments to logistics partners. Final value is our best known data today, and it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: order_gross_profit_final_estimated
-      description: Profit from a specific Joom Group order (not Joom). To calculate it, subtract all expenses from GMV - including payments to logistics partners.
+      description: Profit from a specific Joom Group order (not Joom). To calculate it, subtract all expenses from GMV - including payments to logistics partners. final_estimated is our attempt to predict where the final value converge, as for now it depends only from date and country, it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: merchant_revenue_initial
       description: Cost of all order items in USD set by the merchant. The total payment due to the seller is calculated as costs.merchantPayout + costs.merchantRevenueInsurance, because merchantPayout does not include merchantRevenueInsurance + there is merchantRevenueFinal, which sounds just like what we want, except it does not include merchantRevenueInsurance and, unlike merchantPayout, does not include seller tracking compensation.
     - name: merchant_revenue_final
@@ -713,9 +713,9 @@ models:
     - name: ecgp_final
       description: Profit from a specific Joom order (not Joom Group), the field does not include logistics and adtech profit. Use with caution! This field may be adjusted according to order changes. Calculated as `costs.grossRevenue.usd - costs.merchantRevenueInsurance.usd`. It can also be calculated as `gmv_final - merchant_revenue_final - jl_revenue_by_joom_final - psp_final - refund_forex_change - chargeback_price - vat_final`
     - name: order_gross_profit_final
-      description: Profit from a specific Joom Group order (not Joom). This field may be adjusted according to order changes. To calculate it, subtract all expenses from GMV - including payments to logistics partners.
+      description: Profit from a specific Joom Group order (not Joom). This field may be adjusted according to order changes. To calculate it, subtract all expenses from GMV - including payments to logistics partners. Final value is our best known data today, and it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: order_gross_profit_final_estimated
-      description: Profit from a specific Joom Group order (not Joom). To calculate it, subtract all expenses from GMV - including payments to logistics partners.
+      description: Profit from a specific Joom Group order (not Joom). To calculate it, subtract all expenses from GMV - including payments to logistics partners. final_estimated is our attempt to predict where the final value converge, as for now it depends only from date and country, it updates daily. More https://docs.joom.ai/marketplace/metrics.html
     - name: merchant_revenue_initial
       description: Cost of all order items in USD set by the merchant. The total payment due to the seller is calculated as costs.merchantPayout + costs.merchantRevenueInsurance, because merchantPayout does not include merchantRevenueInsurance + there is merchantRevenueFinal, which sounds just like what we want, except it does not include merchantRevenueInsurance and, unlike merchantPayout, does not include seller tracking compensation.
     - name: merchant_revenue_final
