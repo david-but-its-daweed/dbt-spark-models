@@ -153,7 +153,9 @@ users_corrected as (
             when partner = 'onfy' 
             then coalesce(_campaign_corrected, utm_campaign)
             else partner
-        end as campaign_corrected
+        end as campaign_corrected,
+        coalesce(_source_corrected, source) as source_with_partners,
+        coalesce(_campaign_corrected, utm_campaign) as campaign_with_partners
     from 
         last_not_unknown_devices_partners
 )

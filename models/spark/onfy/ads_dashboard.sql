@@ -108,7 +108,7 @@ session_precalc as
                 over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) is not null,
             0, 1
         ) as new_session_group_1,
-        if(lower(source_corrected) in ('unknown', 'unmarked_facebook_or_instagram', 'social', 'organic', 'e-rezept', 'marketing_newsletter', 'newsletter', 'email', '') or lower(source_corrected) is null, 0, 1) as significant_source,
+        if(lower(source_corrected) in ('unknown', 'unmarked_facebook_or_instagram', 'social', 'e-rezept', 'marketing_newsletter', 'newsletter', 'email', '') or lower(source_corrected) is null, 0, 1) as significant_source,
         if(lower(source_corrected) not in ('unknown', 'e-rezept'), 0, 1) as second_significant_source,
         case
             when lower(source_corrected) like '%google%' then 'google'
@@ -227,7 +227,7 @@ ads_spends as
             when united_spends.partner = 'onfy' 
             then split_part(coalesce(spends_campaigns_corrected.campaign_corrected, united_spends.campaign_name, 'Not_from_dict'), " ", 1)
             when united_spends.source = 'idealo' then 'idealo'
-            when lower(united_spends.partner) like 'ohm%' or lower(united_spends.source) like 'ohm%' then 'ohm'
+            else united_spends.campaign_name
         end as campaign_corrected,
         if(united_spends.source = 'facebook', medium, '') as medium,
         sum(spend) as spend,
@@ -257,7 +257,7 @@ ads_spends as
             when united_spends.partner = 'onfy' 
             then split_part(coalesce(spends_campaigns_corrected.campaign_corrected, united_spends.campaign_name, 'Not_from_dict'), " ", 1)
             when united_spends.source = 'idealo' then 'idealo'
-            when lower(united_spends.partner) like 'ohm%' or lower(united_spends.source) like 'ohm%' then 'ohm'
+            else united_spends.campaign_name
         end,
         if(united_spends.source = 'facebook', medium, '')
 ),
