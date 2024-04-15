@@ -64,7 +64,7 @@ orders as (
     select user_id, fo.order_id, friendly_id,
         fo.created_ts_msk as partition_date_msk,
         min_manufactured_ts_msk as min_manufacturing_time,
-        channel_type
+        channel_type, country
     from {{ ref('fact_order') }} fo
     left join {{ ref('linehaul_channels') }} on linehaul_channel_id = id
     where next_effective_ts_msk is null
@@ -155,6 +155,7 @@ where merchant_order_id||product_id not in (
 dict as (
     select distinct
         o.order_id,
+        country,
         o.friendly_id as order_friendly_id,
         d.order_product_id,
         o.channel_type,
@@ -193,7 +194,8 @@ statuses as (
         date_status,
         status, 
         case when status = 'manufacturing' then 2050 else status_int end as status_int,
-        case when status = 'manufacturing' then manufacturing_days else days end as days
+        case when status = 'manufacturing' then manufacturing_days else days end as days,
+        country
     from
     dict d
     left join (select order_id,
@@ -250,7 +252,8 @@ order_statuses as (
         date_status,
         status, 
         status_int,
-        days
+        days,
+        country
     from
     dict d
     left join 
@@ -275,7 +278,8 @@ select
     b.weight,
     b.qty,
     b.qty_per_box,
-    length*width*hight/1000000 as measures
+    length*width*hight/1000000 as measures,
+    country
     from
 (select 
     order_id,
@@ -291,7 +295,8 @@ select
     pickup_friendly_id,
     status,
     status_int,
-    date_status
+    date_status,
+    country
 from
 (
 select * , 
@@ -341,6 +346,7 @@ select
     max(case when rn = 1 then date_add(date_status, int(day_diff)) end) over (partition by order_id) as predicted_date_order,
     max(case when rn = 1 then current_status_days end) over (partition by order_id) as current_status_days,
     max(case when rn = 1 then current_status_declared_days end) over (partition by order_id) as current_status_declared_days,
+    country,
     date('{{ var("start_date_ymd") }}') as partition_date_msk
 
 from
@@ -376,7 +382,8 @@ select distinct
     sum(case when future then days end) over 
          (partition by order_id, merchant_order_id, product_id, pickup_id, length,
         width, hight, weight, qty_per_box) as day_diff,
-    rank() over (partition by order_id order by status_int) as rn
+    rank() over (partition by order_id order by status_int) as rn,
+    country
 from 
 (
 select distinct
