@@ -66,6 +66,10 @@ orders as (
         min_manufactured_ts_msk as min_manufacturing_time,
         channel_type, country
     from {{ ref('fact_order') }} fo
+    left join (
+        select distinct user_id, country
+        from {{ ref('fact_customers') }}
+    ) using (user_id)
     left join {{ ref('linehaul_channels') }} on linehaul_channel_id = id
     where next_effective_ts_msk is null
 ),
