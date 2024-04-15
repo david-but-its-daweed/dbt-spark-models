@@ -45,3 +45,4 @@ SELECT
        TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_mongo_order') }} t
 left join manufacturing m on t.order_id = m.order_id
+WHERE t.order_id NOT IN ('660e4db2549ee70ee636f730') -- копия заказа, убираем, чтобы не дублировалось
