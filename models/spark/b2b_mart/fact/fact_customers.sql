@@ -74,7 +74,8 @@ customers as (
     grades_prob.grade_prob as grade_probability,
     first_deal_planning_volume,
     first_deal_planning_currency,
-    first_deal_planning_volume_usd
+    first_deal_planning_volume_usd,
+    cnpj
     from {{ ref('sat_customers') }} m
     left join grades on coalesce(m.grade, 0) = grades.value
     left join grades_prob on coalesce(m.grade_probability, 0) = grades_prob.value
@@ -140,7 +141,8 @@ select distinct
     u.partner_source,
     first_deal_planning_volume/1000000 as first_deal_planning_volume,
     first_deal_planning_currency,
-    first_deal_planning_volume_usd/1000000 as first_deal_planning_volume_usd
+    first_deal_planning_volume_usd/1000000 as first_deal_planning_volume_usd,
+    cnpj
     from users as u
     left join admin as a on u.owner_id = a.admin_id
     left join customers as c on u.user_id = c.user_id

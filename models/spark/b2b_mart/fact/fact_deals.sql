@@ -59,10 +59,11 @@ source AS
  
 users AS (
     SELECT DISTINCT
-         user_id,
-         grade,
-         company_name,
-        country
+        user_id,
+        grade,
+        company_name,
+        country,
+        cnpj != "" as ss_customer
     FROM {{ ref('fact_customers') }}
 )
 
@@ -125,6 +126,7 @@ SELECT DISTINCT
     users.grade AS client_grade,
     users.company_name AS client_company_name,
     d.isSelfService AS self_service,
+    users.ss_customer,
     TIMESTAMP(d.dbt_valid_from) AS effective_ts_msk,
     TIMESTAMP(d.dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_deals_snapshot') }} AS d

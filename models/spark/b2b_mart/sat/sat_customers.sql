@@ -30,6 +30,7 @@ SELECT
     firstDealPlanningVolume.ccy AS first_deal_planning_currency,
     firstDealPlanningVolumeUsd AS first_deal_planning_volume_usd,
     tracked,
+    cnpj,
     TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
     TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_customers_snapshot') }}
