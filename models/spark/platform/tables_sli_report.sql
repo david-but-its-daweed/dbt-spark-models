@@ -5,6 +5,7 @@
     },
     schema='platform',
     materialized='view',
+    'bigquery_load': 'true'
 ) }}
 
 with data_readiness_aggregate (
