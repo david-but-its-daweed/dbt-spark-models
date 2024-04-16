@@ -159,7 +159,7 @@ where merchant_order_id||product_id not in (
 dict as (
     select distinct
         o.order_id,
-        country,
+        d.country,
         o.friendly_id as order_friendly_id,
         d.order_product_id,
         o.channel_type,
