@@ -108,7 +108,8 @@ session_precalc as
                 over (partition by coalesce(corrected_sources.device_id, order_data.device_id) order by coalesce(source_dt, order_created_date_cet))) is not null,
             0, 1
         ) as new_session_group_1,
-        if(lower(source_corrected) in ('unknown', 'unmarked_facebook_or_instagram', 'social', 'e-rezept', 'marketing_newsletter', 'newsletter', 'email', '') or lower(source_corrected) is null, 0, 1) as significant_source,
+        if(lower(source_corrected) in ('unknown', 'unmarked_facebook_or_instagram', 'social', 'e-rezept', 'marketing_newsletter', 'newsletter', 'email', '') or lower(source_corrected) is null
+            or (lower(source_corrected) = 'organic' and os_type in ('android', 'ios')), 0, 1) as significant_source,
         if(lower(source_corrected) not in ('unknown', 'e-rezept'), 0, 1) as second_significant_source,
         case
             when lower(source_corrected) like '%google%' then 'google'
