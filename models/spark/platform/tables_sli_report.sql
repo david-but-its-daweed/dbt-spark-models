@@ -1,105 +1,119 @@
 {{ config(
     tags=['data_readiness'],
     meta = {
-      'model_owner' : '@gburg'
+      'model_owner' : '@gburg',
+      'bigquery_load': 'true',
     },
     schema='platform',
-    materialized='view',
-    'bigquery_load': 'true'
+    materialized='view'
 ) }}
 
-with data_readiness_aggregate (
-    select source_id, input_name, input_type, date, min(ready_time_hours) ready_time_hours
-    from platform.data_readiness
-    where 
-        date > NOW() - interval 3 months
-        and date <= to_date(NOW())
-        and input_rank = 1
-    group by source_id, input_name, input_type, date
+WITH data_readiness_aggregate (
+    SELECT
+        source_id,
+        input_name,
+        input_type,
+        date,
+        MIN(ready_time_hours) AS ready_time_hours
+    FROM platform.data_readiness
+    WHERE
+        date > NOW() - INTERVAL 3 MONTHS
+        AND date <= TO_DATE(NOW())
+        AND input_rank = 1
+    GROUP BY source_id, input_name, input_type, date
 ),
+
 data (
-           select source_id,
-           business_name,
-           date,
-           alert_channels,
-           target_sli,
-           owner,
-           description,
-           max(ready_time_hours) as ready_time_hours,
-           max(expected_time_utc_hours) as expected_time_utc_hours
-    from data_readiness_aggregate
-        left join platform_slo.slo_details on source_id = slo_details.slo_id
-    where expected_time_utc_hours is not null
-    group by source_id, business_name, target_sli, date, alert_channels, owner, description
-    ),
-
-data_3_month as (
-    select source_id,
-       business_name,
-       target_sli,
-       alert_channels,
-       owner,
-       description,
-       max(expected_time_utc_hours) as expected_time_utc_hours,
-       sum(
-               case
-                   when ready_time_hours > expected_time_utc_hours then 0
-                   else 1
-                   end)     as successes,
-       count(distinct date) as days
-    from data
-    group by source_id, business_name, target_sli, alert_channels, owner, description
+    SELECT
+        data_readiness.source_id,
+        details.business_name,
+        data_readiness.date,
+        details.alert_channels,
+        details.target_sli,
+        details.owner,
+        details.description,
+        MAX(data_readiness.ready_time_hours) AS ready_time_hours,
+        MAX(details.expected_time_utc_hours) AS expected_time_utc_hours
+    FROM data_readiness_aggregate AS data_readiness
+    LEFT JOIN platform_slo.slo_details AS details ON data_readiness.source_id = details.slo_id
+    WHERE expected_time_utc_hours IS NOT NULL
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
 ),
 
-data_month as (
-    select source_id,
-       business_name,
-       target_sli,
-       alert_channels,
-       owner,
-       description,
-       sum(
-               case
-                   when ready_time_hours > expected_time_utc_hours then 0
-                   else 1
-                   end)     as successes,
-       count(distinct date) as days
-    from data
-    where date > NOW() - interval 1 months
-    group by source_id, business_name, target_sli, alert_channels, owner, description
+data_3_month AS (
+    SELECT
+        source_id,
+        business_name,
+        target_sli,
+        alert_channels,
+        owner,
+        description,
+        MAX(expected_time_utc_hours) AS expected_time_utc_hours,
+        SUM(
+            CASE
+                WHEN ready_time_hours > expected_time_utc_hours THEN 0
+                ELSE 1
+            END
+        ) AS successes,
+        COUNT(DISTINCT date) AS days
+    FROM data
+    GROUP BY source_id, business_name, target_sli, alert_channels, owner, description
 ),
 
-data_week as (
-    select source_id,
-       business_name,
-       target_sli,
-       alert_channels,
-       owner,
-       description,
-       sum(
-               case
-                   when ready_time_hours > expected_time_utc_hours then 0
-                   else 1
-                   end)     as successes,
-       count(distinct date) as days
-    from data
-    where date > NOW() - interval 1 weeks
-    group by source_id, business_name, target_sli, alert_channels, owner, description
+data_month AS (
+    SELECT
+        source_id,
+        business_name,
+        target_sli,
+        alert_channels,
+        owner,
+        description,
+        SUM(
+            CASE
+                WHEN ready_time_hours > expected_time_utc_hours THEN 0
+                ELSE 1
+            END
+        ) AS successes,
+        COUNT(DISTINCT date) AS days
+    FROM data
+    WHERE date > NOW() - INTERVAL 1 MONTHS
+    GROUP BY source_id, business_name, target_sli, alert_channels, owner, description
+),
+
+data_week AS (
+    SELECT
+        source_id,
+        business_name,
+        target_sli,
+        alert_channels,
+        owner,
+        description,
+        SUM(
+            CASE
+                WHEN ready_time_hours > expected_time_utc_hours THEN 0
+                ELSE 1
+            END
+        ) AS successes,
+        COUNT(DISTINCT date) AS days
+    FROM data
+    WHERE date > NOW() - INTERVAL 1 WEEKS
+    GROUP BY 1, 2, 3, 4, 5, 6
 )
 
-select source_id,
+SELECT
+    source_id,
     data_3_month.business_name,
-    priority,
-    data_week.successes / data_week.days * 100 as sli_last_week,
-    data_month.successes / data_month.days * 100 as sli_last_month,
-    data_3_month.successes / data_3_month.days * 100 as sli__3_months,
+    slo_details.priority,
+    data_week.successes / data_week.days * 100 AS sli_last_week,
+    data_month.successes / data_month.days * 100 AS sli_last_month,
+    data_3_month.successes / data_3_month.days * 100 AS sli__3_months,
     data_3_month.target_sli,
     data_3_month.expected_time_utc_hours,
     data_3_month.alert_channels,
     data_3_month.owner,
     data_3_month.description
-from data_3_month
-    left join data_month using (source_id)
-    left join data_week using (source_id)
-    left join platform_slo.slo_details on source_id = slo_details.slo_id
-order by source_id
+FROM data_3_month
+LEFT JOIN data_month USING (source_id)
+LEFT JOIN data_week USING (source_id)
+LEFT JOIN platform_slo.slo_details ON data_3_month.source_id = slo_details.slo_id
+ORDER BY source_id
