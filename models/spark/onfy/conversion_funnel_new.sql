@@ -42,7 +42,7 @@ SELECT
         WHEN device.app_type = 'IOS' THEN 'ios'
         ELSE device.app_type || '_' || device.device_type
         END AS app_device_type,
-    MIN(order.created) AS min_order_dt
+    MIN(from_utc_timestamp(order.created, 'Europe/Berlin')) AS min_order_dt
 FROM sessions
 INNER JOIN {{ source('pharmacy_landing', 'device')}}
     ON device.id = sessions.device_id
@@ -226,8 +226,8 @@ SELECT
     channel_type,
     app_device_type,
     CASE
-        WHEN min_order_dt < payment_dt THEN False
-        ELSE True
+        WHEN session_start > min_order_dt THEN True
+        ELSE False
         END AS is_buyer,
     minenv_type,
     minimal_involvement_dt,
