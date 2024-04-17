@@ -57,7 +57,7 @@ left join company_info using (user_id)
 users_info_1 AS (
     SELECT
         user_id,
-        TIMESTAMP(registration_start / 1000) AS registration_start,
+        registration_start AS registration_start,
         phone_number,
         user_name,
         user_email,
