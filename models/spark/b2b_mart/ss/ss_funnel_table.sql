@@ -65,6 +65,5 @@ SELECT * FROM (
      LEFT JOIN deals USING (user_id)
      GROUP BY user_Id
 )
-left join users using (user_id)
 WHERE visit_date >= '2024-04-06'
     
