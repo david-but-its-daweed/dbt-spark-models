@@ -42,6 +42,7 @@ visits AS (
 main AS (
     SELECT
         event_date_msk,
+        autorisation, registration,
         user_id,
         IF(
             DATEDIFF(CURRENT_DATE() - 1, event_date_msk) >= 1,
@@ -60,6 +61,30 @@ main AS (
         ) AS is_rd7
     FROM visits
     INNER JOIN users USING(user_id)
+    LEFT JOIN (SELECT DISTINCT user_id, autorisation, registration from {{ ref('ss_funnel_table') }})
+),
+
+wau as (
+    SELECT
+        COUNT(DISTINCT user_id) AS wau,
+        autorisation, registration,
+        DATE_TRUNC("WEEK", event_date_msk) AS event_date_msk
+    FROM main
+    GROUP BY 2, 3, 4
 )
 
-SELECT * FROM main
+
+SELECT
+    event_date_msk,
+    autorisation, registration,
+    MAX(wau) AS wau,
+    COUNT(DISTINCT user_id) AS dau,
+    AVG(INT(is_rd1)) AS is_rd1,
+    AVG(INT(is_rd3)) AS is_rd3,
+    AVG(INT(is_rd7)) AS is_rd7
+FROM main
+LEFT JOIN wau using (event_date_msk)
+WHERE event_date_msk >= '2024-04-01'
+GROUP BY 1, 2, 3
+ORDER BY 1, 2, 3
+
