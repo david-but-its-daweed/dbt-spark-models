@@ -29,8 +29,8 @@ assigned AS (
         SELECT
             _id,
             first_value(assignee_id) OVER (PARTITION BY _id ORDER BY created_time) AS first_assignee_id,
-            MIN(created_time) OVER (PARTITION BY _id) AS first_time_assigned,
-            MAX(created_time) OVER (PARTITION BY _id) AS last_time_assigned,
+            MIN(CASE WHEN assignee_id IS NOT NULL THEN created_time END) OVER (PARTITION BY _id) AS first_time_assigned,
+            MAX(CASE WHEN assignee_id IS NOT NULL THEN created_time END) OVER (PARTITION BY _id) AS last_time_assigned,
             COUNT(assignee_id) OVER (PARTITION BY _id) AS times_assigned
         FROM (
             SELECT
