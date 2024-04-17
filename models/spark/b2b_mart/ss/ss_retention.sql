@@ -61,7 +61,7 @@ main AS (
         ) AS is_rd7
     FROM visits
     INNER JOIN users USING(user_id)
-    LEFT JOIN (SELECT DISTINCT user_id, autorisation, registration from {{ ref('ss_funnel_table') }})
+    LEFT JOIN (SELECT DISTINCT user_id, autorisation, registration from {{ ref('ss_funnel_table') }}) using (user_id)
 ),
 
 wau as (
