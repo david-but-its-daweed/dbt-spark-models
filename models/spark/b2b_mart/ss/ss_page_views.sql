@@ -18,7 +18,7 @@ deals as (
         CAST(created_ts_msk - INTERVAL 3 hours AS DATE) AS deal_created_date,
         CASE WHEN d.owner_email is not null then owner_ts - INTERVAL 3 hours end AS owner_ts,
         CAST(CASE WHEN d.owner_email is not null then owner_ts - INTERVAL 3 hours end AS DATE) AS owner_date
-    FROM {{ source('b2b_mart', 'fact_deals') }} d
+    FROM {{ ref('fact_deals') }} d
     left join {{ ref('dim_deal_products') }} using (deal_id, user_id)
     WHERE next_effective_ts_msk is null
         AND (self_service or ss_customer)
