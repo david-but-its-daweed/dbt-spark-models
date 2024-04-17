@@ -1,0 +1,70 @@
+{{ config(
+    schema='b2b_mart',
+    materialized='view',
+    meta = {
+      'model_owner' : '@amitiushkina',
+      'team': 'general_analytics',
+      'bigquery_load': 'true',
+      'priority_weight': '150'
+    }
+) }}
+
+WITH bounce AS (
+    
+    SELECT
+        user['userId'] AS user_id
+    FROM {{ source('b2b_mart', 'device_events') }}
+    WHERE payload.pageUrl like '%https://joom.pro/pt-br%'
+    GROUP BY 1
+    HAVING SUM(IF(type IN ("productPreview", "searchOpen", "categoryClick", "orderPreview", "productGalleryScroll", "categoryOpen", "popupFormSubmit", "popupFormNext", "mainClick", "orderClick"), 1, 0)) > 0
+),
+
+deals as (
+    SELECT
+        user_id,
+        created_ts_msk - INTERVAL 3 hours AS deal_created_ts,
+        CAST(created_ts_msk - INTERVAL 3 hours AS DATE) AS deal_created_date,
+        CASE WHEN owner_email is not null then owner_ts - INTERVAL 3 hours end AS owner_ts_msk,
+        CAST(CASE WHEN owner_email is not null then owner_ts - INTERVAL 3 hours end AS DATE) AS owner_date_msk
+    FROM {{ ref('fact_deals') }}
+    WHERE next_effective_ts_msk is null
+        AND (self_service or ss_customer)
+)
+
+SELECT * FROM (
+    -- визиты
+    SELECT DISTINCT
+        user_id,
+        min(case when type = 'sessionStart' AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS visit_ts,
+        CAST(min(case when type = 'sessionStart' AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS DATE) AS visit_date,
+        max(case when type = 'sessionStart' AND payload.pageUrl like '%https://joom.pro/pt-br%' then 1 else 0 end) AS visit,
+         
+        min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) as autorisation_ts,
+        CAST(min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) AS DATE) as autorisation_date,
+        max(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then 1 else 0 end) AS autorisation,
+        
+        min(case when type = 'selfServiceRegistrationFinished' then event_ts_msk end - INTERVAL 3 hours) as registration_ts,
+        CAST(min(case when type = 'selfServiceRegistrationFinished' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as registration_date,
+        max(case when type = 'selfServiceRegistrationFinished' then 1 else 0 end) as registration,
+        
+        min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) as order_create_ts,
+        CAST(min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as order_create_date,
+        max(case when type = 'orderCreateClick' then 1 else 0 end) as order_create,
+        
+        min(case when deal_created_ts is not null then deal_created_ts end) as deal_created_ts,
+        CAST(min(case when deal_created_ts is not null then deal_created_ts end) AS DATE) as deal_created_date,
+        max(case when deal_created_ts is not null then 1 else 0 end) as deal_created,
+        
+        min(case when owner_ts_msk is not null then owner_ts_msk end) as deal_assigned_ts,
+        CAST(min(case when owner_ts_msk is not null then owner_ts_msk end) AS DATE) as deal_assigned_date,
+        max(case when owner_ts_msk is not null then 1 else 0 end) as deal_assigned
+
+     FROM {{ source('b2b_mart', 'device_events') }}
+     INNER JOIN bounce
+        ON bounce.user_id = user['userId']
+     LEFT JOIN deals USING (user_id)
+     GROUP BY user_Id
+)
+left join users using (user_id)
+WHERE visit_date >= '2024-04-06'
+    
