@@ -11,9 +11,9 @@
 
 
 with interactions as (
-    select distinct user_id, min(interaction_create_time) as registration_start
+    select user_id, min(interaction_create_time) as registration_start
     from {{ ref('fact_attribution_interaction') }}
-    where type == 'Web' AND source == 'selfService' AND interaction_type == 10
+    where type = 'Web' AND source = 'selfService' AND interaction_type = 10
     group by user_id
     ),
     
