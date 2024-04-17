@@ -62,13 +62,4 @@ main AS (
     INNER JOIN users USING(user_id)
 )
 
-SELECT
-    event_date_msk,
-    COUNT(DISTINCT user_id) AS dau,
-    AVG(INT(is_rd1)) AS is_rd1,
-    AVG(INT(is_rd3)) AS is_rd3,
-    AVG(INT(is_rd7)) AS is_rd7
-FROM main
-WHERE event_date_msk >= '2024-04-01'
-GROUP BY 1
-ORDER BY 1
+SELECT * FROM main
