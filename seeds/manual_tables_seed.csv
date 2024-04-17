@@ -6,6 +6,8 @@ mart.dim_product_review
 payments.country_filter
 mart.dim_date
 goods.coolbe_product_labels
-pharmacy.fbads_adset_country_insights
 mongo.product_fast_delivery_info_daily_snapshot
 mongo.b2b_core_product_appendixes_daily_snapshot
+pharmacy.adjust_raw_network_insights
+pharmacy.adjust_raw_deliverables_insights
+pharmacy.adjust_raw_cohort_insights
