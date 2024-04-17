@@ -169,8 +169,14 @@ order_clicks AS (
 deals as (
     SELECT DISTINCT
         user_id, 
-        ARRAY_JOIN(COLLECT_LIST(CONCAT('https://admin.joompro.io/users/', user_id, '/deal/', deal_id)), '; ')         AS deals
+        ARRAY_JOIN(COLLECT_LIST(CONCAT('https://admin.joompro.io/users/', user_id, '/deal/', deal_id)), '; ')         AS deals,
+        SUM(gmv) as gmv
     FROM {{ ref('fact_deals') }}
+    LEFT JOIN (
+        select sum(planned_offer_cost/1000000) as gmv, deal_id
+            from {{ ref('fact_customer_requests') }}
+        group by deal_id
+    ) USING (deal_id)
     WHERE next_effective_ts_msk IS NULL AND deal_id is not null
     GROUP BY user_id
 ),
@@ -195,6 +201,7 @@ main AS (
         uniq_products_opened,
         COALESCE(create_order_clicks, 0) AS create_order_clicks,
         deals,
+        gmv,
         ARRAY_JOIN(
             COLLECT_LIST(
                 CASE
@@ -218,7 +225,7 @@ main AS (
     LEFT JOIN order_clicks USING(user_id)
     LEFT JOIN deals        USING(user_id)
     WHERE phone_number IS NOT NULL
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
 )
 
 SELECT * FROM main
