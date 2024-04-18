@@ -21,9 +21,9 @@ WITH users AS (
 
 utm_labels as (
     SELECT DISTINCT
-        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
-        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
-        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        coalesce(first_value(labels.utm_source) over (partition by user_id order by event_ts_msk), "") as utm_source,
+        coalesce(first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk), "") as utm_medium,
+        coalesce(first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk), "") as utm_campaign,
         user_id
     from
     (
