@@ -58,3 +58,4 @@ FROM
         ON order.id = order_parcel.order_id
     LEFT JOIN {{ source('pharmacy_landing', 'checkout') }} as checkout
         ON checkout.id = order.checkout_id
+WHERE refund_order.final_refunded_amount_price > 0
