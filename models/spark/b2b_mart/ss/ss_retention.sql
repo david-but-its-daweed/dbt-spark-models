@@ -77,7 +77,7 @@ wau as (
 
 mau as (
     SELECT
-        COUNT(DISTINCT user_id) AS wau,
+        COUNT(DISTINCT user_id) AS mau,
         autorisation, registration,
         month
     FROM main
