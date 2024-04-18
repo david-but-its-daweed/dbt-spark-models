@@ -98,7 +98,7 @@ wau as (
         utm_campaign,
         week
     FROM main
-    GROUP BY 2, 3, 4
+    GROUP BY 2, 3, 4, 5, 6, 7
 ),
 
 mau as (
@@ -111,13 +111,16 @@ mau as (
         utm_campaign,
         month
     FROM main
-    GROUP BY 2, 3, 4
+    GROUP BY 2, 3, 4, 5, 6, 7
 )
 
 
 SELECT
     event_date_msk,
     autorisation, registration,
+    utm_source,
+    utm_medium,
+    utm_campaign,
     MAX(wau) AS wau,
     MAX(mau) AS mau,
     COUNT(DISTINCT user_id) AS dau,
@@ -140,5 +143,5 @@ LEFT JOIN mau using (
         utm_medium,
         utm_campaign)
 WHERE event_date_msk >= '2024-04-01'
-GROUP BY 1, 2, 3
-ORDER BY 1, 2, 3
+GROUP BY 1, 2, 3, 5, 6, 7
+ORDER BY 1, 2, 3, 5, 6, 7
