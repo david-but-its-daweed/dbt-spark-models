@@ -141,7 +141,7 @@ users_info_2 AS (
     FROM (SELECT *, EXPLODE_OUTER(product_categories) AS product_category FROM users_info_1) AS main
     LEFT JOIN {{ ref('gold_merchant_categories') }} AS cat
         ON cat.merchant_category_id = main.product_category
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
 ), 
 
 categories AS (
