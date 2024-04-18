@@ -121,9 +121,9 @@ SELECT
     MAX(wau) AS wau,
     MAX(mau) AS mau,
     COUNT(DISTINCT user_id) AS dau,
-    AVG(INT(is_rd1)) AS is_rd1,
-    AVG(INT(is_rd3)) AS is_rd3,
-    AVG(INT(is_rd7)) AS is_rd7
+    SUM(INT(is_rd1)) AS sum_rd1,
+    SUM(INT(is_rd3)) AS sum_rd3,
+    SUM(INT(is_rd7)) AS sum_rd7
 FROM main
 LEFT JOIN wau using (
         week,
