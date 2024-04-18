@@ -22,7 +22,26 @@ deals as (
     left join {{ ref('dim_deal_products') }} using (deal_id, user_id)
     WHERE next_effective_ts_msk is null
         AND (self_service or ss_customer)
+),
+
+
+utm_labels as (
+    SELECT DISTINCT
+        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
+        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
+        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        user_id
+    from
+    (
+    select
+        str_to_map(split_part(payload.pageUrl, "?", -1), "&", "=") as labels,
+        user.userId as user_id, event_ts_msk
+    from {{ source('b2b_mart', 'device_events') }}
+    where type = 'sessionStart' and payload.pageUrl like "%utm%"
 )
+
+)
+
 ,
 
 products AS (
@@ -87,6 +106,8 @@ categories as (
 )
 
 
+SELECT * FROM
+(
 SELECT
         l1_merchant_category_name,
         l2_merchant_category_name,
@@ -126,3 +147,4 @@ SELECT
         0 as deal_assigned,
         'categories' as page_type
 FROM categories
+) LEFT JOIN utm_labels USING (user_id)

@@ -16,6 +16,23 @@ with interactions as (
     where type = 'Web' AND source = 'selfService' AND interaction_type = 10
     group by user_id
     ),
+
+utm_labels as (
+    SELECT DISTINCT
+        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
+        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
+        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        user_id
+    from
+    (
+    select
+        str_to_map(split_part(payload.pageUrl, "?", -1), "&", "=") as labels,
+        user.userId as user_id, event_ts_msk
+    from {{ source('b2b_mart', 'device_events') }}
+    where type = 'sessionStart' and payload.pageUrl like "%utm%"
+    )
+)
+,
     
 phone_numbers as (
         select distinct uid as user_id, _id as phone_number
@@ -52,6 +69,7 @@ select * from interactions
 left join phone_numbers using (user_id)
 left join users_info using (user_id)
 left join company_info using (user_id)
+left join utm_labels using (user_id)
 ),
 
 users_info_1 AS (
@@ -80,7 +98,10 @@ users_info_1 AS (
         has_product_import,
         product_categories,
         ARRAY_JOIN(category_other_values, ', ') AS category_other_values,
-        cnpj
+        cnpj,
+        utm_source,
+        utm_medium,
+        utm_campaign
     FROM joompro_users_table
     WHERE user_id NOT IN (
         '65f8a3b040640e6f0b103c62',
@@ -113,6 +134,9 @@ users_info_2 AS (
         product_categories,
         category_other_values,
         cnpj,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         ARRAY_JOIN(COLLECT_LIST(merchant_category_name), '; ') AS categories
     FROM (SELECT *, EXPLODE_OUTER(product_categories) AS product_category FROM users_info_1) AS main
     LEFT JOIN {{ ref('gold_merchant_categories') }} AS cat
@@ -195,6 +219,9 @@ main AS (
         has_product_import,
         category_other_values,
         cnpj,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         categories,
         categories_opened,
         products_opened,
@@ -225,7 +252,7 @@ main AS (
     LEFT JOIN order_clicks USING(user_id)
     LEFT JOIN deals        USING(user_id)
     WHERE phone_number IS NOT NULL
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22
 )
 
 SELECT * FROM main

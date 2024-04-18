@@ -29,6 +29,23 @@ deals as (
     FROM {{ ref('fact_deals') }}
     WHERE next_effective_ts_msk is null
         AND (self_service or ss_customer)
+),
+
+utm_labels as (
+    SELECT DISTINCT
+        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
+        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
+        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        user_id
+    from
+    (
+    select
+        str_to_map(split_part(payload.pageUrl, "?", -1), "&", "=") as labels,
+        user.userId as user_id, event_ts_msk
+    from {{ source('b2b_mart', 'device_events') }}
+    where type = 'sessionStart' and payload.pageUrl like "%utm%"
+)
+
 )
 
 SELECT * FROM (
@@ -63,7 +80,8 @@ SELECT * FROM (
      INNER JOIN bounce
         ON bounce.user_id = user['userId']
      LEFT JOIN deals USING (user_id)
-     GROUP BY user_Id
+     GROUP BY user_id
 )
+LEFT JOIN utm_labels USING (user_id)
 WHERE visit_date >= '2024-04-06'
     

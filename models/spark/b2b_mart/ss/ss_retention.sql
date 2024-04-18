@@ -18,6 +18,24 @@ WITH users AS (
     HAVING SUM(IF(type IN ("productPreview", "searchOpen", "categoryClick", "orderPreview", "productGalleryScroll", "categoryOpen", "popupFormSubmit", "popupFormNext", "mainClick", "orderClick"), 1, 0)) > 0
 ),
 
+
+utm_labels as (
+    SELECT DISTINCT
+        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
+        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
+        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        user_id
+    from
+    (
+    select
+        str_to_map(split_part(payload.pageUrl, "?", -1), "&", "=") as labels,
+        user.userId as user_id, event_ts_msk
+    from {{ source('b2b_mart', 'device_events') }}
+    where type = 'sessionStart' and payload.pageUrl like "%utm%"
+    )
+)
+,
+
 visits AS (
     SELECT DISTINCT
        user['userId'] AS user_id,
@@ -45,6 +63,9 @@ main AS (
         DATE_TRUNC("WEEK", event_date_msk) AS week,
         DATE_TRUNC("MONTH", event_date_msk) AS month,
         autorisation, registration,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         user_id,
         IF(
             DATEDIFF(CURRENT_DATE() - 1, event_date_msk) >= 1,
@@ -64,12 +85,17 @@ main AS (
     FROM visits
     INNER JOIN users USING(user_id)
     LEFT JOIN (SELECT DISTINCT user_id, autorisation, registration from {{ ref('ss_funnel_table') }}) using (user_id)
+    LEFT JOIN utm_labels USING (user_id)
 ),
 
 wau as (
     SELECT
         COUNT(DISTINCT user_id) AS wau,
-        autorisation, registration,
+        autorisation,
+        registration,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         week
     FROM main
     GROUP BY 2, 3, 4
@@ -78,7 +104,11 @@ wau as (
 mau as (
     SELECT
         COUNT(DISTINCT user_id) AS mau,
-        autorisation, registration,
+        autorisation,
+        registration,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         month
     FROM main
     GROUP BY 2, 3, 4
@@ -95,8 +125,20 @@ SELECT
     AVG(INT(is_rd3)) AS is_rd3,
     AVG(INT(is_rd7)) AS is_rd7
 FROM main
-LEFT JOIN wau using (week, autorisation, registration)
-LEFT JOIN mau using (month, autorisation, registration)
+LEFT JOIN wau using (
+        week,
+        autorisation,
+        registration,
+        utm_source,
+        utm_medium,
+        utm_campaign)
+LEFT JOIN mau using (
+        month,
+        autorisation,
+        registration,
+        utm_source,
+        utm_medium,
+        utm_campaign)
 WHERE event_date_msk >= '2024-04-01'
 GROUP BY 1, 2, 3
 ORDER BY 1, 2, 3
