@@ -42,6 +42,8 @@ visits AS (
 main AS (
     SELECT
         event_date_msk,
+        DATE_TRUNC("WEEK", event_date_msk) AS week,
+        DATE_TRUNC("MONTH", event_date_msk) AS month,
         autorisation, registration,
         user_id,
         IF(
@@ -68,7 +70,7 @@ wau as (
     SELECT
         COUNT(DISTINCT user_id) AS wau,
         autorisation, registration,
-        DATE_TRUNC("WEEK", event_date_msk) AS event_date_msk
+        week
     FROM main
     GROUP BY 2, 3, 4
 ),
@@ -77,7 +79,7 @@ mau as (
     SELECT
         COUNT(DISTINCT user_id) AS wau,
         autorisation, registration,
-        DATE_TRUNC("MONTH", event_date_msk) AS event_date_msk
+        month
     FROM main
     GROUP BY 2, 3, 4
 )
@@ -87,14 +89,14 @@ SELECT
     event_date_msk,
     autorisation, registration,
     MAX(wau) AS wau,
+    MAX(mau) AS mau,
     COUNT(DISTINCT user_id) AS dau,
     AVG(INT(is_rd1)) AS is_rd1,
     AVG(INT(is_rd3)) AS is_rd3,
     AVG(INT(is_rd7)) AS is_rd7
 FROM main
-LEFT JOIN wau using (DATE_TRUNC("WEEK", event_date_msk), autorisation, registration)
-LEFT JOIN mau using (DATE_TRUNC("MONTH", event_date_msk), autorisation, registration)
+LEFT JOIN wau using (week, autorisation, registration)
+LEFT JOIN mau using (month, autorisation, registration)
 WHERE event_date_msk >= '2024-04-01'
 GROUP BY 1, 2, 3
 ORDER BY 1, 2, 3
-
