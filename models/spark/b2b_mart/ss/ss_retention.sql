@@ -143,5 +143,5 @@ LEFT JOIN mau using (
         utm_medium,
         utm_campaign)
 WHERE event_date_msk >= '2024-04-01'
-GROUP BY 1, 2, 3, 5, 6, 7
-ORDER BY 1, 2, 3, 5, 6, 7
+GROUP BY 1, 2, 3, 4, 5, 6
+ORDER BY 1, 2, 3, 4, 5, 6
