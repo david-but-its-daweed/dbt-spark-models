@@ -91,7 +91,6 @@ sources:
       - name: card_bins
       - name: chargeback
       - name: fact_refund
-      - name: order_groups
       - name: payment
       - name: payment_order
   - name: recom

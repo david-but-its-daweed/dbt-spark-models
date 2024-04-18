@@ -65,7 +65,7 @@ slo AS (
 
 categories AS (
     SELECT DISTINCT
-        o.order_group_id AS target_id,
+        o.order_group_id,
         FIRST_VALUE(
             category_id) OVER (
             PARTITION BY o.order_group_id
@@ -84,15 +84,13 @@ categories AS (
 
 orders_info AS (
     SELECT
-        og.payment_order_id,
+        o.order_group_id,
         SUM(o.psp_initial) AS psp_initial,
         SUM(o.psp_refund_fee) AS psp_refund_fee,
         SUM(o.psp_chargeback_fee) AS psp_chargeback_fee,
         MAX(o.country) AS shipping_country
     FROM
         {{ ref('orders') }} AS o
-    INNER JOIN
-        {{ source('payments','order_groups') }} AS og USING (order_group_id)
     GROUP BY
         1
 ),
@@ -117,6 +115,7 @@ SELECT
     po.is_success,
     po.target_type,
     po.target_id,
+    po.order_group_id,
     po.payment_type,
     po.payment_origin,
     po.is_new_card,
@@ -184,7 +183,6 @@ SELECT
     po.riskified_fees,
     po.reason_3ds,
     po.date,
-    po.target_id AS order_group_id,
     po.has_linked_card,
 
     ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int ORDER BY po.created_time)
@@ -265,9 +263,11 @@ LEFT JOIN
 LEFT JOIN
     slo AS s USING (pref_country)
 LEFT JOIN
-    categories AS c USING (target_id)
+    categories AS c
+    ON c.order_group_id = po.order_group_id AND po.is_success = 1
 LEFT JOIN
-    orders_info AS oi USING (payment_order_id)
+    orders_info AS oi
+    ON oi.order_group_id = po.order_group_id AND po.is_success = 1
 LEFT JOIN
     ads_info AS ai USING (device_id)
 WHERE
