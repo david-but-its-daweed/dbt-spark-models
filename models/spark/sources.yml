@@ -3,7 +3,6 @@ version: 2
 sources:
   - name: ads
     tables:
-      - name: web_analytics_cohorts_v4
       - name: referral_payout_stats
       - name: referral_bloggers
       - name: web_analytics_pageviews_with_segments
