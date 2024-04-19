@@ -17,6 +17,7 @@ WITH main AS (
         cube_profit.t AS order_date_msk,
         cube_profit.country AS country_code,
         DATEDIFF(cube_profit.prediction_date, cube_profit.t) - 1 AS days_since_first_estimation,
+        SUM(cube_profit.gmv_initial) AS gmv_initial,
         SUM(cube_profit.order_gross_profit_final_estimated) AS order_gross_profit_final_estimated, -- оценка GP
         MAX(
             IF(
