@@ -40,5 +40,5 @@ FROM main
 WHERE
     TRUE
     AND days_since_first_estimation <= 180
-    AND days_since_first_estimation > 0
+    AND days_since_first_estimation >= 0
 ORDER BY 1, 2, 3
