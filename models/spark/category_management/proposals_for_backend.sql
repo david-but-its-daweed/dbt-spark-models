@@ -45,8 +45,8 @@ products_n_variants AS (
     LEFT JOIN currency_rates AS c
         ON
             c.currency_code = v.currency
-            AND CURRENT_DATE() >= c.effective_date
-            AND CURRENT_DATE() < c.next_effective_date
+            AND DATE('{{ var("start_date_ymd") }}') >= c.effective_date
+            AND DATE('{{ var("start_date_ymd") }}') < c.next_effective_date
 ),
 ------- Collect information for new proposals
 ------- Find documentation https://www.notion.so/joomteam/Joom-Select-bfbc28a1ef53447cab283b91b9d4328a#6438a48f3f2e43e39cd14d1e02a6081d
@@ -80,8 +80,40 @@ products_w_bad_rating AS
     FROM {{ ref('initial_metrics_set') }} AS t
     WHERE partition_date = DATE('{{ var("start_date_ymd") }}')
         AND product_rating_60_days < 4.3
-)
+),
+
+proposals_collections AS (
 ------- New proposals
+    SELECT
+        proposal_id,
+        partition_date,
+        product_id,
+        type,
+        current_status,
+        cancel_reason,
+        warnings,
+        ARRAY_AGG(STRUCT(variant_id, price)) AS  target_prices
+    FROM new_proposals
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    UNION ALL
+------- Proposals to cancel
+    SELECT
+        h.proposal_id,
+        t.partition_date,
+        h.product_id,
+        "cancel" AS type,
+        h.current_status AS current_status,
+        "productRemovedFromJoomSelect" AS cancel_reason,
+        "" AS warnings,
+        NULL AS  target_prices
+    FROM {{ ref('js_proposal_backend_status_history_raw') }} AS h
+    INNER JOIN products_w_bad_rating AS t
+        ON h.product_id = t.product_id
+    WHERE status_effective_to IS NULL
+        AND current_status != "cancelled"
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+)
+
 SELECT
     proposal_id,
     partition_date,
@@ -90,23 +122,5 @@ SELECT
     current_status,
     cancel_reason,
     warnings,
-    ARRAY_AGG(STRUCT(variant_id, price)) AS  target_prices
-FROM new_proposals
-GROUP BY 1, 2, 3, 4, 5, 6, 7
-UNION ALL
-------- Proposals to cancel
-SELECT
-    h.proposal_id,
-    t.partition_date,
-    h.product_id,
-    "cancel" AS type,
-    h.current_status AS current_status,
-    "productRemovedFromJoomSelect" AS cancel_reason,
-    "" AS warnings,
-    NULL AS  target_prices
-FROM {{ ref('js_proposal_backend_status_history_raw') }} AS h
-INNER JOIN products_w_bad_rating AS t
-    ON h.product_id = t.product_id
-WHERE status_effective_to IS NULL
-    AND current_status != "cancelled"
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+    target_prices
+FROM proposals_collections
