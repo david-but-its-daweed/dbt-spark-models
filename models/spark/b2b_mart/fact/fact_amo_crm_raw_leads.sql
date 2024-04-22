@@ -322,6 +322,7 @@ select distinct
         from {{ ref('fact_customers') }}
     ) on leadId = amo_id
     left join amo_admins on admin_id = responsibleUser._id
+    WHERE (createdFromTestEnv is null or createdFromTestEnv == False)
     ) left join statuses using (leadId)
     )
     left join phone on leadId = lead_id
