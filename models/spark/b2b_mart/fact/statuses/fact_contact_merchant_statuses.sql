@@ -75,7 +75,7 @@ customers AS (
     SELECT DISTINCT
         user_id,
         country
-    FROM {{ ref('fact_customers') }})
+    FROM {{ ref('fact_customers') }}
 ),
 
 
