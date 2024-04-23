@@ -33,14 +33,20 @@ owner AS (
 ),
 
 purchase AS (
+    SELECT *
+    FROM
+    (
     SELECT
         entity_id AS deal_id,
         assignee_id AS purchaser_id,
         assignee_email AS purchaser_email,
-        assignee_role AS purchaser_role
+        assignee_role AS purchaser_role,
+        row_number() over (partition by entity_id order by last_time_assigned desc) as rn
     FROM {{ ref('fact_issues') }}
     WHERE type = 'DealPurchaseSupport'
     AND next_effective_ts_msk IS NULL
+    )
+    WHERE rn = 1
 ),
 
 
