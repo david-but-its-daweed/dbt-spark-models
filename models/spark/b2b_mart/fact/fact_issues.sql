@@ -17,7 +17,7 @@ WITH admins AS (
 )
 ,
 assigned AS (
-    SELECT
+    SELECT DISTINCT
         f._id,
         f.first_assignee_id,
         fa.email AS first_assignee_email,
@@ -42,6 +42,7 @@ assigned AS (
                     _id,
                     explode(assigneeHistory) AS assignee_history
                 FROM {{ ref('scd2_issues_snapshot') }}
+                WHERE dbt_valid_to IS NULL
             )
         )
     ) AS f
