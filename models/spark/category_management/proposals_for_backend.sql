@@ -62,7 +62,7 @@ new_proposals AS
         "new" AS type,
         "new" AS current_status,
         "" AS cancel_reason,
-        NULL AS warnings
+        "" AS warnings
     FROM {{ ref('products_with_target_price') }} AS t
     LEFT JOIN products_n_variants AS p
         ON
@@ -91,7 +91,7 @@ proposals_collections AS (
         type,
         current_status,
         cancel_reason,
-        ARRAY_AGG(STRUCT(warnings)) AS warnings,
+        ARRAY_AGG(warnings) AS warnings,
         ARRAY_AGG(STRUCT(variant_id, price)) AS  target_prices
     FROM new_proposals
     GROUP BY 1, 2, 3, 4, 5, 6
