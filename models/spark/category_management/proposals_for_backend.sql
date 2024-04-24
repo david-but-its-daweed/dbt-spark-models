@@ -62,7 +62,7 @@ new_proposals AS
         "new" AS type,
         "new" AS current_status,
         "" AS cancel_reason,
-        "" AS warnings
+        NULL AS warnings
     FROM {{ ref('products_with_target_price') }} AS t
     LEFT JOIN products_n_variants AS p
         ON
