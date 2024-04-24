@@ -62,7 +62,7 @@ new_proposals AS
         "new" AS type,
         "new" AS current_status,
         "" AS cancel_reason,
-        "" AS warnings
+        NULL AS warnings
     FROM {{ ref('products_with_target_price') }} AS t
     LEFT JOIN products_n_variants AS p
         ON
@@ -91,10 +91,10 @@ proposals_collections AS (
         type,
         current_status,
         cancel_reason,
-        warnings,
+        ARRAY_AGG(warnings) AS warnings,
         ARRAY_AGG(STRUCT(variant_id, price)) AS  target_prices
     FROM new_proposals
-    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    GROUP BY 1, 2, 3, 4, 5, 6
     UNION ALL
 ------- Proposals to cancel
     SELECT
@@ -104,7 +104,7 @@ proposals_collections AS (
         "cancel" AS type,
         h.current_status AS current_status,
         "productRemovedFromJoomSelect" AS cancel_reason,
-        "" AS warnings,
+        NULL AS warnings,
         NULL AS  target_prices
     FROM {{ ref('js_proposal_backend_status_history_raw') }} AS h
     INNER JOIN products_w_bad_rating AS t
