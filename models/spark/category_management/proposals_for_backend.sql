@@ -91,7 +91,7 @@ proposals_collections AS (
         type,
         current_status,
         cancel_reason,
-        ARRAY_AGG(warnings) AS warnings,
+        ARRAY_AGG(STRUCT(warnings)) AS warnings,
         ARRAY_AGG(STRUCT(variant_id, price)) AS  target_prices
     FROM new_proposals
     GROUP BY 1, 2, 3, 4, 5, 6
