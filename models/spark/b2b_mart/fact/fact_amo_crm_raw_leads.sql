@@ -189,6 +189,7 @@ select distinct
     support_email,
     support_id,
 
+    is_self_service,
 
     case when owner_email is not null then '' else sales_name end as sales_name,
     coalesce(owner_email, sales_email) as sales_email,
@@ -206,6 +207,7 @@ select distinct
         companyId as company_id,
         companyName as company_name,
         coalesce(contactId, leadId) as contact_id,
+        is_self_service,
         min(case when validation then leadId end) over (partition by coalesce(contactId, leadId)) as validation_lead_id,
         millis_to_ts_msk(createdAt) as created_at,
         millis_to_ts_msk(
@@ -290,6 +292,7 @@ select distinct
         st.createdAt as status_ts,
         st.statuses[0]._id as status_id,
         st.statuses[0].name as status,
+        is_self_service,
         funnel_status, user_id
     from
     (
@@ -314,6 +317,7 @@ select distinct
 
         s.source as country,
         status,
+        isSelfService as is_self_service,
         tags, funnel_status, user_id
     from {{ source('mongo', 'b2b_core_amo_crm_raw_leads_daily_snapshot') }} amo
     left join source s on amo.source = s.id
