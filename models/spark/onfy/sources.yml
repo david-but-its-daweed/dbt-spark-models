@@ -4,6 +4,7 @@ sources:
       - name: orders_info
       - name: sessions
       - name: onfy_medicine_analogs
+      - name: conversion_funnel_new
   - name: pharmacy_landing
     tables:
       - name: product_category_flat
