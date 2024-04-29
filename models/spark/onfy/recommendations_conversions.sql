@@ -145,7 +145,7 @@ SELECT
     sessions.session_start,
     sessions.source,
     sessions.campaign,
-    product_preview_reco.sourcescreen,
+    product_preview_reco.sourcescreen AS source_screen,
     CASE
         WHEN product_preview_reco.reco_block_type = 'recommendationBestsellers' OR product_preview_reco.reco_block_type LIKE '%bestseller%' THEN 'bestsellers'
         WHEN product_preview_reco.reco_block_type = 'recommendationAlsoBought' OR product_preview_reco.reco_block_type LIKE '%also_bought%' THEN 'also_bought'
@@ -157,7 +157,7 @@ SELECT
     END AS reco_block_type,
     product_preview_reco.pzn,
     MIN(product_preview_reco.block_shown_ts) AS block_shown_ts,
-    MIN(product_preview_reco.productposition) AS productposition,
+    MIN(product_preview_reco.productposition) AS product_position,
     MIN(add_to_cart.add_to_cart_ts) AS add_to_cart_ts,
     MIN(orders.order_ts) AS order_ts,
     MIN(orders.products_price) AS products_price
@@ -188,7 +188,7 @@ SELECT
     sessions.session_start,
     sessions.source,
     sessions.campaign,
-    product_preview_reco.sourcescreen,
+    product_preview_reco.sourcescreen AS source_screen,
     CASE
         WHEN product_preview_reco.reco_block_type = 'recommendationBestsellers' OR product_preview_reco.reco_block_type LIKE '%bestseller%' THEN 'bestsellers'
         WHEN product_preview_reco.reco_block_type = 'recommendationAlsoBought' OR product_preview_reco.reco_block_type LIKE '%also_bought%' THEN 'also_bought'
@@ -200,7 +200,7 @@ SELECT
     END AS reco_block_type,
     product_preview_reco.pzn,
     MIN(product_preview_reco.block_shown_ts) AS block_shown_ts,
-    MIN(product_preview_reco.productposition) AS productposition,
+    MIN(product_preview_reco.productposition) AS product_position,
     MIN(add_to_cart.add_to_cart_ts) AS add_to_cart_ts,
     MIN(orders.order_ts) AS order_ts,
     MIN(orders.products_price) AS products_price
