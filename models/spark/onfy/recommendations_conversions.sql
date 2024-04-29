@@ -38,7 +38,7 @@ product_preview_reco AS (
         AND (LOWER(payload.widgettype) LIKE '%recommendatio%' OR payload.widgettype = 'previouslyBought')
         AND payload.widgettype IS NOT NULL
         AND payload.sourcescreen IN ('cart', 'home', 'product')
-        AND DATE(event_ts_cet) >= (CURRENT_DATE() - INTERVAL 3 MONTH)
+        AND partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
 ),
 
 ------------------------------------------------------------------------------------------------------
@@ -55,7 +55,7 @@ add_to_cart_direct AS (
     --AND (LOWER(payload.widgetType) LIKE '%recommendatio%' or payload.widgetType = 'previouslyBought')
     --AND payload.widgetType is not null
     AND payload.sourcescreen IN ('cart', 'home', 'product')
-    AND DATE(event_ts_cet) >= (CURRENT_DATE() - INTERVAL 3 MONTH)
+    AND partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
 ),
 
 -- going to product page FROM recommendaiton block
@@ -70,7 +70,7 @@ product_open_from_recos AS (
     WHERE type = 'productOpen'
     --AND (LOWER(payload.widgetType) LIKE '%recommendatio%' or payload.widgetType = 'previouslyBought')
     --AND payload.widgetType is not null
-    AND DATE(event_ts_cet) >= (CURRENT_DATE() - INTERVAL 3 MONTH)
+    AND partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
 ),
 
 -- adding to cart from product page
@@ -84,7 +84,7 @@ add_to_cart_from_product AS (
         type = 'addToCart'
         AND payload.widgettype IS NULL
         AND payload.sourcescreen = 'product'
-        AND DATE(event_ts_cet) >= (CURRENT_DATE() - INTERVAL 3 MONTH)
+        AND partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
 ),
 
 -- if user comes FROM reco block to product page AND than add this product to cart
