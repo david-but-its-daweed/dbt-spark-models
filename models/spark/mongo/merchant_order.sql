@@ -41,23 +41,26 @@ SELECT
         WHEN pi.sh.t = 2 THEN 'JoomLogistics'
         ELSE ''
     END AS selected_shipping_type,
-    pi.sh.p AS selected_shipping_price,
+    IF(pi.sh.p IS NOT NULL, NAMED_STRUCT(
+        'amount', CAST(pi.sh.p.amount AS DOUBLE) / 1000000,
+        'currency', pi.sh.p.ccy
+    ), NULL) AS selected_shipping_price,
     NAMED_STRUCT(
         'merchant_currency', mi.m.c,
-        'merchant_gmv', mi.m.t,
-        'merchant_revenue', mi.m.r,
-        'merchant_unit_price', mi.m.up,
-        'merchant_refund_amount', mi.m.up,
-        'merchant_revenue_from_invoice', mi.m.ri,
-        'merchant_vat', mi.m.v,
-        'merchant_extra_weight_chanrge', mi.m.ewc,
-        'merchant_gmv_usd', mi.m.td,
-        'logistics_price', IF(mi.l IS NOT NULL, mi.l.sp, NULL),
-        'logistics_ndi_compensation', IF(mi.l IS NOT NULL, mi.l.nc, NULL),
-        'logistics_freebie_charge', IF(mi.l IS NOT NULL, mi.l.fsc, NULL),
-        'logistics_price_usd', IF(mi.l IS NOT NULL, mi.l.pusd, NULL),
+        'merchant_gmv', CAST(mi.m.t AS DOUBLE) / 1000000,
+        'merchant_revenue', CAST(mi.m.r AS DOUBLE) / 1000000,
+        'merchant_unit_price', CAST(mi.m.up AS DOUBLE) / 1000000,
+        'merchant_refund_amount', CAST(mi.m.ra AS DOUBLE) / 1000000,
+        'merchant_revenue_from_invoice', CAST(mi.m.ri AS DOUBLE) / 1000000,
+        'merchant_vat', CAST(mi.m.v AS DOUBLE) / 1000000,
+        'merchant_extra_weight_chanrge', CAST(mi.m.ewc AS DOUBLE) / 1000000,
+        'merchant_gmv_usd', CAST(mi.m.td AS DOUBLE) / 1000000,
+        'logistics_price', IF(mi.l IS NOT NULL, CAST(mi.l.sp AS DOUBLE) / 1000000, NULL),
+        'logistics_ndi_compensation', IF(mi.l IS NOT NULL, CAST(mi.l.nc AS DOUBLE) / 1000000, NULL),
+        'logistics_freebie_charge', IF(mi.l IS NOT NULL, CAST(mi.l.fsc AS DOUBLE) / 1000000, NULL),
+        'logistics_price_usd', IF(mi.l IS NOT NULL, CAST(mi.l.pusd AS DOUBLE) / 1000000, NULL),
         'discounts', IF(mi.d IS NOT NULL, TRANSFORM(mi.d.ds, discount -> NAMED_STRUCT(
-            'amount', discount.a,
+            'amount', CAST(discount.a AS DOUBLE) / 1000000,
             'type', CASE
                 WHEN discount.t = 1 THEN 'other'
                 WHEN discount.t = 2 THEN 'competitivePriceReduction'
