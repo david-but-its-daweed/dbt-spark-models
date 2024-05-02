@@ -51,6 +51,7 @@ filtered_products AS (
     FROM {{ ref('initial_metrics_set') }} AS m
     LEFT JOIN {{ source('category_management', 'joom_select_manual_criteria') }} AS c ON m.main_category = c.category
     LEFT JOIN {{ source('mart', 'dim_merchant') }} AS d ON m.merchant_id = d.merchant_id
+    LEFT JOIN {{ source('category_management', 'joom_select_product_black_list') }} AS bl ON m.product_id = bl.product_id
     LEFT JOIN edlp_products AS e
         ON
             m.product_id = e.product_id
@@ -64,6 +65,7 @@ filtered_products AS (
         AND d.origin_name = "Chinese"              -- a temporary filter: only chinese origin            
         -- a temporary filter: exclude the edlp products
         AND e.product_id IS NULL
+        AND bl.product_id IS NULL
     {% if is_incremental() %}
         AND m.partition_date >= DATE('{{ var("start_date_ymd") }}')
     {% else %}

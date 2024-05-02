@@ -82,6 +82,13 @@ products_w_bad_rating AS
         AND product_rating_60_days < 4.3
 ),
 
+products_from_black_list AS (
+    SELECT
+        product_id
+    FROM {{ source('category_management', 'joom_select_product_black_list') }}
+    GROUP BY 1
+),
+
 proposals_collections AS (
 ------- New proposals
     SELECT
@@ -96,7 +103,24 @@ proposals_collections AS (
     FROM new_proposals
     GROUP BY 1, 2, 3, 4, 5, 6
     UNION ALL
-------- Proposals to cancel
+------- Proposals to cancel because of black list
+    SELECT
+        h.proposal_id,
+        DATE('{{ var("start_date_ymd") }}') AS partition_date,
+        h.product_id,
+        "cancel" AS type,
+        h.current_status AS current_status,
+        "productRemovedFromJoomSelect" AS cancel_reason,
+        NULL AS warnings,
+        NULL AS  target_prices
+    FROM {{ ref('js_proposal_backend_status_history_raw') }} AS h
+    INNER JOIN products_from_black_list AS bl
+        ON h.product_id = bl.product_id
+    WHERE status_effective_to IS NULL
+        AND current_status != "cancelled"
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+    UNION ALL
+------- Proposals to cancel because of bad rating 
     SELECT
         h.proposal_id,
         t.partition_date,
