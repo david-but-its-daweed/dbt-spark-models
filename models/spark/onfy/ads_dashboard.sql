@@ -303,7 +303,7 @@ filtered_data as
         order_created_date_cet as order_date,
         app_device_type,
         app_type,
-        uid.user_email_hash
+        sessions.user_email_hash
     from sessions as sessions
     join uid 
         on sessions.device_id = uid.device_id
