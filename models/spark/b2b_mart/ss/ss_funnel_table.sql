@@ -52,9 +52,9 @@ SELECT * FROM (
     -- визиты
     SELECT DISTINCT
         user_id,
-        min(case when type = 'sessionStart' AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS visit_ts,
-        CAST(min(case when type = 'sessionStart' AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS DATE) AS visit_date,
-        max(case when type = 'sessionStart' AND payload.pageUrl like '%https://joom.pro/pt-br%' then 1 else 0 end) AS visit,
+        min(case when type in ('sessionStart', 'productPreview') AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS visit_ts,
+        CAST(min(case when type in ('sessionStart', 'productPreview') AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS DATE) AS visit_date,
+        max(case when type in ('sessionStart', 'productPreview') AND payload.pageUrl like '%https://joom.pro/pt-br%' then 1 else 0 end) AS visit,
          
         min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) as autorisation_ts,
         CAST(min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) AS DATE) as autorisation_date,
