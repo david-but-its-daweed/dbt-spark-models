@@ -47,6 +47,7 @@ SELECT
     ), NULL) AS selected_shipping_price,
     NAMED_STRUCT(
         'merchant_currency', mi.m.c,
+        'customer_gmv', CAST(mi.c.gmv AS DOUBLE) / 1000000,
         'merchant_gmv', CAST(mi.m.t AS DOUBLE) / 1000000,
         'merchant_revenue', CAST(mi.m.r AS DOUBLE) / 1000000,
         'merchant_unit_price', CAST(mi.m.up AS DOUBLE) / 1000000,
