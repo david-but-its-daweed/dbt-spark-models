@@ -267,8 +267,7 @@ select distinct
             '7553579',
             '7120174',
             '7403522',
-            '7120186',
-            '8671264'
+            '7120186'
         ) then true else false end as validation,
         AccountId,
         hasLegalEntity,
