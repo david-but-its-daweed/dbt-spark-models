@@ -24,7 +24,11 @@ orders AS (
     linehaul_min_days,
     linehaul_max_days,
     linehaul_channel_type,
-    manufacturing_days
+    manufacturing_days,
+    manufacturing,
+    shipping,
+    current_status,
+    current_sub_status
   FROM {{ ref('jp_sla_logistics') }}
 )
 
@@ -46,7 +50,11 @@ select
         comment,
         expectedDurationInDays as expected_duration,
         stage_int as stage_id,
-        stage as status
+        stage as status,
+        manufacturing,
+        shipping,
+        current_status,
+        current_sub_status
     from
     (
     select _id, entityId, entityType, statuses.*, startDate
