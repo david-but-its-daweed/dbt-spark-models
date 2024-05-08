@@ -181,6 +181,7 @@ sources:
     tables:
       - name: joom_select_manual_criteria
       - name: js_merchant_discount_rate
+      - name: joom_select_product_white_list
       - name: joom_select_product_black_list
 
   - name: merchant
