@@ -17,6 +17,16 @@ WITH products AS (
     WHERE ARRAY_CONTAINS(labels.key, "influencer-exchange-suggested") = TRUE
 ),
 
+reviews AS (
+    SELECT
+        review_id,
+        DATE(next_effective_ts) >= "9999-12-31" AND is_deleted = FALSE AS is_review_active,
+        num_of_images AS review_images_cnt,
+        LENGTH(text) AS text_length
+    FROM {{ source('mart', 'dim_product_review') }}
+    WHERE DATE(next_effective_ts) >= "9999-12-31"
+),
+
 requests AS (
     SELECT
         c._id AS request_id,
@@ -45,12 +55,12 @@ requests AS (
             WHEN c.im = 4 THEN "europe"
         END AS market,
         p.product_id IS NOT NULL AS is_recomnded_product,
-        DATE(r.next_effective_ts) >= "9999-12-31" AND r.is_deleted = FALSE AS is_review_active,
-        r.num_of_images AS review_images_cnt,
-        LENGTH(r.text) AS text_length
+        r.is_review_active,
+        r.review_images_cnt,
+        r.text_length
     FROM {{ source('mongo', 'core_paid_post_tenders_daily_snapshot') }} AS c
     LEFT JOIN products AS p ON c.pid = p.product_id
-    LEFT JOIN {{ source('mart', 'dim_product_review') }} AS r ON c.rid = r.review_id
+    LEFT JOIN reviews AS r ON c.rid = r.review_id
 ),
 
 bids AS (
