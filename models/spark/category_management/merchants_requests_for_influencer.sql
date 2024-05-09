@@ -74,7 +74,27 @@ bids AS (
         s.oid AS order_id,
         m.countrycode AS influencer_country_code
     FROM {{ source('mongo', 'user_paid_post_bids_daily_snapshot') }} AS s
-    INNER JOIN {{ source('mongo', 'social_social_users_daily_snapshot') }} AS m ON m._id = s.suid
+    INNER JOIN {{ source('mongo', 'social_social_users_daily_snapshot') }} AS m ON s.suid = m._id
+),
+
+events AS (
+    SELECT
+        payload.tenderid AS tender_id,
+        MAX(IF(payload.state = "completed", FROM_UNIXTIME(server_ts_utc / 1000), NULL)) AS completed_time_utc,
+        MAX(IF(payload.state = "delivered", FROM_UNIXTIME(server_ts_utc / 1000), NULL)) AS delivered_time_utc
+    FROM {{ source('mart', 'unclassified_events') }}
+    WHERE
+        type = "paidPostTenderStatusChanged"
+        AND payload.state IN ("completed", "delivered")
+        AND partition_date >= "2023-12-01"
+    GROUP BY 1
+),
+
+orders AS (
+    SELECT
+        order_id,
+        order_datetime_utc
+    FROM {{ ref('gold_orders') }}
 )
 
 SELECT
@@ -96,8 +116,13 @@ SELECT
     b.social_user_id,
     b.bid_status,
     b.order_id,
-    b.influencer_country_code
+    b.influencer_country_code,
+    o.order_datetime_utc,
+    e.completed_time_utc,
+    e.delivered_time_utc
 FROM requests AS r
 LEFT JOIN bids AS b ON r.bid_id = b.bid_id
+LEFT JOIN orders AS o ON b.order_id = o.order_id
+LEFT JOIN events AS e ON r.request_id = e.tender_id
 
 

@@ -31,6 +31,7 @@ sources:
       - name: dim_published_variant_with_merchant
       - name: dim_joom_select_proposal
       - name: dim_product_review
+      - name: unclassified_events
       
   - name: cube
     tables:
