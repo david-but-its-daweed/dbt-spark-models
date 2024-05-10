@@ -215,6 +215,7 @@ WHERE rnk_payment_start = 1
 
 )
 
+, filter_double_payments as (
 SELECT 
     device_id,
     session_id,
@@ -235,6 +236,12 @@ SELECT
     cart_open_dt,
     checkout_dt,
     payment_start_dt,
-    payment_dt
+    payment_dt,
+    RANK() over(PARTITION BY device_id, payment_dt ORDER BY session_start) as rnk_session_payment
 FROM successful_payment_sessions
 WHERE rnk_payment = 1
+)
+
+SELECT *
+FROM filter_double_payments
+WHERE rnk_session_payment = 1
