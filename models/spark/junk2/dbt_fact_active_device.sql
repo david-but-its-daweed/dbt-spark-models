@@ -7,6 +7,7 @@
     partition_by=['partition_date_msk'],
     file_format='parquet'
 ) }}
+-- comment
 select
   partition_date as partition_date_msk,
   device_id
