@@ -7,6 +7,7 @@ sources:
       - name: referral_bloggers
       - name: web_analytics_pageviews_with_segments
       - name: ads_install
+      - name: product_availability
   - name: mart
     tables:
       - name: dim_device_min
@@ -184,6 +185,7 @@ sources:
       - name: js_merchant_discount_rate
       - name: joom_select_product_white_list
       - name: joom_select_product_black_list
+      - name: categories_with_ce_requirements
 
   - name: merchant
     tables:
