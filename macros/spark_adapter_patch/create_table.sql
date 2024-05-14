@@ -1,4 +1,12 @@
 {%- macro spark__create_table_as(temporary, relation, compiled_code, language='sql') -%}
+
+  {% set tables_to_copy_from_prod = {} %}
+  {% if var('tables_to_copy_from_prod', '') != '' %}
+    {% for t in var('tables_to_copy_from_prod', '').split(',') %}
+      {% do tables_to_copy_from_prod.update({t.split(':')[0]: t.split(':')[1]}) %}
+    {% endfor %}
+  {% endif %}
+
   {%- if language == 'sql' -%}
     {%- if temporary -%}
       {{ create_temporary_view(relation, compiled_code) }}
@@ -16,7 +24,11 @@
       {{ comment_clause() }}
       {{ tblproperties_clause()}}
       as
-      {{ compiled_code }}
+      {% if relation.render() in tables_to_copy_from_prod %}
+        select * from {{ tables_to_copy_from_prod[relation.render()] }}
+      {% else %}
+        {{ compiled_code }}
+      {% endif %}
     {%- endif -%}
   {%- elif language == 'python' -%}
     {#--
