@@ -10,6 +10,10 @@
   {%- if language == 'sql' -%}
     {%- if temporary -%}
       {{ create_temporary_view(relation, compiled_code) }}
+    {%- elif relation.render() in tables_to_copy_from_prod -%}
+      create or replace view {{ relation }}
+      as
+      select * from {{ tables_to_copy_from_prod[relation.render()] }}
     {%- else -%}
       {% if config.get('file_format', validator=validation.any[basestring]) == 'delta' %}
         create or replace table {{ relation }}
@@ -24,11 +28,7 @@
       {{ comment_clause() }}
       {{ tblproperties_clause()}}
       as
-      {% if relation.render() in tables_to_copy_from_prod %}
-        select * from {{ tables_to_copy_from_prod[relation.render()] }}
-      {% else %}
-        {{ compiled_code }}
-      {% endif %}
+      {{ compiled_code }}
     {%- endif -%}
   {%- elif language == 'python' -%}
     {#--

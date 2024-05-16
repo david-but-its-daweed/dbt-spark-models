@@ -23,7 +23,7 @@ DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_D
 dbt compile --vars $DBT_VARS $@
 
 git fetch --quiet --all --prune
-TABLES_TO_COPY_FROM_PROD=$(python3 ./infra/get_tables_to_copy_from_prod.py 2>&1)
+TABLES_TO_COPY_FROM_PROD=$(python3 ./infra/get_tables_to_copy_from_prod.py)
 echo tables_to_copy_from_prod: $TABLES_TO_COPY_FROM_PROD
 
 DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_DATE','table_name':'gburg.test','tables_to_copy_from_prod':'$TABLES_TO_COPY_FROM_PROD'}"

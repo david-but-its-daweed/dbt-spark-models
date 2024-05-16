@@ -55,7 +55,7 @@ def get_models_to_execute():
             return models
 
 
-def find_children_models(model: Node, all_models: List[Node]): # todo check/test
+def find_children_models(model: Node, all_models: List[Node]):
     all_children_models = set()
     children_models = filter(lambda m: m.unique_id in model.child_map, all_models)
     for child in children_models:
@@ -64,7 +64,7 @@ def find_children_models(model: Node, all_models: List[Node]): # todo check/test
     return all_children_models
 
 
-def tables_to_copy_from_prod(): # todo check/test
+def tables_to_copy_from_prod():
     models_to_execute = get_models_to_execute()
     changed_files = get_changed_files()
     changed_models = filter(lambda m: m.original_file_path in changed_files, models_to_execute)
