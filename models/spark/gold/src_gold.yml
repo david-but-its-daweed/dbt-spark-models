@@ -71,11 +71,11 @@ models:
     - name: is_rw1
       description: Flag indicating whether `device_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
-      description: Flag indicating whether `device_id` returned to the service within the 2nd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service within the 2nd calendar week (from 8 to 14 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw3
-      description: Flag indicating whether `device_id` returned to the service within the 3rd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service within the 3rd calendar week (from 15 to 21 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw4
-      description: Flag indicating whether `device_id` returned to the service within the 4th calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service within the 4th calendar week (from 22 to 28 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_14
       description: Flag indicating whether `device_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
@@ -149,11 +149,11 @@ models:
     - name: is_rw1
       description: Flag indicating whether `device_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
-      description: Flag indicating whether `device_id` returned to the service within the 2nd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service within the 2nd calendar week (from 8 to 14 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw3
-      description: Flag indicating whether `device_id` returned to the service within the 3rd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service within the 3rd calendar week (from 15 to 21 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw4
-      description: Flag indicating whether `device_id` returned to the service within the 4th calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service within the 4th calendar week (from 22 to 28 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_14
       description: Flag indicating whether `device_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
@@ -217,11 +217,11 @@ models:
     - name: is_rw1
       description: Flag indicating whether `user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
-      description: Flag indicating whether `user_id` returned to the service within the 2nd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service within the 2nd calendar week (from 8 to 14 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw3
-      description: Flag indicating whether `user_id` returned to the service within the 3rd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service within the 3rd calendar week (from 15 to 21 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw4
-      description: Flag indicating whether `user_id` returned to the service within the 4th calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service within the 4th calendar week (from 22 to 28 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_14
       description: Flag indicating whether `user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
@@ -285,11 +285,11 @@ models:
     - name: is_rw1
       description: Flag indicating whether `user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
-      description: Flag indicating whether `user_id` returned to the service within the 2nd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service within the 2nd calendar week (from 8 to 14 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw3
-      description: Flag indicating whether `user_id` returned to the service within the 3rd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service within the 3rd calendar week (from 15 to 21 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw4
-      description: Flag indicating whether `user_id` returned to the service within the 4th calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service within the 4th calendar week (from 22 to 28 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_14
       description: Flag indicating whether `user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
@@ -351,11 +351,11 @@ models:
     - name: is_rw1
       description: Flag indicating whether `real_user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
-      description: Flag indicating whether `real_user_id` returned to the service within the 2nd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `real_user_id` returned to the service within the 2nd calendar week (from 8 to 14 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw3
-      description: Flag indicating whether `real_user_id` returned to the service within the 3rd calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `real_user_id` returned to the service within the 3rd calendar week (from 15 to 21 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw4
-      description: Flag indicating whether `real_user_id` returned to the service within the 4th calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `real_user_id` returned to the service within the 4th calendar week (from 22 to 28 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_14
       description: Flag indicating whether `real_user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
@@ -475,7 +475,7 @@ models:
     - name: user_id
       description: User ID (In case of app reinstallation until reauthorization, a new `user_id` is assigned).
     - name: order_date_msk
-      description: Order creation date UTC+3.
+      description: Order payment date in UTC+3. We don't use the order creation date because it gives us less information. The platform creates an order only after payment, the order is accepted into work only after payment. The order is accepted into work only after payment. Usually the difference between order creation and order payment does not exceed 3 minutes..
     - name: order_datetime_utc
       description: Order creation date and time in UTC.
     - name: legal_entity
@@ -659,7 +659,7 @@ models:
     - name: platform
       description: User device platform
     - name: order_date_msk
-      description: Order creation date in UTC+3
+      description: Order payment date in UTC+3. We don't use the order creation date because it gives us less information. The platform creates an order only after payment, the order is accepted into work only after payment. The order is accepted into work only after payment. Usually the difference between order creation and order payment does not exceed 3 minutes.
     - name: order_datetime_utc
       description: Order creation date and time in UTC
     - name: legal_entity
@@ -807,7 +807,7 @@ models:
     - name: order_id
       description: Order ID. An order is defined as the purchase of a specific `product_variant_id` from a single merchant. If you need to calculate metrics for the entire purchased cart, use `order_group_id`.
     - name: order_date_msk
-      description: Order creation date in UTC+3.
+      description: Order payment date in UTC+3. We don't use the order creation date because it gives us less information. The platform creates an order only after payment, the order is accepted into work only after payment. The order is accepted into work only after payment. Usually the difference between order creation and order payment does not exceed 3 minutes.
     - name: user_id
       description: User ID (In case of reinstalling the application, a new `user_id` is assigned until the user re-authenticates).
     - name: device_id
@@ -829,7 +829,7 @@ models:
     - name: order_group_id
       description: ID of the purchased cart of products. When a user places an order, one ID is assigned to all purchased products.
     - name: parcel_id
-      description: Parcel ID. A parcel can contain multiple logistic orders (`shipping_order_number`) in the case of Hecny consolidation. The entity can change before being shipped from Hecny.
+      description: Parcel ID. A parcel can contain multiple logistics orders (`shipping_order_number`) in the case of 4PX consolidation. The entity can change before being shipped from 4PX.
     - name: tracking_number
       description: Current tracking number of the parcel. 1 `tracking_number` strictly corresponds to 1 `parcel_id`.
     - name: user_id
@@ -849,27 +849,27 @@ models:
     - name: is_delivered_by_jl
       description: Flag indicating whether the parcel is delivered by JL.
     - name: is_fbj_order
-      description: Flag indicating whether the order is fulfilled using FBJ (at Hecny's warehouse, not the merchant's warehouse).
+      description: Flag indicating whether the order is fulfilled using FBJ (at 4PX's warehouse, not the merchant's warehouse).
     - name: delivery_method_name
       description: Delivery method name. `mail` - regular mail delivery; `delivery point` - delivery to a Pickup Point; `courier` - courier delivery; `fast mail` - expedited or tracked delivery, voluntarily chosen by the user at checkout; `unknown` - used in case of a new method that is not automatically processed.
     - name: linehaul_shipper_final
-      description: Final name of the main logistics provider (international transportation - from Hecny to the destination country).
+      description: Final name of the main logistics provider (international transportation - from 4PX to the destination country).
     - name: shipping_type_initial
       description: Logistics delivery type used for calculating logistics prices for the product at the time of user order placement. This field does not change. Possible values - `Offline`/`NRM`/`SRM`/`RM`.
     - name: shipping_type_final
-      description: Logistics delivery type by which the parcel is sent. If the parcel has not yet been shipped from Hecny's warehouse, this field contains the most up-to-date value for the parcel. Possible values - `Offline`/`NRM`/`SRM`/`RM`.
+      description: Logistics delivery type by which the parcel is sent. If the parcel has not yet been shipped from 4PX's warehouse, this field contains the most up-to-date value for the parcel. Possible values - `Offline`/`NRM`/`SRM`/`RM`.
     - name: channel_id_initial
       description: Logistics delivery channel used for calculating logistics prices for the product at the time of user order placement. This field does not change.
     - name: channel_id_final
-      description: Logistics delivery channel by which the parcel is sent. If the parcel has not yet been shipped from Hecny's warehouse, this field contains the most up-to-date value for the parcel.
+      description: Logistics delivery channel by which the parcel is sent. If the parcel has not yet been shipped from 4PX's warehouse, this field contains the most up-to-date value for the parcel.
     - name: merchant_category_id
       description: ID of the merchant product category.
     - name: business_line
       description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
     - name: is_planned_for_consolidation_by_hecny
-      description: Flag indicating whether the order is planned for consolidation at Hecny's sorting center. If there is no logistics order for the order_id, the flag is NULL
+      description: Flag indicating whether the order is planned for consolidation at 4PX's sorting center. If there is no logistics order for the order_id, the flag is NULL
     - name: is_consolidated_by_hecny
-      description: Flag indicating whether the order is consolidated at Hecny's sorting center. If there is no logistics order for the order_id, the flag is NULL
+      description: Flag indicating whether the order is consolidated at 4PX's sorting center. If there is no logistics order for the order_id, the flag is NULL
     - name: is_consolidated_by_merchant
       description: Flag indicating whether the order is consolidated by the merchant.
     - name: is_refunded
@@ -877,9 +877,9 @@ models:
     - name: refund_reason
       description: Reason for processing a refund. Possible values are `cancelled_by_customer`, `cancelled_by_merchant`, `not_delivered`, `quality`, `other`, `fraud`, NULL.
     - name: shipping_order_weight
-      description: Weight of the logistic order. Obtained during parcel check-in at Hecny. WARNING(!) This field is true for `shipping_order_number`, so it should not be summed up across the entire table without deduplication.
+      description: Weight of the logistic order. Obtained during parcel check-in at 4PX. WARNING(!) This field is true for `shipping_order_number`, so it should not be summed up across the entire table without deduplication.
     - name: parcel_weight
-      description: Logistic weight of the parcel. Obtained during parcel checkout from Hecny. WARNING(!) This field is true for `parcel_id`, so it should not be summed up across the entire table without deduplication.
+      description: Logistic weight of the parcel. Obtained during parcel checkout from 4PX. WARNING(!) This field is true for `parcel_id`, so it should not be summed up across the entire table without deduplication.
     - name: product_quantity
       description: Quantity of `product_variant_id` in the order.
     - name: gmv_initial
@@ -889,11 +889,11 @@ models:
     - name: jl_revenue_final
       description: Final logistics revenue. Calculated based on the weight at `shipping_order_weight` check-in. Distributed from logistics orders (`shipping_order_number`) to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
     - name: jl_consolidation_revenue_final
-      description: Final logistics consolidation revenue. Distributed from the final consolidation group to logistics orders proportionally to the weight of the logistics order at the Hecny check-in, and then from the logistics order to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
+      description: Final logistics consolidation revenue. Distributed from the final consolidation group to logistics orders proportionally to the weight of the logistics order at the 4PX check-in, and then from the logistics order to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
     - name: jl_gross_profit_final
       description: Profit from a specific logistics order. Distributed from logistics orders (`shipping_order_number`) to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
     - name: jl_consolidation_profit_final
-      description: Profit from a specific logistics order due to consolidation. Distributed from the final consolidation group to logistics orders proportionally to the weight of the logistics order at the Hecny check-in, and then from the logistics order to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
+      description: Profit from a specific logistics order due to consolidation. Distributed from the final consolidation group to logistics orders proportionally to the weight of the logistics order at the 4PX check-in, and then from the logistics order to Joom orders (`order_id`) proportionally to the merchant's price. This field can be summed up.
     - name: jl_total_cost_final
       description: Final logistics costs, including per-order consolidation costs, but excluding fixed consolidation costs.
     - name: days_to_non_delivery_warranty_start
@@ -911,33 +911,31 @@ models:
     - name: delivery_duration_by_user
       description: Number of days from order placement to user confirmation of receiving the product.
     - name: delivery_duration_by_tracking
-      description: Number of days from order placement to delivery at Step 6 (tracking_issuing_point_datetime_utc) based on tracking.
+      description: Number of days from order placement to delivery at Step 5 (tracking_issuing_point_datetime_utc) based on tracking.
     - name: order_date_msk
-      description: Order creation date in UTC+3.
+      description: Order payment date in UTC+3. We don't use the order creation date because it gives us less information. The platform creates an order only after payment, the order is accepted into work only after payment. The order is accepted into work only after payment. Usually the difference between order creation and order payment does not exceed 3 minutes.
     - name: order_created_datetime_utc
       description: Date and time of order creation in UTC+3.
     - name: check_in_datetime_utc
-      description: Date and time of order check in at Hecny.
-    - name: check_out_datetime_utc
-      description: Date and time of order check out from Hecny.
-    - name: tracking_shipped_datetime_utc
-      description: Step 1 of delivery. Time of fulfilling the order at the Hecny warehouse. Calculated as the earliest time of checkpoints after the first check-in at Hecny.
+      description: Date and time of order check in at 4PX.
+    - name: outbound_datetime_utc
+      description: date and time of when the order is ready to leave the 4PX warehouse.
     - name: tracking_origin_country_datetime_utc
-      description: Step 2 of delivery. Time of the order appearing in the origin country. Calculated as the earliest time of checkpoints after the first checkpoint in the origin country.
+      description: Step 1 of delivery. Time of the order appearing in the origin country. Calculated as the earliest time of checkpoints after the first checkpoint in the origin country.
     - name: tracking_in_transit_datetime_utc
-      description: Step 3 of delivery. Time of checkout of the order from Hecny. Calculated as the earliest time of checkpoints after leaving Hecny.
+      description: Step 2 of delivery. Time of checkout of the order from 4PX. Calculated as the earliest time of checkpoints after leaving 4PX.
     - name: tracking_international_datetime_utc
-      description: Step 4 of delivery. Time of the order appearing in international delivery. For Chinese orders, the first checkpoint outside of China. Calculated as the earliest time of checkpoints after the first checkpoint with international depth.
+      description: Step 3 of delivery. Time of the order appearing in international delivery. For Chinese orders, the first checkpoint outside of China. Calculated as the earliest time of checkpoints after the first checkpoint with international depth.
     - name: tracking_destination_country_datetime_utc
-      description: Step 5 of delivery. Time of the order appearing in the destination country. Calculated as the earliest time of checkpoints after the first checkpoint in the destination country.
+      description: Step 4 of delivery. Time of the order appearing in the destination country. Calculated as the earliest time of checkpoints after the first checkpoint in the destination country.
     - name: tracking_issuing_point_datetime_utc
-      description: Step 6 of delivery. Time of the order appearing at the pickup point (or delivery to the customer, depending on the logistics type). Calculated as the earliest time of checkpoints after the first checkpoint in the order pickup point.
+      description: Step 5 of delivery. Time of the order appearing at the pickup point (or delivery to the customer, depending on the logistics type). Calculated as the earliest time of checkpoints after the first checkpoint in the order pickup point.
     - name: tracking_delivered_datetime_utc
-      description: Step 7 of delivery. Time of delivery to the customer or customer pickup at the pickup point (depending on the logistics type). Calculated as the earliest time of checkpoints after the first checkpoint with parcel delivery.
+      description: Step 6 of delivery. Time of delivery to the customer or customer pickup at the pickup point (depending on the logistics type). Calculated as the earliest time of checkpoints after the first checkpoint with parcel delivery.
     - name: tracking_returned_datetime_utc
-      description: Step 8 of delivery (parcel returned to the sender). Time of sending the order back to the origin country. Valid for orders that were not received by the customer or were returned with delivery back to the sender. Calculated as the earliest time of checkpoints after the first checkpoint with a "returned" depth.
+      description: Step 7 of delivery (parcel returned to the sender). Time of sending the order back to the origin country. Valid for orders that were not received by the customer or were returned with delivery back to the sender. Calculated as the earliest time of checkpoints after the first checkpoint with a "returned" depth.
     - name: logistics_tracking_stage
-      description: Stage at which the parcel is according to logistics tracking checkpoints - 6. Returned, 5. Delivered, 4. Issuing Point, 3. Destination Country, 2. International, 1.5 In Transit, 1. Origin Country, 1. Hecny':' + last_hecny_checkin_point, 0. No Tracking
+      description: Stage at which the parcel is according to logistics tracking checkpoints - 6. Returned, 5. Delivered, 4. Issuing Point, 3. Destination Country, 2. International, 1.5 In Tansit, 1. Origin Country, 0. No Tracking
 
 - name: gold_payment_orders
   description: Information about attempts to process a payment operation through a provider. The primary key is `payment_order_id`. There can be multiple such attempts for a single order (`order_group_id`) or none at all. There is no points payment in the table. `Payment Order` is a payment instruction. There is a `Payment` entity that tells us about a specific attempt to make a payment through a provider with specified parameters. In case of failure, a new attempt (`Payment`) can be initiated for the `Payment Order` with different parameters (e.g., a different provider/request for CVV/3DS request). This is reflected in the `is_with_cascade_of_payment_attempts` flag.
