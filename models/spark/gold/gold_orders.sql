@@ -220,8 +220,9 @@ logistics_orders AS (
         delivery_duration_tracking,
         delivery_duration_user,
         tracking_delivered_time_utc,
-        final_consolidation_profit_usd AS jl_consolidation_profit_final
-    FROM {{ source('logistics_mart', 'fact_order') }}
+        jl_consolidation_profit_final,
+        is_delivered_by_jl
+    FROM {{ ref('gold_logistics_orders') }}
 ),
 
 support_tickets AS (
@@ -460,6 +461,7 @@ orders_ext5 AS (
         b.delivery_duration_user AS delivery_duration_by_user,
         COALESCE(b.delivery_duration_tracking IS NOT NULL OR b.delivery_duration_user IS NOT NULL, FALSE) AS is_delivered,
         b.jl_consolidation_profit_final,
+        b.is_delivered_by_jl,
         m.origin_name
     FROM orders_ext4 AS a
     LEFT JOIN logistics_orders AS b USING (order_id)
@@ -549,6 +551,7 @@ SELECT
     logistics_price_initial,
     item_logistics_price_initial,
     jl_consolidation_profit_final,
+    is_delivered_by_jl,
     vat_markup,
     marketplace_commission_initial,
     jm_markup,
