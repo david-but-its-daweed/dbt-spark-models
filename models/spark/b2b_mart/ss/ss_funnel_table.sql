@@ -51,10 +51,10 @@ utm_labels as (
 ,
 autorisation_date as (
      SELECT DISTINCT
-        user_id,
+        user['userId'] AS user_id,
         min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end) as autorisation_ts
     FROM {{ source('b2b_mart', 'device_events') }}
-    GROUP BY user_id
+    GROUP BY user['userId']
 )
 
 SELECT * FROM (
