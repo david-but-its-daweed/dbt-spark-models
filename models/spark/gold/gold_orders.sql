@@ -217,9 +217,9 @@ orders_ext0 AS (
 logistics_orders AS (
     SELECT
         order_id,
-        delivery_duration_tracking,
-        delivery_duration_user,
-        tracking_delivered_time_utc,
+        delivery_duration_by_tracking,
+        delivery_duration_by_user,
+        tracking_delivered_datetime_utc,
         jl_consolidation_profit_final,
         is_delivered_by_jl
     FROM {{ ref('gold_logistics_orders') }}
