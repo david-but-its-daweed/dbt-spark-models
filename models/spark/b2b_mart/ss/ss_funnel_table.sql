@@ -48,13 +48,28 @@ utm_labels as (
 
 )
 
+,
+autorisation_date as (
+     SELECT DISTINCT
+        user_id,
+        min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end) as autorisation_ts
+    FROM {{ source('b2b_mart', 'device_events') }}
+    GROUP BY user_id
+)
+
 SELECT * FROM (
     -- визиты
     SELECT DISTINCT
         user_id,
-        min(case when type in ('sessionStart', 'productPreview') AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS visit_ts,
-        CAST(min(case when type in ('sessionStart', 'productPreview') AND payload.pageUrl like '%https://joom.pro/pt-br%' then event_ts_msk end - INTERVAL 3 hours) AS DATE) AS visit_date,
-        max(case when type in ('sessionStart', 'productPreview') AND payload.pageUrl like '%https://joom.pro/pt-br%' then 1 else 0 end) AS visit,
+        max(case when type in ('sessionStart', 'bounceCheck')
+                AND payload.pageUrl like '%https://joom.pro/pt-br%' 
+                AND (event_ts_msk <= autorisation_ts OR autorisation_ts IS NULL)
+            then event_ts_msk end - INTERVAL 3 hours) AS visit_ts,
+        CAST(max(case when type in ('sessionStart', 'bounceCheck')
+                AND payload.pageUrl like '%https://joom.pro/pt-br%'
+                AND (event_ts_msk <= autorisation_ts OR autorisation_ts IS NULL)
+            then event_ts_msk end - INTERVAL 3 hours) AS DATE) AS visit_date,
+        max(case when type in ('sessionStart', 'bounceCheck') AND payload.pageUrl like '%https://joom.pro/pt-br%' then 1 else 0 end) AS visit,
          
         min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) as autorisation_ts,
         CAST(min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) AS DATE) as autorisation_date,
@@ -80,8 +95,9 @@ SELECT * FROM (
      INNER JOIN bounce
         ON bounce.user_id = user['userId']
      LEFT JOIN deals USING (user_id)
+     LEFT JOIN autorisation_date USING (user_id)
+     WHERE event_ts >= '2024-04-06'
      GROUP BY user_id
 )
 LEFT JOIN utm_labels USING (user_id)
-WHERE visit_date >= '2024-04-06'
     
