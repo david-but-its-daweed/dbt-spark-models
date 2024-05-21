@@ -69,4 +69,3 @@ slo_jm_plan_fact_priority,models.alt_origins_plan_vs_fact,bq
 slo_jm_plan_fact_priority,models.alt_origins_plan_vs_fact_cumulative,bq
 slo_jm_plan_fact_priority,models.alt_origins_fact_metrics,bq
 slo_jm_plan_fact_priority,models.jm_bl_plan_vs_fact_ext,bq
-slo_watchdog,mart.table_thats_aint_there,spark
