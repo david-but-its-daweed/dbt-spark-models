@@ -16,7 +16,7 @@ WITH bounce AS (
     FROM {{ source('b2b_mart', 'device_events') }}
     WHERE payload.pageUrl like '%https://joom.pro/pt-br%'
     GROUP BY 1
-    HAVING SUM(IF(type IN ("productPreview", "searchOpen", "categoryClick", "orderPreview", "productGalleryScroll", "categoryOpen", "popupFormSubmit", "popupFormNext", "mainClick", "orderClick"), 1, 0)) > 0
+    HAVING SUM(IF(type IN ('sessionStart', 'bounceCheck', "productPreview", "searchOpen", "categoryClick", "orderPreview", "productGalleryScroll", "categoryOpen", "popupFormSubmit", "popupFormNext", "mainClick", "orderClick"), 1, 0)) > 0
 ),
 
 deals as (
@@ -69,7 +69,9 @@ SELECT * FROM (
                 AND payload.pageUrl like '%https://joom.pro/pt-br%'
                 AND (event_ts_msk <= autorisation_ts OR autorisation_ts IS NULL)
             then event_ts_msk end - INTERVAL 3 hours) AS DATE) AS visit_date,
-        max(case when type in ('sessionStart', 'bounceCheck') AND payload.pageUrl like '%https://joom.pro/pt-br%' then 1 else 0 end) AS visit,
+        max(case when type in ('sessionStart', 'bounceCheck') AND payload.pageUrl like '%https://joom.pro/pt-br%'
+            AND (event_ts_msk <= autorisation_ts OR autorisation_ts IS NULL)
+            then 1 else 0 end) AS visit,
          
         min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) as autorisation_ts,
         CAST(min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) AS DATE) as autorisation_date,
@@ -96,8 +98,7 @@ SELECT * FROM (
         ON bounce.user_id = user['userId']
      LEFT JOIN deals USING (user_id)
      LEFT JOIN autorisation_date USING (user_id)
-     WHERE event_ts >= '2024-04-06'
      GROUP BY user_id
 )
 LEFT JOIN utm_labels USING (user_id)
-    
+WHERE visit_date >= '2024-04-06'
