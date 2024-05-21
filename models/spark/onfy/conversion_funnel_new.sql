@@ -63,14 +63,14 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
       event_ts_cet AS minimal_involvement_dt,
       CASE 
         WHEN type = 'homeOpen' THEN 'main_page'
-        WHEN type IN ('search', 'searchServer') THEN 'search'
+        WHEN type = 'search' THEN 'search'
         WHEN type = 'productOpen' THEN 'product_page'
         WHEN type = 'catalogOpen' THEN 'catalog'
         WHEN type = 'productPreview' AND payload.sourceScreen = 'productPageLanding' THEN 'products_list'
         ELSE null
         END AS minenv_type
     FROM {{ source('onfy_mart', 'device_events')}}
-    WHERE type IN ('search', 'searchServer', 'productOpen', 'catalogOpen', 'homeOpen', 'productPreview')
+    WHERE type IN ('search', 'productOpen', 'catalogOpen', 'homeOpen', 'productPreview')
         AND DATE(event_ts_cet) >= '2022-07-01'
 )
 
