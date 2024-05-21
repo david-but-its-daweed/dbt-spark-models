@@ -16,15 +16,17 @@ class Node:
     child_map: List[str]
     original_file_path: str
     prod_schema: str
+    prod_table_name: str
     materialized: str
 
-    def __init__(self, unique_id, name, relation_name, child_map, original_file_path, prod_schema, materialized):
+    def __init__(self, unique_id, name, relation_name, child_map, original_file_path, prod_schema, prod_table_name, materialized):
         self.unique_id = unique_id
         self.name = name
         self.relation_name = relation_name
         self.child_map = child_map
         self.original_file_path = original_file_path
         self.prod_schema = prod_schema
+        self.prod_table_name = prod_table_name
         self.materialized = materialized
 
 
@@ -50,6 +52,7 @@ def get_models_to_execute():
             for unique_id in model_ids:
                 node = manifest['nodes'][unique_id]
                 schema = node['config']['schema']
+                alias = node['config']['alias']
                 models.append(Node(
                     unique_id = unique_id,
                     name = node['name'],
@@ -57,6 +60,7 @@ def get_models_to_execute():
                     child_map = manifest['child_map'][unique_id],
                     original_file_path = node['original_file_path'],
                     prod_schema = schema if schema is not None else 'models',
+                    prod_table_name = alias if alias is not None else node['name'],
                     materialized = node['config']['materialized']
                 ))
             return models
@@ -86,7 +90,7 @@ def tables_to_copy_from_prod():
                                       m.unique_id not in model_ids_to_rebuild and m.materialized in ['table', 'incremental'],
                                       models_to_execute)
 
-    return ",".join(map(lambda t: f"{t.relation_name}:{t.prod_schema}.{t.name}", tables_to_copy_from_prod))
+    return ",".join(map(lambda t: f"{t.relation_name}:{t.prod_schema}.{t.prod_table_name}", tables_to_copy_from_prod))
 
 
 if __name__ == '__main__':
