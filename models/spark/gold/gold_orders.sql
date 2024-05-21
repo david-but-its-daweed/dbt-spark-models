@@ -455,11 +455,11 @@ orders_ext5 AS (
         a.device_lifetime,
         a.blogger_type,
 
-        IF(b.tracking_delivered_time_utc IS NOT NULL, TRUE, a.is_finalized) AS is_finalized,
+        IF(b.tracking_delivered_datetime_utc IS NOT NULL, TRUE, a.is_finalized) AS is_finalized,
 
-        b.delivery_duration_tracking AS delivery_duration_by_tracking,
-        b.delivery_duration_user AS delivery_duration_by_user,
-        COALESCE(b.delivery_duration_tracking IS NOT NULL OR b.delivery_duration_user IS NOT NULL, FALSE) AS is_delivered,
+        b.delivery_duration_by_tracking,
+        b.delivery_duration_by_user,
+        COALESCE(b.delivery_duration_by_tracking IS NOT NULL OR b.delivery_duration_by_user IS NOT NULL, FALSE) AS is_delivered,
         b.jl_consolidation_profit_final,
         b.is_delivered_by_jl,
         m.origin_name
