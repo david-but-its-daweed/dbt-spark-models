@@ -920,6 +920,8 @@ models:
       description: Date and time of order creation in UTC+3.
     - name: check_in_datetime_utc
       description: Date and time of order check in at 4PX.
+    - name: jl_costs_realization_datetime_utc
+      description: Date and time of realization of costs for JL. From this date we know how much the shipping costs. Also date and time after which the parcel will not physically change unless there is a return from the logistician.
     - name: outbound_datetime_utc
       description: date and time of when the order is ready to leave the 4PX warehouse.
     - name: tracking_origin_country_datetime_utc
