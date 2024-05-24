@@ -52,4 +52,7 @@ sources:
       - name: device_events
       - name: operational_events
       - name: dim_merchant
+  - name: joompro_analytics
+    tables:
+      - name: mercadolibre_category_info
   
