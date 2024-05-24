@@ -14,13 +14,19 @@ SELECT
     _id,
     explode(transform(categories, c -> replace(c, '1,', ''))) id
 FROM {{ source('mongo', 'b2b_core_analytics_users_extras_daily_snapshot') }}
+), c1 AS (
+    SELECT
+        id,
+        any_value(name) as name
+    FROM {{ source('joompro_analytics', 'mercadolibre_category_info') }}
+    GROUP BY 1
 ), c AS (
     SELECT
         _id,
-        concat_ws(',', collect_list(c.name)) categories
+        concat_ws(',', collect_list(c1.name)) categories
     FROM t1
-    JOIN {{ source('joompro_analytics', 'mercadolibre_category_info') }} c USING (id)
-    group by 1
+    JOIN c1 USING (id)
+    GROUP BY 1
 )
 SELECT
     _id AS user_id,
