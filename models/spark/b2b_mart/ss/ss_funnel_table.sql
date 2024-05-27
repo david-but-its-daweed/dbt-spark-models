@@ -80,6 +80,10 @@ SELECT * FROM (
         min(case when type = 'selfServiceRegistrationFinished' then event_ts_msk end - INTERVAL 3 hours) as registration_ts,
         CAST(min(case when type = 'selfServiceRegistrationFinished' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as registration_date,
         max(case when type = 'selfServiceRegistrationFinished' then 1 else 0 end) as registration,
+    
+        min(case when type = 'addToCart' then event_ts_msk end - INTERVAL 3 hours) as addToCart_ts,
+        CAST(min(case when type = 'addToCart' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as addToCart_date,
+        max(case when type = 'addToCart' then 1 else 0 end) as addToCart,
         
         min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) as order_create_ts,
         CAST(min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as order_create_date,
