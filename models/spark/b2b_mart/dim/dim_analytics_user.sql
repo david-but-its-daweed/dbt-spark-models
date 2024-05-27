@@ -23,8 +23,16 @@ SELECT
     t.fn AS first_name,
     COALESCE(t.phone, pn.phone) AS phone_number,
     t.email,
-    u_extra.has_store,
-    u_extra.store_link
+    u_extra.has_ml_store,
+    u_extra.ml_shop_name,
+    u_extra.sells_on_other_marketplaces,
+    u_extra.marketplaces,
+    u_extra.does_import,
+    u_extra.categories,
+    u_extra.store_link,
+    u_extra.todos,
+    u_extra.force_non_premium,
+    u_extra.force_premium
 FROM {{ source('mongo', 'b2b_core_analytics_users_daily_snapshot') }} AS t
 LEFT JOIN phone_number AS pn ON t._id = pn.user_id
 LEFT JOIN {{ ref('dim_analytics_users_extras') }} AS u_extra ON t._id = u_extra.user_id

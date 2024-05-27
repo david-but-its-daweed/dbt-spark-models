@@ -26,8 +26,16 @@ SELECT
     user.first_name,
     user.phone_number,
     user.email,
-    user.has_store AS welcome_form_is_selling,
-    user.store_link AS welcome_form_shop_url
+    user.has_ml_store AS welcome_form_has_ml_store,
+    user.ml_shop_name AS welcome_form_ml_shop_name,
+    user.sells_on_other_marketplaces AS welcome_form_sells_on_other_marketplaces,
+    user.marketplaces AS welcome_form_marketplaces,
+    user.does_import AS welcome_form_does_import,
+    user.categories AS welcome_form_categories,
+    user.store_link AS welcome_form_store_link,
+    user.todos AS welcome_form_todos,
+    user.force_non_premium AS welcome_form_force_non_premium,
+    user.force_premium AS welcome_form_force_premium
 FROM t
 LEFT JOIN {{ ref('dim_analytics_user') }} user
     ON user_id = _id
