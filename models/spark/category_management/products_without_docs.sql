@@ -222,8 +222,12 @@ gmv AS (
 
 SELECT
     p.product_id,
+    p.merchant_id,
     p.merchant_category_id,
     gc.merchant_category_name,
+    gc.l1_merchant_category_name,
+    gc.l2_merchant_category_name,
+    gc.l3_merchant_category_name,
     MAX(COALESCE(d.type = "ec" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) AS has_active_ec,
     MIN(IF(d.type = "ec" AND cc.merchant_category_id IS NOT NULL, d.end_date, NULL)) AS end_date_ec,
     MAX(IF(d.type = "ec" AND cc.merchant_category_id IS NOT NULL, d.start_date, NULL)) AS start_date_ec,
@@ -283,7 +287,7 @@ LEFT JOIN gold.merchant_categories AS gc ON p.merchant_category_id = gc.merchant
 LEFT JOIN categories_ege AS c ON p.merchant_category_id = c.merchant_category_id
 LEFT JOIN categories_ce_fda_pi_doc_full AS cc ON p.merchant_category_id = cc.merchant_category_id
 LEFT JOIN gmv AS g ON p.product_id = g.product_id
-GROUP BY 1, 2, 3
+GROUP BY 1, 2, 3, 4, 5, 6, 7
 HAVING
     MAX(COALESCE(d.type = "ec" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
     OR MAX(COALESCE(d.type = "doc" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
