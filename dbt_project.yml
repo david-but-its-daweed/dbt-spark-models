@@ -25,6 +25,17 @@ clean-targets:         # directories to be removed by `dbt clean`
   - "dbt_packages"
 
 models:
+  platform_dbt_etl:
+    spark:
+      b2b_mart:
+        +tags: "b2b_mart"
+  
   +persist_docs:
     relation: true
     columns: true
+
+snapshots:
+  platform_dbt_etl:
+    spark:
+      b2b_mart:
+        +tags: "b2b_mart"
