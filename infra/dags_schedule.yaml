@@ -1,0 +1,27 @@
+# This is config for different dag. Contains params for each dag. If param doesn't set
+# explicit in dag section then will be used default param.
+# Available params:
+# - dag_name - name of the dag
+# - crontab - schedule for dag
+# - alerts-channel - channel for alerts
+# - profiles-dir - dir with dbt profiles
+# - profile-name - using profile
+# - tags - tags for filter. If model contain multiply tags, then will be using the last one
+
+default:
+  dag-name: dbt-etl
+  crontab: 15 0 * * * 
+  alerts-channel: "#dbt-spark-monitoring"
+  profiles-dir: "production/profiles"
+  profile-name: spark
+  excluded_tags: ["manual"]
+platform:
+  dag-name: dbt-platform
+  alerts-channel: "#analytics-monitoring"
+  tags: ["platform"]
+data-readiness:
+  dag-name: data-readiness
+  crontab: 0 * * * *
+  alerts-channel: "#analytics-monitoring"
+  tags: ["data_readiness"]
+
