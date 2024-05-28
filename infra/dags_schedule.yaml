@@ -14,7 +14,7 @@ default:
   alerts-channel: "#dbt-spark-monitoring"
   profiles-dir: "production/profiles"
   profile-name: spark
-  excluded_tags: ["manual"]
+  excluded-tags: ["manual"]
 platform:
   dag-name: dbt-platform
   alerts-channel: "#analytics-monitoring"
