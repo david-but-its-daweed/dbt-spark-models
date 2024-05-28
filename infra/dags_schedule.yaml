@@ -24,4 +24,6 @@ data-readiness:
   crontab: 0 * * * *
   alerts-channel: "#analytics-monitoring"
   tags: ["data_readiness"]
-
+b2b-mart:
+  dag-name: b2b-marts
+  tags: ["b2b_mart"]
