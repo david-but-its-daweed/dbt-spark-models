@@ -29,6 +29,8 @@ models:
     spark:
       b2b_mart:
         +tags: "b2b_mart"
+      onfy:
+        +tags: "onfy"
   
   +persist_docs:
     relation: true
@@ -39,3 +41,5 @@ snapshots:
     spark:
       b2b_mart:
         +tags: "b2b_mart"
+      onfy:
+        +tags: "onfy"
