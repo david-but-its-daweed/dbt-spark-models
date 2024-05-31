@@ -56,8 +56,8 @@ SELECT
     p.merchant_price_index,
     p.current_price_usd AS initial_price_usd,
     p.target_price_reason,
-    p.target_price AS target_price_usd,
-    ROUND(p.target_price / p.current_price_usd, 3) AS discount_koef
+    b.proposal_price * c.rate AS target_price_usd,
+    ROUND(b.proposal_price * c.rate / b.current_price * c.rate, 3) AS discount_koef
 FROM {{ ref('js_proposal_backend_status_history_raw') }} AS b
 LEFT JOIN {{ ref('products_with_target_price') }} AS p
     ON
@@ -65,10 +65,10 @@ LEFT JOIN {{ ref('products_with_target_price') }} AS p
         AND p.variant_id = b.variant_id
 LEFT JOIN variants AS v
     ON
-        p.product_id = v.product_id
-        AND p.variant_id = v.variant_id
+        b.product_id = v.product_id
+        AND b.variant_id = v.variant_id
 LEFT JOIN currency_rates AS c
     ON
         v.currency = c.currency_code
-        AND p.partition_date >= c.effective_date
-        AND p.partition_date < c.next_effective_date
+        AND b.created_date >= c.effective_date
+        AND b.created_date < c.next_effective_date
