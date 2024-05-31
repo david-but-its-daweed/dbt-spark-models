@@ -334,7 +334,7 @@ products_n_variants_n_prices AS (
         MIN(v.last_not_js_price_usd) AS last_not_js_price_usd,
         MIN(p.min_merchant_list_price) AS min_merchant_list_price,
         MIN(p.min_merchant_sale_price) AS min_merchant_sale_price,
-        MIN(COALESCE(m.discount, d.rate)) AS discount_rate -- The rate of an additional discount from the handbook https://docs.google.com/spreadsheets/d/1JXqKXvYhJcaZWf69e1G5EXB0sZady_EEM6pfeGk6JHU/edit#gid=0 
+        MIN(COALESCE(m.discount, d.rate)) AS discount_rate -- The rate of a discount from the handbook https://docs.google.com/spreadsheets/d/1JXqKXvYhJcaZWf69e1G5EXB0sZady_EEM6pfeGk6JHU/edit#gid=0 
                                                  -- or https://docs.google.com/spreadsheets/d/1fJpQl_JwumbWikePJkqkh3lhGXdmXf6B39VXmrFT1GI/edit#gid=0
     FROM products_n_variants AS v
     LEFT JOIN prices AS p
@@ -356,7 +356,7 @@ target_price_stg AS (
         ROUND(current_price_usd / merchant_price_index, 3) AS merchant_price_index_price,
         CASE
             WHEN ---- just taking discount rate from manual table and apply to the last not JS price - manual way of calculation
-                reason_of_participation = 0 AND discount_rate IS NOT NULL
+                discount_rate IS NOT NULL
                 THEN last_not_js_price_usd * discount_rate
             WHEN ---- when we have no information about sales or price index, we calculate price for variant as an average price for other variants of the product
                 min_merchant_list_price IS NULL
@@ -389,7 +389,7 @@ target_price_stg AS (
         END AS target_price_stg,     -- take minimum price current_price_usd, among min_merchant_list_price, min_merchant_sale_price, price_index_price, last_not_js_price_usd
         CASE
             WHEN
-                reason_of_participation = 0 AND discount_rate IS NOT NULL
+                discount_rate IS NOT NULL
                 THEN "manual_discount"
             WHEN
                 min_merchant_list_price IS NULL
