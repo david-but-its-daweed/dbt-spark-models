@@ -168,11 +168,41 @@ approved_proposals_periods AS (
     FROM {{ ref('js_proposal_backend_status_history_raw') }}
     WHERE status = "approved"
 ),
+
+calendar_dt AS (
+    SELECT col AS partition_date
+    FROM (
+        SELECT EXPLODE(sequence(to_date(CURRENT_DATE() - INTERVAL 365 DAY), to_date(CURRENT_DATE()), interval 1 day))
+    )
+),
+
+promo_calendar AS (
+    SELECT
+        partition_date,
+        product_id,
+        promo_start_time_utc,
+        promo_end_time_utc,
+        discount
+    FROM calendar_dt AS c
+    LEFT JOIN {{ source('mart', 'promotions') }} AS p
+        ON partition_date >= promo_start_time_utc
+        AND partition_date < promo_end_time_utc
+    WHERE promo_start_time_utc >= CURRENT_DATE() - INTERVAL 365 DAY
+),
+
+promo_prods AS (
+    SELECT
+        partition_date,
+        product_id,
+        MAX(discount)/100 AS discount
+    FROM promo_calendar
+    GROUP BY 1, 2
+),
 --------------------------------------------------------------------------    
 ---- As far as dim_published_variant_with_merchant contains 
 ---- many lines for each variant with the same price,
 ---- we shoud define effective period of a particular price for each variant
-variants_stg AS (
+variants_stg_ex1 AS (
     SELECT
         variant_id,
         product_id,
@@ -216,6 +246,42 @@ variants_stg AS (
         )
     GROUP BY 1, 2, 3, 4, 5
 ),
+
+currency_rates AS (
+    SELECT
+        currency_code,
+        rate / 1000000 AS rate,
+        effective_date,
+        next_effective_date
+    FROM {{ source('mart', 'dim_currency_rate') }}
+),
+
+variants_stg_ex2 AS (
+    SELECT 
+        v.effective_ts,
+        v.next_effective_ts,
+        v.product_id,
+        v.variant_id,
+        v.price,
+        v.currency,
+        v.current_price,
+        SUM(v.price * COALESCE((1 - p.discount), 1)) AS sum_price_with_discount,
+        COUNT(p.partition_date) AS days_with_promo
+    FROM variants_stg_ex1 AS v
+    LEFT JOIN promo_prods AS p
+        ON
+            v.product_id = p.product_id
+            AND p.partition_date >= v.effective_ts
+            AND p.partition_date < v.next_effective_ts
+    GROUP BY
+        v.effective_ts,
+        v.next_effective_ts,
+        v.product_id,
+        v.variant_id,
+        v.price,
+        v.current_price,
+        v.currency
+),
 ------------------------------------------------------------------------------    
 ---- Then we should exclude price periods, when the product participated in JS 
 ---- Otherwise we will demand discount over and over again 
@@ -223,20 +289,23 @@ variants AS (
     SELECT
         variant_id,
         product_id,
+        currency,
         price,
         current_price,
-        currency,
+        ROUND(sum_price_with_discount / days_with_promo, 3) AS avg_price_with_discount,
         effective_ts
     FROM (
         SELECT
             p.variant_id,
             p.product_id,
-            p.price AS price,
-            p.currency,
+            p.price,
             p.effective_ts,
             p.current_price,
+            p.currency,
+            SUM(sum_price_with_discount) OVER (PARTITION BY p.variant_id, p.product_id) AS sum_price_with_discount,  
+            SUM(days_with_promo)  OVER (PARTITION BY p.variant_id, p.product_id) AS days_with_promo,
             MAX(p.effective_ts) OVER (PARTITION BY p.variant_id, p.product_id) AS max_effective_ts
-        FROM variants_stg AS p
+        FROM variants_stg_ex2 AS p
         LEFT JOIN approved_proposals_periods AS ap
             ON
                 p.product_id = ap.product_id
@@ -254,14 +323,7 @@ variants AS (
     WHERE effective_ts = max_effective_ts
 ),
 
-currency_rates AS (
-    SELECT
-        currency_code,
-        rate / 1000000 AS rate,
-        effective_date,
-        next_effective_date
-    FROM {{ source('mart', 'dim_currency_rate') }}
-),
+
 ------------------------------------------------------------------------------    
 ---------- Collecting info about vatiants and merchant prices in usd  without promo
 ------------------------------------------------------------------------------    
@@ -270,7 +332,8 @@ products_n_variants AS (
         pt.*,
         v.variant_id,
         v.price * c.rate AS last_not_js_price_usd,
-        v.current_price * c.rate AS current_price_usd
+        v.current_price * c.rate AS current_price_usd,
+        v.avg_price_with_discount * c.rate AS avg_price_with_discount_usd
     FROM all_products AS pt
     INNER JOIN variants AS v ON pt.product_id = v.product_id
     LEFT JOIN currency_rates AS c
@@ -334,6 +397,7 @@ products_n_variants_n_prices AS (
         MIN(v.last_not_js_price_usd) AS last_not_js_price_usd,
         MIN(p.min_merchant_list_price) AS min_merchant_list_price,
         MIN(p.min_merchant_sale_price) AS min_merchant_sale_price,
+        MIN(v.avg_price_with_discount_usd) AS avg_price_with_discount_usd,
         MIN(COALESCE(m.discount, d.rate)) AS discount_rate -- The rate of a discount from the handbook https://docs.google.com/spreadsheets/d/1JXqKXvYhJcaZWf69e1G5EXB0sZady_EEM6pfeGk6JHU/edit#gid=0 
                                                  -- or https://docs.google.com/spreadsheets/d/1fJpQl_JwumbWikePJkqkh3lhGXdmXf6B39VXmrFT1GI/edit#gid=0
     FROM products_n_variants AS v
@@ -362,7 +426,8 @@ target_price_stg AS (
                 min_merchant_list_price IS NULL
                 AND min_merchant_sale_price IS NULL
                 AND ROUND(current_price_usd / merchant_price_index, 3) IS NULL
-                THEN NULL
+                AND current_price_usd >= avg_price_with_discount_usd
+                THEN avg_price_with_discount_usd
             WHEN ---- when last not JS price still is the minimal price for the variant we take it with the discount as the target price
                 last_not_js_price_usd < COALESCE(min_merchant_list_price, 1000000000) 
                 AND last_not_js_price_usd < COALESCE(min_merchant_sale_price, 1000000000) 
@@ -395,7 +460,8 @@ target_price_stg AS (
                 min_merchant_list_price IS NULL
                 AND min_merchant_sale_price IS NULL
                 AND ROUND(current_price_usd / merchant_price_index, 3) IS NULL
-                THEN NULL
+                AND current_price_usd >= avg_price_with_discount_usd
+                THEN "avg_promo_price_discount"
             WHEN
                 last_not_js_price_usd < COALESCE(min_merchant_list_price, 1000000000) 
                 AND last_not_js_price_usd < COALESCE(min_merchant_sale_price, 1000000000) 
@@ -449,11 +515,8 @@ SELECT
     min_merchant_list_price,
     min_merchant_sale_price,
     merchant_price_index_price,
+    avg_price_with_discount_usd,
     COALESCE(target_price_reason, "avg_other_variants_discount") AS target_price_reason,
     ROUND(AVG(target_price_stg / current_price_usd) OVER (PARTITION BY partition_date, product_id), 2) AS avg_product_discount,
-    -- forming target price: if variant's min_merchant_list_price, min_merchant_sale_price, price_index_price are nulls
-    -- we take average discount for other variants of this products, where at list one of  min_merchant_list_price, min_merchant_sale_price, price_index_price are not null. 
-    FLOOR(COALESCE(
-        target_price_stg, current_price_usd * (AVG(target_price_stg / current_price_usd) OVER (PARTITION BY partition_date, product_id))
-    ), 2) AS target_price
+    FLOOR(COALESCE(target_price_stg), 2) AS target_price
 FROM target_price_stg
