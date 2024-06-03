@@ -84,6 +84,10 @@ SELECT * FROM (
         min(case when type = 'addToCart' then event_ts_msk end - INTERVAL 3 hours) as addToCart_ts,
         CAST(min(case when type = 'addToCart' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as addToCart_date,
         max(case when type = 'addToCart' then 1 else 0 end) as addToCart,
+    
+        min(case when type = 'checkoutStartClick' then event_ts_msk end - INTERVAL 3 hours) as checkoutStartClick_ts,
+        CAST(min(case when type = 'checkoutStartClick' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as checkoutStartClick_date,
+        max(case when type = 'checkoutStartClick' then 1 else 0 end) as checkoutStartClick,
         
         min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) as order_create_ts,
         CAST(min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as order_create_date,
