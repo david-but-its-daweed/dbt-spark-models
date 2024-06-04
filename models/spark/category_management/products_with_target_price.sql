@@ -51,9 +51,9 @@ filtered_products AS (
         d.name AS merchant_name,
         1 AS reason_of_participation
     FROM {{ ref('initial_metrics_set') }} AS m
-    LEFT JOIN {{ source('category_management', 'joom_select_manual_criteria') }} AS c ON m.main_category = c.category
+    LEFT JOIN {{ source('category_management', 'joom_select_manual_criteria') }} AS c ON m.main_category = c.category -- from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
     LEFT JOIN {{ source('mart', 'dim_merchant') }} AS d ON m.merchant_id = d.merchant_id
-    LEFT JOIN {{ source('category_management', 'joom_select_product_black_list') }} AS bl ON m.product_id = bl.product_id
+    LEFT JOIN {{ source('category_management', 'joom_select_product_black_list') }} AS bl ON m.product_id = bl.product_id -- from https://docs.google.com/spreadsheets/d/1fzMOIdQhM_YKkzasEZd6MAf7gh_1C1pSQCucG-Zc-uQ/edit#gid=0
     LEFT JOIN edlp_products AS e
         ON
             m.product_id = e.product_id
@@ -82,11 +82,14 @@ manual_products AS (
     SELECT
         product_id,
         MAX(discount) AS discount,
-        0 AS reason_of_participation
-    FROM {{ source('category_management', 'joom_select_product_white_list') }}
+        0 AS reason_of_participation -- 0 for manual, 1 for automatic selection
+    FROM {{ source('category_management', 'joom_select_product_white_list') }} -- https://docs.google.com/spreadsheets/d/1JXqKXvYhJcaZWf69e1G5EXB0sZady_EEM6pfeGk6JHU/edit#gid=0
     GROUP BY 1
 ),
 
+--------------------------------------------------------------------------------------
+--------------- Merging the manual list and automatically selected products ----------
+--------------------------------------------------------------------------------------
 all_products AS (
     SELECT
         product_id,
@@ -155,6 +158,14 @@ all_products AS (
         business_line,
         merchant_name
 ),
+
+----- This is the end of forming product list.
+----- It's recomended to spit this code at least above this line into two parts: product list forming and target price forming|
+
+----- Moreover, it's better to split code below into two parts: first one - processing all the data needed for the target price algorithm.
+----- The second one - the the target price algorithm
+----- It will help to maintain the flow in a readable state and to make debugging easier.
+
 --------------------------------------------------------------------------
 -----------------------Forming target price------------------------
 --------------------------------------------------------------------------    
@@ -169,13 +180,15 @@ approved_proposals_periods AS (
     WHERE status = "approved"
 ),
 
-calendar_dt AS (
+----- In next 3 cte we retrive the calendar of promo activities.
+----- Firstly, we create an artificial calendar, which consists of a list of dates in a row.
+calendar_dt AS ( 
     SELECT col AS partition_date
     FROM (
         SELECT EXPLODE(sequence(to_date(CURRENT_DATE() - INTERVAL 365 DAY), to_date(CURRENT_DATE()), interval 1 day))
     )
 ),
-
+----- Then we are detecting for each product_id in promo table the list of dates when it had product discounts
 promo_calendar AS (
     SELECT
         partition_date,
@@ -184,12 +197,13 @@ promo_calendar AS (
         promo_end_time_utc,
         discount
     FROM calendar_dt AS c
-    LEFT JOIN {{ source('mart', 'promotions') }} AS p
+    LEFT JOIN {{ source('mart', 'promotions') }} AS p -- can be optimized using inner join. Left join is a relic from the last algorithm idea.
         ON partition_date >= promo_start_time_utc
         AND partition_date < promo_end_time_utc
     WHERE promo_start_time_utc >= CURRENT_DATE() - INTERVAL 365 DAY
 ),
-
+----- Now for each product we take maximum discount at a particular day
+----- This cte can be merged with the previous one.
 promo_prods AS (
     SELECT
         partition_date,
@@ -210,8 +224,9 @@ variants_stg_ex1 AS (
         currency,
         value_partition,
         MAX(current_price) AS current_price,
-        MIN(effective_ts) AS effective_ts,
-        MAX(next_effective_ts) AS next_effective_ts
+        -- Forming new effective periods of each price
+        MIN(effective_ts) AS effective_ts, -- define when the price starts to be valid
+        MAX(next_effective_ts) AS next_effective_ts -- define when the price ends to be valid
     FROM (
         SELECT
             variant_id,
@@ -220,8 +235,8 @@ variants_stg_ex1 AS (
             currency,
             effective_ts,
             next_effective_ts,
-            SUM(value_partition) over (PARTITION BY variant_id, product_id ORDER BY effective_ts ) AS value_partition,
-            FIRST(price) OVER (PARTITION BY variant_id, product_id ORDER BY effective_ts DESC) AS current_price
+            SUM(value_partition) over (PARTITION BY variant_id, product_id ORDER BY effective_ts ) AS value_partition, -- So here ve derive unique marks for periods with a constant price
+            FIRST(price) OVER (PARTITION BY variant_id, product_id ORDER BY effective_ts DESC) AS current_price -- here we get the last (actual) price
         FROM (
             SELECT
                 variant_id,
@@ -230,7 +245,7 @@ variants_stg_ex1 AS (
                 currency,
                 effective_ts AS effective_ts,
                 next_effective_ts AS next_effective_ts,
-                CASE WHEN IF(price_lag IS NULL OR price_lag!= price, effective_ts, NULL) IS NULL THEN 0 ELSE 1 END AS value_partition    
+                CASE WHEN IF(price_lag IS NULL OR price_lag!= price, effective_ts, NULL) IS NULL THEN 0 ELSE 1 END AS value_partition  ---- The idea is to mark сonsecutive time periods where price didn't change. It's the preliminary step, where mark only raws with price changing. 
             FROM (
                 SELECT
                     variant_id,
@@ -239,14 +254,15 @@ variants_stg_ex1 AS (
                     currency,
                     effective_ts,
                     next_effective_ts,
-                    LAG(p.price / 1000000) OVER (PARTITION BY variant_id, product_id ORDER BY next_effective_ts) AS price_lag
+                    LAG(p.price / 1000000) OVER (PARTITION BY variant_id, product_id ORDER BY next_effective_ts) AS price_lag --- Firstly we define price in previous effective period
                 FROM {{ source('mart', 'dim_published_variant_with_merchant') }} AS p
                 )
             )
         )
     GROUP BY 1, 2, 3, 4, 5
 ),
-
+--- As far as dim_published_variant_with_merchant contains info about price in a merchant currency, we need to convert it into usd for comparing with other prices.
+--- So, here we can find currency rate for each day for any currency. 
 currency_rates AS (
     SELECT
         currency_code,
@@ -256,6 +272,7 @@ currency_rates AS (
     FROM {{ source('mart', 'dim_currency_rate') }}
 ),
 
+--- Here we are merging data on prices with information on promotional discounts and calculating aggregates to determine the average price during a promotion.
 variants_stg_ex2 AS (
     SELECT 
         v.effective_ts,
@@ -292,7 +309,7 @@ variants AS (
         currency,
         price,
         current_price,
-        ROUND(sum_price_with_discount / days_with_promo, 3) AS avg_price_with_discount,
+        ROUND(sum_price_with_discount / days_with_promo, 3) AS avg_price_with_discount, -- defining promo avg promo price
         effective_ts
     FROM (
         SELECT
@@ -320,7 +337,7 @@ variants AS (
         WHERE p.next_effective_ts > "2024-01-01"
             AND ap.product_id IS NULL
     )
-    WHERE effective_ts = max_effective_ts
+    WHERE effective_ts = max_effective_ts --- we need only the most recent period after js participation filtering. So, current_price - is the last actual price without JS participation
 ),
 
 
@@ -343,7 +360,7 @@ products_n_variants AS (
             AND pt.partition_date < c.next_effective_date
 ),
 ------------------------------------------------------------------------------    
----------- Collecting info about vatiants and prices in usd with promo -------
+---------- Collecting info about variants and prices in usd from orders ------
 ------------------------------------------------------------------------------   
 
 prices AS (
@@ -372,7 +389,7 @@ prices AS (
     GROUP BY 1, 2, 3
 ),
 ------------------------------------------------------------------------------    
------------------ Collecting all vatiant's info together ----------------
+----------------- Collecting all variant's info together ----------------
 ------------------------------------------------------------------------------  
 products_n_variants_n_prices AS (
     SELECT
@@ -517,6 +534,6 @@ SELECT
     merchant_price_index_price,
     avg_price_with_discount_usd,
     COALESCE(target_price_reason, "avg_other_variants_discount") AS target_price_reason,
-    ROUND(AVG(target_price_stg / current_price_usd) OVER (PARTITION BY partition_date, product_id), 2) AS avg_product_discount,
+    ROUND(AVG(target_price_stg / current_price_usd) OVER (PARTITION BY partition_date, product_id), 2) AS avg_product_discount, -- the relic from the previous algorithm iteration, can be deleted
     FLOOR(COALESCE(target_price_stg), 2) AS target_price
 FROM target_price_stg

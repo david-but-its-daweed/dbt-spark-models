@@ -12,7 +12,12 @@
     },
   )
 }}
+-------------------------------------------------------------------------------------
+----------------------- Calculate merchant price index ------------------------------
+-- It's a temporary decision. It should be replaced with a price index for each variant ID.
 
+--- Calculate ratio joom_merchant_price_usd/aliexpress_merchant_price_usd metric for each product.
+--- Attention! Prices in mi_analytics.aliexpress_joom_price_index don't contain commission (our ou ali)
 WITH price_index_stg_1 AS (
     SELECT
         a.joom_product_id AS product_id,
@@ -32,6 +37,7 @@ WITH price_index_stg_1 AS (
  
 ),
 
+---- Calculating median price index for each product_id (median ratio metrica)
 price_index_stg_2 AS (
     SELECT
         product_id,
@@ -43,6 +49,7 @@ price_index_stg_2 AS (
     GROUP BY 1, 2, 3
 ),
 
+---- Calculating median price index for merchant_ids (median ratio metrica over all merchant_id products)
 price_index_final AS (
     SELECT DISTINCT
         l1_merchant_category_name,
@@ -52,6 +59,11 @@ price_index_final AS (
     FROM price_index_stg_2
 ),
 
+-------------------------------------------------------------------------------------
+---------- Calculating set of metrics for future filtering to the JS  ---------------
+-------------------------------------------------------------------------------------
+
+---- For manual criteria of merchant cancel rate
 merchant_cancel_rate AS (
     SELECT
         merchant_id,
@@ -65,6 +77,7 @@ merchant_cancel_rate AS (
     {% endif %}
 ),
 
+---- For manual criteria, the minimum order quantity and minimum GMV. Also product rating (hardcoded parameter)
 orders_stats_60_days AS (
     SELECT
         o.product_id,
@@ -87,6 +100,12 @@ orders_stats_60_days AS (
     GROUP BY 1, 2
 ),
 
+----- Negative feedback share for each product: 
+----- Flag indicating whether the user remains dissatisfied with the purchase.
+----- Calculated based on the condition [less than 80 days have passed since order creation] 
+----- AND [[1 or 2 stars in the review before leaving the review] 
+----- OR [`customer_refund_reason` IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27)]] 
+
 orders_negative_feedback_stats AS (
     SELECT
         o.product_id,
@@ -104,7 +123,9 @@ orders_negative_feedback_stats AS (
     {% endif %}
     GROUP BY 1
 )
-
+---------------------------------------------------------
+---------- Collecting final set of metrics --------------
+---------------------------------------------------------
     SELECT 
         DATE('{{ var("start_date_ymd") }}') AS partition_date,
         o.product_id,

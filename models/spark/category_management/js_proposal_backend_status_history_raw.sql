@@ -10,6 +10,10 @@
   )
 }}
 
+---------------------------------------------------------------------------
+--------- Here the only source is historical data about proposals ---------
+---- So, this code just unpacking it from structures into flat a table ----
+---------------------------------------------------------------------------
 WITH backend_tab_stg_1 AS (
     SELECT
         SUBSTRING_INDEX(SUBSTRING_INDEX(proposal_id, '"', 2), '"', -1) AS proposal_id,
