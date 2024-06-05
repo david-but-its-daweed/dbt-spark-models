@@ -15,7 +15,7 @@ WITH wide_data AS
           millis_to_ts_msk(ctms) AS date,
           dealId AS deal_id,
           explode(variants)
-   FROM {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }}
+   FROM {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }} )
 SELECT customer_request_id,
        deal_id,
        col.id AS sub_product_id,
