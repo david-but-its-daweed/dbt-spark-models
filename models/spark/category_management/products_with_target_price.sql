@@ -64,7 +64,12 @@ filtered_products AS (
         AND m.merchant_cancel_rate_1_year <= c.merchant_cancel_rate_maximum --from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
         AND m.orders_with_nf_share_1_year <= 0.05  -- this parameter from https://joom-team.atlassian.net/browse/AN-2985
         AND m.product_rating_60_days >= 4.3        -- this parameter from https://joom-team.atlassian.net/browse/AN-2985
-        AND d.origin_name = "Chinese"              -- a temporary filter: only chinese origin            
+        AND ( d.origin_name = "Chinese"            -- a temporary filter: only chinese origin  or merchant_id first 24 rows from list from https://joom-team.atlassian.net/browse/AN-3379 
+            OR  m.merchant_id IN ("65eea31a238708eb4ee3502c","65cc35d0144e748709e72ae8","65cacb034ef29de4eaf1ea8f","657168bc0c3be88fcfde094b","6493ff6a397ba7d04e97a35d","641bd999a2e4f03234e7f523",
+                                "62da5b66797cacb687948fd4","62b33993a73a5a0b96e06ff6","62b02810141f0618e9a0d90a","62a054c5fc6d8bd6d9e2f338","62170618dfe1c46ecd689af1","6156a5e939f22972c5121356",
+                                "60f5248425c01ec5873c4bbd","5e384a0406d9540b010fa4d0","5cf4ddb18b45130b017c0e16","5ce7faff8b45130b018601bf","5cdedea78b2c370b0162f3a4","62f35104abb496a02e7359b6"
+                                "6499251b7a76a242e05ee08d","63849ba073c6932a64ef7288","5f29031ca244430b065022fa","61c989872345d2754cc8727e","61fb7080f4be39f12f27deb8","633ecff8a3d631358b111362")
+            )           
         -- a temporary filter: exclude the edlp products
         AND e.product_id IS NULL
         AND bl.product_id IS NULL
