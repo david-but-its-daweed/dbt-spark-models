@@ -12,7 +12,7 @@
         file_format='parquet',
         schema='gold',
         meta = {
-            'model_owner' : '@gusev',
+            'model_owner' : '@general_analytics',
             'bigquery_load': 'true',
             'bigquery_partitioning_date_column': 'date_msk',
             'bigquery_upload_horizon_days': '230',
@@ -33,7 +33,7 @@
         file_format='parquet',
         schema='gold',
         meta = {
-            'model_owner' : '@gusev',
+            'model_owner' : '@general_analytics',
             'bigquery_load': 'true',
             'bigquery_partitioning_date_column': 'date_msk',
             'bigquery_upload_horizon_days': '230',

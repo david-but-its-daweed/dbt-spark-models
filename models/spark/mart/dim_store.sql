@@ -2,7 +2,7 @@
     schema='mart',
     materialized='view',
      meta = {
-      'model_owner' : '@gburg',
+      'model_owner' : '@analytics.duty',
       'priority_weight': '1000',
       'bigquery_load': 'true'
     }

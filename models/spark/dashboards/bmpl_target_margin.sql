@@ -2,7 +2,7 @@
   config(
     materialized='table',
     meta = {
-      'model_owner' : '@gusev',
+      'model_owner' : '@general_analytics',
       'priority_weight': '1000',
       'bigquery_load': 'true'
     }

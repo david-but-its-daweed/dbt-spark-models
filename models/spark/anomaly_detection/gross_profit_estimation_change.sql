@@ -5,7 +5,7 @@
     schema='models',
     file_format='parquet',
     meta = {
-        'model_owner' : '@gusev',
+        'model_owner' : '@general_analytics',
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true'
     }

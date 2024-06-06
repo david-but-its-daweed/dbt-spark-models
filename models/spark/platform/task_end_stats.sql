@@ -1,6 +1,6 @@
 {{ config(
     meta = {
-      'model_owner' : '@gburg'
+      'model_owner' : '@analytics.duty'
     },
     schema='platform',
     materialized='table'

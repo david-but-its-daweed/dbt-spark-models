@@ -2,7 +2,7 @@
     schema='mart',
     materialized='view',
     meta = {
-      'model_owner' : '@gburg',
+      'model_owner' : '@analytics.duty',
       'bigquery_load': 'true',
       'bigquery_clustering_columns': ['context_name'],
       'bigquery_partitioning_date_column': 'partition_date',

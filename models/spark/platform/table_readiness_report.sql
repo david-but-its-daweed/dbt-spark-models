@@ -3,7 +3,7 @@
     materialized='view',
     tags=['data_readiness'],
     meta = {
-      'model_owner' : '@gusev',
+      'model_owner' : '@general_analytics',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
       'bigquery_upload_horizon_days': '2',

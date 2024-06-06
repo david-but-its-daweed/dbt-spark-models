@@ -6,7 +6,7 @@
     incremental_strategy='insert_overwrite',
     partition_by=['month'],
     meta = {
-        'model_owner' : '@gusev',
+        'model_owner' : '@general_analytics',
         'bigquery_load': 'true',
         'bigquery_partitioning_date_column': 'day',
         'bigquery_upload_horizon_days': '230',

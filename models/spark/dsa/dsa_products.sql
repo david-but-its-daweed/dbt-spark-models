@@ -1,7 +1,7 @@
 {{
   config(
     meta = {
-      'model_owner' : '@gusev',
+      'model_owner' : '@general_analytics',
     },
     materialized='table'
   )

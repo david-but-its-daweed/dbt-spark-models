@@ -1,7 +1,7 @@
 {{ config(
     tags=['data_readiness'],
     meta = {
-      'model_owner' : '@gburg',
+      'model_owner' : '@analytics.duty',
       'bigquery_load': 'true',
     },
     schema='platform',

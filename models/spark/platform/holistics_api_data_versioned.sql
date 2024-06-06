@@ -2,7 +2,7 @@
     schema='holistics',
     materialized='incremental',
     meta = {
-      'model_owner' : '@gusev',
+      'model_owner' : '@general_analytics',
       'bigquery_load': 'true'
     },
     incremental_strategy='insert_overwrite',

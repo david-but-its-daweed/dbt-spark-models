@@ -3,7 +3,7 @@
     materialized='table',
     file_format='delta',
     meta = {
-        'model_owner' : '@espander',
+        'model_owner' : '@general_analytics',
         'bigquery_load': 'true',
         'priority_weight': '1000',
     }

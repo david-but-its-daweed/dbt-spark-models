@@ -3,7 +3,7 @@
     materialized='view',
     meta = {
       'team': 'platform',
-      'model_owner': '@logrel',
+      'model_owner': '@analytics.duty',
       'bigquery_load': 'true',
       'bigquery_table_name': 'experiments.decisions',
       'bigquery_overwrite': 'true'
