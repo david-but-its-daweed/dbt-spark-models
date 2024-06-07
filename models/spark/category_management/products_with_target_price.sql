@@ -430,7 +430,7 @@ products_n_variants_n_prices AS (
             AND v.partition_date >= p.order_date_msk
             AND p.order_date_msk >= v.partition_date - INTERVAL 90 DAY
     LEFT JOIN {{ source('category_management', 'js_merchant_discount_rate') }} AS d ON v.merchant_id = d.merchant_id    
-    LEFT JOIN manual_products AS m ON p.product_id = m.product_id
+    LEFT JOIN manual_products AS m ON v.product_id = m.product_id
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 ),
 ------------------------------------------------------------------------------    
