@@ -1,5 +1,5 @@
 {{ config(
-    schema='b2b_mart',
+    schema='joompro_analytics_internal_mart',
     materialized='table',
     file_format='parquet',
     meta = {
