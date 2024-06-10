@@ -5,6 +5,8 @@
     meta = {
       'model_owner' : '@amitiushkina',
       'bigquery_load': 'true',
+      'bigquery_project_id': 'joom-analytics-joompro-public',
+      'bigquery_check_counts': 'false'
       'priority_weight': '150'
     }
 ) }}
