@@ -13,6 +13,7 @@
 
 select
         _id as payment_id,
+        usedId as user_id,
         millis_to_ts(createdTimeMs) as payment_created_time,
         packageSnapshot._id as package_id,
         packageSnapshot.duration.unit as package_duration_unit,
