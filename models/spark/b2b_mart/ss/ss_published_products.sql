@@ -25,8 +25,9 @@ SELECT     _id as product_id,
            sku,
            storeId as store_id,
            millis_to_ts_msk(updatedTimeMs) as update_ts_msk,
-           date(millis_to_ts_msk(updatedTimeMs)) as update_date
-
+           date(millis_to_ts_msk(updatedTimeMs)) as update_date,
+           millis_to_ts_msk(publishedTimeMs) as published_ts_msk,
+           date(millis_to_ts_msk(publishedTimeMs)) as published_date
 from {{ ref('scd2_published_products_snapshot')}} pp
 left join 
 (
