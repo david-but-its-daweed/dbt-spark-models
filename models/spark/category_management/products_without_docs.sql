@@ -93,20 +93,6 @@ products AS (
 -----------------Only available in EU products------
 ----------------------------------------------------
 
-prod_n_country AS (
-    SELECT
-        product_id,
-        availability_country
-    FROM (
-        SELECT
-            product_id,
-            EXPLODE(availability_counties) AS availability_country
-        FROM {{ source('ads', 'product_availability') }}
-        WHERE partition_date >= CURRENT_DATE() - 7
-    )
-    GROUP BY 1, 2
-),
-
 countries AS (
     SELECT country_code
     FROM {{ ref('gold_countries') }}
@@ -115,12 +101,21 @@ countries AS (
 
 prod_ext AS (
     SELECT
-        p.product_id,
-        p.merchant_category_id,
-        p.merchant_id
-    FROM products AS p
-    INNER JOIN prod_n_country AS pc ON p.product_id = pc.product_id
+        pc.product_id,
+        pc.merchant_category_id,
+        pc.merchant_id
+    FROM (
+        SELECT
+            p.product_id,
+            p.merchant_category_id,
+            p.merchant_id,
+            EXPLODE(pa.availability_counties) AS availability_country
+        FROM products AS p
+        INNER JOIN {{ source('ads', 'product_availability') }} AS pa ON p.product_id = pa.product_id
+        WHERE pa.partition_date >= CURRENT_DATE() - 7
+    ) AS pc
     INNER JOIN countries AS c ON pc.availability_country = c.country_code
+    GROUP BY 1, 2, 3
 ),
 ----------------------------------------------------
 ---Define categories for eprgermanyelectronics------
