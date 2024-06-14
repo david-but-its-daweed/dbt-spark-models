@@ -19,5 +19,14 @@ WITH wide_data AS
 SELECT customer_request_id,
        deal_id,
        col.id AS sub_product_id,
-       col.expectedQuantity, date
+       col.expectedQuantity, 
+       сol.prices.ddpPerItem.amount as ddpPerItem ,
+       col.prices.ddpPerItem.ccy as ddpPerItem_ccy,
+       col.prices.exwPerItem.amount as exwPerItem,
+       col.prices.exwPerItem.ccy as exwPerItem_ccy,
+       col.prices.taxBasePerItem.amount as exwPerItem, 
+       col.prices.taxBasePerItem.ccy as exwPerItem_ccy, 
+       col.prices.totalPerItem.amount as totalPerItem,
+       col.prices.totalPerItem.ccy as totalPerItem_ccy,
+       date
 FROM wide_data
