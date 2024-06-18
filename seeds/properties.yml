@@ -28,6 +28,10 @@ seeds:
   - name: utm_campaigns_corrected
     config:
       schema: onfy
+
+  - name: onfy_discount_rule
+    config:
+      schema: onfy
       
   - name: spends_campaign_corrected
     config:
