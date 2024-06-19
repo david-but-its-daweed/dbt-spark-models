@@ -20,7 +20,7 @@
         brokerid AS broker_id,
         channelid AS delivery_channel_id,
         commission AS commission,
-        MILLIS_TO_TS_MSK(ctms+1) AS created_ts_msk,
+        MILLIS_TO_TS_MSK(ctms) AS created_ts_msk,
         dealid AS deal_id,
         deliveryscheme AS delivery_scheme,
         isdocumentoutdated AS is_document_outdated,
@@ -32,7 +32,7 @@
         rates,
         samplepriceoverridesv2 AS sample_price_overrides,
         subsidy,
-        MILLIS_TO_TS_MSK(ctms) AS update_ts_msk,
+        MILLIS_TO_TS_MSK(ctms+1) AS update_ts_msk,
         variantoverrides AS variant_overrides,
         paymentmethod AS payment_method
     FROM {{ source('mongo', 'b2b_core_calculations_daily_snapshot') }}
