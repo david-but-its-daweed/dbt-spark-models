@@ -71,6 +71,16 @@ users AS (
         country,
         cnpj != "" as ss_customer
     FROM {{ ref('fact_customers') }}
+),
+
+paymentmethod AS (
+    select 
+    deal_id,
+    payment_method
+from {{ ref('scd2_calculations_snapshot') }}
+where deal_id is not null 
+    and dbt_valid_to is null
+group by 1,2
 )
 
 
@@ -133,6 +143,7 @@ SELECT DISTINCT
     users.company_name AS client_company_name,
     d.isSelfService AS self_service,
     users.ss_customer,
+    paymentmethod.payment_method,
     TIMESTAMP(d.dbt_valid_from) AS effective_ts_msk,
     TIMESTAMP(d.dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_deals_snapshot') }} AS d
@@ -140,3 +151,4 @@ LEFT JOIN owner ON d._id = owner.deal_id
 LEFT JOIN purchase ON d._id = purchase.deal_id
 LEFT JOIN source ON source.user_id = d.userId
 LEFT JOIN users ON users.user_id = d.userId
+LEFT JOIN paymentmethod ON d._id = paymentmethod.deal_id
