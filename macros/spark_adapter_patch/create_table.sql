@@ -7,15 +7,18 @@
     {% endfor %}
   {% endif %}
 
+  {% set relation_name = relation.render() %}
+  {% set is_delta = config.get('file_format', validator=validation.any[basestring]) == 'delta' %}
+
   {%- if language == 'sql' -%}
     {%- if temporary -%}
       {{ create_temporary_view(relation, compiled_code) }}
-    {%- elif relation.render() in tables_to_copy_from_prod -%}
+    {%- elif relation_name in tables_to_copy_from_prod and not is_delta -%}
       create or replace view {{ relation }}
       as
-      select * from {{ tables_to_copy_from_prod[relation.render()] }}
+      select * from {{ tables_to_copy_from_prod[relation_name] }}
     {%- else -%}
-      {% if config.get('file_format', validator=validation.any[basestring]) == 'delta' %}
+      {% if is_delta %}
         create or replace table {{ relation }}
       {% else %}
         create table {{ relation }}
@@ -28,7 +31,11 @@
       {{ comment_clause() }}
       {{ tblproperties_clause()}}
       as
-      {{ compiled_code }}
+      {% if relation_name in tables_to_copy_from_prod %}
+        select * from {{ tables_to_copy_from_prod[relation_name] }}
+      {% else %}
+        {{ compiled_code }}
+      {% endif %}
     {%- endif -%}
   {%- elif language == 'python' -%}
     {#--
