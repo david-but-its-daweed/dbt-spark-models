@@ -15,26 +15,27 @@
     )
 }}
 
-select
-    _id as calculation_id,
-    brokerId as broker_id,
-    channelId as delivery_channel_id,
-    commission as commission,
-    millis_to_ts_msk(ctms) as created_ts_msk,
-    dealId as deal_id,
-    deliveryScheme as delivery_scheme,
-    isDocumentOutdated as is_document_outdated,
-    name,
-    offerIds as offer_ids,
-    offerOverrides as offer_overrides,
-    paymentCcy as payment_ccy,
-    priceOverridesV2 as price_overrides,
-    rates,
-    samplePriceOverridesV2 as sample_price_overrides,
-    subsidy,
-    millis_to_ts_msk(ctms) as update_ts_msk,
-    variantOverrides as variant_overrides
-from {{ source('mongo', 'b2b_core_calculations_daily_snapshot') }}
+    SELECT
+        _id AS calculation_id,
+        brokerid AS broker_id,
+        channelid AS delivery_channel_id,
+        commission AS commission,
+        MILLIS_TO_TS_MSK(ctms+1) AS created_ts_msk,
+        dealid AS deal_id,
+        deliveryscheme AS delivery_scheme,
+        isdocumentoutdated AS is_document_outdated,
+        name,
+        offerids AS offer_ids,
+        offeroverrides AS offer_overrides,
+        paymentccy AS payment_ccy,
+        priceoverridesv2 AS price_overrides,
+        rates,
+        samplepriceoverridesv2 AS sample_price_overrides,
+        subsidy,
+        MILLIS_TO_TS_MSK(ctms) AS update_ts_msk,
+        variantoverrides AS variant_overrides,
+        paymentmethod AS payment_method
+    FROM {{ source('mongo', 'b2b_core_calculations_daily_snapshot') }}
 
 
 {% endsnapshot %}
