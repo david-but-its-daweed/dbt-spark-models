@@ -211,7 +211,7 @@ select distinct
         min(case when validation then leadId end) over (partition by coalesce(contactId, leadId)) as validation_lead_id,
         millis_to_ts_msk(createdAt) as created_at,
         millis_to_ts_msk(
-            case when pipelineId in ('7314451', '7249567', '7553579', '7120174', '8671264') then createdAt
+            case when pipelineId in ('7314451', '7249567', '7553579', '7120174', '8671264', '8157194') then createdAt
             when pipelineId in ('7403522', '7120186') then 
                 min(
                 case when 
@@ -229,6 +229,7 @@ select distinct
                 or (pipelineId = '7249567' and status in ('Closed - won'))
                 or (pipelineId = '7120174' and status in ('Квалифицирован', 'Лид квалифицирован', 'Уточняем запрос клиента'))
                 or (pipelineId = '7403522' and status in ('Квалифицирован', 'Лид квалифицирован'))
+                or (pipelineId = '8157194' and status in ('Квалифицирован', 'Лид квалифицирован'))
                 or (pipelineId = '7120186' and status in ('Квалифицирован', 'Лид квалифицирован', 'Предложение отправлено'))
                 or (pipelineId = '8671264' and status in ('Order'))
             then status_ts end) 
@@ -267,7 +268,8 @@ select distinct
             '7553579',
             '7120174',
             '7403522',
-            '7120186'
+            '7120186',
+            '8157194'
         ) then true else false end as validation,
         AccountId,
         hasLegalEntity,
