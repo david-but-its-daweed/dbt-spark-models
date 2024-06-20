@@ -1,7 +1,7 @@
 {{
   config(
     meta = {
-      'model_owner' : '@yushkov',
+      'model_owner' : '@e.kotsegubov',
       'bigquery_load': 'true'
     },
     materialized='table',
