@@ -16,6 +16,21 @@
 
 
 WITH
+    utm_labels as (
+    SELECT DISTINCT
+        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
+        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
+        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        user_id
+    from
+    (
+    select
+        str_to_map(split_part(payload.pageUrl, "?", -1), "&", "=") as labels,
+        user.userId as user_id, event_ts_msk
+    from {{ source('b2b_mart', 'device_events') }}
+    where type = 'sessionStart' and payload.pageUrl like "%utm%"
+    )
+),
   users AS (
   SELECT
     user['userId'] AS user_id,
@@ -53,7 +68,10 @@ SELECT
   device.osVersion AS osVersion,
   device.browserName AS browserName,
   COALESCE(active_user,0) AS active_user,
-  regexp_extract(payload.pageUrl, 'https://joom.pro/([^/?]+)', 1) AS landing
+  regexp_extract(payload.pageUrl, 'https://joom.pro/([^/?]+)', 1) AS landing,
+  utm_source,
+  utm_medium,
+  utm_campaign
 FROM
    {{ source('b2b_mart', 'device_events') }} AS de
 LEFT JOIN
@@ -61,6 +79,7 @@ LEFT JOIN
 ON
   de.user['userId'] = users.user_id
   AND CAST(de.event_ts_msk AS DATE) >= users.valid_msk_date
+LEFT JOIN utm_labels  ON  de.user['userId'] = utm_labels.user_id 
 WHERE
   partition_date >= '2024-04-06'
   AND type IN ('sessionStart',
