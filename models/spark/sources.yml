@@ -73,6 +73,7 @@ sources:
       - name: user_paid_post_bids_daily_snapshot
       - name: social_social_users_daily_snapshot
       - name: merchant_order_orders_daily_snapshot
+      - name: merchant_order
   - name: default
     tables:
       - name: sat_store_performance

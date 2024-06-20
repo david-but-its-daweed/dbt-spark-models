@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: jms_merchant_orders
+    description: Model with JMS orders
+    columns:
+      - name: merchant_order_id
+        description: Merchant Order ID
+      - name: country_code
+        description: Country
+      - name: created_date
+        description: Date of the order
+      - name: marketplace_name
+        description: Marketplace where the order was placed (i.e. ZoodMall, Fruugo, etc.)
+      - name: product_id
+        description: Product ID
+      - name: gmv_initial_without_vat
+        description: Customer GMV - Customer VAT (both in USD)
