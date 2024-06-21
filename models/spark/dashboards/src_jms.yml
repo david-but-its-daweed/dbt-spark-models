@@ -9,7 +9,7 @@ models:
       - name: country_code
         description: Country
       - name: created_date
-        description: Date of the order
+        description: Date of the order (when the order was created on the marketplace)
       - name: marketplace_name
         description: Marketplace where the order was placed (i.e. ZoodMall, Fruugo, etc.)
       - name: product_id
