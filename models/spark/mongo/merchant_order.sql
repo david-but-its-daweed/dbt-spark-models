@@ -19,6 +19,7 @@ SELECT
         'id', mpid.id
     ), NULL) AS marketplace_id,
     ctt AS creation_triggered_time_utc,
+    ci.t AS marketplace_created_time,
     ELEMENT_AT(TRANSFORM(FILTER(st.st, element -> element.s == 0), x -> x.t), 1) AS created_time_utc,
     ELEMENT_AT(TRANSFORM(FILTER(st.st, element -> element.s == 1), x -> x.t), 1) AS fulfilled_online_time_utc,
     ELEMENT_AT(TRANSFORM(FILTER(st.st, element -> element.s == 2), x -> x.t), 1) AS shipped_time_utc,
