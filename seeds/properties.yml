@@ -29,7 +29,7 @@ seeds:
     config:
       schema: onfy
 
-  - name: onfy_discount_rule
+  - name: onfy_discount_rules
     config:
       schema: onfy
       

@@ -1,0 +1,7 @@
+product_id,store_id,channel,weight,pessimization_type,discount_percent,source,comment
+,,,0,,0,manual,no default discount
+,,apomio,10,,17,manual,apomio
+,,idealo,10,,17,manual,idealo
+,,billiger,10,,17,manual,billiger
+,7631548fbb5649f28a9523f661a8dac3,,11,,14,manual,fliegende-pillen
+,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,11,manual,frauenapotheke
