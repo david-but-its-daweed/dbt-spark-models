@@ -194,7 +194,7 @@ SELECT
         WHEN product_preview_reco.reco_block_type = 'recommendationAlsoBought' OR product_preview_reco.reco_block_type LIKE '%also_bought%' THEN 'also_bought'
         WHEN product_preview_reco.reco_block_type = 'recommendationAlsoViewed' OR product_preview_reco.reco_block_type LIKE '%also_viewed%' THEN 'also_viewed'
         WHEN product_preview_reco.reco_block_type LIKE '%alternatives%' THEN 'alternatives'
-        WHEN product_preview_reco.reco_block_type = 'previouslyBought' THEN 'previously_bought'
+        WHEN product_preview_reco.reco_block_type = 'previouslyBought' OR product_preview_reco.reco_block_type LIKE '%orderedBefore%' THEN 'already_bought'
         WHEN product_preview_reco.reco_block_type = 'recommendationUserViewed' THEN 'user_viewed'
         ELSE product_preview_reco.reco_block_type
     END AS reco_block_type,
