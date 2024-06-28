@@ -23,9 +23,18 @@ WITH
         first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
         user_id
     from
-    (
+      (
     select
-        str_to_map(split_part(payload.pageUrl, "?", -1), "&", "=") as labels,
+    map_from_arrays(transform(
+            split(split_part(payload.pageUrl, "?", -1), '&'), 
+            x -> case when split_part(x, '=', 1) != "gclid" then split_part(x, '=', 1) else "gclid" || uuid() end
+        ),
+        
+        transform(
+            split(split_part(payload.pageUrl, "?", -1), '&'), 
+            x -> split_part(x, '=', 2)
+        )
+        ) as labels,
         user.userId as user_id, event_ts_msk
     from {{ source('b2b_mart', 'device_events') }}
     where type = 'sessionStart' and payload.pageUrl like "%utm%"
