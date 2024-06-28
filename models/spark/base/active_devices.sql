@@ -11,7 +11,8 @@
         'bigquery_partitioning_date_column': 'day',
         'bigquery_upload_horizon_days': '230',
         'priority_weight': '1000',
-    },
+        'full_reload_on': '6',
+    }
   )
 }}
 
