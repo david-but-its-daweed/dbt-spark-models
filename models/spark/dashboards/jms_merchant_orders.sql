@@ -35,3 +35,4 @@ LEFT JOIN cr_data AS cr
 WHERE
     source.kind = 'jms'
     AND TO_DATE(mo.marketplace_created_time) >= '2023-02-16' -- date of first JMS order
+    AND TO_DATE(mo.marketplace_created_time) < CURRENT_DATE()
