@@ -28,5 +28,7 @@ SELECT customer_request_id,
        col.prices.taxBasePerItem.ccy as taxBasePerItem_ccy, 
        col.prices.totalPerItem.amount as totalPerItem,
        col.prices.totalPerItem.ccy as totalPerItem_ccy,
+       col.sampleDDPPrice.amount as sampleDDPPrice,
+       col.sampleDDPPrice.ccy sampleDDPPrice_ccy,
        date
 FROM wide_data
