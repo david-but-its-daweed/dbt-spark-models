@@ -161,7 +161,7 @@ select
 from
 (select event_id,
         partition_date AS partition_date_msk,
-        coalesce(TIMESTAMP(millis_to_ts_msk(payload.updatedTime)), event_ts_msk) as event_ts_msk,
+        event_ts_msk as event_ts_msk,
         payload.orderId AS order_id,
         payload.clientCurrency AS client_currency,
         posexplode_outer(payload.typedPricesOriginal),
@@ -278,7 +278,7 @@ select
 from
 (select event_id,
         partition_date AS partition_date_msk,
-        coalesce(TIMESTAMP(millis_to_ts_msk(payload.updatedTime)), event_ts_msk) as event_ts_msk,
+        event_ts_msk as event_ts_msk,
         payload.orderId AS order_id,
         payload.clientCurrency AS client_currency,
         posexplode_outer(payload.otherPricesOriginal),
