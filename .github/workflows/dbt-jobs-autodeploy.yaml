@@ -42,7 +42,7 @@ jobs:
       - name: Add python installed packages to path
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Install development tools
-        run: sudo yum -y install gcc gcc-c++ python3-devel cyrus-sasl-devel
+        run: sudo yum -y install gcc gcc-c++ python3-devel cyrus-sasl-devel python3-pip
       - name: Install protobuf
         run: pip install protobuf==4.25.3
       - name: Install DBT
