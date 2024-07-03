@@ -17,7 +17,7 @@ jobs:
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3.0.2
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: eu-central-1
           role-to-assume: arn:aws:iam::392166590300:role/github-hosted-runner
@@ -39,7 +39,7 @@ jobs:
           token: ${{ secrets.ACCESS_TOKEN }}
           path: dbt-models-repo
       - name: Ensure Python 3.8
-        run: sudo amazon-linux-extras enable python3.8 && sudo yum -y install python3.8
+        run: sudo yum -y install python3.8
       # Not using setup-python because of https://github.com/actions/setup-python/issues/162
       - name: Add python installed packages to path
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
