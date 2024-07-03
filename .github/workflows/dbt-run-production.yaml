@@ -28,7 +28,7 @@ jobs:
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: eu-central-1
           role-to-assume: arn:aws:iam::392166590300:role/github-hosted-runner
@@ -42,19 +42,17 @@ jobs:
         run: aws eks --region eu-central-1 update-kubeconfig --name streaming-kube
       - name: Check out repository code
         uses: actions/checkout@v3
-      - name: Ensure Python 3.8
-        run: sudo amazon-linux-extras enable python3.8 && sudo yum -y install python3.8
       # Not using setup-python because of https://github.com/actions/setup-python/issues/162
       - name: Add python installed packages to path
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
       - name: Install development tools
-        run: sudo yum -y install gcc gcc-c++ python3-devel python38-devel cyrus-sasl-devel
+        run: sudo yum -y install gcc gcc-c++ python3-devel cyrus-sasl-devel python3-pip
       - name: Install protobuf
-        run: pip3.8 install protobuf==4.25.3
+        run: pip install protobuf==4.25.3
       - name: Install DBT
         # to fix error
         # ImportError: urllib3 v2.0 only supports OpenSSL 1.1.1+, currently the 'ssl' module is compiled with OpenSSL 1.0.2k-fips  26 Jan 2017. See: https://github.com/urllib3/urllib3/issues/2168
-        run: pip3.8 install dbt-core==1.7.6 dbt-spark[PyHive]==1.7.1 urllib3==1.26.6
+        run: pip install dbt-core==1.7.6 dbt-spark[PyHive]==1.7.1 urllib3==1.26.6
       - name: Set up JDK 11
         uses: actions/setup-java@v3
         with:
