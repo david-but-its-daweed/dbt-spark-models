@@ -5,7 +5,6 @@
     meta = {
       'model_owner' : '@kirill_melnikov',
       'bigquery_load': 'true',
-      'bigquery_partitioning_date_column': 'created_date',
     }
 ) }}
 
