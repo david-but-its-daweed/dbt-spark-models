@@ -17,7 +17,7 @@ jobs:
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v3
+        uses: aws-actions/configure-aws-credentials@v4
         with:
           aws-region: eu-central-1
           role-to-assume: arn:aws:iam::392166590300:role/github-hosted-runner
