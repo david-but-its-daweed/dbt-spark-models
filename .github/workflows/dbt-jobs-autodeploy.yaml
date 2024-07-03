@@ -38,8 +38,6 @@ jobs:
           ref: master
           token: ${{ secrets.ACCESS_TOKEN }}
           path: dbt-models-repo
-      - name: Ensure Python 3.8
-        run: sudo yum -y install python3.8
       # Not using setup-python because of https://github.com/actions/setup-python/issues/162
       - name: Add python installed packages to path
         run: echo "${HOME}/.local/bin" >> $GITHUB_PATH
