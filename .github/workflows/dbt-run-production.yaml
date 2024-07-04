@@ -34,8 +34,8 @@ jobs:
           role-to-assume: arn:aws:iam::392166590300:role/github-hosted-runner
       - name: Login to Amazon ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v1
-      - uses: azure/setup-kubectl@v3
+        uses: aws-actions/amazon-ecr-login@v2
+      - uses: azure/setup-kubectl@v4
         with:
           version: 'v1.19.0'
       - name: Login to EKS
