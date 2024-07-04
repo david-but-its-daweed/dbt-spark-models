@@ -16,11 +16,11 @@ jobs:
       - run: echo "🐧 This job is now running on ${{ runner.name }}"
       - run: echo "🔎 The name of your branch is ${{ github.ref }} and your repository is ${{ github.repository }}."
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
       - name: Checkout reusable workflow dir
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: joomcode/dbt-models
           ref: master
