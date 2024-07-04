@@ -30,5 +30,6 @@ SELECT customer_request_id,
        col.prices.totalPerItem.ccy as totalPerItem_ccy,
        col.sampleDDPPrice.amount as sampleDDPPrice,
        col.sampleDDPPrice.ccy sampleDDPPrice_ccy,
+       col.sampleType  as sample_type,
        date
 FROM wide_data
