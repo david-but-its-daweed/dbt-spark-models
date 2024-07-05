@@ -3,7 +3,7 @@ slo_ads,Advertising data,@ok,#analytics-achtung,6.5,Advertising costs data,platf
 slo_analytics_reports,Time reports at analytics.joom.ai,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,8,used in Time report in analytics.joom.ai,platform,90,1,#analytics-achtung
 slo_jl_external_cube,JL External Cube,@e.kotsegubov,#jl-etl-monitoring,16,it is in the report which is viewed by our team every morning,mart,0,2,
 slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,8,used in Overview report in analytics.joom.ai for Marketplace columns,platform,90,1,#analytics-achtung
-slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,@e.kotsegubov,#jl-etl-monitoring,6,used in Overview report in analytics.joom.ai for B2B columns,platform,0,2,#analytics-achtung
+slo_overview_logistics,Logistics columns in analytics.joom.ai/joom/overview,@e.kotsegubov,#jl-etl-monitoring,16,used in Overview report in analytics.joom.ai for B2B columns,platform,0,2,#analytics-achtung
 slo_overview_onfy,Onfy columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,8,used in Overview report in analytics.joom.ai for Onfy columns,platform,0,2,#analytics-achtung
 slo_overview_pro,Pro columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,8,used in Overview report in analytics.joom.ai for Pro columns,platform,0,2,#analytics-achtung
 slo_pnl,PnL report,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,9,PnL report data https://analytics.joom.ai/pnl/profit_by_day,platform,90,1,#analytics-achtung
