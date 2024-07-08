@@ -57,7 +57,6 @@ sources:
       - name: babylone_joom_tags_daily_snapshot
       - name: babylone_logistics_queues_daily_snapshot
       - name: babylone_logistics_tags_daily_snapshot
-      - name: babylone_onfy_queues_daily_snapshot
       - name: babylone_onfy_tags_daily_snapshot
       - name: babylone_joom_tag_categories_daily_snapshot
       - name: babylone_logistics_tag_categories_daily_snapshot
@@ -65,7 +64,6 @@ sources:
       - name: points_points_transactions_daily_snapshot
       - name: finance_order_costs_daily_snapshot
       - name: babylone_logistics_agents_daily_snapshot
-      - name: babylone_onfy_agents_daily_snapshot
       - name: logistics_jl_obligatory_channels_daily_snapshot
       - name: abu_core_catalog_daily_snapshot
       - name: product_merchant_joom_select_proposals_daily_snapshot
