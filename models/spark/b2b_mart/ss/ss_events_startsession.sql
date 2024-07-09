@@ -16,6 +16,11 @@
 
 
 WITH
+    bots as (
+                            select device_id, max(1) as bot_flag
+                        from threat.bot_devices_joompro 
+                        where is_device_marked_as_bot or is_retrospectively_detected_bot
+                        group by 1 ) ,
     utm_labels as (
     SELECT DISTINCT
         first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
@@ -80,7 +85,8 @@ SELECT
   regexp_extract(payload.pageUrl, 'https://joom.pro/([^/?]+)', 1) AS landing,
   utm_source,
   utm_medium,
-  utm_campaign
+  utm_campaign,
+  coalesce(bot_flag,0) as bot_flag
 FROM
    {{ source('b2b_mart', 'device_events') }} AS de
 LEFT JOIN
@@ -89,6 +95,7 @@ ON
   de.user['userId'] = users.user_id
   AND CAST(de.event_ts_msk AS DATE) >= users.valid_msk_date
 LEFT JOIN utm_labels  ON  de.user['userId'] = utm_labels.user_id 
+left join bots on bots.device_id = de.device.id
 WHERE
   partition_date >= '2024-04-06'
   AND type IN ('sessionStart',
