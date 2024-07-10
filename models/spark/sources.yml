@@ -165,12 +165,7 @@ sources:
   - name: joompro_mart
     tables:
       - name: mercadolibre_categories
-      - name: mercadolibre_shops
       - name: auth_proxy_dim_devices
-
-  - name: joompro_analytics
-    tables:
-      - name: mercadolibre_product_measurements
   
   - name: joompro_analytics_mart
     tables:
