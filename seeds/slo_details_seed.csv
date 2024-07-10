@@ -22,3 +22,4 @@ slo_jm_plan_fact_weekly,JM Plan-Fact | Weekly,@yatsushko,#slo-monitoring,8,Data 
 slo_main_report,⭐ Main,@yatsushko,#slo-monitoring,8,Data for Main dashboard https://secure.holistics.io/dashboards/v3/16602-main,report,80,2,
 slo_logistics_stages_report,⭐ Logistics stages by tracking checkpoints,@e.kotsegubov,#slo-monitoring,8,Data for Logistics stages by tracking checkpoints dashboard https://secure.holistics.io/dashboards/v3/76520-logistics-stages-by-tracking-checkpoints,report,80,2,
 slo_jm_plan_fact_priority,JM Plan Fact Priority,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,8,Priority tables for JM Plan Fact Reports,mart,90,1,
+
