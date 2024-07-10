@@ -26,3 +26,4 @@ sources:
       - name: fbads_adset_country_insights
       - name: adjust_raw_network_insights
       - name: partners_insights
+      - name: mindbox_events
