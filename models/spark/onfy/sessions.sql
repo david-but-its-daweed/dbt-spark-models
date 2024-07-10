@@ -16,6 +16,7 @@ WITH interaction_events AS (
         type,
         NULL AS order_id,
         NULL AS gmv_initial,
+        NULL AS gross_profit_initial,
         NULL AS promocode_discount
     FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
@@ -47,6 +48,7 @@ WITH interaction_events AS (
         'purchase_server' AS type,
         order_id,
         SUM(gmv_initial) AS gmv_initial,
+        SUM(gross_profit_initial) AS gross_profit_initial,
         SUM(IF(type = 'DISCOUNT', price, 0)) AS promocode_discount
     FROM {{ source('onfy', 'transactions') }}
     WHERE
@@ -83,6 +85,7 @@ sessions_predata AS (
         type,
         order_id,
         gmv_initial,
+        gross_profit_initial,
         promocode_discount,
         NULL AS source_corrected,
         NULL AS campaign_corrected,
@@ -97,6 +100,7 @@ sessions_predata AS (
         type,
         NULL AS order_id,
         NULL AS gmv_initial,
+        NULL AS gross_profit_initial,
         NULL AS promocode_discount,
         source_corrected,
         campaign_corrected,
@@ -120,6 +124,7 @@ first_sessions AS (
         next_event_ts_cet,
         order_id,
         gmv_initial,
+        gross_profit_initial,
         promocode_discount,
         source_corrected,
         campaign_corrected,
@@ -159,6 +164,7 @@ output AS (
         MIN_BY(gmv_initial, IF(type = 'purchase_server', event_ts_cet, NULL)) AS first_transaction_gmv_initial,
         COUNT(order_id) AS orders,
         SUM(gmv_initial) AS gmv_initial,
+        SUM(gross_profit_initial) AS gross_profit_initial,
         SUM(promocode_discount) AS promocode_discount
     FROM sessions_calculation
     GROUP BY
