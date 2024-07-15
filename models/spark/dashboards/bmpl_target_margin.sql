@@ -90,7 +90,13 @@ SELECT
     gmv_14,
     base_price_14,
     gross_profit_14,
-    0.125 AS target_gmv_overhead_costs,
-    0.2 AS target_margin
+    CASE
+        WHEN DATE_TRUNC('QUARTER', date_msk) >= '2024-07-01' THEN 0.08
+        ELSE 0.125
+    END AS target_gmv_overhead_costs,
+    CASE
+        WHEN DATE_TRUNC('QUARTER', date_msk) >= '2024-07-01' THEN 0.216
+        ELSE 0.2
+    END AS target_margin
 FROM main
 ORDER BY 1, 2
