@@ -26,6 +26,7 @@ WITH
         first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
         first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
         first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        first_value(labels.gad_source) over (partition by user_id order by event_ts_msk) as gad_source,
         user_id
     from
       (
@@ -42,7 +43,9 @@ WITH
         ) as labels,
         user.userId as user_id, event_ts_msk
     from {{ source('b2b_mart', 'device_events') }}
-    where type = 'sessionStart' and payload.pageUrl like "%utm%"
+    where type = 'sessionStart' and ( payload.pageUrl like "%utm%" 
+                                        or payload.pageUrl like "%gad_source%" 
+                                        or payload.pageUrl like "%gclid%" )
     )
 ),
   users AS (
@@ -83,7 +86,7 @@ SELECT
   device.browserName AS browserName,
   COALESCE(active_user,0) AS active_user,
   regexp_extract(payload.pageUrl, 'https://joom.pro/([^/?]+)', 1) AS landing,
-  utm_source,
+  case when utm_source is Null and gad_source is not null then 'unrecognized_google_advertising' else utm_source end as utm_source ,
   utm_medium,
   utm_campaign,
   coalesce(bot_flag,0) as bot_flag
