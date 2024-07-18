@@ -1,7 +1,6 @@
 {{ config(
     schema='mart',
-    materialized='table',
-    partition_by='date_msk',
+    materialized='view',
     meta = {
       'model_owner' : '@analytics.duty',
       'bigquery_load': 'true',
