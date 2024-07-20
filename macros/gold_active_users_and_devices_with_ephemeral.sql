@@ -324,5 +324,6 @@ SELECT
     is_churned_28,
     trunc(date_msk, 'MM') as month
 FROM active_devices_ext6
+CLUSTER by month
 
 {% endmacro %}
