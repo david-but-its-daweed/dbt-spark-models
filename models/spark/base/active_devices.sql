@@ -80,3 +80,4 @@ SELECT
     TRUNC(d.day, 'MM') AS month
 FROM device_info AS d
 INNER JOIN min_dates USING (device_id)
+CLUSTER BY month

@@ -599,3 +599,4 @@ SELECT
     TRUNC(order_date_msk, 'MM') AS month
 
 FROM orders_ext7
+CLUSTER BY month

@@ -60,3 +60,4 @@ SELECT
     TRUNC(u.day, 'MM') AS month
 FROM user_info AS u
 INNER JOIN join_dates AS jd USING (user_id)
+CLUSTER BY month
