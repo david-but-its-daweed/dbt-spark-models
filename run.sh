@@ -20,4 +20,4 @@ DEFAULT_START_DATE=$(days_ago 1)
 DEFAULT_END_DATE=$(days_ago 0)
 DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_DATE','table_name':'gburg.test'}"
 
-dbt --debug run --vars $DBT_VARS $@
+dbt run --vars $DBT_VARS $@

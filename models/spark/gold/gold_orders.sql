@@ -599,4 +599,4 @@ SELECT
     TRUNC(order_date_msk, 'MM') AS month
 
 FROM orders_ext7
-CLUSTER BY month
+CLUSTER BY month, abs(hash(order_id)) % 10
