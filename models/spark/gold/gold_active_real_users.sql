@@ -4,7 +4,6 @@
         alias='active_real_users',
         schema='gold',
         clustered_by=['real_user_id'],
-        buckets=8,
         file_format='parquet',
         meta = {
             'model_owner' : '@general_analytics',
