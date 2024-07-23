@@ -2,7 +2,7 @@
     schema='category_management',
     materialized='table',
     meta = {
-      'model_owner' : '@troyanovskaya',
+      'model_owner' : '@catman-analytics.duty',
       'team': 'category_management',
       'bigquery_load': 'true',
     }
@@ -23,4 +23,4 @@ from
 left join {{ source('mongo', 'product_products_daily_snapshot') }}
     on published_products_current.product_id = product_products_daily_snapshot._id
 left join  {{ source('mongo','abu_core_brands_daily_snapshot') }} as brands
-    on product_products_daily_snapshot.brandId = brands._id.oid
+    on product_products_daily_snapshot.brandId = brands._id
