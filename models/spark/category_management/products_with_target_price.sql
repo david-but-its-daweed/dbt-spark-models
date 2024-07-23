@@ -12,74 +12,24 @@
     },
   )
 }}
---------------------------------------------------------------------------
------------------------Forming list of JS products------------------------
---------------------------------------------------------------------------
 
-WITH edlp_products AS (----------- a temporary filter: only for non edlp products  
+--------------------------------------------------------------------------
+-----------------------Forming target price------------------------
+--------------------------------------------------------------------------    
+---- we need to exclude periods, when proposal was approved
+---- otherwise we will demand discount from JS price over and over again
+WITH all_products AS (
     SELECT
-        product_id,
-        partition_date
-    FROM {{ source('goods', 'product_labels') }}
-    WHERE
-        label = "EDLP"
-    {% if is_incremental() %}
-        AND partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 90 DAY
-    {% else %}
-        AND partition_date >= DATE("2024-02-18") - INTERVAL 90 DAY
-    {% endif %}
+        *
+    FROM {{ ref('js_filtered_products') }}
+    WHERE 
+        {% if is_incremental() %}
+            partition_date >= DATE('{{ var("start_date_ymd") }}') - INTERVAL 90 DAY
+        {% else %}
+            partition_date >= DATE("2024-02-18") - INTERVAL 90 DAY
+        {% endif %}
 ),
-------------------------------------------------------------------------------
-------------------Forming the list of automatically selected products---------
-------------------------------------------------------------------------------
-filtered_products AS (
-    SELECT
-        m.product_id,
-        m.partition_date,
-        m.main_category,
-        m.merchant_id,
-        m.product_rating_60_days,
-        m.gmv_60_days,
-        m.orders_60_days,
-        m.orders_with_nf_share_1_year,
-        m.merchant_cancel_rate_1_year,
-        m.merchant_price_index,
-        c.days_orders_minimum_60 AS criteria_days_orders_minimum_60,
-        c.days_gmv_minimum_60 AS criteria_days_gmv_minimum_60,
-        c.merchant_cancel_rate_maximum AS criteria_merchant_cancel_rate_maximum,
-        c.business_line,
-        d.name AS merchant_name,
-        1 AS reason_of_participation
-    FROM {{ ref('initial_metrics_set') }} AS m
-    LEFT JOIN {{ source('category_management', 'joom_select_manual_criteria') }} AS c ON m.main_category = c.category -- from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
-    LEFT JOIN {{ source('mart', 'dim_merchant') }} AS d ON m.merchant_id = d.merchant_id
-    LEFT JOIN {{ source('category_management', 'joom_select_product_black_list') }} AS bl ON m.product_id = bl.product_id -- from https://docs.google.com/spreadsheets/d/1fzMOIdQhM_YKkzasEZd6MAf7gh_1C1pSQCucG-Zc-uQ/edit#gid=0
-    LEFT JOIN edlp_products AS e
-        ON
-            m.product_id = e.product_id
-            AND e.partition_date = m.partition_date - INTERVAL 1 DAY
-    WHERE
-        m.gmv_60_days >= c.days_gmv_minimum_60         --from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
-        AND m.orders_60_days >= c.days_orders_minimum_60 --from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
-        AND m.merchant_cancel_rate_1_year <= c.merchant_cancel_rate_maximum --from https://docs.google.com/spreadsheets/d/1QSlcEnxAEHmoOMlcSV7fAxZl0pwYyDSOm1tSEvXVOZU/edit#gid=0
-        AND m.orders_with_nf_share_1_year <= 0.05  -- this parameter from https://joom-team.atlassian.net/browse/AN-2985
-        AND m.product_rating_60_days >= 4.3        -- this parameter from https://joom-team.atlassian.net/browse/AN-2985
-        AND ( d.origin_name = "Chinese"            -- a temporary filter: only chinese origin  or merchant_id first 24 rows from list from https://joom-team.atlassian.net/browse/AN-3379 
-            OR  m.merchant_id IN ("65eea31a238708eb4ee3502c","65cc35d0144e748709e72ae8","65cacb034ef29de4eaf1ea8f","657168bc0c3be88fcfde094b","6493ff6a397ba7d04e97a35d","641bd999a2e4f03234e7f523",
-                                "62da5b66797cacb687948fd4","62b33993a73a5a0b96e06ff6","62b02810141f0618e9a0d90a","62a054c5fc6d8bd6d9e2f338","62170618dfe1c46ecd689af1","6156a5e939f22972c5121356",
-                                "60f5248425c01ec5873c4bbd","5e384a0406d9540b010fa4d0","5cf4ddb18b45130b017c0e16","5ce7faff8b45130b018601bf","5cdedea78b2c370b0162f3a4","62f35104abb496a02e7359b6"
-                                "6499251b7a76a242e05ee08d","63849ba073c6932a64ef7288","5f29031ca244430b065022fa","61c989872345d2754cc8727e","61fb7080f4be39f12f27deb8","633ecff8a3d631358b111362")
-            )           
-        -- a temporary filter: exclude the edlp products
-        AND e.product_id IS NULL
-        AND bl.product_id IS NULL
-    {% if is_incremental() %}
-        AND m.partition_date >= DATE('{{ var("start_date_ymd") }}')
-    {% else %}
-        AND m.partition_date >= DATE("2024-02-19")
-    {% endif %}
         
-),
 ------------------------------------------------------------------------------
 ------------------Forming the list of manually selected products--------------
 ------------------------------------------------------------------------------
@@ -88,94 +38,10 @@ manual_products AS (
         product_id,
         MAX(discount) AS discount,
         0 AS reason_of_participation -- 0 for manual, 1 for automatic selection
-    FROM {{ source('category_management', 'joom_select_product_white_list') }} -- https://docs.google.com/spreadsheets/d/1JXqKXvYhJcaZWf69e1G5EXB0sZady_EEM6pfeGk6JHU/edit#gid=0
+    FROM {{ source('category_management', 'joom_select_product_white_list') }} -- https://docs.google.com/spreadsheets/d/1fJpQl_JwumbWikePJkqkh3lhGXdmXf6B39VXmrFT1GI/edit?gid=0#gid=0
     GROUP BY 1
 ),
 
---------------------------------------------------------------------------------------
---------------- Merging the manual list and automatically selected products ----------
---------------------------------------------------------------------------------------
-all_products AS (
-    SELECT
-        product_id,
-        partition_date,
-        main_category,
-        merchant_id,
-        business_line,
-        merchant_name,
-        MAX(product_rating_60_days) AS product_rating_60_days,
-        MAX(gmv_60_days) AS gmv_60_days,
-        MAX(orders_60_days) AS orders_60_days,
-        MAX(orders_with_nf_share_1_year) AS orders_with_nf_share_1_year,
-        MAX(merchant_cancel_rate_1_year) AS merchant_cancel_rate_1_year,
-        MAX(merchant_price_index) AS merchant_price_index,
-        MAX(criteria_days_orders_minimum_60) AS criteria_days_orders_minimum_60,
-        MAX(criteria_days_gmv_minimum_60) AS criteria_days_gmv_minimum_60,
-        MAX(criteria_merchant_cancel_rate_maximum) AS criteria_merchant_cancel_rate_maximum,
-        MIN(reason_of_participation) AS reason_of_participation
-    FROM (
-        SELECT
-            product_id,
-            partition_date,
-            main_category,
-            merchant_id,
-            product_rating_60_days,
-            gmv_60_days,
-            orders_60_days,
-            orders_with_nf_share_1_year,
-            merchant_cancel_rate_1_year,
-            merchant_price_index,
-            criteria_days_orders_minimum_60,
-            criteria_days_gmv_minimum_60,
-            criteria_merchant_cancel_rate_maximum,
-            business_line,
-            merchant_name,
-            reason_of_participation
-        FROM filtered_products
-        UNION ALL
-        SELECT
-            p.product_id,
-            DATE('{{ var("start_date_ymd") }}') AS partition_date,
-            c.l1_merchant_category_name AS main_category,
-            p.merchant_id,
-            0 AS product_rating_60_days,
-            0 AS gmv_60_days,
-            0 AS orders_60_days,
-            0 AS orders_with_nf_share_1_year,
-            0 AS merchant_cancel_rate_1_year,
-            0 AS merchant_price_index,
-            0 AS criteria_days_orders_minimum_60,
-            0 AS criteria_days_gmv_minimum_60,
-            0 AS criteria_merchant_cancel_rate_maximum,
-            c.business_line,
-            dm.name AS merchant_name,
-            0 AS reason_of_participation
-        FROM {{ source('mart', 'dim_published_product_min') }} AS p
-        INNER JOIN manual_products AS m ON p.product_id = m.product_id
-        INNER JOIN {{ source('mart', 'dim_merchant') }} AS dm ON dm.merchant_id = p.merchant_id
-        INNER JOIN {{ ref('gold_merchant_categories') }} AS c ON p.category_id = c.merchant_category_id
-    )
-    GROUP BY
-        product_id,
-        partition_date,
-        main_category,
-        merchant_id,
-        business_line,
-        merchant_name
-),
-
------ This is the end of forming product list.
------ It's recomended to spit this code at least above this line into two parts: product list forming and target price forming|
-
------ Moreover, it's better to split code below into two parts: first one - processing all the data needed for the target price algorithm.
------ The second one - the the target price algorithm
------ It will help to maintain the flow in a readable state and to make debugging easier.
-
---------------------------------------------------------------------------
------------------------Forming target price------------------------
---------------------------------------------------------------------------    
----- we need to exclude periods, when proposal was approved
----- otherwise we will demand discount from JS price over and over again
 approved_proposals_periods AS (
     SELECT DISTINCT
         product_id,
@@ -185,87 +51,6 @@ approved_proposals_periods AS (
     WHERE status = "approved"
 ),
 
------ In next 3 cte we retrive the calendar of promo activities.
------ Firstly, we create an artificial calendar, which consists of a list of dates in a row.
-calendar_dt AS ( 
-    SELECT col AS partition_date
-    FROM (
-        SELECT EXPLODE(sequence(to_date(CURRENT_DATE() - INTERVAL 365 DAY), to_date(CURRENT_DATE()), interval 1 day))
-    )
-),
------ Then we are detecting for each product_id in promo table the list of dates when it had product discounts
-promo_calendar AS (
-    SELECT
-        partition_date,
-        product_id,
-        promo_start_time_utc,
-        promo_end_time_utc,
-        discount
-    FROM calendar_dt AS c
-    LEFT JOIN {{ source('mart', 'promotions') }} AS p -- can be optimized using inner join. Left join is a relic from the last algorithm idea.
-        ON partition_date >= promo_start_time_utc
-        AND partition_date < promo_end_time_utc
-    WHERE promo_start_time_utc >= CURRENT_DATE() - INTERVAL 365 DAY
-),
------ Now for each product we take maximum discount at a particular day
------ This cte can be merged with the previous one.
-promo_prods AS (
-    SELECT
-        partition_date,
-        product_id,
-        MAX(discount)/100 AS discount
-    FROM promo_calendar
-    GROUP BY 1, 2
-),
---------------------------------------------------------------------------    
----- As far as dim_published_variant_with_merchant contains 
----- many lines for each variant with the same price,
----- we shoud define effective period of a particular price for each variant
-variants_stg_ex1 AS (
-    SELECT
-        variant_id,
-        product_id,
-        price,
-        currency,
-        value_partition,
-        MAX(current_price) AS current_price,
-        -- Forming new effective periods of each price
-        MIN(effective_ts) AS effective_ts, -- define when the price starts to be valid
-        MAX(next_effective_ts) AS next_effective_ts -- define when the price ends to be valid
-    FROM (
-        SELECT
-            variant_id,
-            product_id,
-            price,
-            currency,
-            effective_ts,
-            next_effective_ts,
-            SUM(value_partition) over (PARTITION BY variant_id, product_id ORDER BY effective_ts ) AS value_partition, -- So here ve derive unique marks for periods with a constant price
-            FIRST(price) OVER (PARTITION BY variant_id, product_id ORDER BY effective_ts DESC) AS current_price -- here we get the last (actual) price
-        FROM (
-            SELECT
-                variant_id,
-                product_id,
-                price,
-                currency,
-                effective_ts AS effective_ts,
-                next_effective_ts AS next_effective_ts,
-                CASE WHEN IF(price_lag IS NULL OR price_lag!= price, effective_ts, NULL) IS NULL THEN 0 ELSE 1 END AS value_partition  ---- The idea is to mark сonsecutive time periods where price didn't change. It's the preliminary step, where mark only raws with price changing. 
-            FROM (
-                SELECT
-                    variant_id,
-                    product_id,
-                    price / 1000000 AS price,
-                    currency,
-                    effective_ts,
-                    next_effective_ts,
-                    LAG(p.price / 1000000) OVER (PARTITION BY variant_id, product_id ORDER BY next_effective_ts) AS price_lag --- Firstly we define price in previous effective period
-                FROM {{ source('mart', 'dim_published_variant_with_merchant') }} AS p
-                )
-            )
-        )
-    GROUP BY 1, 2, 3, 4, 5
-),
 --- As far as dim_published_variant_with_merchant contains info about price in a merchant currency, we need to convert it into usd for comparing with other prices.
 --- So, here we can find currency rate for each day for any currency. 
 currency_rates AS (
@@ -277,33 +62,6 @@ currency_rates AS (
     FROM {{ source('mart', 'dim_currency_rate') }}
 ),
 
---- Here we are merging data on prices with information on promotional discounts and calculating aggregates to determine the average price during a promotion.
-variants_stg_ex2 AS (
-    SELECT 
-        v.effective_ts,
-        v.next_effective_ts,
-        v.product_id,
-        v.variant_id,
-        v.price,
-        v.currency,
-        v.current_price,
-        SUM(v.price * COALESCE((1 - p.discount), 1)) AS sum_price_with_discount,
-        COUNT(p.partition_date) AS days_with_promo
-    FROM variants_stg_ex1 AS v
-    LEFT JOIN promo_prods AS p
-        ON
-            v.product_id = p.product_id
-            AND p.partition_date >= v.effective_ts
-            AND p.partition_date < v.next_effective_ts
-    GROUP BY
-        v.effective_ts,
-        v.next_effective_ts,
-        v.product_id,
-        v.variant_id,
-        v.price,
-        v.current_price,
-        v.currency
-),
 ------------------------------------------------------------------------------    
 ---- Then we should exclude price periods, when the product participated in JS 
 ---- Otherwise we will demand discount over and over again 
@@ -327,17 +85,17 @@ variants AS (
             SUM(sum_price_with_discount) OVER (PARTITION BY p.variant_id, p.product_id) AS sum_price_with_discount,  
             SUM(days_with_promo)  OVER (PARTITION BY p.variant_id, p.product_id) AS days_with_promo,
             MAX(p.effective_ts) OVER (PARTITION BY p.variant_id, p.product_id) AS max_effective_ts
-        FROM variants_stg_ex2 AS p
+        FROM {{ ref('js_prices_log') }} AS p
         LEFT JOIN approved_proposals_periods AS ap
             ON
                 p.product_id = ap.product_id
                 AND
                     (
-                        (DATE(p.effective_ts - INTERVAL 3 HOURS) = DATE(ap.status_effective_from) 
-                        AND DATE(p.next_effective_ts - INTERVAL 3 HOURS) = DATE(ap.status_effective_to))
+                        (DATE(p.effective_ts - INTERVAL 3 HOURS) >= DATE(ap.status_effective_from) 
+                        AND DATE(p.next_effective_ts - INTERVAL 3 HOURS) <= DATE(ap.status_effective_to))
                     OR 
-                        (DATE(p.effective_ts - INTERVAL 3 HOURS) = DATE(ap.status_effective_from) 
-                        AND DATE(p.next_effective_ts - INTERVAL 3 HOURS) = '9999-12-31')
+                        (DATE(p.effective_ts - INTERVAL 3 HOURS) >= DATE(ap.status_effective_from) 
+                        AND DATE(p.next_effective_ts - INTERVAL 3 HOURS) <= '9999-12-31')
                     )
         WHERE p.next_effective_ts > "2024-01-01"
             AND ap.product_id IS NULL
