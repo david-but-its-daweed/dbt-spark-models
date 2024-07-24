@@ -48,6 +48,7 @@ select
         to_date(cast(cast(slaDate as int) as string), 'yyyyMMdd') as sla_date,
         to_date(cast(cast(startDate as int) as string), 'yyyyMMdd') as start_date,
         comment,
+        clientDelayInDays as client_delay, 
         expectedDurationInDays as expected_duration,
         stage_int as stage_id,
         stage as status,
