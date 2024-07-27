@@ -80,4 +80,4 @@ SELECT
     TRUNC(d.day, 'MM') AS month
 FROM device_info AS d
 INNER JOIN min_dates USING (device_id)
-CLUSTER BY month, abs(hash(d.device_id)) % 10
+DISTRIBUTE BY month, abs(hash(d.device_id)) % 10

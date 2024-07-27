@@ -33,3 +33,4 @@ WHERE
     {% else %}
         AND partition_date >= DATE'2022-06-01'
     {% endif %}
+DISTRIBUTE BY partition_date_msk

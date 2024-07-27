@@ -324,6 +324,6 @@ SELECT
     is_churned_28,
     trunc(date_msk, 'MM') as month
 FROM active_devices_ext6
-CLUSTER by month, abs(hash({{ device_or_user_id }})) % 10
+DISTRIBUTE by month, abs(hash({{ device_or_user_id }})) % 10
 
 {% endmacro %}
