@@ -164,6 +164,14 @@ models:
         description: advertisements parthner id for device_id from ads.ads_install.ads_partner_id
       - name: has_linked_card
         description: 1 if user had linked card before the payment start and 0 if no (1st checkout session on the day)
+      - name: klarna_real_type
+        description: used klarna method in order by mapping
+      - name: klarna_desctription
+        description: used klarna method desctription
+      - name: klarna_type
+        description: used klarna type
+      - name: is_visa_discount_applicable
+        description: 1 if card bin is in visa discount project, 0 if no
 
   - name: payment
     description: Table with payment info data without points, last 365 days

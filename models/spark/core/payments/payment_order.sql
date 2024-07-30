@@ -184,6 +184,10 @@ SELECT
     po.reason_3ds,
     po.date,
     po.has_linked_card,
+    po.klarna_real_type,
+    po.klarna_desctription,
+    po.klarna_type,
+    po.is_visa_discount_applicable,
 
     ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int ORDER BY po.created_time)
     AS number_attempt_provider_payment_type,
