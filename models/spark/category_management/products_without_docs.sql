@@ -195,115 +195,119 @@ categories_ce_fda_pi_doc_full AS (
 gmv AS (
     SELECT
         product_id,
-        IF(order_date_msk >= CURRENT_DATE() - 30, gmv_initial, 0) AS gmv_30_day_all,
-        IF(order_date_msk >= CURRENT_DATE() - 90, gmv_initial, 0) AS gmv_90_day_all,
-        IF(order_date_msk >= CURRENT_DATE() - 180, gmv_initial, 0) AS gmv_180_day_all,
-        IF(order_date_msk >= CURRENT_DATE() - 30 AND country_code = "FR", gmv_initial, 0) AS gmv_30_day_fr,
-        IF(order_date_msk >= CURRENT_DATE() - 90 AND country_code = "FR", gmv_initial, 0) AS gmv_90_day_fr,
-        IF(order_date_msk >= CURRENT_DATE() - 180 AND country_code = "FR", gmv_initial, 0) AS gmv_180_day_fr,
-        IF(order_date_msk >= CURRENT_DATE() - 30 AND country_code = "DE", gmv_initial, 0) AS gmv_30_day_de,
-        IF(order_date_msk >= CURRENT_DATE() - 90 AND country_code = "DE", gmv_initial, 0) AS gmv_90_day_de,
-        IF(order_date_msk >= CURRENT_DATE() - 180 AND country_code = "DE", gmv_initial, 0) AS gmv_180_day_de,
-        IF(order_date_msk >= CURRENT_DATE() - 30 AND country_code = "AT", gmv_initial, 0) AS gmv_30_day_at,
-        IF(order_date_msk >= CURRENT_DATE() - 90 AND country_code = "AT", gmv_initial, 0) AS gmv_90_day_at,
-        IF(order_date_msk >= CURRENT_DATE() - 180 AND country_code = "AT", gmv_initial, 0) AS gmv_180_day_at,
-        IF(order_date_msk >= CURRENT_DATE() - 30 AND region_name = "Europe", gmv_initial, 0) AS gmv_30_day_eu,
-        IF(order_date_msk >= CURRENT_DATE() - 90 AND region_name = "Europe", gmv_initial, 0) AS gmv_90_day_eu,
-        IF(order_date_msk >= CURRENT_DATE() - 180 AND region_name = "Europe", gmv_initial, 0) AS gmv_180_day_eu
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 30, gmv_initial, 0)) AS gmv_30_day_all,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 90, gmv_initial, 0)) AS gmv_90_day_all,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 180, gmv_initial, 0)) AS gmv_180_day_all,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 30 AND country_code = "FR", gmv_initial, 0)) AS gmv_30_day_fr,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 90 AND country_code = "FR", gmv_initial, 0)) AS gmv_90_day_fr,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 180 AND country_code = "FR", gmv_initial, 0)) AS gmv_180_day_fr,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 30 AND country_code = "DE", gmv_initial, 0)) AS gmv_30_day_de,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 90 AND country_code = "DE", gmv_initial, 0)) AS gmv_90_day_de,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 180 AND country_code = "DE", gmv_initial, 0)) AS gmv_180_day_de,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 30 AND country_code = "AT", gmv_initial, 0)) AS gmv_30_day_at,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 90 AND country_code = "AT", gmv_initial, 0)) AS gmv_90_day_at,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 180 AND country_code = "AT", gmv_initial, 0)) AS gmv_180_day_at,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 30 AND region_name = "Europe", gmv_initial, 0)) AS gmv_30_day_eu,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 90 AND region_name = "Europe", gmv_initial, 0)) AS gmv_90_day_eu,
+        SUM(IF(order_date_msk >= CURRENT_DATE() - 180 AND region_name = "Europe", gmv_initial, 0)) AS gmv_180_day_eu
     FROM {{ ref('gold_orders') }}
     WHERE order_date_msk >= CURRENT_DATE() - 365
+    GROUP BY 1
+),
 
+agg AS (
+    SELECT
+        p.product_id,
+        p.merchant_id,
+        p.merchant_category_id,
+        gc.merchant_category_name,
+        gc.l1_merchant_category_name,
+        gc.l2_merchant_category_name,
+        gc.l3_merchant_category_name,
+        MAX(COALESCE(d.type = "ec" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) AS has_active_ec,
+        MIN(IF(d.type = "ec" AND cc.merchant_category_id IS NOT NULL, d.end_date, NULL)) AS end_date_ec,
+        MAX(IF(d.type = "ec" AND cc.merchant_category_id IS NOT NULL, d.start_date, NULL)) AS start_date_ec,
+        MAX(COALESCE(d.type = "doc" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) AS has_active_doc,
+        MIN(IF(d.type = "doc" AND cc.merchant_category_id IS NOT NULL, d.end_date, NULL)) AS end_date_doc,
+        MAX(IF(d.type = "doc" AND cc.merchant_category_id IS NOT NULL, d.start_date, NULL)) AS start_date_doc,
+        MAX(COALESCE(d.type = "eprGermanyElectronics" AND d.status = "active" AND c.merchant_category_id IS NOT NULL, FALSE)) AS has_active_eprgermanyelectronics,
+        MIN(IF(d.type = "eprGermanyElectronics" AND c.merchant_category_id IS NOT NULL, d.end_date, NULL)) AS end_date_eprgermanyrlectronics,
+        MAX(IF(d.type = "eprGermanyElectronics" AND c.merchant_category_id IS NOT NULL, d.start_date, NULL)) AS start_date_eprgermanyelectronics,
+        MAX(
+            CASE
+                WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprGermany" AND dm.status = "active", FALSE)
+                WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprGermany" AND d.status = "active", FALSE)
+            END
+        ) AS has_active_eprgermany,
+        MIN(IF(dm.type = "eprGermany" AND dm.status = "active", dm.end_date, NULL)) AS end_date_eprgermany,
+        MAX(IF(dm.type = "eprGermany" AND dm.status = "active", dm.start_date, NULL)) AS start_date_eprgermany,
+        MAX(
+            CASE
+                WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprFrance" AND dm.status = "active", FALSE)
+                WHEN dm.is_packaging = TRUE THEN COALESCE(d.type = "eprFrance" AND d.status = "active", FALSE)
+            END
+        ) AS has_active_eprfrance,
+        MIN(IF(dm.type = "eprFrance" AND dm.status = "active", dm.end_date, NULL)) AS end_date_eprfrance,
+        MAX(IF(dm.type = "eprFrance" AND dm.status = "active", dm.start_date, NULL)) AS start_date_eprfrance,
+        MAX(
+            CASE
+                WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprAustria" AND dm.status = "active", FALSE)
+                WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprAustria" AND d.status = "active", FALSE)
+            END
+        ) AS has_active_epraustria,
+        MIN(IF(dm.type = "eprFrance" AND dm.status = "active", dm.end_date, NULL)) AS end_date_epraustria,
+        MAX(IF(dm.type = "eprFrance" AND dm.status = "active", dm.end_date, NULL)) AS start_date_epraustria
+    FROM prod_ext AS p
+    ----Для  eprGermany, eprFrance, eprAustria документ относится ко всем товарам продавца, если productKind - packaging
+    ----К документу можно привязать товары и он будет относится только к ним, если выбраны другие productKind
+    ----Для остальных связь по линку
+    LEFT JOIN docs AS dm ON p.merchant_id = dm.merchantid
+    LEFT JOIN links AS l ON p.product_id = l.product_id
+    LEFT JOIN docs AS d ON l.doc_id = d.doc_id AND dm.doc_id = d.doc_id
+    LEFT JOIN {{ ref('gold_merchant_categories') }} AS gc ON p.merchant_category_id = gc.merchant_category_id
+    LEFT JOIN categories_ege AS c ON p.merchant_category_id = c.merchant_category_id
+    LEFT JOIN categories_ce_fda_pi_doc_full AS cc ON p.merchant_category_id = cc.merchant_category_id
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    HAVING
+        MAX(COALESCE(d.type = "ec" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
+        OR MAX(COALESCE(d.type = "doc" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
+        OR MAX(COALESCE(d.type = "eprGermanyElectronics" AND d.status = "active" AND c.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
+        OR MAX(
+            CASE
+                WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprGermany" AND dm.status = "active", FALSE)
+                WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprGermany" AND d.status = "active", FALSE)
+            END
+        ) IS FALSE
+        OR MAX(
+            CASE
+                WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprFrance" AND dm.status = "active", FALSE)
+                WHEN dm.is_packaging = TRUE THEN COALESCE(d.type = "eprFrance" AND d.status = "active", FALSE)
+            END
+        ) IS FALSE
+        OR MAX(
+            CASE
+                WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprAustria" AND dm.status = "active", FALSE)
+                WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprAustria" AND d.status = "active", FALSE)
+            END
+        ) IS FALSE
 )
 
 SELECT
-    p.product_id,
-    p.merchant_id,
-    p.merchant_category_id,
-    gc.merchant_category_name,
-    gc.l1_merchant_category_name,
-    gc.l2_merchant_category_name,
-    gc.l3_merchant_category_name,
-    MAX(COALESCE(d.type = "ec" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) AS has_active_ec,
-    MIN(IF(d.type = "ec" AND cc.merchant_category_id IS NOT NULL, d.end_date, NULL)) AS end_date_ec,
-    MAX(IF(d.type = "ec" AND cc.merchant_category_id IS NOT NULL, d.start_date, NULL)) AS start_date_ec,
-    MAX(COALESCE(d.type = "doc" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) AS has_active_doc,
-    MIN(IF(d.type = "doc" AND cc.merchant_category_id IS NOT NULL, d.end_date, NULL)) AS end_date_doc,
-    MAX(IF(d.type = "doc" AND cc.merchant_category_id IS NOT NULL, d.start_date, NULL)) AS start_date_doc,
-    MAX(COALESCE(d.type = "eprGermanyElectronics" AND d.status = "active" AND c.merchant_category_id IS NOT NULL, FALSE)) AS has_active_eprgermanyelectronics,
-    MIN(IF(d.type = "eprGermanyElectronics" AND c.merchant_category_id IS NOT NULL, d.end_date, NULL)) AS end_date_eprgermanyrlectronics,
-    MAX(IF(d.type = "eprGermanyElectronics" AND c.merchant_category_id IS NOT NULL, d.start_date, NULL)) AS start_date_eprgermanyelectronics,
-    MAX(
-        CASE
-            WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprGermany" AND dm.status = "active", FALSE)
-            WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprGermany" AND d.status = "active", FALSE)
-        END
-    ) AS has_active_eprgermany,
-    MIN(IF(dm.type = "eprGermany" AND dm.status = "active", dm.end_date, NULL)) AS end_date_eprgermany,
-    MAX(IF(dm.type = "eprGermany" AND dm.status = "active", dm.start_date, NULL)) AS start_date_eprgermany,
-    MAX(
-        CASE
-            WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprFrance" AND dm.status = "active", FALSE)
-            WHEN dm.is_packaging = TRUE THEN COALESCE(d.type = "eprFrance" AND d.status = "active", FALSE)
-        END
-    ) AS has_active_eprfrance,
-    MIN(IF(dm.type = "eprFrance" AND dm.status = "active", dm.end_date, NULL)) AS end_date_eprfrance,
-    MAX(IF(dm.type = "eprFrance" AND dm.status = "active", dm.start_date, NULL)) AS start_date_eprfrance,
-    MAX(
-        CASE
-            WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprAustria" AND dm.status = "active", FALSE)
-            WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprAustria" AND d.status = "active", FALSE)
-        END
-    ) AS has_active_epraustria,
-    MIN(IF(dm.type = "eprFrance" AND dm.status = "active", dm.end_date, NULL)) AS end_date_epraustria,
-    MAX(IF(dm.type = "eprFrance" AND dm.status = "active", dm.end_date, NULL)) AS start_date_epraustria,
-    COALESCE(ROUND(SUM(g.gmv_30_day_all), 2), 0) AS gmv_30_day_all,
-    COALESCE(ROUND(SUM(g.gmv_90_day_all), 2), 0) AS gmv_90_day_all,
-    COALESCE(ROUND(SUM(g.gmv_180_day_all), 2), 0) AS gmv_180_day_all,
-    COALESCE(ROUND(SUM(g.gmv_30_day_fr), 2), 0) AS gmv_30_day_fr,
-    COALESCE(ROUND(SUM(g.gmv_90_day_fr), 2), 0) AS gmv_90_day_fr,
-    COALESCE(ROUND(SUM(g.gmv_180_day_fr), 2), 0) AS gmv_180_day_fr,
-    COALESCE(ROUND(SUM(g.gmv_30_day_de), 2), 0) AS gmv_30_day_de,
-    COALESCE(ROUND(SUM(g.gmv_90_day_de), 2), 0) AS gmv_90_day_de,
-    COALESCE(ROUND(SUM(g.gmv_180_day_de), 2), 0) AS gmv_180_day_de,
-    COALESCE(ROUND(SUM(g.gmv_30_day_at), 2), 0) AS gmv_30_day_at,
-    COALESCE(ROUND(SUM(g.gmv_90_day_at), 2), 0) AS gmv_90_day_at,
-    COALESCE(ROUND(SUM(g.gmv_180_day_at), 2), 0) AS gmv_180_day_at,
-    COALESCE(ROUND(SUM(g.gmv_30_day_eu), 2), 0) AS gmv_30_day_eu,
-    COALESCE(ROUND(SUM(g.gmv_90_day_eu), 2), 0) AS gmv_90_day_eu,
-    COALESCE(ROUND(SUM(g.gmv_180_day_eu), 2), 0) AS gmv_180_day_eu
-FROM prod_ext AS p
-----Для  eprGermany, eprFrance, eprAustria документ относится ко всем товарам продавца, если productKind - packaging
-----К документу можно привязать товары и он будет относится только к ним, если выбраны другие productKind
-----Для остальных связь по линку
-LEFT JOIN docs AS dm ON p.merchant_id = dm.merchantid
-LEFT JOIN links AS l ON p.product_id = l.product_id
-LEFT JOIN docs AS d ON l.doc_id = d.doc_id AND dm.doc_id = d.doc_id
-LEFT JOIN gold.merchant_categories AS gc ON p.merchant_category_id = gc.merchant_category_id
-LEFT JOIN categories_ege AS c ON p.merchant_category_id = c.merchant_category_id
-LEFT JOIN categories_ce_fda_pi_doc_full AS cc ON p.merchant_category_id = cc.merchant_category_id
-LEFT JOIN gmv AS g ON p.product_id = g.product_id
-GROUP BY 1, 2, 3, 4, 5, 6, 7
-HAVING
-    MAX(COALESCE(d.type = "ec" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
-    OR MAX(COALESCE(d.type = "doc" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
-    OR MAX(COALESCE(d.type = "eprGermanyElectronics" AND d.status = "active" AND c.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
-    OR MAX(
-        CASE
-            WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprGermany" AND dm.status = "active", FALSE)
-            WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprGermany" AND d.status = "active", FALSE)
-        END
-    ) IS FALSE
-    OR MAX(
-        CASE
-            WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprFrance" AND dm.status = "active", FALSE)
-            WHEN dm.is_packaging = TRUE THEN COALESCE(d.type = "eprFrance" AND d.status = "active", FALSE)
-        END
-    ) IS FALSE
-    OR MAX(
-        CASE
-            WHEN dm.is_packaging = TRUE THEN COALESCE(dm.type = "eprAustria" AND dm.status = "active", FALSE)
-            WHEN dm.is_packaging = FALSE THEN COALESCE(d.type = "eprAustria" AND d.status = "active", FALSE)
-        END
-    ) IS FALSE
-
-
+    a.*,
+    COALESCE(ROUND(g.gmv_30_day_all, 2), 0) AS gmv_30_day_all,
+    COALESCE(ROUND(g.gmv_90_day_all, 2), 0) AS gmv_90_day_all,
+    COALESCE(ROUND(g.gmv_180_day_all, 2), 0) AS gmv_180_day_all,
+    COALESCE(ROUND(g.gmv_30_day_fr, 2), 0) AS gmv_30_day_fr,
+    COALESCE(ROUND(g.gmv_90_day_fr, 2), 0) AS gmv_90_day_fr,
+    COALESCE(ROUND(g.gmv_180_day_fr, 2), 0) AS gmv_180_day_fr,
+    COALESCE(ROUND(g.gmv_30_day_de, 2), 0) AS gmv_30_day_de,
+    COALESCE(ROUND(g.gmv_90_day_de, 2), 0) AS gmv_90_day_de,
+    COALESCE(ROUND(g.gmv_180_day_de, 2), 0) AS gmv_180_day_de,
+    COALESCE(ROUND(g.gmv_30_day_at, 2), 0) AS gmv_30_day_at,
+    COALESCE(ROUND(g.gmv_90_day_at, 2), 0) AS gmv_90_day_at,
+    COALESCE(ROUND(g.gmv_180_day_at, 2), 0) AS gmv_180_day_at,
+    COALESCE(ROUND(g.gmv_30_day_eu, 2), 0) AS gmv_30_day_eu,
+    COALESCE(ROUND(g.gmv_90_day_eu, 2), 0) AS gmv_90_day_eu,
+    COALESCE(ROUND(g.gmv_180_day_eu, 2), 0) AS gmv_180_day_eu
+FROM agg AS a
+LEFT JOIN gmv AS g ON a.product_id = g.product_id
