@@ -24,7 +24,7 @@ WITH price_index_stg_1 AS (
         d.merchant_id,
         d.l1_merchant_category_name,
         a.joom_merchant_price_usd / a.aliexpress_merchant_price_usd AS full_price_joom_to_aliexpress_rate
-    FROM  {{ source('mi_analytics', 'aliexpress_joom_price_index') }} AS a
+    FROM  {{ source('mi_analytics', 'aliexpress_joom_price_index_v2') }} AS a
     LEFT JOIN {{ ref('gold_products') }} AS d ON a.joom_product_id = d.product_id
     WHERE
         a.aliexpress_merchant_price_usd IS NOT NULL

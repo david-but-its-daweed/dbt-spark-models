@@ -154,7 +154,7 @@ sources:
   - name: mi_analytics
     tables:
       - name: aliexpress_logistics_prices
-      - name: aliexpress_joom_price_index
+      - name: aliexpress_joom_price_index_v2
 
   - name: goods
     tables:
