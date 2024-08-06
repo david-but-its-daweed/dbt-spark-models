@@ -53,7 +53,9 @@ users_info as (
         _id as user_id,
         fn as user_name,
         email as user_email,
-        roleOtherValue as user_company_role_other_value
+        roleOtherValue as user_company_role_other_value,
+        landingId as landing_id, 
+        contactId as contact_id 
         from {{ source('mongo', 'b2b_core_users_daily_snapshot') }}
         
     ),
@@ -110,7 +112,9 @@ users_info_1 AS (
         cnpj,
         utm_source,
         utm_medium,
-        utm_campaign
+        utm_campaign,
+        landing_id, 
+        contact_id 
     FROM joompro_users_table
     WHERE user_id NOT IN (
         '65f8a3b040640e6f0b103c62',
@@ -146,11 +150,13 @@ users_info_2 AS (
         utm_source,
         utm_medium,
         utm_campaign,
+        landing_id, 
+        contact_id,
         ARRAY_JOIN(COLLECT_LIST(merchant_category_name), '; ') AS categories
     FROM (SELECT *, EXPLODE_OUTER(product_categories) AS product_category FROM users_info_1) AS main
     LEFT JOIN {{ ref('gold_merchant_categories') }} AS cat
         ON cat.merchant_category_id = main.product_category
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19
 ), 
 
 categories AS (
@@ -238,6 +244,8 @@ main AS (
         COALESCE(create_order_clicks, 0) AS create_order_clicks,
         deals,
         gmv,
+        landing_id, 
+        contact_id, 
         ARRAY_JOIN(
             COLLECT_LIST(
                 CASE
@@ -261,7 +269,7 @@ main AS (
     LEFT JOIN order_clicks USING(user_id)
     LEFT JOIN deals        USING(user_id)
     WHERE phone_number IS NOT NULL
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24
 )
 
 SELECT * FROM main
