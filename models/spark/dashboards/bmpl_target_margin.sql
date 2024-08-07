@@ -24,7 +24,7 @@ WITH gmv_per_day AS (
                 + COALESCE(lfo.jl_shipping_item_price_components.customs_duty.usd, 0)
                 + COALESCE(lfo.jl_shipping_item_price_components.refund_markup.usd, 0)
                 + COALESCE(lfo.jl_shipping_item_price_components.insurance_fee.usd, 0)
-            ) / 1e6 * lfo.quantity
+            ) * lfo.quantity
         ) AS base_price,
         SUM(fo.gmv_initial) AS gmv,
         SUM(fo.order_gross_profit_final_estimated) AS gross_profit
