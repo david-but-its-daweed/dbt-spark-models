@@ -11,36 +11,29 @@
 
 WITH gmv_per_day AS (
     SELECT
-        partition_date AS date_msk,
-        shipping_country AS country_code,
-        SUM(gmv_initial - vat_initial) AS gmv_net_of_vat,
+        fo.partition_date AS date_msk,
+        fo.shipping_country AS country_code,
+        SUM(fo.gmv_initial - fo.vat_initial) AS gmv_net_of_vat,
         SUM(
             -- цена мерчанта
-            merchant_revenue_initial
-
+            fo.merchant_revenue_initial
             -- цена логистики
             + (
-                COALESCE(jl_shipping_info.iteminfo.pricecomponents.itemcost.amount, 0)
-                + COALESCE(jl_shipping_info.iteminfo.pricecomponents.weightcost.amount, 0)
-                -- осознанно не включаем jl_shipping_info.itemInfo.priceComponents.vat.amount
-                + COALESCE(jl_shipping_info.iteminfo.pricecomponents.customsduty.amount, 0)
-                + COALESCE(jl_shipping_info.iteminfo.pricecomponents.refundmarkup.amount, 0)
-                + COALESCE(jl_shipping_info.iteminfo.pricecomponents.insurancefee.amount, 0)
-                + COALESCE(jl_shipping_info.iteminfo.pricecomponents.splitmarkup.amount, 0)
-            ) / 1e6 * product_quantity
+                COALESCE(lfo.jl_shipping_item_price_components.item_cost.usd, 0)
+                + COALESCE(lfo.jl_shipping_item_price_components.weight_cost.usd, 0)
+                + COALESCE(lfo.jl_shipping_item_price_components.customs_duty.usd, 0)
+                + COALESCE(lfo.jl_shipping_item_price_components.refund_markup.usd, 0)
+                + COALESCE(lfo.jl_shipping_item_price_components.insurance_fee.usd, 0)
+            ) / 1e6 * lfo.quantity
         ) AS base_price,
-        SUM(gmv_initial) AS gmv,
-        SUM(order_gross_profit_final_estimated) AS gross_profit
+        SUM(fo.gmv_initial) AS gmv,
+        SUM(fo.order_gross_profit_final_estimated) AS gross_profit
     FROM
-        {{ source('mart', 'fact_order_2020') }}
+        {{ source('mart', 'fact_order_2020') }} AS fo
+    LEFT JOIN {{ source('logistics_mart', 'fact_order') }} AS lfo ON lfo.order_id = fo.order_id
     WHERE
-        partition_date >= CAST('2023-01-01' AS DATE)
-        AND
-        -- не хотим захватить неправильную цену доставки из-за другой валюты
-        (
-            jl_shipping_info.iteminfo.pricecomponents.weightcost.amount IS NULL
-            OR jl_shipping_info.iteminfo.pricecomponents.weightcost.ccy = 'USD'
-        )
+        fo.partition_date >= CAST('2023-01-01' AS DATE)
+        AND lfo.order_created_date_msk >= CAST('2022-12-31' AS DATE)
     GROUP BY 1, 2
 ),
 
