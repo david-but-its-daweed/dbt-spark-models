@@ -2,7 +2,7 @@
 sql_file_exts = .sql
 max_line_length = 200
 dialect = sparksql
-exclude_rules = ST06, LT12, RF01, RF03, RF04, AL07, ST07, AM06, AL06
+exclude_rules = ST06, LT12, RF01, RF03, RF04, AL07, ST07, AM06, AL06, CP02
 templater = dbt
 
 [sqlfluff:indentation]
