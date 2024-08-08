@@ -72,6 +72,8 @@ sources:
       - name: social_social_users_daily_snapshot
       - name: merchant_order_orders_daily_snapshot
       - name: merchant_order
+      - name: logistics_product_stocks_daily_snapshot
+      - name: logistics_products_v2_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
