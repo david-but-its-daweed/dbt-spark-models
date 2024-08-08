@@ -15,12 +15,12 @@ SELECT
     `activatedByMerchant` AS activated_by_merchant,
     enabled,
     `blockActionTime` AS disabled_time,
-    `disablingReason` AS disabling_reason,
-    `disablingNote` AS disabling_note,
+    `disablingReason`,
+    `disablingNote`,
     `businessLines` AS business_lines,
     `categoryIds` AS category_ids,
-    `createdBy` AS created_by,
-    `disabledBy` AS disabled_by,
+    `createdBy`,
+    `disabledBy`,
     lead,
     leadNotes AS lead_notes
 FROM {{ source('mongo', 'core_merchants_daily_snapshot') }}
