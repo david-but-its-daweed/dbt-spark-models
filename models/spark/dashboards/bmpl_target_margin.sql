@@ -40,6 +40,7 @@ WITH gmv_per_day AS (
         (
             lfo.jl_shipping_item_price_components.weight_cost.amount IS NULL
             OR lfo.jl_shipping_item_price_components.weight_cost.ccy = 'USD'
+            AND lfo.origin_country = 'CN'
         )
     GROUP BY 1, 2
 ),
