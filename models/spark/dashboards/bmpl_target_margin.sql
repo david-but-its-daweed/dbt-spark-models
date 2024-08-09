@@ -19,11 +19,12 @@ WITH gmv_per_day AS (
             fo.merchant_revenue_initial
             -- цена логистики
             + (
-                COALESCE(lfo.jl_shipping_item_price_components.item_cost.usd, 0)
-                + COALESCE(lfo.jl_shipping_item_price_components.weight_cost.usd, 0)
-                + COALESCE(lfo.jl_shipping_item_price_components.customs_duty.usd, 0)
-                + COALESCE(lfo.jl_shipping_item_price_components.refund_markup.usd, 0)
-                + COALESCE(lfo.jl_shipping_item_price_components.insurance_fee.usd, 0)
+                COALESCE(lfo.jl_shipping_item_price_components.item_cost.amount, 0)
+                + COALESCE(lfo.jl_shipping_item_price_components.weight_cost.amount, 0)
+                -- осознанно не включаем jl_shipping_item_price_components.vat.amount
+                + COALESCE(lfo.jl_shipping_item_price_components.customs_duty.amount, 0)
+                + COALESCE(lfo.jl_shipping_item_price_components.refund_markup.amount, 0)
+                + COALESCE(lfo.jl_shipping_item_price_components.insurance_fee.amount, 0)
             ) * lfo.quantity
         ) AS base_price,
         SUM(fo.gmv_initial) AS gmv,
@@ -34,6 +35,12 @@ WITH gmv_per_day AS (
     WHERE
         fo.partition_date >= CAST('2023-01-01' AS DATE)
         AND lfo.order_created_date_msk >= CAST('2022-12-31' AS DATE)
+        AND
+        -- не хотим захватить неправильную цену доставки из-за другой валюты
+        (
+            lfo.jl_shipping_item_price_components.weight_cost.amount IS NULL
+            OR lfo.jl_shipping_item_price_components.weight_cost.ccy = 'USD'
+        )
     GROUP BY 1, 2
 ),
 
