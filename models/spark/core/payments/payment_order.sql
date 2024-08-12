@@ -217,8 +217,8 @@ SELECT
     COALESCE(r.has_success_refund, 0) AS has_success_refund,
     COALESCE(r.success_refund_usd, 0) AS success_refund_usd,
     po.amount_currency * cur.rate AS amount_eur,
-    '<a href="https://admin.joom.it/payments/' || payment_id
-    || '" target="_blank">' || payment_id || '</a>' AS p_id_to_admin_link,
+    '<a href="https://admin.joom.it/payments/' || po.payment_id
+    || '" target="_blank">' || po.payment_id || '</a>' AS p_id_to_admin_link,
     s.slo_card,
     s.slo_all,
     s.country_rank,
@@ -253,7 +253,7 @@ SELECT
     og.discount_amount_ccy * cur.rate AS discount_amount_eur,
     IF(og.discount_amount_ccy > 0, 1, 0) AS is_discount_applied,
     IF(po.pref_country = 'MD' AND cb.card_brand = 'VISA' AND po.amount_usd >= 17
-    AND po.currency IN ('MDL', 'USD', 'EUR', 'UAH', 'RUB', 'RON', 'GBP'), 1, 0) AS is_discount_proper,
+    AND po.currency IN ('MDL', 'USD', 'EUR', 'UAH', 'RUB', 'RON', 'GBP'), 1, 0) AS is_discount_proper
 FROM
     {{ source('payments','payment_order') }} AS po
 LEFT JOIN
