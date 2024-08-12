@@ -94,6 +94,7 @@ sources:
       - name: fact_refund
       - name: payment
       - name: payment_order
+      - name: order_groups
   - name: recom
     tables:
       - name: context_device_counters_v6

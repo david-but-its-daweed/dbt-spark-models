@@ -248,7 +248,12 @@ SELECT
     oi.psp_chargeback_fee,
     COALESCE(oi.shipping_country, 'unknown') AS shipping_country,
     COALESCE(ai.ads_source, '-') AS ads_source,
-    COALESCE(ai.ads_partner_id, '-') AS ads_partner_id
+    COALESCE(ai.ads_partner_id, '-') AS ads_partner_id,
+    og.discount_amount_ccy,
+    og.discount_amount_ccy * cur.rate AS discount_amount_eur,
+    IF(og.discount_amount_ccy > 0, 1, 0) AS is_discount_applied,
+    IF(po.pref_country = 'MD' AND cb.card_brand = 'VISA' AND po.amount_usd >= 17
+    AND po.currency IN ('MDL', 'USD', 'EUR', 'UAH', 'RUB', 'RON', 'GBP'), 1, 0) AS is_discount_proper,
 FROM
     {{ source('payments','payment_order') }} AS po
 LEFT JOIN
@@ -274,6 +279,8 @@ LEFT JOIN
     ON oi.order_group_id = po.order_group_id AND po.is_success = 1
 LEFT JOIN
     ads_info AS ai USING (device_id)
+LEFT JOIN
+    {{ source('payments','order_groups') }} AS og USING (payment_order_id)
 WHERE
     po.date >= DATE_SUB(CURRENT_DATE(), 750)
     AND po.payment_type != 'points'

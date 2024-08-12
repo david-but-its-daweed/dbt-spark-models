@@ -172,6 +172,14 @@ models:
         description: used klarna type
       - name: is_visa_discount_applicable
         description: 1 if card bin is in visa discount project, 0 if no
+      - name: discount_amount_ccy
+        description: discount amount in currency for VISA project
+      - name: discount_amount_eur
+        description: discount amount in eur for VISA project
+      - name: is_discount_proper
+        description: 1 if VISA discount can be aplied, 0 if not
+      - name: is_discount_applied
+        description: 1 if VISA discount was applied, 0 if not
 
   - name: payment
     description: Table with payment info data without points, last 365 days
