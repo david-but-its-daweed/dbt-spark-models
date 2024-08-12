@@ -11,6 +11,7 @@
 SELECT
     CURRENT_DATE() AS partition_date,
     published_variant.product_id,
+    gp.business_line,
     info.externalId AS product_variant_id,
     info._id AS logistics_product_id,
     stocks.reserved AS number_of_reserved,
@@ -35,4 +36,5 @@ LEFT JOIN {{ ref('dim_pair_currency_rate') }} AS currency_rate
         info.uPrice.ccy = currency_rate.currency_code
         AND currency_rate.effective_date = CURRENT_DATE()
         AND currency_rate.currency_code_to = 'USD'
-WHERE stocks._id.wid = '66719d184d731a97c6a58b28'
+LEFT JOIN {{ ref('gold_products') }} AS gp ON gp.product_id = published_variant.product_id
+WHERE stocks._id.wid = '66719d184d731a97c6a58b28' 

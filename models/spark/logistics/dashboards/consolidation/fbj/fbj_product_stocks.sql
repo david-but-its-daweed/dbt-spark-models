@@ -15,6 +15,7 @@ SELECT
     partition_date,
     product_variant_id,
     product_id,
+    business_line,
     logistics_product_id,
     number_of_reserved,
     number_of_products_in_stock,
