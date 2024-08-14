@@ -6,6 +6,7 @@
   )
 }}
 
-SELECT
-  *
-FROM junk_yatsushko.fbj_table_for_backfill_kirill
+
+SELECT  
+    *
+FROM models.fbj_product_stocks
