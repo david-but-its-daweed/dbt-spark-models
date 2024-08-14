@@ -28,6 +28,7 @@ deals as (
         CAST(CASE WHEN owner_email is not null then owner_ts - INTERVAL 3 hours end AS DATE) AS owner_date_msk
     FROM {{ ref('fact_deals') }}
     WHERE next_effective_ts_msk is null
+        AND deal_name not like '%Self service sample%'
         AND (self_service or ss_customer)
 ),
 
