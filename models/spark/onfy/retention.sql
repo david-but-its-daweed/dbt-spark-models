@@ -2,7 +2,7 @@
     schema='onfy',
     materialized='table',
     meta = {
-      'model_owner' : '@marksysoev',
+      'model_owner' : '@easaltykova',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': 'onfy-etl-monitoring'
