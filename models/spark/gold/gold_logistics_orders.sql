@@ -39,6 +39,7 @@ SELECT
     a.channel_id AS channel_id_final,
     a.category_id AS merchant_category_id,
     mc.business_line AS business_line,
+    a.warehouse_country AS warehouse_country_code,
 
     -- TODO: remove `a.is_consolidated` for `planned` after the completion of https://joom-team.atlassian.net/browse/LOGAN-1470
     a.is_consolidated OR a.consolidation_group_id IS NOT NULL AS is_planned_for_consolidation_by_hecny,
@@ -71,6 +72,7 @@ SELECT
 
     a.order_created_date_msk AS order_date_msk,
     a.order_created_time_utc AS order_created_datetime_utc,
+    CAST(DATEADD(HOUR, 3, a.order_fulfilled_online_time_utc) AS DATE) AS order_fulfilled_online_date_msk,
     a.check_in_time_utc AS check_in_datetime_utc,
     a.check_out_time_utc AS jl_costs_realization_datetime_utc,
     a.outbound_time_utc AS outbound_datetime_utc,
