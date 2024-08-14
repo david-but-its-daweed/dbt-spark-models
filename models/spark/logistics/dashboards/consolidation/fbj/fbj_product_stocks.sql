@@ -1,9 +1,8 @@
 {{
   config(
-    materialized='table',
     meta = {
         'model_owner' : '@catman-analytics.duty'
-    },
+    }
   )
 }}
 
