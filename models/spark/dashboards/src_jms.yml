@@ -14,5 +14,7 @@ models:
         description: Marketplace where the order was placed (i.e. ZoodMall, Fruugo, etc.)
       - name: product_id
         description: Product ID
+      - name: business_line
+        description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
       - name: gmv_initial_without_vat
         description: Customer GMV - Customer VAT (both in USD)
