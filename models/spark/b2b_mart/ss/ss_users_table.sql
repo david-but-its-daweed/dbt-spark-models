@@ -277,3 +277,4 @@ main AS (
 )
 
 SELECT * FROM main
+where phone_number not like '79%'
