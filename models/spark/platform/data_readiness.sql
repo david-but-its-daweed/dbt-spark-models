@@ -97,6 +97,35 @@ with deps as (SELECT output.tableName       as output_name,
               from airflow_data
               where start_date > NOW() - interval 2 month),
 
+      ftu as (select platform,
+                     table_name,
+                     date,
+                     fate_table_dttm,
+                     fate_table_start_time
+              from {{ ref("fact_table_update_archive")}}
+              where coalesce(fate_table_start_time, fate_table_dttm) < to_date(NOW()) - interval 1 day
+                and coalesce(fate_table_start_time, fate_table_dttm) > NOW() - interval 2 month
+
+              UNION ALL
+
+              select platform,
+                     table_name,
+                     to_date(CASE
+                                 WHEN hour(coalesce(start_time, dttm)) >= 22 THEN date_trunc('Day', coalesce(start_time, dttm)) + interval 24 hours
+                                 ELSE date_trunc('Day', coalesce(start_time, dttm))
+                         END) date,
+                     min(dttm) fate_table_dttm,
+                     min(start_time) fate_table_start_time
+              from platform.fact_table_update t
+              where coalesce(start_time, dttm) >= to_date(NOW()) - interval 1 day
+              group by platform, 
+                       table_name,
+                       to_date(CASE
+                                   WHEN hour(coalesce(start_time, dttm)) >= 22 THEN date_trunc('Day', coalesce(start_time, dttm)) + interval 24 hours
+                                   ELSE date_trunc('Day', coalesce(start_time, dttm))
+                       END)
+       ),
+
 final_data as (
 
 select source_id,
@@ -112,19 +141,24 @@ select source_id,
        dependencies.output_dag_id,
        dependencies.output_task_id,
        dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
-       (unix_timestamp(end_date) - unix_timestamp(partition_date)) / 60 / 60                  as ready_time_hours,
-       (unix_timestamp(start_date) - unix_timestamp(partition_date)) / 60 / 60                as start_time_hours,
+       (unix_timestamp(coalesce(ftu.fate_table_dttm, end_date)) - unix_timestamp(partition_date)) / 60 / 60                  as ready_time_hours,
+       (unix_timestamp(coalesce(ftu.fate_table_start_time, start_date)) - unix_timestamp(partition_date)) / 60 / 60                as start_time_hours,
        dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
        state,
        priority_weight,
-       start_date,
-       end_date,
-       duration
+       coalesce(ftu.fate_table_start_time, start_date) start_date,
+       coalesce(ftu.fate_table_dttm, end_date) end_date,
+       duration,
+       ftu.fate_table_start_time,
+       ftu.fate_table_dttm
 from dependencies
          left join mart.dim_date as dates
          left join data on dependencies.dag_id = data.dag_id
                 and dependencies.task_id = data.task_id
                 and dates.id = data.partition_date
+         left join ftu on dependencies.input_name = ftu.table_name
+                and dependencies.input_type = ftu.platform
+                and dates.id = ftu.date
 )
 
 SELECT *,
