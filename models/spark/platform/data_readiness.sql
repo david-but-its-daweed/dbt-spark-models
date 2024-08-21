@@ -100,58 +100,57 @@ with deps as (SELECT output.tableName       as output_name,
       ftu as (select platform,
                      table_name,
                      date,
-                     fate_table_dttm,
-                     fate_table_start_time
+                     fact_table_dttm,
+                     fact_table_start_time
               from {{ ref("fact_table_update_archive")}}
-              where coalesce(fate_table_start_time, fate_table_dttm) < to_date(NOW()) - interval 1 day
-                and coalesce(fate_table_start_time, fate_table_dttm) > NOW() - interval 2 month
+              where coalesce(fact_table_start_time, fact_table_dttm) < to_date(NOW()) - interval 1 day
+                and coalesce(fact_table_start_time, fact_table_dttm) > NOW() - interval 2 month
 
               UNION ALL
 
               select platform,
                      table_name,
                      to_date(CASE
-                                 WHEN hour(coalesce(start_time, dttm)) >= 22 THEN date_trunc('Day', coalesce(start_time, dttm)) + interval 24 hours
+                                 WHEN hour(coalesce(start_time, dttm)) >= 22 THEN date_trunc('Day', (coalesce(start_time, dttm) + interval 24 hours))
                                  ELSE date_trunc('Day', coalesce(start_time, dttm))
                          END) date,
-                     min(dttm) fate_table_dttm,
-                     min(start_time) fate_table_start_time
+                     min(dttm) fact_table_dttm,
+                     min(start_time) fact_table_start_time
               from platform.fact_table_update t
               where coalesce(start_time, dttm) >= to_date(NOW()) - interval 1 day
               group by platform, 
                        table_name,
                        to_date(CASE
-                                   WHEN hour(coalesce(start_time, dttm)) >= 22 THEN date_trunc('Day', coalesce(start_time, dttm)) + interval 24 hours
+                                   WHEN hour(coalesce(start_time, dttm)) >= 22 THEN date_trunc('Day', (coalesce(start_time, dttm) + interval 24 hours))
                                    ELSE date_trunc('Day', coalesce(start_time, dttm))
                        END)
        ),
 
 final_data as (
-
-select source_id,
-       dates.id as date,
-       run_id,
-       partition_date,
-       dependencies.input_name,
-       dependencies.input_type,
-       dependencies.input_rank,
-       dependencies.input_path,
-       dependencies.dag_id,
-       dependencies.task_id,
-       dependencies.output_dag_id,
-       dependencies.output_task_id,
-       dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
-       (unix_timestamp(coalesce(ftu.fate_table_dttm, end_date)) - unix_timestamp(partition_date)) / 60 / 60                  as ready_time_hours,
-       (unix_timestamp(coalesce(ftu.fate_table_start_time, start_date)) - unix_timestamp(partition_date)) / 60 / 60                as start_time_hours,
-       dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
-       state,
-       priority_weight,
-       coalesce(ftu.fate_table_start_time, start_date) start_date,
-       coalesce(ftu.fate_table_dttm, end_date) end_date,
-       duration,
-       ftu.fate_table_start_time,
-       ftu.fate_table_dttm
-from dependencies
+       select source_id,
+              dates.id as date,
+              run_id,
+              partition_date,
+              dependencies.input_name,
+              dependencies.input_type,
+              dependencies.input_rank,
+              dependencies.input_path,
+              dependencies.dag_id,
+              dependencies.task_id,
+              dependencies.output_dag_id,
+              dependencies.output_task_id,
+              dependencies.input_name || '_' || dependencies.input_type                                   as input_full_name,
+              (unix_timestamp(coalesce(ftu.fact_table_dttm, end_date)) - unix_timestamp(partition_date)) / 60 / 60                  as ready_time_hours,
+              (unix_timestamp(coalesce(ftu.fact_table_start_time, start_date)) - unix_timestamp(partition_date)) / 60 / 60                as start_time_hours,
+              dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
+              state,
+              priority_weight,
+              coalesce(ftu.fact_table_start_time, start_date) start_date,
+              coalesce(ftu.fact_table_dttm, end_date) end_date,
+              duration,
+              ftu.fact_table_start_time,
+              ftu.fact_table_dttm
+       from dependencies
          left join mart.dim_date as dates
          left join data on dependencies.dag_id = data.dag_id
                 and dependencies.task_id = data.task_id
@@ -164,6 +163,5 @@ from dependencies
 SELECT *,
        round(ready_time_hours - 0.5) +
        round((ready_time_hours - round(ready_time_hours - 0.5)) * 60) / 100                                 as ready_time_human,
-       round(start_time_hours - 0.5) + round((start_time_hours - round(start_time_hours - 0.5)) * 60) /
-                                       100                                                                  as start_time_human
+       round(start_time_hours - 0.5) + round((start_time_hours - round(start_time_hours - 0.5)) * 60) / 100 as start_time_human
 FROM final_data
