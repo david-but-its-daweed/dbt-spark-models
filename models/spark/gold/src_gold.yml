@@ -63,11 +63,11 @@ models:
     - name: is_rd1
       description: Flag indicating whether `device_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `device_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 3rd calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `device_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 7th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `device_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 14th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `device_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -141,11 +141,11 @@ models:
     - name: is_rd1
       description: Flag indicating whether `device_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `device_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 3rd calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `device_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 7th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `device_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `device_id` returned to the service on the 14th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `device_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -209,11 +209,11 @@ models:
     - name: is_rd1
       description: Flag indicating whether `user_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `user_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 3rd calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `user_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 7th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `user_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 14th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -277,11 +277,11 @@ models:
     - name: is_rd1
       description: Flag indicating whether `user_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `user_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 3rd calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `user_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 7th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `user_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `user_id` returned to the service on the 14th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -343,11 +343,11 @@ models:
     - name: is_rd1
       description: Flag indicating whether `real_user_id` returned to the service on the 1st calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd3
-      description: Flag indicating whether `real_user_id` returned to the service on the 3rd calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `real_user_id` returned to the service on the 3rd calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd7
-      description: Flag indicating whether `real_user_id` returned to the service on the 7th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `real_user_id` returned to the service on the 7th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rd14
-      description: Flag indicating whether `real_user_id` returned to the service on the 14th calendar days (If the required number of days has not passed yet, it will be NULL)
+      description: Flag indicating whether `real_user_id` returned to the service on the 14th calendar day (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw1
       description: Flag indicating whether `real_user_id` returned to the service within the 1st calendar week (from 1 to 7 days, where day 0 is the date of activity) (If the required number of days has not passed yet, it will be NULL)
     - name: is_rw2
@@ -570,6 +570,8 @@ models:
       description: Profit from consolidation logistics for a specific order. Distributed from the final consolidation group to logistics orders proportionally to the weight of the logistics order at check-in in Hackney, and then from the logistics order to Joom (order_id) proportionally to the merchant's price. This field can be summed.
     - name: is_delivered_by_jl
       description: Flag indicating whether the parcel is delivered by JL.
+    - name: is_fbj
+      description: Flag indicating whether the order is fulfilled using FBJ !ONLY CN! (at 4PX's warehouse, not the merchant's warehouse).
     - name: vat_markup
       description: Money included in the item price to cover taxes.
     - name: marketplace_commission_initial
@@ -850,8 +852,8 @@ models:
       description: Merchant's origin from which the products are shipped.
     - name: is_delivered_by_jl
       description: Flag indicating whether the parcel is delivered by JL.
-    - name: is_fbj_order
-      description: Flag indicating whether the order is fulfilled using FBJ (at 4PX's warehouse, not the merchant's warehouse).
+    - name: is_fbj
+      description: Flag indicating whether the order is fulfilled using FBJ !ONLY CN! (at 4PX's warehouse, not the merchant's warehouse).
     - name: delivery_method_name
       description: Delivery method name. `mail` - regular mail delivery; `delivery point` - delivery to a Pickup Point; `courier` - courier delivery; `fast mail` - expedited or tracked delivery, voluntarily chosen by the user at checkout; `unknown` - used in case of a new method that is not automatically processed.
     - name: linehaul_shipper_final

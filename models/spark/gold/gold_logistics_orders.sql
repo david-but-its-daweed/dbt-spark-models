@@ -30,7 +30,14 @@ SELECT
     COALESCE(c.region_name, 'Other') AS region_name,
     a.origin_name,
     a.is_online_shipping AS is_delivered_by_jl,
-    a.is_fbj_order,
+    IF(
+      TRUE
+      AND a.is_fbj_order
+      AND a.warehouse_country = 'CN'
+      AND a.order_created_date_utc >= DATE '2024-05-01',
+      TRUE,
+      FALSE
+    ) AS is_fbj,
     a.delivery_method_name,
     a.linehaul_shipper AS linehaul_shipper_final,
     a.initial_shipping_type AS shipping_type_initial,
@@ -41,7 +48,6 @@ SELECT
     mc.business_line AS business_line,
     a.warehouse_country AS warehouse_country_code,
 
-    -- TODO: remove `a.is_consolidated` for `planned` after the completion of https://joom-team.atlassian.net/browse/LOGAN-1470
     a.is_consolidated OR a.consolidation_group_id IS NOT NULL AS is_planned_for_consolidation_by_hecny,
     a.is_consolidated AS is_consolidated_by_hecny,
     a.is_consolidated_by_merchant,

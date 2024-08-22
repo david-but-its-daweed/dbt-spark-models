@@ -222,7 +222,8 @@ logistics_orders AS (
         delivery_duration_by_user,
         tracking_delivered_datetime_utc,
         jl_consolidation_profit_final,
-        is_delivered_by_jl
+        is_delivered_by_jl,
+        is_fbj
     FROM {{ ref('gold_logistics_orders') }}
 ),
 
@@ -463,6 +464,7 @@ orders_ext5 AS (
         COALESCE(b.delivery_duration_by_tracking IS NOT NULL OR b.delivery_duration_by_user IS NOT NULL, FALSE) AS is_delivered,
         b.jl_consolidation_profit_final,
         b.is_delivered_by_jl,
+        b.is_fbj,
         m.origin_name
     FROM orders_ext4 AS a
     LEFT JOIN logistics_orders AS b USING (order_id)
@@ -553,6 +555,7 @@ SELECT
     item_logistics_price_initial,
     jl_consolidation_profit_final,
     is_delivered_by_jl,
+    is_fbj,
     vat_markup,
     marketplace_commission_initial,
     jm_markup,
