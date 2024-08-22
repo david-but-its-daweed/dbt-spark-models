@@ -143,7 +143,7 @@ final_data as (
               (unix_timestamp(coalesce(ftu.fact_table_dttm, end_date)) - unix_timestamp(partition_date)) / 60 / 60                  as ready_time_hours,
               (unix_timestamp(coalesce(ftu.fact_table_start_time, start_date)) - unix_timestamp(partition_date)) / 60 / 60                as start_time_hours,
               dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type as input_table,
-              state,
+              case when ftu.fact_table_start_time is not null then 'success' else state end state,
               priority_weight,
               coalesce(ftu.fact_table_start_time, start_date) start_date,
               coalesce(ftu.fact_table_dttm, end_date) end_date,
