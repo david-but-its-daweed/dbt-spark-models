@@ -13,16 +13,17 @@
 
 WITH numbered_purchases AS (
     SELECT
-        pharmacy_landing.order.id as order_id, 
-        rank() over (partition by pharmacy_landing.order.user_email_hash order by pharmacy_landing.order.created asc) as purchase_num
-    from 
+        pharmacy_landing.order.id AS order_id, 
+        RANK() OVER (PARTITION BY pharmacy_landing.order.user_email_hash ORDER BY pharmacy_landing.order.created ASC) AS purchase_num
+    FROM 
         {{ source('pharmacy_landing', 'order') }}
 ),
+    
 
 order_data AS (
     SELECT
         pharmacy_landing.order.id AS order_id,
-        from_utc_timestamp(pharmacy_landing.order.created, 'Europe/Berlin') as order_created_time_cet,
+        from_utc_timestamp(pharmacy_landing.order.created, 'Europe/Berlin') AS order_created_time_cet,
         numbered_purchases.purchase_num,
         pharmacy_landing.order.user_email_hash,
         onfy.lndc_user_attribution.source_corrected,
@@ -42,28 +43,30 @@ order_data AS (
             WHEN pharmacy_landing.device.app_type IS NOT NULL THEN 'APP'
             ELSE 'Other'
         END AS platform_type,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'PAYMENT' THEN onfy_mart.transactions.price ELSE 0 END), 0) as products_price,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'ORDER_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) as products_price_refund,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'ORDER_SHIPMENT' THEN onfy_mart.transactions.price ELSE 0 END), 0) as delivery,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'ORDER_SHIPMENT_REV' THEN onfy_mart.transactions.price ELSE 0 END), 0) as delivery_refund,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DELIVERY_SURCHARGE' THEN onfy_mart.transactions.price ELSE 0 END), 0) as delivery_surcharge,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DELIVERY_SURCHARGE_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) as delivery_surcharge_refund,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'SERVICE_FEE' THEN onfy_mart.transactions.price ELSE 0 END), 0) as service_fee,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'SERVICE_FEE_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) as service_fee_refund,
-        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DISCOUNT' THEN onfy_mart.transactions.price ELSE 0 END), 0) as discount,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'PAYMENT' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS products_price,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'ORDER_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS products_price_refund,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'ORDER_SHIPMENT' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS delivery,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'ORDER_SHIPMENT_REV' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS delivery_refund,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DELIVERY_SURCHARGE' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS delivery_surcharge,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DELIVERY_SURCHARGE_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS delivery_surcharge_refund,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'SERVICE_FEE' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS service_fee,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'SERVICE_FEE_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS service_fee_refund,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DISCOUNT' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS discount,
         pharmacy_landing.order.payment_method,
         CASE
             WHEN payment_method = 'PAY_PAL' then 0.35
             WHEN payment_method in ('CARD', 'APPLE_PAY')   then 0.05
             WHEN payment_method = 'GIROPAY' then 0.22
             WHEN payment_method = 'SOFORT'  then 0.22
+            WHEN payment_method = 'KLARNA' then 0.2
             ELSE 0
-        END as psp_commission_fix,
+        END AS psp_commission_fix,
         CASE
             WHEN payment_method = 'PAY_PAL' then 0.023 
             WHEN payment_method in ('CARD', 'APPLE_PAY')    then 0.01
             WHEN payment_method = 'GIROPAY' then 0.0205
             WHEN payment_method = 'SOFORT'  then 0.0205
+            WHEN payment_method = 'KLARNA' then 0.0256
             ELSE 0
         END AS psp_commission_perc,
         CASE
@@ -71,6 +74,7 @@ order_data AS (
             WHEN payment_method in ('CARD', 'APPLE_PAY')    then 0.03
             WHEN payment_method = 'GIROPAY' then 0.02
             WHEN payment_method = 'SOFORT'  then 0.02
+            WHEN payment_method = 'KLARNA' then 0.0256
             ELSE 0
         END AS psp_commission_refund_fix,
         CASE
@@ -78,6 +82,7 @@ order_data AS (
             WHEN payment_method in ('CARD', 'APPLE_PAY')    then 0
             WHEN payment_method = 'GIROPAY' then 0
             WHEN payment_method = 'SOFORT'  then 0
+            WHEN payment_method = 'KLARNA' then 0.2
             ELSE 0
         END AS psp_commission_refund_perc
     FROM
@@ -107,71 +112,77 @@ order_data AS (
 turnover_refunds AS (
     SELECT
         order_data.*,
-        products_price + delivery + delivery_surcharge - discount + service_fee as turnover,
-        products_price_refund + delivery_refund + delivery_surcharge_refund + service_fee_refund as refund
+        products_price + delivery + delivery_surcharge - discount + service_fee AS turnover,
+        products_price_refund + delivery_refund + delivery_surcharge_refund + service_fee_refund AS refund
     FROM 
         order_data
 ),
 
 psp_initial AS (   
     SELECT 
-        'PSP_COMMISSION' as type,
+        'CHARGE_FEE' AS type,
         order_id,
         purchase_num,
         device_id,
         app_device_type,
         platform_type,
-        '' as order_parcel_id,
-        '' as store_name,
+        null AS order_parcel_id,
+        null AS store_name,
+        payment_method,
         user_email_hash,
         source_corrected,
         campaign_corrected,
         order_created_time_cet,
-        order_created_time_cet as transaction_date,
-        psp_commission_fix + psp_commission_perc * turnover as price,
-        'EUR' as currency
+        order_created_time_cet AS transaction_date,
+        psp_commission_fix + psp_commission_perc * turnover AS price,
+        'EUR' AS currency
     FROM 
         turnover_refunds
+    where 1=1
+        AND order_created_time_cet < '2023-07-21'
 ),
 
 psp_refund AS (
     SELECT 
-        'PSP_COMMISSION_REVERSAL' as type,
+        'REFUND_FEE' AS type,
         order_id,
         purchase_num,
         device_id,
         app_device_type,
         platform_type,
-        '' as order_parcel_id,
-        '' as store_name,
+        null AS order_parcel_id,
+        null AS store_name,
+        payment_method,
         user_email_hash,
         source_corrected,
         campaign_corrected,
         order_created_time_cet,
-        order_created_time_cet as transaction_date,
-        psp_commission_refund_fix + psp_commission_refund_perc * refund as price,
-        'EUR' as currency
+        order_created_time_cet AS transaction_date,
+        psp_commission_refund_fix + psp_commission_refund_perc * refund AS price,
+        'EUR' AS currency
     FROM 
         turnover_refunds
-    WHERE
-        refund > 0
+    WHERE 1=1
+        AND refund > 0
+        AND order_created_time_cet < '2023-07-21'
 ),
 
 transactions_psp AS (
     SELECT DISTINCT
-        onfy_mart.transactions.type,
+        UPPER(onfy_mart.transactions.type) AS type,
         onfy_mart.transactions.order_id,
         order_data.purchase_num,
         order_data.device_id,
         order_data.app_device_type,
         order_data.platform_type,
         onfy_mart.transactions.order_parcel_id,
-        pharmacy_landing.store.name as store_name,
+        pharmacy_landing.store.name AS store_name,
+        order_data.payment_method,
         onfy_mart.transactions.user_email_hash,
-        order_data.source_corrected as source,
-        order_data.campaign_corrected as campaign,
+        order_data.source_corrected AS source,
+        order_data.campaign_corrected AS campaign,
         order_data.order_created_time_cet,
-        from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') as transaction_date,
+        from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') AS transaction_date,
         onfy_mart.transactions.price,
         onfy_mart.transactions.currency
     FROM 
@@ -182,6 +193,8 @@ transactions_psp AS (
             ON onfy_mart.transactions.order_parcel_id = pharmacy_landing.order_parcel.id
         LEFT JOIN {{ source('pharmacy_landing', 'store') }}
             ON pharmacy_landing.store.id = pharmacy_landing.order_parcel.store_id
+    WHERE 1=1
+        AND NOT (type in ('charge_fee', 'REFUND_FEE') AND from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') < '2023-07-21')
         UNION
     SELECT * FROM psp_initial
         UNION
@@ -198,37 +211,38 @@ transactions_eur AS (
         transactions_psp.platform_type,
         transactions_psp.order_parcel_id,
         transactions_psp.store_name,
+        transactions_psp.payment_method,
         transactions_psp.user_email_hash,
         transactions_psp.source,
         transactions_psp.campaign,
         transactions_psp.order_created_time_cet,
         transactions_psp.transaction_date,
-        CAST(transactions_psp.price as float) as price,
+        CAST(price AS float) AS price,
         transactions_psp.currency,
         CAST(
             CASE WHEN transactions_psp.type IN ('PAYMENT', 'SERVICE_FEE', 'ORDER_SHIPMENT', 'DELIVERY_SURCHARGE') THEN transactions_psp.price ELSE 0 END
-        as float) as gmv_initial,
+        AS float) AS gmv_initial,
         CAST(
             CASE 
                 WHEN transactions_psp.type IN ('PAYMENT', 'SERVICE_FEE', 'ORDER_SHIPMENT', 'DELIVERY_SURCHARGE') THEN transactions_psp.price
                 WHEN transactions_psp.type IN ('ORDER_REVERSAL', 'SERVICE_FEE_REVERSAL', 'ORDER_SHIPMENT_REV', 'DELIVERY_SURCHARGE_REVERSAL') THEN -transactions_psp.price
                 ELSE 0 
             END
-        as float) as gmv_final,
+        AS float) AS gmv_final,
         CAST(
             CASE 
                 WHEN transactions_psp.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'MEDIA_REVENUE') THEN transactions_psp.price
-                WHEN transactions_psp.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'PSP_COMMISSION') THEN -transactions_psp.price
+                WHEN transactions_psp.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'CHARGE_FEE') THEN -transactions_psp.price
                 ELSE 0 
             END 
-        as float) as gross_profit_initial,
+        AS float) AS gross_profit_initial,
         CAST(
             CASE 
-                WHEN transactions_psp.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'COMMISSION_REVERSAL_VAT', 'SERVICE_FEE_REVERSAL_VAT', 'DELIVERY_SURCHARGE_REVERSAL_VAT', 'MEDIA_REVENUE') THEN transactions_psp.price
-                WHEN transactions_psp.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'PSP_COMMISSION', 'PSP_COMMISSION_REVERSAL', 'COMMISSION_REVERSAL', 'SERVICE_FEE_REVERSAL', 'DELIVERY_SURCHARGE_REVERSAL') THEN -transactions_psp.price
+                WHEN transactions_psp.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'COMMISSION_REVERSAL_VAT', 'SERVICE_FEE_REVERSAL_VAT', 'DELIVERY_SURCHARGE_REVERSAL_VAT', 'MEDIA_REVENUE', 'REFUND_FEE') THEN transactions_psp.price
+                WHEN transactions_psp.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'COMMISSION_REVERSAL', 'SERVICE_FEE_REVERSAL', 'DELIVERY_SURCHARGE_REVERSAL', 'CHARGE_FEE') THEN -transactions_psp.price
                 ELSE 0 
             END
-        as float) as gross_profit_final
+        AS float) AS gross_profit_final
     FROM 
         transactions_psp
 ),
@@ -243,17 +257,18 @@ transactions_usd AS (
         transactions_eur.platform_type,
         transactions_eur.order_parcel_id,
         transactions_eur.store_name,
+        transactions_eur.payment_method,
         transactions_eur.user_email_hash,
         transactions_eur.source,
         transactions_eur.campaign,
         transactions_eur.order_created_time_cet,
         transactions_eur.transaction_date,
-        transactions_eur.price * eur.rate / usd.rate as price,
-        'USD' as currency,
-        transactions_eur.gmv_initial * eur.rate / usd.rate as gmv_initial,
-        transactions_eur.gmv_final * eur.rate / usd.rate as gmv_final,
-        transactions_eur.gross_profit_initial * eur.rate / usd.rate as gross_profit_initial,
-        transactions_eur.gross_profit_final * eur.rate / usd.rate as gross_profit_final
+        transactions_eur.price * eur.rate / usd.rate AS price,
+        'USD' AS currency,
+        transactions_eur.gmv_initial * eur.rate / usd.rate AS gmv_initial,
+        transactions_eur.gmv_final * eur.rate / usd.rate AS gmv_final,
+        transactions_eur.gross_profit_initial * eur.rate / usd.rate AS gross_profit_initial,
+        transactions_eur.gross_profit_final * eur.rate / usd.rate AS gross_profit_final
     FROM
         transactions_eur
         LEFT JOIN {{ source('mart', 'dim_currency_rate') }} eur
