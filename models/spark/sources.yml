@@ -75,6 +75,8 @@ sources:
       - name: logistics_product_stocks_daily_snapshot
       - name: logistics_products_v2_daily_snapshot
       - name: core_merchant_fines_daily_snapshot
+      - name: logistics_zipcode_range_snapshots_daily_snapshot
+      - name: logistics_pickup_orders_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
