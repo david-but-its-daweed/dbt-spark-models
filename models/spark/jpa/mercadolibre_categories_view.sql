@@ -36,11 +36,9 @@ FROM {{ source('joompro_mart', 'mercadolibre_categories') }} AS c
 WHERE
     ELEMENT_AT(breadcrumb_names, 1) NOT IN (
         'Agro',
-        'Alimentos e Bebidas',
         'Antiguidades e Coleções',
         'Carros, Motos e Outros',
         'Imóveis',
         'Ingressos',
-        'Serviços',
-        'Acessórios para Veículos'
+        'Serviços'
     ) AND category_id IS NOT NULL
