@@ -58,7 +58,6 @@ pre_data as (
         partition_date >= '2024-04-01' and (
             type in (
                 'contactUsClick',
-                'searchBarSelect',
                 'searchBarEmit',
                 'learnMoreClick',
                 'categoryClick',
