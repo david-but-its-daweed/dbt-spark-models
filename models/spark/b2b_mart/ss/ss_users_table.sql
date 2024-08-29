@@ -71,7 +71,8 @@ company_info as (
         catIds as product_categories,
         categoryOtherValues as category_other_values,
         companyAnnualTurnoverRange as company_annual_turnover_range, 
-        cnpj as cnpj
+        cnpj as cnpj,
+        gradeInfo.grade as grade
         from {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
     ),
 
@@ -110,7 +111,8 @@ users_info_1 AS (
         has_product_import,
         product_categories,
         ARRAY_JOIN(category_other_values, ', ') AS category_other_values,
-        company_annual_turnover_range, 
+        company_annual_turnover_range,
+        grade,
         cnpj,
         utm_source,
         utm_medium,
@@ -148,7 +150,8 @@ users_info_2 AS (
         has_product_import,
         product_categories,
         category_other_values,
-        company_annual_turnover_range, 
+        company_annual_turnover_range,
+        grade,
         cnpj,
         utm_source,
         utm_medium,
@@ -159,7 +162,7 @@ users_info_2 AS (
     FROM (SELECT *, EXPLODE_OUTER(product_categories) AS product_category FROM users_info_1) AS main
     LEFT JOIN {{ ref('gold_merchant_categories') }} AS cat
         ON cat.merchant_category_id = main.product_category
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
 ), 
 
 categories AS (
@@ -236,7 +239,8 @@ main AS (
         company_employees_number,
         has_product_import,
         category_other_values,
-        company_annual_turnover_range, 
+        company_annual_turnover_range,
+        grade,
         cnpj,
         utm_source,
         utm_medium,
@@ -273,7 +277,7 @@ main AS (
     LEFT JOIN order_clicks USING(user_id)
     LEFT JOIN deals        USING(user_id)
     WHERE phone_number IS NOT NULL
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25
+    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
 )
 
 SELECT * FROM main
