@@ -1,5 +1,5 @@
 slo_id,business_name,owner,alert_channels,expected_time_utc_hours_str,description,slo_type,target_sli,priority,technical_alert_channels,dow
-slo_ads,Advertising data,@ok,#analytics-achtung,6.5,Advertising costs data,platform,80,2,#analytics-achtung,
+slo_ads,Advertising data,@ok,#analytics-achtung,6,Advertising costs data,platform,80,2,#analytics-achtung,
 slo_analytics_reports,Time reports at analytics.joom.ai,<!subteam^SDN6W6X71|analytics.duty>,#analytics-eng,8,used in Time report in analytics.joom.ai,platform,90,1,#analytics-achtung,
 slo_jl_external_cube,JL External Cube,@e.kotsegubov,#jl-etl-monitoring,16,it is in the report which is viewed by our team every morning,mart,0,2,,
 slo_overview_marketplace,JM columns in analytics.joom.ai/joom/overview,<!subteam^SDN6W6X71|analytics.duty>,#analytics-achtung,8,used in Overview report in analytics.joom.ai for Marketplace columns,platform,90,1,#analytics-achtung,
