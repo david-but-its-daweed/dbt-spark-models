@@ -326,7 +326,7 @@ dates as
     from
     (
         select distinct
-            partition_date as campaign_date_utc,,
+            partition_date as campaign_date_utc,
             date_trunc('month', partition_date) as campaign_month,
             dayofmonth(last_day(partition_date)) as days_in_month
         from united_spends
