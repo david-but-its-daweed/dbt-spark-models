@@ -211,7 +211,7 @@ united_spends as
         join_date,
         if(spend = 0 and source = 'idealo', clicks * 0.44, spend) as spend,
         clicks
-    from {{source('pharmacy', 'partners_insights')}} 
+    from {{source('pharmacy', 'partners_insights')}}
     union all 
     select 
         campaign_id,
@@ -309,63 +309,141 @@ new_costs as
         os_type,
         partner,
         join_date
-)
+),
+
+----------------------------------------------------
+-- spreading non-performance costs equally throughout the month
+----------------------------------------------------
+
+dates as
+(
+    select
+        campaign_date_utc,
+        campaign_month,
+        add_months(campaign_month, -1) as previous_month,
+        max(campaign_month) over () as max_month,
+        days_in_month
+    from
+    (
+        select distinct
+            partition_date as campaign_date_utc,,
+            date_trunc('month', partition_date) as campaign_month,
+            dayofmonth(last_day(partition_date)) as days_in_month
+        from united_spends
+    ) as predates
+),
+
+non_perf_spends as 
+(
+    select distinct
+        'non-performance' as type,
+        if(pharmacy.manual_ads_spends.spend is null, 1, 0) as forecasted_spend,
+        coalesce(pharmacy.manual_ads_spends.campaign_id, forecasted_spends.campaign_id) as campaign_id,
+        coalesce(pharmacy.manual_ads_spends.campaign_name, forecasted_spends.campaign_name) as campaign_name,
+        coalesce(pharmacy.manual_ads_spends.source, forecasted_spends.source) as source,
+        coalesce(pharmacy.manual_ads_spends.medium, forecasted_spends.medium) as medium,
+        coalesce(pharmacy.manual_ads_spends.partner, forecasted_spends.partner) as partner,
+        coalesce(pharmacy.manual_ads_spends.campaign_platform, forecasted_spends.campaign_platform) as campaign_platform,
+        coalesce(pharmacy.manual_ads_spends.app_device_type, forecasted_spends.app_device_type) as app_device_type,
+        cast(dates.campaign_date_utc as date) as campaign_date_utc,
+        campaign_month,
+        days_in_month,
+        coalesce(pharmacy.manual_ads_spends.spend, forecasted_spends.spend) / days_in_month as spend,
+        0 as clicks
+    from dates
+    left join pharmacy.manual_ads_spends
+        on cast(manual_ads_spends.campaign_date_utc as date) = dates.campaign_month
+    left join pharmacy.manual_ads_spends as forecasted_spends
+        on cast(forecasted_spends.campaign_date_utc as date) = dates.previous_month
+    where 1=1
+        and coalesce(pharmacy.manual_ads_spends.campaign_name, forecasted_spends.campaign_name) is not null
+    
+),
 
 ----------------------------------------------------
 -- adding it all together & adding manual spends (performance & non-performance)
 ----------------------------------------------------
 
-select
-    'performance' as type,
-    campaign_id,
-    campaign_name,
-    source,
-    medium,
-    partner,
-    lower(campaign_platform) as campaign_platform,
-    lower(campaign_platform) as app_device_type,
-    partition_date as campaign_date_utc,
-    sum(spend) as spend,
-    sum(clicks) as clicks
-from united_spends
+final_calculation as
+(
+    select
+        'performance' as type,
+        0 as forecasted_spend,
+        campaign_id,
+        campaign_name,
+        source,
+        medium,
+        partner,
+        lower(campaign_platform) as campaign_platform,
+        lower(campaign_platform) as app_device_type,
+        partition_date as campaign_date_utc,
+        date_trunc('month', partition_date) as campaign_month,
+        dayofmonth(last_day(partition_date)) as days_in_month,
+        sum(spend) as spend,
+        sum(clicks) as clicks
+    from united_spends
     group by
+        campaign_id,
+        campaign_name,
+        source,
+        medium,
+        partner,
+        lower(campaign_platform),
+        partition_date,
+        campaign_month
+    union all
+    select 
+        'performance' as type,
+        0 as forecasted_spend,
+        campaign_id,
+        campaign_name,
+        source,
+        medium,
+        partner,
+        campaign_platform,
+        app_device_type,
+        cast(new_costs.join_date as date) as campaign_date_utc,
+        date_trunc('month', new_costs.join_date) as campaign_month,
+        dayofmonth(last_day(new_costs.join_date)) as days_in_month,
+        cost,
+        clicks
+    from new_costs
+    union all
+    select 
+        'performance' as type,
+        0 as forecasted_spend,
+        campaign_id,
+        campaign,
+        source,
+        medium,
+        partner, 
+        campaign_platform,
+        app_device_type,
+        cast(tmp_onfy_gmbh_spend.campaign_date_utc as date) as campaign_date_utc,
+        date_trunc('month', tmp_onfy_gmbh_spend.campaign_date_utc) as campaign_month,
+        dayofmonth(last_day(tmp_onfy_gmbh_spend.campaign_date_utc)) as days_in_month,
+        spend,
+        clicks
+    from pharmacy.tmp_onfy_gmbh_spend
+    union all
+    select 
+        *
+    from non_perf_spends
+)
+
+select 
+    type,
+    max(forecasted_spend) over (partition by campaign_month) as forecasted_spend,
     campaign_id,
     campaign_name,
     source,
     medium,
     partner,
-    lower(campaign_platform),
-    partition_date
-union all
-select 
-    'performance' as type,
-    *
-from new_costs
-union all
-select 
-    'performance' as type,
-    campaign_id,
-    campaign,
-    source,
-    medium,
-    partner, 
     campaign_platform,
     app_device_type,
-    cast(campaign_date_utc as date) as campaign_date_utc,
+    campaign_date_utc,
+    campaign_month,
+    days_in_month,
     spend,
     clicks
-from pharmacy.tmp_onfy_gmbh_spend
-union all
-select 
-    'non-performance' as type,
-    campaign_id,
-    campaign_name,
-    source,
-    medium,
-    partner, 
-    campaign_platform,
-    app_device_type,
-    cast(campaign_date_utc as date) as campaign_date_utc,
-    spend,
-    clicks
-from pharmacy.manual_ads_spends
+from final_calculation
