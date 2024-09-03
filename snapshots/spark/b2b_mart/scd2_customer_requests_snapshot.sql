@@ -16,6 +16,6 @@
 }}
 
 
-SELECT *, millis_to_ts_msk(utms)  AS update_ts_msk
+SELECT *, millis_to_ts_msk(utms+1)  AS update_ts_msk
 FROM {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }}
 {% endsnapshot %}
