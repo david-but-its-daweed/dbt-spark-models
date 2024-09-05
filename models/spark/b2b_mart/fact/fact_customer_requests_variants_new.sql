@@ -15,7 +15,6 @@ WITH wide_data AS
           millis_to_ts_msk(ctms) AS date,
           dealId AS deal_id,
           explode(variants),
-          row_number() Over(partition _id order by utms) AS num_row,
           millis_to_ts_msk(utms) as updated_time,
           TIMESTAMP(dbt_valid_from) as effective_ts_msk,
           TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
@@ -36,7 +35,7 @@ SELECT customer_request_id,
        col.sampleDDPPrice.ccy sampleDDPPrice_ccy,
        col.sampleType  as sample_type,
        date,
-       num_row,
+       row_number() Over(partition by customer_request_id,col.id order by updated_time) AS num_row,
        updated_time,
        effective_ts_msk, 
        next_effective_ts_msk
