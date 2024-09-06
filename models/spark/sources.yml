@@ -172,6 +172,8 @@ sources:
     tables:
       - name: mercadolibre_categories
       - name: auth_proxy_dim_devices
+      - name: sellers_for_outreach
+      - name: contacts_cpf
   
   - name: joompro_analytics_mart
     tables:
