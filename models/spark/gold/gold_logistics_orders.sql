@@ -31,12 +31,12 @@ SELECT
     a.origin_name,
     a.is_online_shipping AS is_delivered_by_jl,
     IF(
-      TRUE
-      AND a.is_fbj_order
-      AND a.warehouse_country = 'CN'
-      AND a.order_created_date_utc >= DATE '2024-05-01',
-      TRUE,
-      FALSE
+        TRUE
+        AND a.is_fbj_order
+        AND a.warehouse_country = 'CN'
+        AND a.order_created_date_utc >= DATE '2024-05-01',
+        TRUE,
+        FALSE
     ) AS is_fbj,
     a.delivery_method_name,
     a.linehaul_shipper AS linehaul_shipper_final,
@@ -47,6 +47,7 @@ SELECT
     a.category_id AS merchant_category_id,
     mc.business_line AS business_line,
     a.warehouse_country AS warehouse_country_code,
+    a.merchant_id AS merchant_id,
 
     a.is_consolidated OR a.consolidation_group_id IS NOT NULL AS is_planned_for_consolidation_by_hecny,
     a.is_consolidated AS is_consolidated_by_hecny,
