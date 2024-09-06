@@ -24,5 +24,5 @@ select
     legal_name,
     seller_name
 from {{ source('joompro_mart' , 'contacts_cpf')}}
-left join sellers_info on contacts_cpf.cnpj = sellers_info.cnpj
+left join sellers_info on using(cnpj)
 group by 1, 2, 3, 4, 5, 6
