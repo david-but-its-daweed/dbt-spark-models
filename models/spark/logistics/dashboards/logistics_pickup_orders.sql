@@ -14,7 +14,7 @@ WITH regions_by_zip AS (
     EXPLODE(zip.zipcodeRange) AS zip_code,
     SIZE(zip.zipcodeRange) AS zip_code_size
   FROM {{ source('mongo', 'logistics_zipcode_range_snapshots_daily_snapshot') }} AS zip
-  LEFT JOIN {{ ref('china_zip_codes_regions') }} AS seed ON seed.zip_code_range_id = zip._id
+  INNER JOIN {{ ref('china_zip_codes_regions') }} AS seed ON seed.zip_code_range_id = zip._id
 ),
 
 min_region AS (-- Если к одному zip_code подходит 2 региона, то берем регион с наименьшим количеством zip_code -> так регионы должны быть точнее
