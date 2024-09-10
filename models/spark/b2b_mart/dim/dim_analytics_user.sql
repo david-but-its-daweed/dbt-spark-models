@@ -23,6 +23,8 @@ SELECT
     t.fn AS first_name,
     COALESCE(t.phone, pn.phone) AS phone_number,
     t.email,
+    t.contactId AS contact_id,
+    t.landingId AS landing_id,
     u_extra.has_ml_store,
     u_extra.ml_shop_name,
     u_extra.sells_on_other_marketplaces,
