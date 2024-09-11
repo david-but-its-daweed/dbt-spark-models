@@ -37,6 +37,13 @@ select
     plannedOfferCost.ccy as planned_offer_currency,
     userId as user_id,
     case when request.type = 1 then TRUE else FALSE end as fake_door,
+    request.source as creation_source, 
+    case when request.source = 0 then True else False end as manual, 
+    case when request.source = 1 then True else False end as standart_deal, 
+    case when request.source = 2 then True else False end as rfq_deal, 
+    case when request.source = 3 then True else False end as sample, 
+    request.totalPrice.amount as total_price,
+    request.totalPrice.ccy as total_price_ccy,
     millis_to_ts_msk(utms) as updated_time,
     TIMESTAMP(dbt_valid_from) as effective_ts_msk,
     TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
