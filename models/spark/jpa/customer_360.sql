@@ -37,7 +37,7 @@ SELECT
     user.store_link AS welcome_form_store_link,
     user.todos AS welcome_form_todos,
     user.force_non_premium AS welcome_form_force_non_premium,
-    user.force_premium AS welcome_form_force_premium,
+    user.force_premium AS welcome_form_force_premium
 FROM t
 LEFT JOIN {{ ref('dim_analytics_user') }} user
     ON user_id = _id
