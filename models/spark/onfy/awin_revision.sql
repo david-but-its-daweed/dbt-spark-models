@@ -13,7 +13,8 @@ with vats as
 (
     select 
         order_parcel_id,
-        sum(total_price_after_discount_price / (1+vat)) as products_price_before_vat
+        sum(total_price_after_discount_price / (1+vat)) as products_price_before_vat,
+        sum(refunded_item_amount / (1+vat)) as products_price_refund_before_vat
     from {{source('pharmacy_landing', 'order_parcel_item')}}
     left join {{source('onfy', 'refunds')}}
         on order_parcel_item.order_parcel_id = refunds.parcel_id
