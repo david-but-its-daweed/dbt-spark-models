@@ -80,6 +80,7 @@ sources:
       - name: core_fbj_replenishments_daily_snapshot
       - name: product_fbj_demand_sk_us_daily_snapshot
       - name: logistics_replenishments_v3_daily_snapshot
+      - name: product_committed_fulfillment_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
