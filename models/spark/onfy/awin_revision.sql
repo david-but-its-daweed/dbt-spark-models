@@ -15,6 +15,9 @@ with vats as
         order_parcel_id,
         sum(total_price_after_discount_price / (1+vat)) as products_price_before_vat
     from {{source('pharmacy_landing', 'order_parcel_item')}}
+    left join {{source('onfy', 'refunds')}}
+        on order_parcel_item.order_parcel_id = refunds.parcel_id
+        and order_parcel_item.product_id = refunds.product_id
     join {{source('pharmacy_landing', 'medicine')}}
         on medicine.id = order_parcel_item.product_id
     group by 
@@ -26,6 +29,7 @@ transactions as
     select 
         transactions.order_id,
         transactions.order_parcel_id,
+        products_price_refund_before_vat,
         order_num,
         (sum(if(type = 'PAYMENT', price, 0)) - sum(if(type='DISCOUNT', price, 0))) as payment,
         (sum(if(type = 'ORDER_REVERSAL', price, 0)) - sum(if(type='DISCOUNT_REVERSAL', price, 0))) as reversal,
@@ -43,6 +47,7 @@ transactions as
     group by 
         transactions.order_id,
         purchase_num,
+        products_price_refund_before_vat,
         transactions.order_parcel_id,
         products_price_before_vat,
         order_num
@@ -62,6 +67,8 @@ select
     sum(reversal) as reversal,
     sum(parcels_reversed) as parcels_reversed,
     max(parcels_reversed) as had_reversal,
+    sum(products_price_refund_before_vat) as products_price_refund_before_vat,
+    sum(products_price_before_vat - coalesce(products_price_refund_before_vat, 0)) as products_price_before_vat_final,
     sum(products_price_before_vat) as products_price_before_vat,
     case
         when sum(discount) = 0 and purchase_num = 1 then 0.15
