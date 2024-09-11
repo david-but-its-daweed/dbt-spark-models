@@ -1,5 +1,5 @@
 {{ config(
-    schema='onfy_mart',
+    schema='onfy',
     materialized='table',
     meta = {
       'model_owner' : '@annzaychik',
@@ -193,22 +193,44 @@ idealo_data as
         latest_price_decrease
 )
 
-
-
 select 
-  m.id as product_id, null as store_id, 'google' as channel, 31 as weight, 'filter_out' as pessimization_type, 0.0 as discount_percent, 'blacklist' as source, 'Google Shopping low performing blacklist' as comment
+    m.id as product_id, 
+    null as store_id, 
+    'google' as channel, 
+    31 as weight, 
+    'filter_out' as pessimization_type, 
+    0.0 as discount_percent, 
+    'blacklist' as source, 
+    'Google Shopping low performing blacklist' as comment
 from pharmacy.google_shopping_blacklist cr
-join pharmacy_landing.medicine m on m.country_local_id = cr.landing_pzn
+join pharmacy_landing.medicine m 
+    on m.country_local_id = cr.landing_pzn
 where orders < 1
 union all
 select 
-  m.id as product_id, null as store_id, 'idealo' as channel, 31 as weight, 'use_max_price' as pessimization_type, 0.0 as discount_percent, 'low_performing' as source, 'Idealo low performing blacklist' as comment
+    m.id as product_id, 
+    null as store_id, 
+    'idealo' as channel, 
+    31 as weight, 
+    'use_max_price' as pessimization_type, 
+    0.0 as discount_percent, 
+    'low_performing' as source, 
+    'Idealo low performing blacklist' as comment
 from idealo_data as cr
-join pharmacy_landing.medicine m on m.country_local_id = cr.pzn
+join pharmacy_landing.medicine m 
+    on m.country_local_id = cr.pzn
 where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
 union all
 select 
-  m.id as product_id, null as store_id, 'billiger' as channel, 31 as weight, 'use_max_price' as pessimization_type, 0.0 as discount_percent, 'low_performing' as source, 'Billiger low performing blacklist' as comment
+    m.id as product_id, 
+    null as store_id, 
+    'billiger' as channel, 
+    31 as weight, 
+    'use_max_price' as pessimization_type, 
+    0.0 as discount_percent, 
+    'low_performing' as source, 
+    'Billiger low performing blacklist' as comment
 from billiger_data cr 
-join pharmacy_landing.medicine m on m.country_local_id = cr.pzn
+join pharmacy_landing.medicine m 
+    on m.country_local_id = cr.pzn
 where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
