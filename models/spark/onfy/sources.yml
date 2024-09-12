@@ -7,6 +7,7 @@ sources:
       - name: conversion_funnel_new
       - name: ads_dashboard
       - name: refunds
+      - name: auto_discount_rules
   - name: pharmacy_landing
     tables:
       - name: product_category_flat
