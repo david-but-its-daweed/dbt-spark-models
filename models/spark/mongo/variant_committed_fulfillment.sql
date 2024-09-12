@@ -6,15 +6,15 @@
       'team': 'merchant',
     },
 ) }}
-WITH t1 AS (
+WITH variant_cfts AS (
     SELECT
         _id AS product_id,
-        explode(vcft) as variant_cft,
+        EXPLODE(vcft) as variant_cft,
     FROM {{ source('mongo', 'product_committed_fulfillment_daily_snapshot') }}
 ),
 
 SELECT
     product_id,
-    variant_cft.vId as variant_id,
+    variant_cft.vid as variant_id,
     variant_cft.cft as cft
-FROM t1
+FROM variant_cfts
