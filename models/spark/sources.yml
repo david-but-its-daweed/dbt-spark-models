@@ -192,3 +192,4 @@ sources:
   - name: merchant
     tables:
       - name: merchant_performance
+      - name: order_data
