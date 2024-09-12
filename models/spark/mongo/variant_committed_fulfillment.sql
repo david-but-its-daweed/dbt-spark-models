@@ -9,7 +9,7 @@
 WITH variant_cfts AS (
     SELECT
         _id AS product_id,
-        EXPLODE(vcft) AS variant_cft,
+        EXPLODE(vcft) AS variant_cft
     FROM {{ source('mongo', 'product_committed_fulfillment_daily_snapshot') }}
 )
 
