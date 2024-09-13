@@ -49,3 +49,5 @@ SELECT
     IF(FILTER(sh, x -> x.s = 4) IS NULL, NULL, FILTER(sh, x -> x.s = 4)[0].ut) AS cancelled_datetime_utc
 FROM {{ source('mongo', 'core_pickup_request_boxes_daily_snapshot') }} AS sh
 LEFT JOIN pickup_orders ON pickup_orders.boxes.barcode = sh.b
+WHERE
+  sh.st >= '1900-01-01'
