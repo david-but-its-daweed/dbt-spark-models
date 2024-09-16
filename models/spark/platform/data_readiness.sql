@@ -62,7 +62,8 @@ with deps as (SELECT output.tableName       as output_name,
                              priority_weight,
                              start_date,
                              end_date,
-                             duration
+                             duration,
+                             try_number
                       FROM {{ ref("airflow_task_instance_archive")}}
                       where start_date < to_date(NOW()) - interval 1 day
                         and start_date > NOW() - interval 2 month
@@ -76,7 +77,8 @@ with deps as (SELECT output.tableName       as output_name,
                              max(priority_weight) as priority_weight,
                              min(start_date) as start_date,
                              min(end_date)   as end_date,
-                             min(duration)   as duration
+                             min(duration)   as duration,
+                             max(try_number) as try_number
                       FROM platform.airflow_task_instance
                       where start_date >= to_date(NOW()) - interval 1 day
                         and start_date > NOW() - interval 2 month
@@ -93,7 +95,8 @@ with deps as (SELECT output.tableName       as output_name,
                      priority_weight,
                      start_date as start_date,
                      end_date   as end_date,
-                     duration
+                     duration,
+                     try_number
               from airflow_data
               where start_date > NOW() - interval 2 month),
 
@@ -148,6 +151,7 @@ final_data as (
               coalesce(ftu.fact_table_start_time, start_date) start_date,
               coalesce(ftu.fact_table_dttm, end_date) end_date,
               duration,
+              try_number,
               ftu.fact_table_start_time,
               ftu.fact_table_dttm
        from dependencies
