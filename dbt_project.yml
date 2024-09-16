@@ -31,6 +31,8 @@ models:
         +tags: "b2b_mart"
       onfy:
         +tags: "onfy"
+      platform:
+        +tags: "platform"
   
   +persist_docs:
     relation: true
@@ -43,3 +45,5 @@ snapshots:
         +tags: "b2b_mart"
       onfy:
         +tags: "onfy"
+      platform:
+        +tags: "platform"

@@ -70,30 +70,6 @@ jobs:
           manual-tables-filepath: seeds/manual_tables_seed.csv
           manifest-filepath: target/manifest.json
           script-filepath: dbt-models-repo/.github/scripts/check_manual_tables.py
-      - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
-        with:
-          dbt-select: "--exclude tag:manual tag:platform tag:data_readiness"
-          job-name: dbt-etl
-          crontab: 15 0 * * *
-          alerts-channel: "#dbt-spark-monitoring"
-          profiles-dir: "production/profiles"
-          profile-name: spark
-      - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
-        with:
-          dbt-select: "--select tag:platform"
-          job-name: dbt-platform
-          crontab: 15 0 * * *
-          alerts-channel: "#analytics-monitoring"
-          profiles-dir: "production/profiles"
-          profile-name: spark
-      - uses: joomcode/dbt-models/.github/actions/deploy-manifest@master
-        with:
-          dbt-select: "--select tag:data_readiness"
-          job-name: data-readiness
-          crontab: 0 * * * *
-          alerts-channel: "#analytics-monitoring"
-          profiles-dir: "production/profiles"
-          profile-name: spark
       - name: Create package
         run: |
           tar --exclude="./.git/*" --exclude="*.tar.gz" --exclude="./.idea/*" -zcvf ../dbt-models.tar.gz .
