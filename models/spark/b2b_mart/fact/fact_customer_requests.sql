@@ -42,6 +42,7 @@ select
     case when request.source = 1 then True else False end as standart_deal, 
     case when request.source = 2 then True else False end as rfq_deal, 
     case when request.source = 3 then True else False end as sample, 
+    sampleType as sample_type,
     request.totalPrice.amount as total_price,
     request.totalPrice.ccy as total_price_ccy,
     millis_to_ts_msk(utms) as updated_time,
