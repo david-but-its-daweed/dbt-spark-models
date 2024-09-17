@@ -10,6 +10,7 @@
         'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'true'
     },
+    on_schema_change='append_new_columns'
   )
 }}
 
@@ -20,8 +21,8 @@ WITH status_raw AS (
     FROM
         {{ source('mongo', 'core_fbj_replenishments_daily_snapshot') }} AS c
     {% if is_incremental() %}
-    WHERE
-        c.ct >= CURRENT_DATE - INTERVAL 60 DAY 
+        WHERE
+            c.ct >= CURRENT_DATE - INTERVAL 60 DAY
     {% else %}
         WHERE
             c.ct >= DATE("2024-07-01")
@@ -91,7 +92,9 @@ SELECT
     r.whi.pcnt AS problem_count,
     p.business_line,
     p.l1_merchant_category_name,
-    p.product_name
+    p.product_name,
+    l.sku AS merchant_sku_id,
+    w.extid AS warehouse_sku_id
 FROM
     {{ source('mongo', 'core_fbj_replenishments_daily_snapshot') }} AS r
 INNER JOIN
@@ -105,3 +108,9 @@ LEFT JOIN
 LEFT JOIN
     {{ ref('gold_products') }} AS p
     ON r.pid = p.product_id
+LEFT JOIN
+    {{ source('mongo', 'logistics_products_v2_daily_snapshot') }} AS l
+    ON r.vid = l.externalid
+LEFT JOIN
+    {{ source('mongo', 'logistics_warehouse_product_infos_daily_snapshot') }} AS w
+    ON l._id = w.pid
