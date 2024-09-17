@@ -17,7 +17,8 @@ select
         millis_to_ts(createdTimeMs) as payment_created_time,
         packageSnapshot._id as package_id,
         packageSnapshot.duration.unit as package_duration_unit,
-        packageSnapshot.duration.value as package_duration,
+        case when packageSnapshot.duration.unit = 'year' then packageSnapshot.duration.value*12
+            else packageSnapshot.duration.value end as package_duration,
         packageSnapshot.price.amount/1000000 as package_price,
         packageSnapshot.price.ccy as package_price_ccy,
         millis_to_ts(paidTimeMs) as paid_time,
