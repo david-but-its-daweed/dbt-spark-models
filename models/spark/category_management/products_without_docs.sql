@@ -83,11 +83,13 @@ links AS (
 
 products AS (
     SELECT
-        product_id,
-        merchant_category_id,
-        merchant_id
-    FROM {{ ref('gold_products') }}
-    WHERE is_public = TRUE
+        p.product_id,
+        p.merchant_category_id,
+        p.merchant_id,
+        m.origin_name
+    FROM {{ ref('gold_products') }} AS p
+    INNER JOIN {{ ref('gold_merchants') }} AS m ON p.merchant_id = m.merchant_id
+    WHERE p.is_public = TRUE
 ),
 ----------------------------------------------------
 -----------------Only available in EU products------
@@ -103,12 +105,14 @@ prod_ext AS (
     SELECT
         pc.product_id,
         pc.merchant_category_id,
-        pc.merchant_id
+        pc.merchant_id,
+        ps.origin_name
     FROM (
         SELECT
             p.product_id,
             p.merchant_category_id,
             p.merchant_id,
+            p.origin_name,
             EXPLODE(pa.availability_counties) AS availability_country
         FROM products AS p
         INNER JOIN {{ source('ads', 'product_availability') }} AS pa ON p.product_id = pa.product_id
@@ -219,6 +223,7 @@ agg AS (
     SELECT
         p.product_id,
         p.merchant_id,
+        p.origin_name,
         p.merchant_category_id,
         gc.merchant_category_name,
         gc.l1_merchant_category_name,
