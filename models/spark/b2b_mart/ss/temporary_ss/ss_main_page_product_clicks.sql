@@ -89,7 +89,7 @@ pre_data as (
 ), 
 dd as (
 select pre_data.*,
-       registration_start, registration_end, target_category,
+       registration_start, registration_end, 
        case when c.product_id is not null then 1 else 0 end as target_product_in_cart
 from pre_data
 left join users_data using(user_id)
@@ -109,9 +109,6 @@ group by 1,2
 ),
 ss_users as (select 
 user_id,
-case when categories like 'Home & Kitchen' then 1 
-when categories != '' and categories is not null then 2
-else 0 end target_category, 
 categories,
 company_op_field_name
 from 
