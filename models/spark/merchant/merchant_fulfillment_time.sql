@@ -19,7 +19,7 @@ orders_fulfilled_by_merchants AS (
     SELECT
         o.order_date_msk,
         o.friendly_order_id,
-        a.aft AS aft
+        COALESCE(a.aft, 9999) AS aft
     FROM {{ ref('gold_orders') }} AS o
     LEFT JOIN aft AS a ON a.friendly_order_id = o.friendly_order_id
     WHERE
@@ -27,12 +27,20 @@ orders_fulfilled_by_merchants AS (
         AND o.origin_name = 'Chinese'
         AND o.order_date_msk > '2024-06-15' -- до этой даты нет данных по aft
         AND NOT (o.refund_reason IN ('fraud', 'cancelled_by_customer') AND o.refund_reason IS NOT NULL)
-)
+),
+
+percentiles AS (
+    SELECT
+        order_date_msk,
+        PERCENTILE(aft, 0.5) AS merchant_fulfillment_time_p50,
+        PERCENTILE(aft, 0.8) AS merchant_fulfillment_time_p80,
+        PERCENTILE(aft, 0.95) AS merchant_fulfillment_time_p95
+    FROM orders_fulfilled_by_merchants
+    GROUP BY 1)
 
 SELECT
     order_date_msk,
-    PERCENTILE(aft, 0.5) AS merchant_fulfillment_time_p50,
-    PERCENTILE(aft, 0.8) AS merchant_fulfillment_time_p80,
-    PERCENTILE(aft, 0.95) AS merchant_fulfillment_time_p95
-FROM orders_fulfilled_by_merchants
-GROUP BY 1
+    ROUND(IF(merchant_fulfillment_time_p50 > 100, NULL, merchant_fulfillment_time_p50), 2) AS merchant_fulfillment_time_p50,
+    ROUND(IF(merchant_fulfillment_time_p80 > 100, NULL, merchant_fulfillment_time_p80), 2) AS merchant_fulfillment_time_p80,
+    ROUND(IF(merchant_fulfillment_time_p95 > 100, NULL, merchant_fulfillment_time_p95), 2) AS merchant_fulfillment_time_p95
+FROM percentiles
