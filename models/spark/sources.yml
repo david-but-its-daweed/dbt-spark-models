@@ -49,6 +49,7 @@ sources:
       - name: core_tracking_providers_daily_snapshot
       - name: core_merchants_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
+      - name: product_product_diagnoses_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: core_store_specializations_daily_snapshot
       - name: product_products_daily_snapshot
@@ -106,9 +107,6 @@ sources:
   - name: recom
     tables:
       - name: context_device_counters_v6
-  - name: product
-    tables:
-      - name: diagnoses_changes
   - name: platform
     tables:
       - name: aws_service_costs
