@@ -5,7 +5,7 @@
     file_format='parquet',
     schema='category_management',
     meta = {
-        'model_owner' : '@ekutynina',
+        'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'true'
     },
   )
@@ -106,7 +106,7 @@ prod_ext AS (
         pc.product_id,
         pc.merchant_category_id,
         pc.merchant_id,
-        ps.origin_name
+        pc.origin_name
     FROM (
         SELECT
             p.product_id,
@@ -119,7 +119,7 @@ prod_ext AS (
         WHERE pa.partition_date >= CURRENT_DATE() - 7
     ) AS pc
     INNER JOIN countries AS c ON pc.availability_country = c.country_code
-    GROUP BY 1, 2, 3
+    GROUP BY 1, 2, 3, 4
 ),
 ----------------------------------------------------
 ---Define categories for eprgermanyelectronics------
@@ -272,7 +272,7 @@ agg AS (
     LEFT JOIN {{ ref('gold_merchant_categories') }} AS gc ON p.merchant_category_id = gc.merchant_category_id
     LEFT JOIN categories_ege AS c ON p.merchant_category_id = c.merchant_category_id
     LEFT JOIN categories_ce_fda_pi_doc_full AS cc ON p.merchant_category_id = cc.merchant_category_id
-    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
     HAVING
         MAX(COALESCE(d.type = "ec" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
         OR MAX(COALESCE(d.type = "doc" AND d.status = "active" AND cc.merchant_category_id IS NOT NULL, FALSE)) IS FALSE
