@@ -30,7 +30,8 @@ Select user['userId'] AS user_id,
         payload.topProductsNumber,
         payload.hasNextPage,
         payload.searchResultsUniqId,
-        payload.page, 
+        payload.page,
+        payload.isSearchByImage as is_search_by_image,
         payload.index as index,
         row_number() Over(partition by payload.searchResultsUniqId, type order by event_ts_msk) as event_number 
         from {{ source('b2b_mart', 'device_events') }} 
@@ -44,7 +45,8 @@ Select user['userId'] AS user_id,
         event_ts_msk as search_ts_msk , 
         type, 
         productsNumber as product_number, 
-        query
+        query,
+        is_search_by_image
         from search_events 
         where type = 'search' 
         ),
@@ -64,7 +66,8 @@ Select user['userId'] AS user_id,
         search_ts_msk , 
         cast(search_ts_msk as date) as search_date,
         product_number, 
-        query, 
+        query,
+        is_search_by_image,
         click_ts_msk,
         position,
         product_id,
