@@ -15,6 +15,7 @@ with order_data as
     select
         date_trunc('day', transaction_date) as transaction_date,
         date_trunc('month', transaction_date) as transaction_month,
+        date_trunc('quarter', transaction_date) as transaction_quarter,
         sum(gmv_initial) as gmv_initial,
         sum(gross_profit_final) as gross_profit_final,
         sum(if(type = 'DISCOUNT', price, 0)) as promocode_discount,
@@ -30,7 +31,11 @@ with order_data as
         and currency = 'EUR'
         and date_trunc('day', transaction_date) < current_date() 
     group by
-        grouping sets ((date_trunc('day', transaction_date), date_trunc('month', transaction_date)), (date_trunc('month', transaction_date)))
+        grouping sets (
+            (date_trunc('day', transaction_date), date_trunc('month', transaction_date), date_trunc('quarter', transaction_date)), 
+            (date_trunc('month', transaction_date), date_trunc('quarter', transaction_date)),
+            (date_trunc('quarter', transaction_date))
+        )
 ),
 
 
@@ -39,11 +44,16 @@ ads_spends_data as
     select
         date_trunc('day', campaign_date_utc) as ads_spends_date,
         date_trunc('month', campaign_date_utc) as ads_spends_month,
+        date_trunc('quarter', campaign_date_utc) as ads_spends_quarter,
         sum(spend) as spend,
         sum(clicks) as clicks
-    from {{source('onfy_mart', 'ads_spends')}}
+    from  {{source('onfy_mart', 'ads_spends')}}
     group by 
-        grouping sets ((campaign_date_utc, date_trunc('month', campaign_date_utc)), (date_trunc('month', campaign_date_utc)))
+        grouping sets (
+            (campaign_date_utc, date_trunc('month', campaign_date_utc), date_trunc('quarter', campaign_date_utc)), 
+            (date_trunc('month', campaign_date_utc), date_trunc('quarter', campaign_date_utc)),
+            (date_trunc('quarter', campaign_date_utc))
+        )
 ),
 
 base as 
@@ -51,7 +61,14 @@ base as
     select 
         current_date() as date_updated,
         case
-            when coalesce(transaction_date, ads_spends_date) is null and coalesce(transaction_month, ads_spends_month) is not null then 'month'
+            when coalesce(transaction_date, ads_spends_date) is null and 
+                coalesce(transaction_month, ads_spends_month) is not null and
+                coalesce(transaction_quarter, ads_spends_quarter) is not null 
+            then 'month'
+            when coalesce(transaction_date, ads_spends_date) is null and 
+                coalesce(transaction_month, ads_spends_month) is null and
+                coalesce(transaction_quarter, ads_spends_quarter) is not null 
+            then 'quarter'
             else 'day'
         end as mode,
 
@@ -60,6 +77,7 @@ base as
 
         coalesce(transaction_date, ads_spends_date) as date,
         coalesce(transaction_month, ads_spends_month) as month,
+        coalesce(transaction_quarter, ads_spends_quarter) as quarter,
         order_data.gmv_initial,
         order_data.gross_profit_final,
         order_data.promocode_discount,
@@ -78,7 +96,8 @@ base as
     from order_data
     full join ads_spends_data
         on coalesce(order_data.transaction_date, '') = coalesce(ads_spends_data.ads_spends_date, '')
-        and order_data.transaction_month = ads_spends_data.ads_spends_month
+        and coalesce(order_data.transaction_month, '') = coalesce(ads_spends_data.ads_spends_month, '')
+        and order_data.transaction_quarter = ads_spends_data.ads_spends_quarter
 )
 
 select 
