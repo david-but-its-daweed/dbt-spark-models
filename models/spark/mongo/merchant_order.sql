@@ -212,5 +212,6 @@ SELECT
                 ELSE 'other'
             END
         ), NULL)
-    ), NULL) AS cancelled_by_jl_info
+    ), NULL) AS cancelled_by_jl_info,
+    cft
 FROM {{ source('mongo', 'merchant_order_orders_daily_snapshot') }}
