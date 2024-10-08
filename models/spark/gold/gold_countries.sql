@@ -19,6 +19,7 @@ WITH countries_properties AS (
         country_code,
         currency_code,
         country_priority_type,
+        macroregion_name,
         ROW_NUMBER() OVER (PARTITION BY country_code ORDER BY currency_code) AS row_num
     FROM {{ ref('countries_properties') }}
 )
@@ -33,7 +34,8 @@ SELECT DISTINCT
     ) AS region_name,
     COALESCE(gr.top_country_code, 'Other') AS top_country_code,
     cc.currency_code AS national_currency_code,
-    COALESCE(cc.country_priority_type, 'Other') AS country_priority_type
+    COALESCE(cc.country_priority_type, 'Other') AS country_priority_type,
+    COALESCE(cc.macroregion_name, 'Other') AS macroregion_name
 FROM {{ ref('gold_regions') }} AS gr
 LEFT JOIN countries_properties AS cc
     ON

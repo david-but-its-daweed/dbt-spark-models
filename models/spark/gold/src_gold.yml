@@ -376,6 +376,8 @@ models:
       description: Country's national currency code (If the country has more than one national currency, an arbitrary one is displayed)
     - name: country_priority_type
       description: Focus priority type ('Focused Perspective', 'Focused Growing', 'Big Good', 'Big Bad', 'Other')
+    - name: macroregion_name
+      description: macroregion name ('CIS', 'WE' - Western Europe, 'EE' - Eastern Europe, 'RU' - RU + BY, 'Other')
 
 - name: gold_merchant_categories
   description: Information about merchant categories. Each row in the table corresponds to a `merchant_category_id`.
