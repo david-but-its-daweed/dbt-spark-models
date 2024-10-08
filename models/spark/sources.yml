@@ -49,6 +49,7 @@ sources:
       - name: core_tracking_providers_daily_snapshot
       - name: core_merchants_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
+      - name: product_product_document_links_daily_snapshot
       - name: product_product_diagnoses_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: core_store_specializations_daily_snapshot
