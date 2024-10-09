@@ -171,7 +171,30 @@ ohm as
         campaign_platform,
         campaign_date_utc
 ),
-        
+
+----------------------------------------------------
+-- add awin 
+----------------------------------------------------
+
+awin_costs as 
+(
+    select 
+        null as campaign_id,
+        site_name as campaign_name,
+        publisher_url as medium,
+        'awin' as source,
+        'onfy' as partner,
+        'web' as campaign_platform,
+        click_date as date,
+        sum(commission_amount) as spend,
+        count(id) as clicks
+    from {{source('pharmacy', 'awin_insights')}}
+    group by 
+        site_name,
+        publisher_url,
+        click_date
+),
+              
 ----------------------------------------------------
 -- union all of the "main" channels together
 ----------------------------------------------------
@@ -254,6 +277,9 @@ united_spends as
     union all
     select *
     from ohm
+    union all
+    select *
+    from awin_costs
 ),
 
 ----------------------------------------------------

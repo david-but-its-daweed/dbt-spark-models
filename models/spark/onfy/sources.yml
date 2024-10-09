@@ -29,3 +29,4 @@ sources:
       - name: adjust_raw_network_insights
       - name: partners_insights
       - name: mindbox_events
+      - name: awin_insights
