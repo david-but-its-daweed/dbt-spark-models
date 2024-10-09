@@ -23,35 +23,37 @@ WITH data_readiness_aggregate (
         AND input_rank = 1
     GROUP BY source_id, input_name, input_type, date, day_of_week_no
 ),
-
 data (
     SELECT
         data_readiness.source_id,
-        details.business_name,
+        details_all.business_name,
         data_readiness.date,
-        coalesce(details.dow, -1) dow,
-        details.alert_channels,
-        details.target_sli,
-        details.owner,
-        details.description,
-        details.priority,
+        coalesce(details_days.dow, -1) dow,
+        details_all.alert_channels,
+        coalesce(details_days.target_sli, details_all.target_sli) target_sli,
+        details_all.owner,
+        details_all.description,
+        coalesce(details_days.priority, details_all.priority) priority,
         MAX(data_readiness.ready_time_hours) AS ready_time_hours,
-        MAX(details.expected_time_utc_hours) AS expected_time_utc_hours
+        MAX(coalesce(details_days.expected_time_utc_hours, details_all.expected_time_utc_hours)) expected_time_utc_hours
     FROM data_readiness_aggregate AS data_readiness
-    LEFT JOIN {{ref("slo_details")}} AS details 
-      ON data_readiness.source_id = details.slo_id
-     and data_readiness.day_of_week_no = coalesce(details.dow, data_readiness.day_of_week_no)
-    WHERE expected_time_utc_hours IS NOT NULL
+    JOIN {{ref("slo_details")}} AS details_all
+      ON data_readiness.source_id = details_all.slo_id
+     and details_all.dow is null
+    LEFT JOIN {{ref("slo_details")}} AS details_days
+      on data_readiness.source_id = details_days.slo_id
+     and details_days.dow is not null
+    WHERE coalesce(details_days.expected_time_utc_hours, details_all.expected_time_utc_hours) IS NOT NULL
     GROUP BY 
         data_readiness.source_id,
-        details.business_name,
+        details_all.business_name,
         data_readiness.date,
-        details.dow,
-        details.alert_channels,
-        details.target_sli,
-        details.owner,
-        details.description,
-        details.priority
+        coalesce(details_days.dow, -1),
+        details_all.alert_channels,
+        coalesce(details_days.target_sli, details_all.target_sli),
+        details_all.owner,
+        details_all.description,
+        coalesce(details_days.priority, details_all.priority)
 ),
 
 data_3_month AS (
