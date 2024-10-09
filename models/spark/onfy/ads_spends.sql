@@ -180,7 +180,7 @@ awin_costs as
 (
     select 
         null as campaign_id,
-        site_name as campaign_name,
+        'awin' as campaign_name,
         publisher_url as medium,
         'awin' as source,
         'onfy' as partner,

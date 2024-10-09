@@ -56,6 +56,8 @@ WITH sources AS (
             CASE
                 WHEN onfy_mart.device_events.type = 'externalLink' AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%billiger%'
                     THEN 'billiger'
+                WHEN onfy_mart.device_events.type = 'externalLink' AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%awin%'
+                    THEN 'awin'
                 WHEN
                     onfy_mart.device_events.type = 'externalLink'
                     AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%'
