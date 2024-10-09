@@ -132,6 +132,7 @@ with deps as (SELECT output.tableName       as output_name,
 final_data as (
        select source_id,
               dates.id as date,
+              dates.day_of_week_no as day_of_week_no,
               run_id,
               partition_date,
               dependencies.input_name,
