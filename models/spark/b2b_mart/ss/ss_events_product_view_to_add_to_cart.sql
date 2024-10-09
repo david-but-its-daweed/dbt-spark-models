@@ -34,8 +34,7 @@ WITH bots AS
                                             ORDER BY event_ts_msk) AS product_id
    FROM {{ source('b2b_mart', 'device_events') }}  de
    LEFT JOIN bots ON bots.device_id = de.device.id
-   WHERE partition_date >= '2024-09-30'
-     AND (TYPE IN ('productSelfServiceOpen',
+   WHERE (TYPE IN ('productSelfServiceOpen',
                    'pageView')
           AND payload.pageurl like '%.pro/pt-br/%')),
        VIEWS AS
@@ -56,8 +55,7 @@ WITH bots AS
               payload.productId product_id,
               explode(payload.variants)
    FROM {{ source('b2b_mart', 'device_events') }}  de
-   WHERE partition_date >= '2024-09-30'
-     AND (TYPE IN ('addToCart')
+   WHERE  (TYPE IN ('addToCart')
           AND payload.pageurl like '%.pro/pt-br/%')),
                                 add_to_card AS
   (SELECT user_id,
