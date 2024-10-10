@@ -16,44 +16,47 @@ WITH data_readiness_aggregate (
         date,
         day_of_week_no,
         MIN(ready_time_hours) AS ready_time_hours
-    FROM {{ref("data_readiness")}}
+    FROM {{ ref("data_readiness") }}
     WHERE
         date > NOW() - INTERVAL 3 MONTHS
         AND date <= TO_DATE(NOW())
         AND input_rank = 1
     GROUP BY source_id, input_name, input_type, date, day_of_week_no
 ),
+
 data (
     SELECT
         data_readiness.source_id,
         details_all.business_name,
         data_readiness.date,
-        coalesce(details_days.dow, -1) dow,
+        COALESCE(details_days.dow, -1) AS dow,
         details_all.alert_channels,
-        coalesce(details_days.target_sli, details_all.target_sli) target_sli,
+        COALESCE(details_days.target_sli, details_all.target_sli) AS target_sli,
         details_all.owner,
         details_all.description,
-        coalesce(details_days.priority, details_all.priority) priority,
+        COALESCE(details_days.priority, details_all.priority) AS priority,
         MAX(data_readiness.ready_time_hours) AS ready_time_hours,
-        MAX(coalesce(details_days.expected_time_utc_hours, details_all.expected_time_utc_hours)) expected_time_utc_hours
+        MAX(COALESCE(details_days.expected_time_utc_hours, details_all.expected_time_utc_hours)) AS expected_time_utc_hours
     FROM data_readiness_aggregate AS data_readiness
-    JOIN {{ref("slo_details")}} AS details_all
-      ON data_readiness.source_id = details_all.slo_id
-     and details_all.dow is null
-    LEFT JOIN {{ref("slo_details")}} AS details_days
-      on data_readiness.source_id = details_days.slo_id
-     and details_days.dow is not null
-    WHERE coalesce(details_days.expected_time_utc_hours, details_all.expected_time_utc_hours) IS NOT NULL
-    GROUP BY 
+    INNER JOIN {{ ref("slo_details") }} AS details_all
+        ON
+            data_readiness.source_id = details_all.slo_id
+            AND details_all.dow IS NULL
+    LEFT JOIN {{ ref("slo_details") }} AS details_days
+        ON
+            data_readiness.source_id = details_days.slo_id
+            AND data_readiness.day_of_week_no = details_days.dow
+    WHERE COALESCE(details_days.expected_time_utc_hours, details_all.expected_time_utc_hours) IS NOT NULL
+    GROUP BY
         data_readiness.source_id,
         details_all.business_name,
         data_readiness.date,
-        coalesce(details_days.dow, -1),
+        COALESCE(details_days.dow, -1),
         details_all.alert_channels,
-        coalesce(details_days.target_sli, details_all.target_sli),
+        COALESCE(details_days.target_sli, details_all.target_sli),
         details_all.owner,
         details_all.description,
-        coalesce(details_days.priority, details_all.priority)
+        COALESCE(details_days.priority, details_all.priority)
 ),
 
 data_3_month AS (
@@ -124,16 +127,16 @@ data_week AS (
 
 SELECT
     source_id,
-    case 
-        when data_3_month.dow = 1 then 'Monday'
-        when data_3_month.dow = 2 then 'Tuesday'
-        when data_3_month.dow = 3 then 'Wednesday'
-        when data_3_month.dow = 4 then 'Thursday'
-        when data_3_month.dow = 5 then 'Friday'
-        when data_3_month.dow = 6 then 'Saturday'
-        when data_3_month.dow = 7 then 'Sunday'
-        else ''
-    end day_of_week,
+    CASE
+        WHEN data_3_month.dow = 1 THEN 'Monday'
+        WHEN data_3_month.dow = 2 THEN 'Tuesday'
+        WHEN data_3_month.dow = 3 THEN 'Wednesday'
+        WHEN data_3_month.dow = 4 THEN 'Thursday'
+        WHEN data_3_month.dow = 5 THEN 'Friday'
+        WHEN data_3_month.dow = 6 THEN 'Saturday'
+        WHEN data_3_month.dow = 7 THEN 'Sunday'
+        ELSE ''
+    END AS day_of_week,
     data_3_month.business_name,
     data_3_month.priority,
     data_week.successes / data_week.days * 100 AS sli_last_week,
@@ -147,5 +150,4 @@ SELECT
 FROM data_3_month
 LEFT JOIN data_month USING (source_id, dow)
 LEFT JOIN data_week USING (source_id, dow)
-  
 ORDER BY source_id
