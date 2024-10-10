@@ -32,7 +32,7 @@ $RECYCLE.BIN/
 .idea/
 
 ### VSCode ###
-.vscode/
+.vscode/**
 !.vscode/settings.json
 
 ### Metals extension VSCode ###
@@ -237,3 +237,6 @@ cython_debug/
 
 # symlink /datasci/analytics/joom/jobs/recom/common/src/main/airflow
 analytics/joom/jobs/recom/utils
+
+# log files
+logs/

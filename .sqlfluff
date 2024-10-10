@@ -3,7 +3,7 @@ sql_file_exts = .sql
 max_line_length = 200
 dialect = sparksql
 exclude_rules = ST06, LT12, RF01, RF03, RF04, AL07, ST07, AM06, AL06, CP02
-templater = dbt
+templater = jinja
 
 [sqlfluff:indentation]
 indent_unit = space
@@ -45,10 +45,18 @@ require_final_semicolon = False
 group_by_and_order_by_style = consistent
 
 [sqlfluff:rules:references.quoting]
-force_enable = True
 prefer_quoted_identifiers = False
 
 [sqlfluff:templater:dbt]
 project_dir = .
 profiles_dir = ./production/profiles
 profile = spark
+
+[sqlfluff:templater:jinja]
+apply_dbt_builtins = true
+load_macros_from_path = ./macros/
+ignore_templated_areas = True
+
+# Mock variables that are used in dbt
+; [sqlfluff:templater:jinja:context]
+; target = prod

@@ -1,2 +1,5 @@
 # Ignore anything in the "macros" path
-/macros/
+target/
+dbt_modules/
+dbt_packages/
+macros/

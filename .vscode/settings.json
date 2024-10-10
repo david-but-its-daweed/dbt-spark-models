@@ -1,0 +1,8 @@
+{
+    "[sql]": {
+        "editor.defaultFormatter": "RobertOstermann.vscode-sqlfluff"
+    },
+    "editor.formatOnSave": false,
+    "sqlfluff.linter.run": "onType",
+    "sqlfluff.experimental.format.executeInTerminal": true,
+}
