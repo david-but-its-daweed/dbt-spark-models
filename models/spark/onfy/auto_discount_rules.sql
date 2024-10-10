@@ -191,6 +191,27 @@ idealo_data as
         utm_source,
         idealo_sessions.pzn,
         latest_price_decrease
+),
+
+google_data as 
+(
+    select
+        cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string) as landing_pzn,
+        count(distinct order_id) as orders,
+        sum(session_spend) as spend,
+        count(sources.device_id) as sessions
+    from {{source('onfy', 'sources')}} as sources
+    join {{source('onfy', 'ads_dashboard')}} as ads_dashboard
+        on sources.device_id = ads_dashboard.device_id
+        and sources.source_dt = ads_dashboard.session_dt
+    where 1=1
+        and session_dt >= current_date() - interval 3 month
+        and source = 'google'
+        and campaign like 'shopping%'
+        and cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string) is not null
+    group by 
+        cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string)
+    having orders = 0
 )
 
 select 
@@ -202,8 +223,8 @@ select
     0.0 as discount_percent, 
     'blacklist' as source, 
     'Google Shopping low performing blacklist' as comment
-from pharmacy.google_shopping_blacklist cr
-join pharmacy_landing.medicine m 
+from google_data cr
+join {{source('pharmacy_landing', 'medicine')}} m 
     on m.country_local_id = cr.landing_pzn
 where orders < 1
 union all
@@ -217,7 +238,7 @@ select
     'low_performing' as source, 
     'Idealo low performing blacklist' as comment
 from idealo_data as cr
-join pharmacy_landing.medicine m 
+join {{source('pharmacy_landing', 'medicine')}} m 
     on m.country_local_id = cr.pzn
 where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
 union all
@@ -231,6 +252,6 @@ select
     'low_performing' as source, 
     'Billiger low performing blacklist' as comment
 from billiger_data cr 
-join pharmacy_landing.medicine m 
+join {{source('pharmacy_landing', 'medicine')}} m 
     on m.country_local_id = cr.pzn
 where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
