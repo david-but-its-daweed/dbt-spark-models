@@ -22,6 +22,7 @@ WITH bots AS
    GROUP BY 1),
        pre_data AS
   (SELECT USER['userId'] AS user_id,
+              de.device.id as device_id,
               TYPE,
               event_ts_msk,
               cast(event_ts_msk AS DATE) AS event_msk_date,
@@ -38,7 +39,9 @@ WITH bots AS
                    'pageView')
           AND payload.pageurl like '%.pro/pt-br/%')),
        VIEWS AS
-  (SELECT user_id,
+  (SELECT 
+          device_id,
+          user_id,
           bot_flag,
           event_ts_msk,
           event_msk_date,
@@ -70,7 +73,8 @@ WITH bots AS
             2,
             3),
                                 DATA AS
-  (SELECT views.user_id,
+  (SELECT views.device_id,
+          views.user_id,
           views.bot_flag,
           views.event_ts_msk,
           views.event_msk_date,
@@ -89,6 +93,7 @@ WITH bots AS
    AND views.product_id = add_to_card.product_id
    AND add_to_card.event_ts_msk > views.event_ts_msk)
 SELECT user_id,
+       device_id,
        bot_flag,
        event_ts_msk,
        event_msk_date,
