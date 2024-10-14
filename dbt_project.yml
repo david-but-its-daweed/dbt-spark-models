@@ -33,6 +33,8 @@ models:
         +tags: "onfy"
       platform:
         +tags: "platform"
+      pulse:
+        +tags: "pulse"
   
   +persist_docs:
     relation: true
@@ -47,3 +49,5 @@ snapshots:
         +tags: "onfy"
       platform:
         +tags: "platform"
+      pulse:
+        +tags: "pulse"

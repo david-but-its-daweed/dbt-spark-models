@@ -30,3 +30,8 @@ b2b-mart:
 onfy:
   dag-name: onfy
   tags: ["onfy"]
+pulse:
+  dag-name: pulse
+  crontab: 0 13 * * *
+  alerts-channel: "#jpa-monitoring"
+  tags: ["pulse"]
