@@ -42,10 +42,9 @@ utm_campaign as first_utm_campaign ,
 utm_source as first_utm_sourceas ,
 utm_medium as first_utm_medium ,
 friendly_source as first_source ,
-traffic_type as first_type, 
-
+traffic_type as first_type 
 from interactions
-where first_visit_flag),
+where first_visit_flag is True),
 data as (
 select 
 user_id,
@@ -71,6 +70,7 @@ left join dop_info using(user_id )
 where  1=1
 and cast(created_ts_msk as date) >=  visit_date
 order by user_id,deal_id, visit_ts_msk)
+
 select 
 * 
 from data 
