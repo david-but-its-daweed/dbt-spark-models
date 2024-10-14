@@ -34,7 +34,7 @@ models:
       platform:
         +tags: "platform"
       pulse:
-        +tags: "pulse"
+        +tags: ["joom_pulse", "pulse"]
   
   +persist_docs:
     relation: true
@@ -50,10 +50,10 @@ snapshots:
       platform:
         +tags: "platform"
       pulse:
-        +tags: "pulse"
+        +tags: ["joom_pulse", "pulse"]
 
 tests:
   platform_dbt_etl:
     spark:
       pulse:
-        +tags: "pulse"
+        +tags: ["joom_pulse", "pulse"]
