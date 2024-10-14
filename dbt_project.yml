@@ -51,3 +51,9 @@ snapshots:
         +tags: "platform"
       pulse:
         +tags: "pulse"
+
+tests:
+  platform_dbt_etl:
+    spark:
+      pulse:
+        +tags: "pulse"
