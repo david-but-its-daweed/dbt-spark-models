@@ -24,8 +24,8 @@ row_number() Over(partition by user_id order by event_msk_date desc ) rn_2,
 
 from 
   {{ ref('ss_events_startsession') }}
-where landing = 'pt-br'
-qualify max(bot_flag) Over(partition by user_id order by event_msk_date ) = 0
+where landing = 'pt-br' and bot_flag = 0 
+----qualify max(bot_flag) Over(partition by user_id order by event_msk_date ) = 0
 ),
 interactions as (
 select interaction_id,
