@@ -1,7 +1,8 @@
 # This is config for different dag. Contains params for each dag. If param doesn't set
 # explicit in dag section then will be used default param.
 # Available params:
-# - dag_name - name of the dag
+# - dag-name - name of the dag
+# - dag-tags - tags for dag (airflow tags)
 # - crontab - schedule for dag
 # - alerts-channel - channel for alerts
 # - profiles-dir - dir with dbt profiles
@@ -32,6 +33,7 @@ onfy:
   tags: ["onfy"]
 pulse:
   dag-name: pulse
+  dag-tags: ["joom_pulse"]
   crontab: 0 13 * * *
   alerts-channel: "#jpa-monitoring"
   tags: ["pulse"]
