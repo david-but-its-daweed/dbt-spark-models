@@ -34,6 +34,6 @@ onfy:
 pulse:
   dag-name: pulse
   dag-tags: ["joom_pulse"]
-  crontab: 0 13 * * *
+  crontab: 0 9 * * *
   alerts-channel: "#jpa-monitoring"
   tags: ["pulse"]
