@@ -1,7 +1,6 @@
 /deploy/ @msafonov
-/infra/ @msafonov
 /macros/ @msafonov @g00sek
-/tests/ @BorisovDm
+/tests/ @msafonov @BorisovDm @NastiaMitiushkina
 /analytics/ @msafonov
 /models/spark/gold/ @g00sek
 /models/spark/base @g00sek
