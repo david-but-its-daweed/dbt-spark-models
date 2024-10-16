@@ -43,7 +43,7 @@ WITH
         ) as labels,
         user.userId as user_id, event_ts_msk
     from {{ source('b2b_mart', 'device_events') }}
-    where type = 'sessionStart' and and  payload.pageUrl not like  '%https://joompro.ru/ru%' and ( payload.pageUrl like "%utm%" 
+    where type = 'sessionStart' and payload.pageUrl not like  '%https://joompro.ru/ru%' and ( payload.pageUrl like "%utm%" 
                                         or payload.pageUrl like "%gad_source%" 
                                         or payload.pageUrl like "%gclid%" )
     )
