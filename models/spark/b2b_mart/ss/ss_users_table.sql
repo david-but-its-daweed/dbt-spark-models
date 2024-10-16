@@ -38,7 +38,7 @@ utm_labels as (
         ) as labels,
         user.userId as user_id, event_ts_msk
     from {{ source('b2b_mart', 'device_events') }}
-    where type = 'sessionStart' and payload.pageUrl like "%utm%" and and payload.pageUrl not like  '%https://joompro.ru/ru%'
+    where type = 'sessionStart' and payload.pageUrl like "%utm%" and payload.pageUrl not like  '%https://joompro.ru/ru%'
     )
 )
 ,
