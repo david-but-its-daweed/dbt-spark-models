@@ -8,5 +8,8 @@
     }
 ) }}
 
-SELECT *
-FROM {{ref("product_outliers_seed")}}
+SELECT
+    product_id,
+    LAST_VALUE(product_outlier_group_name) AS product_outlier_group_name
+FROM {{ ref("product_outliers_seed") }}
+GROUP BY 1
