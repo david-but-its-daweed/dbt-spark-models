@@ -18,8 +18,8 @@ utm_source,
 case when utm_source = 'unrecognized_google_advertising' and utm_medium is Null then 'unrecognized_google_advertising' else utm_medium end utm_medium ,
 utm_campaign, 
 case when utm_source is Null and utm_medium is Null  then 'organic' else 'advertising' end as traffic_type,
-row_number() Over(partition by user_id order by event_msk_date ) rn_1,
-row_number() Over(partition by user_id order by event_msk_date desc ) rn_2,
+row_number() Over(partition by user_id order by event_ts_msk ) rn_1,
+row_number() Over(partition by user_id order by event_ts_msk desc ) rn_2,
 'events' as data_source
 
 from 
