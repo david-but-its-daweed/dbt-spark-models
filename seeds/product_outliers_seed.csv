@@ -81,9 +81,6 @@ product_id,product_outlier_group_name
 655f643644d520015ec8905b,iPhone
 6566cc6d560df5012c10fcc6,iPhone
 657ab6917c6b8201a86c44c7,iPhone
-669f4923dad2c3019003799f,iPhone
-66cc5e29ecdab90186d40cb2,iPhone
-669f4f46e4fda9019622644d,IPhone
 66a74b2facf45f017ae57876,IPhone
 669f4923dad2c3019003799f,IPhone
 669f4f46e4fda9019622644d,IPhone
@@ -93,7 +90,6 @@ product_id,product_outlier_group_name
 66cc5e29ecdab90186d40cb2,IPhone
 65829b6b299a3e01eb272883,Samsung
 658292f1fa49a401065254ce,Samsung
-6614dd4847d17c01b6c739a4,Samsung
 66632b331acd1501c5bccc9f,Samsung
 66f3dadf555b8401d6bc1ae6,Samsung
 6614dd4847d17c01b6c739a4,Samsung
