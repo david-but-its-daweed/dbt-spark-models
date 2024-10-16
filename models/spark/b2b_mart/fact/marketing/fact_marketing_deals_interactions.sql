@@ -35,6 +35,7 @@ number_visit,
 first_visit_flag, 
 last_visit_flag
  from   {{ ref('fact_marketing_utm_interactions') }}
+    where (friendly_source is not null or first_visit_flag is True )
 ),
 dop_info as (select 
 user_id, 
