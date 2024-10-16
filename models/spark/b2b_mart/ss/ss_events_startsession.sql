@@ -22,11 +22,16 @@ WITH
                         where is_device_marked_as_bot or is_retrospectively_detected_bot
                         group by 1 ) ,
     utm_labels as (
-    SELECT DISTINCT
+    SELECT /*DISTINCT
         first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
         first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
         first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
-        first_value(labels.gad_source) over (partition by user_id order by event_ts_msk) as gad_source,
+        first_value(labels.gad_source) over (partition by user_id order by event_ts_msk) as gad_source, */
+        labels.utm_source as utm_source,
+        labels.utm_medium as utm_medium,
+        labels.utm_campaign as utm_campaign,
+        labels.gad_source as gad_source,
+        id,
         user_id
     from
       (
@@ -41,7 +46,7 @@ WITH
             x -> split_part(x, '=', 2)
         )
         ) as labels,
-        user.userId as user_id, event_ts_msk
+        user.userId as user_id, event_ts_msk, id
     from {{ source('b2b_mart', 'device_events') }}
     where type = 'sessionStart' and payload.pageUrl not like  '%https://joompro.ru/ru%' and ( payload.pageUrl like "%utm%" 
                                         or payload.pageUrl like "%gad_source%" 
@@ -97,7 +102,7 @@ LEFT JOIN
 ON
   de.user['userId'] = users.user_id
   AND CAST(de.event_ts_msk AS DATE) >= users.valid_msk_date
-LEFT JOIN utm_labels  ON  de.user['userId'] = utm_labels.user_id 
+LEFT JOIN utm_labels  ON de.id = utm_labels.id   --- de.user['userId'] = utm_labels.user_id 
 left join bots on bots.device_id = de.device.id
 WHERE
   partition_date >= '2024-04-06'
