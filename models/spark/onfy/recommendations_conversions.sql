@@ -28,16 +28,16 @@ product_preview_reco AS (
     SELECT
         device_id,
         event_ts_cet AS block_shown_ts,
-        payload.sourcescreen AS sourcescreen,
+        payload.sourcescreen,
         COALESCE(payload.recommendationtype, payload.widgettype) AS reco_block_type,
-        payload.pzn AS pzn,
+        payload.pzn,
         payload.productposition
     FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         type = 'productPreview'
         AND (LOWER(payload.widgettype) LIKE '%recommendatio%' OR payload.widgettype = 'previouslyBought')
         AND payload.widgettype IS NOT NULL
-        AND payload.sourcescreen IN ('cart', 'home', 'product')
+        AND payload.sourcescreen IN ('cart', 'home', 'product', 'cartRecommendations')
         AND partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
 ),
 
@@ -47,14 +47,14 @@ add_to_cart_direct AS (
     SELECT
         device_id,
         event_ts_cet AS add_to_cart_ts,
-        payload.sourcescreen AS sourcescreen,
+        payload.sourcescreen,
         COALESCE(payload.recommendationtype, payload.widgettype) AS reco_block_type,
-        payload.pzn AS pzn
+        payload.pzn
     FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type = 'addToCart'
     --AND (LOWER(payload.widgetType) LIKE '%recommendatio%' or payload.widgetType = 'previouslyBought')
     --AND payload.widgetType is not null
-    AND payload.sourcescreen IN ('cart', 'home', 'product')
+    AND payload.sourcescreen IN ('cart', 'home', 'product', 'cartRecommendations')
     AND partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
 ),
 
@@ -63,9 +63,9 @@ product_open_from_recos AS (
     SELECT
         device_id,
         event_ts_cet AS product_open_from_recos_ts,
-        payload.sourcescreen AS sourcescreen,
+        payload.sourcescreen,
         COALESCE(payload.recommendationtype, payload.widgettype) AS reco_block_type,
-        payload.pzn AS pzn
+        payload.pzn
     FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type = 'productOpen'
     --AND (LOWER(payload.widgetType) LIKE '%recommendatio%' or payload.widgetType = 'previouslyBought')
@@ -78,7 +78,7 @@ add_to_cart_from_product AS (
     SELECT
         device_id,
         event_ts_cet AS add_to_cart_from_product_ts,
-        payload.pzn AS pzn
+        payload.pzn
     FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         type = 'addToCart'
