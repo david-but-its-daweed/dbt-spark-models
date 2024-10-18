@@ -18,8 +18,8 @@ utm_source,
 case when utm_source = 'unrecognized_google_advertising' and utm_medium is Null then 'unrecognized_google_advertising' else utm_medium end utm_medium ,
 utm_campaign, 
 case when utm_source is Null and utm_medium is Null  then 'organic' else 'advertising' end as traffic_type,
-row_number() Over(partition by user_id order by event_ts_msk ) rn_1,
-row_number() Over(partition by user_id order by event_ts_msk desc ) rn_2,
+---row_number() Over(partition by user_id order by event_ts_msk ) rn_1,
+---row_number() Over(partition by user_id order by event_ts_msk desc ) rn_2,
 'events' as data_source
 
 from 
@@ -42,12 +42,16 @@ select interaction_id,
        last_interaction_type
  from {{ ref('fact_attribution_interaction') }}
 ),
+users_with_visit as (
+    select user_id, min(visit_ts_msk) as visit_ts_msk
+    from visits 
+),
 interactions_visits as (
 select  
  d.user_id, 
  interaction_create_time as visit_ts_msk,
  interaction_create_date as visit_date, 
-  coalesce(i.utm_source,i.source) as utm_source ,
+ coalesce(i.utm_source,i.source) as utm_source ,
  i.utm_medium ,
   coalesce(i.utm_campaign, i.campaign) as utm_campaign , 
 case 
@@ -55,13 +59,13 @@ when  type = 'Offline' then 'Offline'
 when coalesce(i.utm_source,i.source) is null then 'organic'
 else  'advertising'
   end as traffic_type,
-row_number() Over(partition by user_id order by interaction_create_time ) rn_1,
-row_number() Over(partition by user_id order by interaction_create_time desc ) rn_2,
+---row_number() Over(partition by user_id order by interaction_create_time ) rn_1,
+---row_number() Over(partition by user_id order by interaction_create_time desc ) rn_2,
 'admin' as data_source
 from  {{ ref('dim_user') }} d
-left join visits using(user_id)
+left join users_with_visit using(user_id)
 left join interactions i using(user_id)
-where  visit_ts_msk is null
+where  (visit_ts_msk is null or i.first_interaction_type is True) 
 and next_effective_ts_msk is null 
 and country = 'BR'),
 
@@ -102,9 +106,12 @@ LOWER(utm_source) like '%acebook%' or LOWER(utm_source) like '%instagram%' or LO
     or (utm_medium is Null and utm_source is not null)  then 'Unrecognised_source' 
     else utm_medium 
     end as friendly_source, 
-    rn_1 as number_visit,
-    case when rn_1 = 1 then True else False end as first_visit_flag, 
-    case when rn_2 = 1 then True else False end as last_visit_flag,
+    
+    row_number() Over(partition by user_id order by visit_ts_msk ) number_visit,
+    case when row_number() Over(partition by user_id order by visit_ts_msk ) = 1 
+        then True else False end as first_visit_flag, 
+    case when row_number() Over(partition by user_id order by visit_ts_msk  desc) = 1 
+        then True else False end as last_visit_flag,
     data_source
 
 from
