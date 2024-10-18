@@ -74,7 +74,7 @@ select * from visits
 
 union all 
 
-select * from interactions_visits).
+select * from interactions_visits),
 data_visits as (
 select 
 user_id, 
