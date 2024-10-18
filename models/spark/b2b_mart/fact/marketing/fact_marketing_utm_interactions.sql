@@ -45,6 +45,7 @@ select interaction_id,
 users_with_visit as (
     select user_id, min(visit_ts_msk) as visit_ts_msk
     from visits 
+    group by user_id
 ),
 interactions_visits as (
 select  
