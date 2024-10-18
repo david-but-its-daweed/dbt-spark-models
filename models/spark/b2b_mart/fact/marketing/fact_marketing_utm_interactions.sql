@@ -74,9 +74,8 @@ select * from visits
 
 union all 
 
-select * from interactions_visits) 
-
-
+select * from interactions_visits).
+data_visits as (
 select 
 user_id, 
 visit_ts_msk,
@@ -106,13 +105,26 @@ LOWER(utm_source) like '%acebook%' or LOWER(utm_source) like '%instagram%' or LO
     or (utm_medium is Null and utm_source is not null)  then 'Unrecognised_source' 
     else utm_medium 
     end as friendly_source, 
-    
     row_number() Over(partition by user_id order by visit_ts_msk ) number_visit,
-    case when row_number() Over(partition by user_id order by visit_ts_msk ) = 1 
-        then True else False end as first_visit_flag, 
-    case when row_number() Over(partition by user_id order by visit_ts_msk  desc) = 1 
-        then True else False end as last_visit_flag,
+    row_number() Over(partition by user_id order by visit_ts_msk  desc)  desc_number_visit,
     data_source
 
 from
- all_visits
+ all_visits)
+
+select 
+user_id, 
+visit_ts_msk,
+visit_date,
+traffic_type, 
+utm_source,
+utm_medium,
+utm_campaign,
+friendly_source,
+number_visit,
+ case when number_visit = 1
+        then True else False end as first_visit_flag, 
+ case when desc_number_visit = 1 
+        then True else False end as last_visit_flag,
+     data_source
+from data_visits
