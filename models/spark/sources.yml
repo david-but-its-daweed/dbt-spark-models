@@ -86,6 +86,7 @@ sources:
       - name: product_committed_fulfillment_daily_snapshot
       - name: core_pickup_request_boxes_daily_snapshot
       - name: logistics_bags_daily_snapshot
+      - name: logistics_channels_daily_snapshot 
   - name: default
     tables:
       - name: sat_store_performance
