@@ -1,11 +1,11 @@
 product_id,store_id,channel,weight,pessimization_type,discount_percent,source,comment
 ,,,0,,0,manual,no default discount
-,,apomio,10,,17,manual,apomio
-,,medizinfuchs,10,,17,manual,medizinfuchs
-,,idealo,10,,17,manual,idealo
-,,billiger,10,,17,manual,billiger
-,7631548fbb5649f28a9523f661a8dac3,,11,,14,manual,fliegende-pillen
-,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,11,manual,frauenapotheke
+,,apomio,10,,18,manual,apomio
+,,medizinfuchs,10,,18,manual,medizinfuchs
+,,idealo,10,,18,manual,idealo
+,,billiger,10,,18,manual,billiger
+,7631548fbb5649f28a9523f661a8dac3,,11,,15,manual,fliegende-pillen
+,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,12,manual,frauenapotheke
 ,f818f7e2da64439890e406b3fe87e35e,,41,,0,manual,weitling
 3d3a2b1a5ad84ad0b0292c5ed7e522f1,f818f7e2da64439890e406b3fe87e35e,,42,,15.5,manual,wetiling pilot
 6fbbeabd097843198d2a14a744dbca20,f818f7e2da64439890e406b3fe87e35e,,42,,15.5,manual,wetiling pilot
