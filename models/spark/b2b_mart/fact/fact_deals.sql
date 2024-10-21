@@ -26,7 +26,10 @@ owner AS (
         fi.first_time_assigned AS owner_ts,
         fi.status_time,
         fi.status,
-        ks.id as status_int
+        ks.id as status_int, 
+        fi.reject_id,
+        fi.reject_reason,
+        fi.reject_reason_comment
     FROM {{ ref('fact_issues') }} AS fi
     LEFT JOIN key_status AS ks ON fi.status = ks.status
     WHERE type like '%CloseTheDeal%' AND next_effective_ts_msk IS NULL
@@ -129,6 +132,9 @@ SELECT DISTINCT
     owner.status_time,
     owner.status,
     owner.status_int,
+    owner.reject_id,
+    owner.reject_reason,
+    owner.reject_reason_comment,
     purchase.purchaser_id,
     purchase.purchaser_email,
     purchase.purchaser_role,
