@@ -190,6 +190,7 @@ sessions as
         first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window order by source_dt) as source,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window order by source_dt) as campaign,
         first_value(sessions_window.utm_medium) over (partition by device_id, ultimate_window order by source_dt) as medium,
+        first_value(sessions_window.gclid) over (partition by device_id, ultimate_window order by source_dt) as attributed_gclid,
         first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt) as attributed_session_dt_1,
         date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt)) as attributed_session_date_1,
         first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window_1 order by source_dt) as source_1,
@@ -310,6 +311,7 @@ filtered_data as
         app_device_type,
         app_type,
         sessions.user_email_hash,
+        attributed_gclid,
         landing_page,
         gclid,
         landing_pzn
@@ -377,6 +379,7 @@ data_combined as
         coalesce(ads_spends_attributed.spend, 0) as attributed_spend,
         coalesce(ads_spends_attributed_1.spend, 0) as attributed_spend_1d,
         coalesce(sessions.app_type, ads_spends.campaign_platform) as report_app_type,
+        attributed_gclid,
         landing_page,
         gclid,
         landing_pzn
@@ -468,6 +471,7 @@ spend_distributed as
         medium_1d) as attributed_campaign_sessions_1d,
         count(order_id) over (partition by attributed_session_date_1d, campaign_1d, source_1d,
         medium_1d) as attributed_campaign_purchases_1d,
+        attributed_gclid,
         landing_page,
         gclid,
         landing_pzn
@@ -535,6 +539,7 @@ select
     if(order_id is not null and purchase_num = 1, attributed_spend, 0) / if(source <> 'unknown' and campaign <> 'unknown' and purchase_num = 1, attributed_campaign_first_purchases, 1) as attributed_first_order_spend,
     attributed_spend_1d / if(source_1d <> 'unknown' and campaign_1d <> 'Unknown', attributed_campaign_sessions_1d, 1) as attributed_session_spend_1d,
     if(order_id is not null, attributed_spend_1d, 0) / if(source_1d <> 'unknown' and campaign_1d <> 'unknown', attributed_campaign_purchases_1d, 1) as attributed_order_spend_1d,
+    attributed_gclid,
     landing_page,
     gclid,
     landing_pzn
