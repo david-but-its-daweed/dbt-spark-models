@@ -11,7 +11,7 @@
 
 SELECT
     key AS id,
-    UPPER(SUBSTR(value, 0, 1)) || (SUBSTR(value, 2, LENGTH(value) - 1)) AS type
+    UPPER(SUBSTR(value, 0, 1)) || (SUBSTR(value, 2, LENGTH(value) - 1)) AS reject_reason
 FROM (
     SELECT EXPLODE(values)
     FROM {{ source('mongo', 'b2b_core_enumregistry_daily_snapshot') }}
