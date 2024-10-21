@@ -100,6 +100,9 @@ FROM (
         i.history.moderatorId AS moderator_id,
         key.id AS status_id,
         key.status,
+        rej.id as reject_id,
+        rej.reject_reason, 
+        i.history.rejectReasonComment, 
         element_at(teamHistory, cast((array_position(teamHistory.ctms,
                                        array_max(teamHistory.ctms))) as INTEGER)) as team,
         size(teamHistory) as teams,
@@ -121,6 +124,12 @@ FROM (
             status
         FROM {{ ref('key_issue_status') }}
     ) AS key ON i.history.status = key.id
+     LEFT JOIN (
+        SELECT DISTINCT
+            id,
+            reject_reason 
+        FROM {{ ref('key_reject_reason') }}
+    ) AS rej ON i.history.rejectReason = rej.id
 ) AS issues
 LEFT JOIN admins AS assignee ON issues.assignee_id = assignee.admin_id
 LEFT JOIN admins AS reporter ON issues.reporter_id = reporter.admin_id
