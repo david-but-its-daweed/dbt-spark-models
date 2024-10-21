@@ -123,6 +123,9 @@ session_precalc as
             end
             , " ", 1) as campaign_corrected,
         if(lower(source_corrected) = 'facebook', utm_medium, '') as utm_medium,
+        landing_page,
+        parse_url(concat("https://onfy.de", landing_page), 'QUERY', 'gclid') as gclid,
+        cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string) as landing_pzn,
         user_email_hash,
         order_id,
         order_created_time_cet,
@@ -198,7 +201,10 @@ sessions as
         first_value(sessions_window.utm_medium) over (partition by device_id, second_ultimate_window order by source_dt) as second_medium,
         first_value(sessions_window.source_corrected) over (partition by device_id, significant_source_window order by source_dt) as source_significant,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, significant_source_window order by source_dt) as campaign_significant,
-        first_value(sessions_window.utm_medium) over (partition by device_id, significant_source_window order by source_dt) as medium_significant
+        first_value(sessions_window.utm_medium) over (partition by device_id, significant_source_window order by source_dt) as medium_significant,
+        landing_page,
+        gclid,
+        landing_pzn
     from sessions_window
 ),
 
@@ -303,7 +309,10 @@ filtered_data as
         order_created_date_cet as order_date,
         app_device_type,
         app_type,
-        sessions.user_email_hash
+        sessions.user_email_hash,
+        landing_page,
+        gclid,
+        landing_pzn
     from sessions as sessions
     join uid 
         on sessions.device_id = uid.device_id
@@ -367,7 +376,10 @@ data_combined as
         coalesce(ads_spends.spend, 0) as total_spend,
         coalesce(ads_spends_attributed.spend, 0) as attributed_spend,
         coalesce(ads_spends_attributed_1.spend, 0) as attributed_spend_1d,
-        coalesce(sessions.app_type, ads_spends.campaign_platform) as report_app_type
+        coalesce(sessions.app_type, ads_spends.campaign_platform) as report_app_type,
+        landing_page,
+        gclid,
+        landing_pzn
     from filtered_data as sessions
     full join ads_spends 
         on date_trunc('day', ads_spends.partition_date) = sessions.session_date
@@ -455,7 +467,10 @@ spend_distributed as
         count(*) over (partition by attributed_session_date_1d, campaign_1d, source_1d, 
         medium_1d) as attributed_campaign_sessions_1d,
         count(order_id) over (partition by attributed_session_date_1d, campaign_1d, source_1d,
-        medium_1d) as attributed_campaign_purchases_1d
+        medium_1d) as attributed_campaign_purchases_1d,
+        landing_page,
+        gclid,
+        landing_pzn
     from data_combined
 )
 
@@ -519,5 +534,8 @@ select
     if(order_id is not null, attributed_spend, 0) / if(source <> 'unknown' and campaign <> 'unknown', attributed_campaign_purchases, 1) as attributed_order_spend,
     if(order_id is not null and purchase_num = 1, attributed_spend, 0) / if(source <> 'unknown' and campaign <> 'unknown' and purchase_num = 1, attributed_campaign_first_purchases, 1) as attributed_first_order_spend,
     attributed_spend_1d / if(source_1d <> 'unknown' and campaign_1d <> 'Unknown', attributed_campaign_sessions_1d, 1) as attributed_session_spend_1d,
-    if(order_id is not null, attributed_spend_1d, 0) / if(source_1d <> 'unknown' and campaign_1d <> 'unknown', attributed_campaign_purchases_1d, 1) as attributed_order_spend_1d
+    if(order_id is not null, attributed_spend_1d, 0) / if(source_1d <> 'unknown' and campaign_1d <> 'unknown', attributed_campaign_purchases_1d, 1) as attributed_order_spend_1d,
+    landing_page,
+    gclid,
+    landing_pzn
 from spend_distributed
