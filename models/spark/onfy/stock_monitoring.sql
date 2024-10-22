@@ -21,7 +21,7 @@ stocks_raw AS (
         product.pzn,
         product.manufacturer_name,
         product.store_name,
-        SUM(product.stock_quantity) AS stock_quantity,
+        SUM(COALESCE(product.stock_quantity, 0)) AS stock_quantity,
         MIN(product.price) AS price
     FROM {{ source('onfy_mart', 'dim_product') }} AS product
     INNER JOIN dates
