@@ -194,9 +194,9 @@ idealo_data as
 ),
 
 google_data as 
-(
+(    
     select
-        cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string) as landing_pzn,
+        if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2]) as landing_pzn,
         count(distinct order_id) as orders,
         sum(session_spend) as spend,
         count(sources.device_id) as sessions
@@ -208,9 +208,10 @@ google_data as
         and session_dt >= current_date() - interval 3 month
         and source = 'google'
         and campaign like 'shopping%'
-        and cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string) is not null
+        and if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2]) is not null
+        and len(if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2])) = 8
     group by 
-        cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string)
+        if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2])
     having orders = 0
 )
 
