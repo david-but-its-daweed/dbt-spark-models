@@ -51,6 +51,15 @@ latest_price as
         pzn
 ),
 
+manufacturers_products as 
+(
+    select distinct 
+        product_id
+    from price_history
+    where 1=1
+        and manufacturer_name = 'MEDICE Arzneimittel Pütter GmbH&Co.KG'
+),
+
 billiger_sessions as 
 (
     select distinct
@@ -213,46 +222,54 @@ google_data as
     group by 
         if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2])
     having orders = 0
+),
+
+precalculation as 
+(
+    select 
+        m.id as product_id, 
+        null as store_id, 
+        'google' as channel, 
+        31 as weight, 
+        'filter_out' as pessimization_type, 
+        0.0 as discount_percent, 
+        'blacklist' as source, 
+        'Google Shopping low performing blacklist' as comment
+    from google_data cr
+    join {{source('pharmacy_landing', 'medicine')}} m 
+        on m.country_local_id = cr.landing_pzn
+    where orders < 1
+    union all
+    select 
+        m.id as product_id, 
+        null as store_id, 
+        'idealo' as channel, 
+        31 as weight, 
+        'use_max_price' as pessimization_type, 
+        0.0 as discount_percent, 
+        'low_performing' as source, 
+        'Idealo low performing blacklist' as comment
+    from idealo_data as cr
+    join {{source('pharmacy_landing', 'medicine')}} m 
+        on m.country_local_id = cr.pzn
+    where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
+    union all
+    select 
+        m.id as product_id, 
+        null as store_id, 
+        'billiger' as channel, 
+        31 as weight, 
+        'use_max_price' as pessimization_type, 
+        0.0 as discount_percent, 
+        'low_performing' as source, 
+        'Billiger low performing blacklist' as comment
+    from billiger_data cr 
+    join {{source('pharmacy_landing', 'medicine')}} m 
+        on m.country_local_id = cr.pzn
+    where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
 )
 
-select 
-    m.id as product_id, 
-    null as store_id, 
-    'google' as channel, 
-    31 as weight, 
-    'filter_out' as pessimization_type, 
-    0.0 as discount_percent, 
-    'blacklist' as source, 
-    'Google Shopping low performing blacklist' as comment
-from google_data cr
-join {{source('pharmacy_landing', 'medicine')}} m 
-    on m.country_local_id = cr.landing_pzn
-where orders < 1
-union all
-select 
-    m.id as product_id, 
-    null as store_id, 
-    'idealo' as channel, 
-    31 as weight, 
-    'use_max_price' as pessimization_type, 
-    0.0 as discount_percent, 
-    'low_performing' as source, 
-    'Idealo low performing blacklist' as comment
-from idealo_data as cr
-join {{source('pharmacy_landing', 'medicine')}} m 
-    on m.country_local_id = cr.pzn
-where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
-union all
-select 
-    m.id as product_id, 
-    null as store_id, 
-    'billiger' as channel, 
-    31 as weight, 
-    'use_max_price' as pessimization_type, 
-    0.0 as discount_percent, 
-    'low_performing' as source, 
-    'Billiger low performing blacklist' as comment
-from billiger_data cr 
-join {{source('pharmacy_landing', 'medicine')}} m 
-    on m.country_local_id = cr.pzn
-where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
+select *
+from precalculation 
+where 1=1
+    and product_id not in (select distinct product_id from manufacturers_products)
