@@ -243,6 +243,20 @@ precalculation as
     select 
         m.id as product_id, 
         null as store_id, 
+        'ohm' as channel, 
+        31 as weight, 
+        'filter_out' as pessimization_type, 
+        0.0 as discount_percent, 
+        'blacklist' as source, 
+        'OHM Google Shopping low performing blacklist' as comment
+    from google_data cr
+    join {{source('pharmacy_landing', 'medicine')}} m 
+        on m.country_local_id = cr.landing_pzn
+    where orders < 1
+    union all
+    select 
+        m.id as product_id, 
+        null as store_id, 
         'idealo' as channel, 
         31 as weight, 
         'use_max_price' as pessimization_type, 
