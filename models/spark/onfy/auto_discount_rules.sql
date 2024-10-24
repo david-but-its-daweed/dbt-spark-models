@@ -15,6 +15,7 @@ with price_history as
         effective_ts,
         product_id,
         pzn,
+        manufacturer_name,
         min(price) as min_price
     from {{source('onfy_mart', 'dim_product')}}
     where 1=1
@@ -25,7 +26,8 @@ with price_history as
     group by 
         effective_ts,
         product_id,
-        pzn
+        pzn,
+        manufacturer_name
 ),
 
 price_change as 
