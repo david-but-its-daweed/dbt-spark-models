@@ -80,6 +80,7 @@ WITH
           "orderClick"), 1, 0)) > 0 )
 SELECT
   user['userId'] AS user_id,
+  de.device.id as device_id,
   type,
   event_ts_utc,
   CAST(event_ts_utc AS DATE) AS event_utc_date,
