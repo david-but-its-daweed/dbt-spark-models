@@ -51,6 +51,8 @@ grades as (
   select "b" as grade, 2 as value
   union all 
   select "c" as grade, 3 as value
+  union all 
+  select "d" as grade, 4 as value
 ),
 
 grades_prob as (
@@ -72,6 +74,7 @@ customers as (
     tracked,
     grades.grade,
     grades_prob.grade_prob as grade_probability,
+    grades_initial.grade as initial_grade,
     first_deal_planning_volume,
     first_deal_planning_currency,
     first_deal_planning_volume_usd,
@@ -79,6 +82,8 @@ customers as (
     from {{ ref('sat_customers') }} m
     left join grades on coalesce(m.grade, 0) = grades.value
     left join grades_prob on coalesce(m.grade_probability, 0) = grades_prob.value
+    left join grades grades_initial on coalesce(m.initial_grade, 0) = grades_initial.value
+
     where next_effective_ts_msk is null
 ),
 
@@ -133,6 +138,7 @@ select distinct
     volume_to,
     coalesce(grade, "unknown") as grade,
     coalesce(grade_probability, "unknown") as grade_probability,
+    coalesce(initial_grade, "unknown") as initial_grade,
     amo_crm_id, 
     amo_id, 
     invited_by_promo,
