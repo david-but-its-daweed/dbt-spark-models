@@ -25,6 +25,7 @@ SELECT
     invitedTime AS invited_time,
     isPartner AS is_partner,
     gradeInfo.grade AS grade,
+    initialGrade AS initial_grade,
     gradeInfo.prob AS grade_probability,
     firstDealPlanningVolume.amount AS first_deal_planning_volume,
     firstDealPlanningVolume.ccy AS first_deal_planning_currency,
