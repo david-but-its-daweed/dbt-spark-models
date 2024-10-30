@@ -76,13 +76,25 @@ select
         promocodeSnapshot.code as promocode,
         status,
         ceil(
+            case when status = "active"
+                then months_between(
+                
+                    greatest(to_timestamp(current_date()),
+                    coalesce(millis_to_ts(cancellationTime),
+                    millis_to_ts(nextChargeAttemptTime)
+                    )), millis_to_ts(createdTimeMs)
+                
+            )
+            else
             months_between(
                 coalesce(
                     millis_to_ts(cancellationTime),
                     millis_to_ts(nextChargeAttemptTime)
                     ), millis_to_ts(createdTimeMs)
                 )
-            ) as subscribtion_months
+            end
+            ) 
+            as subscribtion_months
 from {{ source('mongo', 'b2b_core_analytics_subscriptions_daily_snapshot') }}
 )
 )
