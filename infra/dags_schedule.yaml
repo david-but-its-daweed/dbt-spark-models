@@ -27,9 +27,11 @@ data-readiness:
   tags: ["data_readiness"]
 b2b-mart:
   dag-name: b2b-marts
+  alerts-channel: "#alerts-pro-dbt"
   tags: ["b2b_mart"]
 onfy:
   dag-name: onfy
+  alerts-channel: "#onfy-etl-monitoring"
   tags: ["onfy"]
 pulse:
   dag-name: pulse
