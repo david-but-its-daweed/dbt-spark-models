@@ -6,6 +6,7 @@
     schema='gold',
     incremental_strategy='insert_overwrite',
     partition_by=['month'],
+    on_schema_change='sync_all_columns',
     meta = {
         'model_owner' : '@general_analytics',
         'bigquery_load': 'true',
@@ -233,6 +234,19 @@ support_tickets AS (
         MAX(ticket_id) AS ticket_id
     FROM {{ ref('joom_babylone_tickets') }}
     GROUP BY order_id
+),
+
+merchant_fulfill AS (
+    SELECT friendly_id AS friendly_order_id, 
+            MAX(cft) AS order_commited_merchant_fulfillment_days,
+            ROUND(max(aft / 1000 / 60 / 60 / 24), 3) AS order_merchant_fulfillment_days_estimated
+    FROM {{ source('mongo', 'merchant_order') }} AS mo
+    LEFT JOIN {{ source('merchant', 'order_data') }} USING(friendly_id)
+    WHERE (aft IS NOT NULL OR cft IS NOT NULL)
+        {% if is_incremental() %}
+            AND DATE(created_time_utc) >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
+        {% endif %}
+    GROUP BY 1
 ),
 
 orders_ext1 AS (
@@ -485,12 +499,15 @@ orders_ext6 AS (
 ),
 
 orders_ext7 AS (
-    -- добавляем бизнес-линию
+    -- добавляем бизнес-линию, order_commited_merchant_fulfillment_days и order_merchant_fulfillment_days_estimated
     SELECT
         a.*,
-        b.business_line
+        b.business_line,
+        c.order_merchant_fulfillment_days_estimated,
+        c.order_commited_merchant_fulfillment_days
     FROM orders_ext6 AS a
     LEFT JOIN {{ ref('gold_merchant_categories') }} AS b USING (merchant_category_id)
+    LEFT JOIN merchant_fulfill AS c USING(friendly_order_id)
 )
 
 SELECT
@@ -580,6 +597,8 @@ SELECT
     is_finalized,
 
     is_canceled_by_merchant,
+    order_merchant_fulfillment_days_estimated,
+    order_commited_merchant_fulfillment_days,
 
     support_ticket_id IS NOT NULL AS is_with_support_ticket,
     support_ticket_id,

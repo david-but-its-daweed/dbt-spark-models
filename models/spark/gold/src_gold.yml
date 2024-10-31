@@ -650,6 +650,10 @@ models:
       description: Product rating at the time of purchase
     - name: is_negative_feedback
       description: Flag indicating whether the user remains dissatisfied with the purchase. Calculated based on the condition [less than 80 days have passed since order creation] AND [[1 or 2 stars in the review before leaving the review] OR [`customer_refund_reason` IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27)]]
+    - name: order_merchant_fulfillment_days_estimated
+      description: Actual Fulfillment Time (in days), approximate time from order approve to passing order to pickup by merchant. AFT is attributed to order, AFT = [time from approve to checkin] - [pickup time], pickup time is 95-percentile of time from shipping to delivery over merchant or all orders, the formula could be adjusted in future. For more information refer to https://www.notion.so/joomteam/Actual-Fulfillment-Time-calculation-AFT-b7bd6dd09d8b4b2694949960949d4adb?pvs=4#753d63ecf087404ebdb7deb2f0f2d8c9 
+    - name: order_commited_merchant_fulfillment_days
+      description: Commited Fullfillment Time (in days), merchant's estimation of time from order approve to passing order to pickup by merchant. CFT is attributed to product variant, but can be changed by merchant.
 
 - name: gold_order_groups
   description: Information about purchased shopping carts. The row in the table is true for `order_group_id`.
