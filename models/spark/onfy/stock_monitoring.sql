@@ -64,10 +64,9 @@ orders_daily AS (
     FROM pzns
     LEFT JOIN {{ source('onfy', 'orders_info') }}
         ON
-            INT(pzns.pzn) = INT(orders_info.pzn)
-    WHERE
-        orders_info.product_id IS NOT NULL
-        AND orders_info.order_created_time_cet >= '2022-06-01'
+            pzns.pzn = orders_info.pzn
+            and pzns.report_date = date(orders_info.order_created_time_cet)
+            and orders_info.order_created_time_cet >= '2022-06-01'
     GROUP BY 1, 2, 3
 ),
 
