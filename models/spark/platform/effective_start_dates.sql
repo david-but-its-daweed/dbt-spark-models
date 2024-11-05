@@ -6,10 +6,18 @@
     materialized='view'
 ) }}
 
-select output_dag_id         as dag_id,
-       output_task_id        as task_id,
-       date,
-       coalesce(max(ready_time_hours), 0) as effective_start_hours
-from {{ref("data_readiness")}}
-where input_rank = 2
-group by output_dag_id, output_task_id, date
+SELECT
+    partition_date,
+    output_name AS table_name,
+    output_type AS table_type,
+    output_dag_id AS dag_id,
+    output_task_id AS task_id,
+    COALESCE(MAX(ready_time_hours), 0) AS effective_start_hours
+FROM {{ ref("data_readiness") }}
+WHERE input_rank = 2
+GROUP BY
+    partition_date,
+    output_name,
+    output_type,
+    output_dag_id,
+    output_task_id

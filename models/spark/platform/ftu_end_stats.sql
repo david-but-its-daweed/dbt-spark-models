@@ -1,0 +1,38 @@
+{{ config(
+    meta = {
+      'model_owner' : '@analytics.duty'
+    },
+    schema='platform',
+    materialized='table'
+) }}
+
+WITH ftu_data AS (
+    SELECT
+        table_name,
+        platform AS table_type,
+        partition_date,
+        start_date,
+        end_date
+    FROM {{ ref("ftu_archive") }}
+    WHERE partition_date > NOW() - INTERVAL 2 MONTH
+),
+
+ready_hours AS (
+    SELECT
+        ftu_data.table_name,
+        ftu_data.table_type,
+        esd.effective_start_hours,
+        (UNIX_TIMESTAMP(ftu_data.end_date) - UNIX_TIMESTAMP(DATE(ftu_data.end_date))) / 60 / 60 AS ready_time_hours
+    FROM ftu_data
+    LEFT JOIN {{ ref("effective_start_dates") }} AS esd
+        USING (table_name, table_type, partition_date)
+)
+
+SELECT
+    table_name,
+    table_type,
+    PERCENTILE_APPROX(ready_time_hours, 0.5) AS median_end_time,
+    PERCENTILE_APPROX(ready_time_hours - effective_start_hours, 0.5) AS p50_effective_duration,
+    PERCENTILE_APPROX(ready_time_hours - effective_start_hours, 0.8) AS p80_effective_duration
+FROM ready_hours
+GROUP BY table_name, table_type

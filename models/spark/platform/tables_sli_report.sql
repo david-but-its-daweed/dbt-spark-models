@@ -13,18 +13,18 @@ WITH data_readiness_aggregate (
         source_id,
         input_name,
         input_type,
-        date,
+        partition_date AS date,
         day_of_week_no,
         MIN(ready_time_hours) AS ready_time_hours
     FROM {{ ref("data_readiness") }}
     WHERE
-        date > NOW() - INTERVAL 3 MONTHS
-        AND date <= TO_DATE(NOW())
+        partition_date > NOW() - INTERVAL 3 MONTHS
+        AND partition_date <= TO_DATE(NOW())
         AND input_rank = 1
-    GROUP BY source_id, input_name, input_type, date, day_of_week_no
+    GROUP BY source_id, input_name, input_type, partition_date, day_of_week_no
 ),
 
-data (
+prepared_data (
     SELECT
         data_readiness.source_id,
         details_all.business_name,
@@ -77,7 +77,7 @@ data_3_month AS (
             END
         ) AS successes,
         COUNT(DISTINCT date) AS days
-    FROM data
+    FROM prepared_data
     GROUP BY source_id, dow, business_name, target_sli, alert_channels, owner, description, priority
 ),
 
@@ -98,7 +98,7 @@ data_month AS (
             END
         ) AS successes,
         COUNT(DISTINCT date) AS days
-    FROM data
+    FROM prepared_data
     WHERE date > NOW() - INTERVAL 1 MONTHS
     GROUP BY source_id, dow, business_name, target_sli, alert_channels, owner, description, priority
 ),
@@ -120,7 +120,7 @@ data_week AS (
             END
         ) AS successes,
         COUNT(DISTINCT date) AS days
-    FROM data
+    FROM prepared_data
     WHERE date > NOW() - INTERVAL 1 WEEKS
     GROUP BY source_id, dow, business_name, target_sli, alert_channels, owner, description, priority
 )

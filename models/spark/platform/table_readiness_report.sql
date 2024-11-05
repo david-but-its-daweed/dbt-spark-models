@@ -13,30 +13,104 @@
     },
 ) }}
 
-select source_id,
-    date as partition_date,
-    input_name,
-    input_type,
-    case 
-        when state = 'failed' then 999
-        else coalesce(ready_time_human, 999)
-    end as ready_time,
-    round(tes.median_end_time - 0.5) + round((tes.median_end_time - round(tes.median_end_time - 0.5))* 60)/100 as median_ready_time,
-    (ready_time_hours - coalesce(esd.effective_start_hours, 0)) / coalesce(tes.p50_effective_duration, tes.median_end_time) as slowness_ratio,
-    (ready_time_hours - coalesce(esd.effective_start_hours, 0) - coalesce(tes.p50_effective_duration, tes.median_end_time)) * 60 as slowdown_minutes,
-    state,
-    input_rank,
-    run_id,
-    dag_id,
-    task_id,
-    priority_weight,
-    start_time_human,
-    round(coalesce(esd.effective_start_hours, 0) - 0.5) + round((coalesce(esd.effective_start_hours, 0) - round(coalesce(esd.effective_start_hours, 0) - 0.5))* 60)/100 as effective_start_human,
-    ready_time_hours,
-    (ready_time_hours - coalesce(esd.effective_start_hours, 0)) * 60 as effective_duration_minutes,
-    coalesce(tes.p50_effective_duration, tes.median_end_time) * 60 as p50_effective_duration_minutes,
-    tes.p80_effective_duration * 60 as p80_effective_duration_minutes
-from {{ref("data_readiness")}}
-    left join {{ref("task_end_stats")}} tes using (dag_id, task_id)
-    left join {{ref("effective_start_dates")}} esd using (dag_id, task_id, date)
-where date >= NOW() - INTERVAL 2 MONTH
+WITH final_data AS (
+    SELECT
+        dr.source_id,
+        dr.partition_date,
+        dr.run_id,
+        dr.input_name,
+        dr.input_type,
+        dr.input_rank,
+        dr.dag_id,
+        dr.task_id,
+        dr.output_name,
+        dr.output_type,
+        dr.output_dag_id,
+        dr.output_task_id,
+        dr.ready_time_hours,
+        dr.ready_time_human,
+        dr.start_time_hours,
+        dr.start_time_human,
+        dr.state,
+        dr.priority_weight,
+        dr.ftu_start_date,
+        dr.ftu_end_date,
+        dr.airflow_start_date,
+        dr.airflow_end_date,
+        dr.start_date,
+        dr.end_date,
+        dr.airflow_duration,
+        dr.ftu_duration,
+        dr.duration,
+        dr.try_number,
+        dr.is_daily,
+        dr.is_output_has_ftu_sensor,
+
+        at_es.median_end_time AS airflow_median_ready_time,
+        at_es.p50_effective_duration AS airflow_p50_effective_duration,
+        at_es.p80_effective_duration AS airflow_p80_effective_duration,
+
+        ftu_es.median_end_time AS ftu_median_ready_time,
+        ftu_es.p50_effective_duration AS ftu_p50_effective_duration,
+        ftu_es.p80_effective_duration AS ftu_p80_effective_duration,
+
+        COALESCE(ftu_es.median_end_time, at_es.median_end_time) AS median_ready_time,
+        COALESCE(ftu_es.p50_effective_duration, at_es.p50_effective_duration) AS p50_effective_duration,
+        COALESCE(ftu_es.p80_effective_duration, at_es.p80_effective_duration) AS p80_effective_duration,
+
+
+        airflow_task_esd.effective_start_hours AS airflow_task_effective_start_hours,
+        tables_esd.effective_start_hours AS tables_effective_start_hours,
+        COALESCE(tables_esd.effective_start_hours, airflow_task_esd.effective_start_hours) AS effective_start_hours,
+
+        dr.ready_time_hours - COALESCE(tables_esd.effective_start_hours, airflow_task_esd.effective_start_hours, 0) AS effective_duration
+
+    FROM {{ ref("data_readiness") }} AS dr
+
+    LEFT JOIN {{ ref("airflow_task_end_stats") }} AS at_es
+        ON
+            dr.dag_id = at_es.dag_id
+            AND dr.task_id = at_es.task_id
+
+    LEFT JOIN {{ ref("ftu_end_stats") }} AS ftu_es
+        ON
+            dr.input_name = ftu_es.table_name
+            AND dr.input_type = ftu_es.table_type
+
+    LEFT JOIN {{ ref("effective_start_dates_tasks") }} AS airflow_task_esd
+        ON
+            dr.dag_id = airflow_task_esd.dag_id
+            AND dr.task_id = airflow_task_esd.task_id
+            AND dr.partition_date = airflow_task_esd.partition_date
+
+    LEFT JOIN {{ ref("effective_start_dates") }} AS tables_esd
+        ON
+            dr.input_name = tables_esd.table_name
+            AND dr.input_type = tables_esd.table_type
+            AND dr.partition_date = tables_esd.partition_date
+
+    WHERE dr.partition_date >= NOW() - INTERVAL 2 MONTH
+)
+
+SELECT
+    *,
+    {{ format_time('airflow_median_ready_time') }} AS airflow_median_ready_time_human,
+    {{ format_time('ftu_median_ready_time') }} AS ftu_median_ready_time_human,
+    {{ format_time('median_ready_time') }} AS median_ready_time_human,
+
+    {{ format_time('airflow_task_effective_start_hours') }} AS airflow_task_effective_start_hours_human,
+    {{ format_time('tables_effective_start_hours') }} AS tables_effective_start_hours_human,
+    {{ format_time('effective_start_hours') }} AS effective_start_hours_human,
+
+    effective_duration / p50_effective_duration AS slowness_ratio,
+    (effective_duration - p50_effective_duration) * 60 AS slowdown_minutes,
+
+    effective_duration * 60 AS effective_duration_minutes,
+    p50_effective_duration * 60 AS p50_effective_duration_minutes,
+    p80_effective_duration * 60 AS p80_effective_duration_minutes,
+    CASE
+        WHEN state = 'failed' THEN '999'
+        ELSE COALESCE(ready_time_human, '999')
+    END AS ready_time
+
+FROM final_data
