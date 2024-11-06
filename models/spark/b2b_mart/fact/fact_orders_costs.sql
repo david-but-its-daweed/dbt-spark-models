@@ -293,7 +293,10 @@ select p.order_id,
 
 subsidy as (
 select p.order_id, 
-        round(SUM(IF(type in  ('grant', 'dapGrant') or tag in ('grant', 'dapGrant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub
+        round(SUM(IF(type in  ('grant', 'dapGrant') or tag in ('grant', 'dapGrant'), fee_rub, 0)), 2) AS subsidy_confirmed_price_rub,
+        round(SUM(IF(type = 'firstmileBeforeQC', fee_rub, 0)), 2) AS firstmile_before_qc_confirmed_price_rub,
+        round(SUM(IF(type = 'firstmileAfterQC', fee_rub, 0)), 2) AS firstmile_after_qc_confirmed_price_rub,
+        round(SUM(IF(type = 'linehaul', fee_rub, 0)), 2) AS linehaul_confirmed_price_rub
         from all_prices p
         left join 
         (
@@ -342,7 +345,10 @@ prices as (
         general_cargo_forecast_price_rub,
         currency_control_forecast_price_rub,
         export_declaration_forecast_price_rub,
-        subsidy_confirmed_price_rub
+        subsidy_confirmed_price_rub,
+        firstmile_before_qc_confirmed_price_rub,
+        firstmile_after_qc_confirmed_price_rub,
+        linehaul_confirmed_price_rub
     from prices_final pf
     left join prices_forecast p on pf.order_id = p.order_id
     left join subsidy g on pf.order_id = g.order_id
@@ -414,6 +420,9 @@ select distinct
         currency_control_forecast_price_rub,
         export_declaration_forecast_price_rub,
         subsidy_confirmed_price_rub,
+        firstmile_before_qc_confirmed_price_rub,
+        firstmile_after_qc_confirmed_price_rub,
+        linehaul_confirmed_price_rub,
         usd_rate,
         usd_company_rate,
         usd_markup_rate,
