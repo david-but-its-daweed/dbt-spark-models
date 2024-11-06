@@ -133,6 +133,14 @@ ftu AS (
         END)
 ),
 
+spark_updated_tables AS (
+    SELECT
+        table_full_name AS table_name,
+        'spark' AS table_type
+    FROM platform.beacon
+    WHERE create_datetime / 1000 >= UNIX_TIMESTAMP(DATE(NOW()) - INTERVAL 1 MONTH)
+),
+
 final_data AS (
     SELECT
         dependencies.source_id,
@@ -166,7 +174,8 @@ final_data AS (
         COALESCE(ftu.duration, airflow_data.duration) AS duration,
         airflow_data.try_number,
         COALESCE(airflow_data.run_cnt = 1, FALSE) AS is_daily,
-        COALESCE(aftus.partition_date IS NOT NULL, FALSE) AS is_output_has_ftu_sensor
+        COALESCE(aftus.partition_date IS NOT NULL, FALSE) AS is_output_has_ftu_sensor,
+        COALESCE(dependencies.input_type == 'spark' AND sut.table_name IS NULL, FALSE) AS is_manual_table
     FROM dependencies
     LEFT JOIN mart.dim_date AS dates
     LEFT JOIN airflow_data
@@ -185,6 +194,12 @@ final_data AS (
             AND dependencies.input_name = aftus.sensor_table_name
             AND dependencies.input_type = aftus.sensor_type
             AND dates.id = aftus.partition_date
+
+    LEFT JOIN spark_updated_tables AS sut
+        ON
+            dependencies.input_name = sut.table_name
+            AND dependencies.input_type = sut.table_type
+
     WHERE
         dates.id <= TO_DATE(NOW())
         AND dates.id >= TO_DATE(NOW()) - INTERVAL 6 MONTH

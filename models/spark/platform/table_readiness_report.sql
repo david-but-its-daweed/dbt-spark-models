@@ -45,6 +45,7 @@ WITH final_data AS (
         dr.try_number,
         dr.is_daily,
         dr.is_output_has_ftu_sensor,
+        dr.is_manual_table,
 
         at_es.median_end_time AS airflow_median_ready_time,
         at_es.p50_effective_duration AS airflow_p50_effective_duration,
