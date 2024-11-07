@@ -42,7 +42,7 @@ select
     publicContact.phone.code as phone_code,
     publicContact.phone.number as phone_number,
   ---  publicContact.weChat as we_chat,
-    publicContact.website as website
+  ---  publicContact.website as website
 from {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }}
 ),
 
@@ -110,7 +110,7 @@ from
     phone_code,
     phone_number,
    -- we_chat,
-    website,
+  --  website,
     merchant_response_status,
     merchant_rejected_time,
     merchant_reject_reason,
