@@ -65,7 +65,7 @@ WITH final_data AS (
         tables_esd.effective_start_hours AS tables_effective_start_hours,
         COALESCE(tables_esd.effective_start_hours, airflow_task_esd.effective_start_hours) AS effective_start_hours,
 
-        dr.ready_time_hours - COALESCE(tables_esd.effective_start_hours, airflow_task_esd.effective_start_hours, 0) AS effective_duration
+        dr.ready_time_hours_msk - COALESCE(tables_esd.effective_start_hours_msk, airflow_task_esd.effective_start_hours_msk, 0) AS effective_duration
 
     FROM {{ ref("data_readiness") }} AS dr
 
