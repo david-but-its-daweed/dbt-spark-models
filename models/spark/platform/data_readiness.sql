@@ -208,8 +208,12 @@ final_data AS (
 
 SELECT
     *,
+    (ready_time_hours + 3) % 24 AS ready_time_hours_msk,
+    (start_time_hours + 3) % 24 AS start_time_hours_msk,
     {{ format_time('ready_time_hours') }} AS ready_time_human,
-    {{ format_time('start_time_hours') }} AS start_time_human
+    {{ format_time('start_time_hours') }} AS start_time_human,
+    {{ format_time('(ready_time_hours + 3) % 24') }} AS ready_time_human_msk,
+    {{ format_time('(start_time_hours + 3) % 24') }} AS start_time_human_msk
     -- CONCAT_WS(':', LPAD(CAST(ready_time_hours AS INT), 2, '0'), LPAD(CAST((ready_time_hours % 1) * 60 AS INT), 2, '0')) AS ready_time_human,
     -- CONCAT_WS(':', LPAD(CAST(start_time_hours AS INT), 2, '0'), LPAD(CAST((start_time_hours % 1) * 60 AS INT), 2, '0')) AS start_time_human
     -- ROUND(ready_time_hours - 0.5) + ROUND((ready_time_hours - ROUND(ready_time_hours - 0.5)) * 60) / 100 AS ready_time_human,

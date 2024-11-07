@@ -17,12 +17,15 @@ SELECT DISTINCT
     dr.dag_id,
     dr.task_id,
     dr.partition_date,
+    dr.ready_time_hours,
+    dr.ready_time_hours_msk,
     dr.ready_time_human,
-    (dr.ready_time_hours - airflow_task_esd.effective_start_hours) * 60 AS airflow_effective_duration_minutes,
-    (dr.ready_time_hours - tables_esd.effective_start_hours) * 60 AS tables_effective_duration_minutes,
+    dr.ready_time_human_msk,
+    (dr.ready_time_hours_msk - airflow_task_esd.effective_start_hours_msk) * 60 AS airflow_effective_duration_minutes,
+    (dr.ready_time_hours_msk - tables_esd.effective_start_hours_msk) * 60 AS tables_effective_duration_minutes,
     COALESCE(
-        (dr.ready_time_hours - tables_esd.effective_start_hours) * 60,
-        (dr.ready_time_hours - airflow_task_esd.effective_start_hours) * 60
+        (dr.ready_time_hours_msk - airflow_task_esd.effective_start_hours_msk) * 60,
+        (dr.ready_time_hours_msk - tables_esd.effective_start_hours_msk) * 60
     ) AS effective_duration_minutes
 
 FROM {{ ref("data_readiness") }} AS dr

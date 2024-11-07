@@ -10,6 +10,7 @@ SELECT
     partition_date,
     dag_id,
     task_id,
+    MAX(effective_start_hours_msk) AS effective_start_hours_msk,
     MAX(effective_start_hours) AS effective_start_hours
 FROM {{ ref("effective_start_dates") }}
 GROUP BY
