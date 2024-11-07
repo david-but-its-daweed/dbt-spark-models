@@ -4,7 +4,7 @@
     tags=['data_readiness'],
     meta = {
       'model_owner' : '@general_analytics',
-      'bigquery_load': 'true',
+      'bigquery_load': 'false',
       'bigquery_partitioning_date_column': 'partition_date',
       'bigquery_upload_horizon_days': '2',
       'bigquery_fail_on_missing_partitions': 'false',
@@ -43,9 +43,10 @@ WITH final_data AS (
         dr.ftu_duration,
         dr.duration,
         dr.try_number,
+        dr.is_ftu_record,
         dr.is_daily,
         dr.is_output_has_ftu_sensor,
-        dr.is_manual_table,
+        dr.is_not_updated_last_day,
 
         at_es.median_end_time AS airflow_median_ready_time,
         at_es.p50_effective_duration AS airflow_p50_effective_duration,

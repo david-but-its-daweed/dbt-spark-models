@@ -10,7 +10,7 @@
 
 ) }}
 
-
-SELECT *,
-  cast(expected_time_utc_hours_str as float) as expected_time_utc_hours
-FROM {{ref("slo_details_seed")}}
+SELECT
+    *,
+    CAST(expected_time_utc_hours_str AS FLOAT) AS expected_time_utc_hours
+FROM {{ ref("slo_details_seed") }}
