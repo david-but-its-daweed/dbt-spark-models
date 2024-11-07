@@ -17,7 +17,10 @@ WITH deps AS (
         SIZE(`input`.`input_path`) AS input_rank
     FROM platform.table_dependencies_v2
     WHERE
-        NOT `input`.`table`.isSeed AND (`input`.`table`.`tableName`, `input`.`table`.`tableType`)
+        TRUE
+        AND NOT `input`.`table`.isSeed
+        AND NOT (`input`.`table`.tableName = output.tableName AND `input`.`table`.tableType = output.tableType)
+        AND (`input`.`table`.`tableName`, `input`.`table`.`tableType`)
         NOT IN (
             SELECT
                 mt.full_table_name,
