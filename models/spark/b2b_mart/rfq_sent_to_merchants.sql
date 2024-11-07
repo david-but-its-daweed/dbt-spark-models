@@ -40,7 +40,7 @@ select
    --- publicContact.kakaoTalk as kakao_talk,
     publicContact.person,
     publicContact.phone.code as phone_code,
-    publicContact.phone.number as phone_number,
+    publicContact.phone.number as phone_number
   ---  publicContact.weChat as we_chat,
   ---  publicContact.website as website
 from {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }}
