@@ -213,5 +213,6 @@ SELECT
             END
         ), NULL)
     ), NULL) AS cancelled_by_jl_info,
-    cft
+    cft,
+    ci.t AS user_ordered_time_utc
 FROM {{ source('mongo', 'merchant_order_orders_daily_snapshot') }}
