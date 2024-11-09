@@ -4,7 +4,7 @@
     alias='active_users',
     file_format='parquet',
     incremental_strategy='insert_overwrite',
-    partition_by=['month'],
+    partition_by=['month_msk'],
     meta = {
         'model_owner' : '@general_analytics',
         'bigquery_load': 'true',
@@ -57,7 +57,7 @@ SELECT
     u.real_user_id,
     u.legal_entity,
     u.app_language,
-    TRUNC(u.day, 'MM') AS month
+    TRUNC(u.day, 'MM') AS month_msk
 FROM user_info AS u
 INNER JOIN join_dates AS jd USING (user_id)
-DISTRIBUTE BY month, abs(hash(u.user_id)) % 10
+DISTRIBUTE BY month_msk, abs(hash(u.user_id)) % 10

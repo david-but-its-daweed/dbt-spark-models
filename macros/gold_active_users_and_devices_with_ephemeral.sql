@@ -21,7 +21,7 @@
             'full_reload_on': '6',
         },
         incremental_strategy='insert_overwrite',
-        partition_by=['month'],
+        partition_by=['month_msk'],
     )
     }}
 {% elif device_or_user_id == 'user_id' %}
@@ -43,7 +43,7 @@
             'full_reload_on': '6',
         },
         incremental_strategy='insert_overwrite',
-        partition_by=['month'],
+        partition_by=['month_msk'],
     )
     }}
 {% endif %}
@@ -57,7 +57,7 @@ uniq_regions AS (
 first_order_dates AS (
     SELECT
         {{ device_or_user_id }},
-        MIN(order_date_msk) as dt
+        MIN(order_date_msk) AS dt
     FROM {{ ref('gold_orders') }}
     GROUP BY 1
 ),
@@ -65,7 +65,9 @@ first_order_dates AS (
 orders_ext1 AS (
     SELECT
         {{ device_or_user_id }},
-        order_date_msk as date_msk,
+        order_date_msk AS date_msk,
+        country_code,
+        platform,
         SUM(gmv_initial) AS gmv_per_day_initial,
         SUM(gmv_final) AS gmv_per_day_final,
         SUM(order_gross_profit_final_estimated) AS order_gross_profit_per_day_final_estimated,
@@ -73,24 +75,54 @@ orders_ext1 AS (
         SUM(ecgp_initial) AS ecgp_per_day_initial,
         SUM(ecgp_final) AS ecgp_per_day_final,
         COUNT(order_id) AS number_of_orders,
-        COUNT(order_id) > 0 AS is_converted
+        COUNT(order_id) > 0 AS is_converted,
+
+        -- столбцы нужны для определения страны/платформы пользователя. Отдаем приоритет стране, где у пользователя больше gmv за дату
+        SUM(SUM(gmv_initial)) OVER(PARTITION BY {{ device_or_user_id }}, order_date_msk, country_code) AS gmv_initial_per_country_code,
+        SUM(SUM(gmv_initial)) OVER(PARTITION BY {{ device_or_user_id }}, order_date_msk, platform) AS gmv_initial_per_platform
     FROM {{ ref('gold_orders') }}
 
     {% if is_incremental() %}
-        WHERE month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
+        WHERE order_month_msk >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
     {% elif device_or_user_id == 'device_id' %}
         WHERE order_date_msk >= '2018-04-15' -- до 2018-04-15 пустые device_id
     {% endif %}
+    GROUP BY 1, 2, 3, 4
+),
+
+orders_ext2 AS (
+    SELECT
+        {{ device_or_user_id }},
+        date_msk,
+        SUM(gmv_per_day_initial) AS gmv_per_day_initial,
+        SUM(gmv_per_day_final) AS gmv_per_day_final,
+        SUM(order_gross_profit_per_day_final_estimated) AS order_gross_profit_per_day_final_estimated,
+        SUM(order_gross_profit_per_day_final) AS order_gross_profit_per_day_final,
+        SUM(ecgp_per_day_initial) AS ecgp_per_day_initial,
+        SUM(ecgp_per_day_final) AS ecgp_per_day_final,
+        SUM(number_of_orders) AS number_of_orders,
+        MAX(is_converted) AS is_converted
+    FROM orders_ext1
     GROUP BY 1, 2
 ),
 
-active_devices_ext0 as (
+-- определям страну/платформу пользователя на основе gmv
+adjusted_slices AS (
+    SELECT DISTINCT
+        {{ device_or_user_id }},
+        date_msk AS day,
+        FIRST_VALUE(country_code) OVER(PARTITION BY {{ device_or_user_id }}, date_msk ORDER BY gmv_initial_per_country_code DESC, country_code) AS country_code_based_on_gmv_initial,
+        FIRST_VALUE(platform) OVER(PARTITION BY {{ device_or_user_id }}, date_msk ORDER BY gmv_initial_per_platform DESC, platform) AS platform_based_on_gmv_initial
+    FROM orders_ext1
+),
+
+active_devices_ext0 AS (
     -- добавляем предыдущий день активности и другие св-ва, для которых требуется вся история
     select
         {{ device_or_user_id }},
         day,
         LAG(day) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY day) AS prev_date_msk, -- смотрим на предыдущий день активности
-        LEAD(day) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY day) AS next_date_msk,  -- смотрим на следующий  день активности
+        LEAD(day) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY day) AS next_date_msk, -- смотрим на следующий день активности
         MIN(is_ephemeral) OVER(PARTITION BY {{ device_or_user_id }}) AS min_is_ephemeral
 
     {% if device_or_user_id == 'user_id' %}
@@ -103,16 +135,16 @@ active_devices_ext0 as (
 active_devices_ext1 AS (
     SELECT
         main.{{ device_or_user_id }},
-        main.day as date_msk,
+        main.day AS date_msk,
         main.real_user_id,
-        main.join_day as join_date_msk,
+        main.join_day AS join_date_msk,
         main.legal_entity,
         {% if device_or_user_id == 'device_id' %}
             main.app_entity,
         {% endif %}
-        main.country as country_code,
+        COALESCE(adjusted_slices.country_code_based_on_gmv_initial, main.country) AS country_code,
         main.app_language,
-        main.platform,
+        COALESCE(adjusted_slices.platform_based_on_gmv_initial, main.platform) AS platform,
         main.os_version,
         main.app_version,
         main.is_ephemeral,
@@ -125,14 +157,15 @@ active_devices_ext1 AS (
         main.day = main.join_day AS is_new_{{ naming_field }}
 
     {% if device_or_user_id == 'user_id' %}
-        FROM {{ ref('active_users') }} as main
+        FROM {{ ref('active_users') }} AS main
     {% else %}
-        FROM {{ ref('active_devices') }} as main
+        FROM {{ ref('active_devices') }} AS main
     {% endif %}
-    JOIN active_devices_ext0 as aux USING ({{ device_or_user_id}}, day)
+    JOIN active_devices_ext0 AS aux USING ({{ device_or_user_id}}, day)
+    LEFT JOIN adjusted_slices USING({{ device_or_user_id }}, day)
 
     {% if is_incremental() %}
-        WHERE month >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
+        WHERE month_msk >= trunc(date'{{ var("start_date_ymd") }}' - interval 200 days, 'MM')
     {% endif %}
 ),
 
@@ -191,9 +224,9 @@ active_devices_ext3 AS (
 
         COALESCE(a.date_msk >= f.dt, false) AS is_payer,
 
-        COALESCE(b.is_converted, false) as is_converted
+        COALESCE(b.is_converted, false) AS is_converted
     FROM active_devices_ext2 AS a
-    LEFT JOIN orders_ext1 AS b USING ({{ device_or_user_id }}, date_msk)
+    LEFT JOIN orders_ext2 AS b USING ({{ device_or_user_id }}, date_msk)
     LEFT JOIN first_order_dates f USING ({{ device_or_user_id }})
 ),
 
@@ -323,8 +356,8 @@ SELECT
     is_rw4,
     is_churned_14,
     is_churned_28,
-    trunc(date_msk, 'MM') as month
+    trunc(date_msk, 'MM') AS month_msk
 FROM active_devices_ext6
-DISTRIBUTE by month, abs(hash({{ device_or_user_id }})) % 10
+DISTRIBUTE by month_msk, abs(hash({{ device_or_user_id }})) % 10
 
 {% endmacro %}

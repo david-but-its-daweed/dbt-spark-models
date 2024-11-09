@@ -80,6 +80,8 @@ models:
       description: Flag indicating whether `device_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `device_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: month_msk
+      description: Month of activity in UTC+3 (based on `date_msk`)
 
 - name: gold_active_devices
   description: Key metrics of a user on a specific date. Primary key - `device_id` and `date_msk`
@@ -226,6 +228,8 @@ models:
       description: Flag indicating whether `user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `user_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: month_msk
+      description: Month of activity in UTC+3 (based on `date_msk`)
 
 - name: gold_active_users
   description: Key metrics of a user on a specific date. Primary key - `user_id` and `date_msk`
@@ -654,6 +658,8 @@ models:
       description: Actual Fulfillment Time (in days), approximate time from order approve to passing order to pickup by merchant. AFT is attributed to order, AFT = [time from approve to checkin] - [pickup time], pickup time is 95-percentile of time from shipping to delivery over merchant or all orders, the formula could be adjusted in future. For more information refer to https://www.notion.so/joomteam/Actual-Fulfillment-Time-calculation-AFT-b7bd6dd09d8b4b2694949960949d4adb?pvs=4#753d63ecf087404ebdb7deb2f0f2d8c9 
     - name: order_commited_merchant_fulfillment_days
       description: Commited Fullfillment Time (in days), merchant's estimation of time from order approve to passing order to pickup by merchant. CFT is attributed to product variant, but can be changed by merchant.
+    - name: order_month_msk
+      description: Order payment month in UTC+3 (based on `order_date_msk`). We don't use the order creation date because it gives us less information. The platform creates an order only after payment, the order is accepted into work only after payment. The order is accepted into work only after payment. Usually the difference between order creation and order payment does not exceed 3 minutes..
 
 - name: gold_order_groups
   description: Information about purchased shopping carts. The row in the table is true for `order_group_id`.

@@ -4,7 +4,7 @@
     alias='active_devices',
     file_format='parquet',
     incremental_strategy='insert_overwrite',
-    partition_by=['month'],
+    partition_by=['month_msk'],
     meta = {
         'model_owner' : '@general_analytics',
         'bigquery_load': 'true',
@@ -77,7 +77,7 @@ SELECT
     d.real_user_id,
     d.legal_entity,
     d.app_language,
-    TRUNC(d.day, 'MM') AS month
+    TRUNC(d.day, 'MM') AS month_msk
 FROM device_info AS d
 INNER JOIN min_dates USING (device_id)
-DISTRIBUTE BY month, abs(hash(d.device_id)) % 10
+DISTRIBUTE BY month_msk, abs(hash(d.device_id)) % 10

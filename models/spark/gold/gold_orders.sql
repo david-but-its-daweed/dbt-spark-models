@@ -5,7 +5,7 @@
     file_format='parquet',
     schema='gold',
     incremental_strategy='insert_overwrite',
-    partition_by=['month'],
+    partition_by=['order_month_msk'],
     on_schema_change='sync_all_columns',
     meta = {
         'model_owner' : '@general_analytics',
@@ -361,7 +361,7 @@ active_devices AS (
         join_day
     FROM {{ ref('active_devices') }}
     {% if is_incremental() %}
-        WHERE month >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
+        WHERE month_msk >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
     {% endif %}
 ),
 
@@ -618,7 +618,7 @@ SELECT
     number_of_reviews,
     product_rating,
     is_negative_feedback,
-    TRUNC(order_date_msk, 'MM') AS month
+    TRUNC(order_date_msk, 'MM') AS order_month_msk
 
 FROM orders_ext7
-DISTRIBUTE BY month, abs(hash(order_id)) % 10
+DISTRIBUTE BY order_month_msk, abs(hash(order_id)) % 10
