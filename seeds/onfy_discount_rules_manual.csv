@@ -1,11 +1,11 @@
 product_id,store_id,channel,weight,pessimization_type,discount_percent,source,comment
 ,,,0,,0,manual,no default discount
-,,apomio,10,,20,manual,apomio
-,,medizinfuchs,10,,20,manual,medizinfuchs
-,,idealo,10,,20,manual,idealo
-,,billiger,10,,20,manual,billiger
-,7631548fbb5649f28a9523f661a8dac3,,11,,17,manual,fliegende-pillen
-,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,14,manual,frauenapotheke
+,,apomio,10,,18,manual,apomio
+,,medizinfuchs,10,,18,manual,medizinfuchs
+,,idealo,10,,18,manual,idealo
+,,billiger,10,,18,manual,billiger
+,7631548fbb5649f28a9523f661a8dac3,,11,,15,manual,fliegende-pillen
+,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,13,manual,frauenapotheke
 ,f818f7e2da64439890e406b3fe87e35e,,45,,15.5,manual,weitling
 3d3a2b1a5ad84ad0b0292c5ed7e522f1,f818f7e2da64439890e406b3fe87e35e,,42,,15.5,manual,wetiling pilot
 6fbbeabd097843198d2a14a744dbca20,f818f7e2da64439890e406b3fe87e35e,,42,,15.5,manual,wetiling pilot
@@ -267,86 +267,86 @@ f360ceadf37c41439a738b7eca74c123,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,m
 368b542aa29643f4b9b7f0f54be15a11,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 eb32a4e966c34522af78a32cb9c85417,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 3ae92091ccf9400195b49982baba6380,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
-54d3c5b469f44d2cb6a7c9170c34da34,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-5a167de3e78641bea0227f897497a686,,idealo,32,,22,manual,Sticky products experiment
-b09fbf56a74942d18d49c389a7f1530a,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-a33e7387a9d84d61bf4e5f8e00c22ce5,,idealo,32,,22,manual,Sticky products experiment
-a7d4698a50244a1194c93a2f062bf52f,,idealo,32,,22,manual,Sticky products experiment
-1f64a648e0ac49f383a23374961d8aea,,idealo,32,,22,manual,Sticky products experiment
-d6e1224352344e6b91853f2d5381ce2b,,idealo,32,,22,manual,Sticky products experiment
-964411c5f16046918743bb3902d1ba42,,idealo,32,,22,manual,Sticky products experiment
-b0c50c81756f4eaf949297990797f9ee,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-4809d56e2d3545f0a1e9cfca90c0f7c7,,idealo,32,,22,manual,Sticky products experiment
-f2c28b25b7ee4c859973ccbbb8ab02d1,,idealo,32,,22,manual,Sticky products experiment
-c089e8aeb0b94415968f0d3b157f30e7,7631548fbb5649f28a9523f661a8dac3,idealo,33,,22,manual,Sticky products experiment
-5d890d9831c14527beebe8f469d8e5f2,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-e07495176c9143e5b141f83cd7e9d774,,idealo,32,,22,manual,Sticky products experiment
-c089e8aeb0b94415968f0d3b157f30e7,,idealo,32,,25,manual,Sticky products experiment
-c76320d0f667444abe4aca62617eb98c,7631548fbb5649f28a9523f661a8dac3,idealo,33,,22,manual,Sticky products experiment
-4809d56e2d3545f0a1e9cfca90c0f7c7,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-cca248fff65741ae9e3fe882114d3eaa,,idealo,32,,22,manual,Sticky products experiment
-7f0425eaf0e94b2d8b5c993d778b41e8,,idealo,32,,22,manual,Sticky products experiment
-d6e1224352344e6b91853f2d5381ce2b,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-0c89638b9219492997cd9f504113cc3d,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-a9a0248fb3a943ee884561160547f54d,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-871986af3aad4c9582394bb56703daf7,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-c76320d0f667444abe4aca62617eb98c,,idealo,32,,25,manual,Sticky products experiment
-96bd3829444244b1ae073794274afd13,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-a33e7387a9d84d61bf4e5f8e00c22ce5,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-7a65a1c4fa134af4995e874feb81c284,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-1af4dbb426924d3aa7fc3c0d55bcbb70,,idealo,32,,22,manual,Sticky products experiment
-6203af5062dc4a02bf0a52559e629b58,,idealo,32,,22,manual,Sticky products experiment
-3d9af71b60b548f1938e8260b418921b,,idealo,32,,22,manual,Sticky products experiment
-9d931e595c9b4b85a0526399f97d923c,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-dbda7fb0870d47f495e8f52df8f9e3e2,,idealo,32,,22,manual,Sticky products experiment
-383d6b6f751c483fa59efd43899dbe17,,idealo,32,,22,manual,Sticky products experiment
-dc6bcf797d934941a679bc3769dcd438,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-54d3c5b469f44d2cb6a7c9170c34da34,,idealo,32,,22,manual,Sticky products experiment
-e7fda9f6d6d24cc4bfda0e9bfeea3107,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-b09fbf56a74942d18d49c389a7f1530a,,idealo,32,,22,manual,Sticky products experiment
-964411c5f16046918743bb3902d1ba42,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-f2c28b25b7ee4c859973ccbbb8ab02d1,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-383d6b6f751c483fa59efd43899dbe17,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-86b589e66af249c5b6ce48d538ac29ca,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-9d931e595c9b4b85a0526399f97d923c,,idealo,32,,22,manual,Sticky products experiment
-6203af5062dc4a02bf0a52559e629b58,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-1f64a648e0ac49f383a23374961d8aea,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-5a167de3e78641bea0227f897497a686,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-bf151ee0a6ec47f68734b54d3ffae762,,idealo,32,,22,manual,Sticky products experiment
-17d05f7b9df149c083efee9bbc683d21,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-938f63b5f2a84ea9ad5dbe3cc770cc4e,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-f96def93b62845d986a18d38cad64174,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-7f0425eaf0e94b2d8b5c993d778b41e8,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-9a320b5e45914b9380e6f1d55f1dd509,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-e07495176c9143e5b141f83cd7e9d774,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-0c89638b9219492997cd9f504113cc3d,,idealo,32,,22,manual,Sticky products experiment
-17d05f7b9df149c083efee9bbc683d21,,idealo,32,,22,manual,Sticky products experiment
-a9a0248fb3a943ee884561160547f54d,,idealo,32,,22,manual,Sticky products experiment
-bf151ee0a6ec47f68734b54d3ffae762,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-871986af3aad4c9582394bb56703daf7,,idealo,32,,22,manual,Sticky products experiment
-938f63b5f2a84ea9ad5dbe3cc770cc4e,,idealo,32,,22,manual,Sticky products experiment
-d6cf3051bcc6458a96cc83da0d30932b,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-dbda7fb0870d47f495e8f52df8f9e3e2,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-7caf896aaba246d9af3c50bf79024a4d,,idealo,32,,22,manual,Sticky products experiment
-2e6f33aa9e2e4bd8a967f22471ed5b05,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-7a65a1c4fa134af4995e874feb81c284,,idealo,32,,22,manual,Sticky products experiment
-d6cf3051bcc6458a96cc83da0d30932b,,idealo,32,,22,manual,Sticky products experiment
-5d890d9831c14527beebe8f469d8e5f2,,idealo,32,,22,manual,Sticky products experiment
-9a320b5e45914b9380e6f1d55f1dd509,,idealo,32,,22,manual,Sticky products experiment
-7caf896aaba246d9af3c50bf79024a4d,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-5f175b8a7a8f4c89af87d608ae3e40c1,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-f96def93b62845d986a18d38cad64174,,idealo,32,,22,manual,Sticky products experiment
-cca248fff65741ae9e3fe882114d3eaa,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-1af4dbb426924d3aa7fc3c0d55bcbb70,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-5f175b8a7a8f4c89af87d608ae3e40c1,,idealo,32,,22,manual,Sticky products experiment
-2e6f33aa9e2e4bd8a967f22471ed5b05,,idealo,32,,22,manual,Sticky products experiment
-b0c50c81756f4eaf949297990797f9ee,,idealo,32,,22,manual,Sticky products experiment
-86b589e66af249c5b6ce48d538ac29ca,,idealo,32,,22,manual,Sticky products experiment
-dc6bcf797d934941a679bc3769dcd438,,idealo,32,,22,manual,Sticky products experiment
-96bd3829444244b1ae073794274afd13,,idealo,32,,22,manual,Sticky products experiment
-f934405854cc435dbff817bcd96c2aed,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-e7fda9f6d6d24cc4bfda0e9bfeea3107,,idealo,32,,22,manual,Sticky products experiment
-f934405854cc435dbff817bcd96c2aed,,idealo,32,,22,manual,Sticky products experiment
-a7d4698a50244a1194c93a2f062bf52f,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
-3d9af71b60b548f1938e8260b418921b,7631548fbb5649f28a9523f661a8dac3,idealo,33,,19,manual,Sticky products experiment
+54d3c5b469f44d2cb6a7c9170c34da34,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+5a167de3e78641bea0227f897497a686,,idealo,32,,20,manual,Sticky products experiment
+b09fbf56a74942d18d49c389a7f1530a,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+a33e7387a9d84d61bf4e5f8e00c22ce5,,idealo,32,,20,manual,Sticky products experiment
+a7d4698a50244a1194c93a2f062bf52f,,idealo,32,,20,manual,Sticky products experiment
+1f64a648e0ac49f383a23374961d8aea,,idealo,32,,20,manual,Sticky products experiment
+d6e1224352344e6b91853f2d5381ce2b,,idealo,32,,20,manual,Sticky products experiment
+964411c5f16046918743bb3902d1ba42,,idealo,32,,20,manual,Sticky products experiment
+b0c50c81756f4eaf949297990797f9ee,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+4809d56e2d3545f0a1e9cfca90c0f7c7,,idealo,32,,20,manual,Sticky products experiment
+f2c28b25b7ee4c859973ccbbb8ab02d1,,idealo,32,,20,manual,Sticky products experiment
+c089e8aeb0b94415968f0d3b157f30e7,7631548fbb5649f28a9523f661a8dac3,idealo,33,,20,manual,Sticky products experiment
+5d890d9831c14527beebe8f469d8e5f2,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+e07495176c9143e5b141f83cd7e9d774,,idealo,32,,20,manual,Sticky products experiment
+c089e8aeb0b94415968f0d3b157f30e7,,idealo,32,,23,manual,Sticky products experiment
+c76320d0f667444abe4aca62617eb98c,7631548fbb5649f28a9523f661a8dac3,idealo,33,,20,manual,Sticky products experiment
+4809d56e2d3545f0a1e9cfca90c0f7c7,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+cca248fff65741ae9e3fe882114d3eaa,,idealo,32,,20,manual,Sticky products experiment
+7f0425eaf0e94b2d8b5c993d778b41e8,,idealo,32,,20,manual,Sticky products experiment
+d6e1224352344e6b91853f2d5381ce2b,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+0c89638b9219492997cd9f504113cc3d,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+a9a0248fb3a943ee884561160547f54d,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+871986af3aad4c9582394bb56703daf7,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+c76320d0f667444abe4aca62617eb98c,,idealo,32,,23,manual,Sticky products experiment
+96bd3829444244b1ae073794274afd13,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+a33e7387a9d84d61bf4e5f8e00c22ce5,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+7a65a1c4fa134af4995e874feb81c284,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+1af4dbb426924d3aa7fc3c0d55bcbb70,,idealo,32,,20,manual,Sticky products experiment
+6203af5062dc4a02bf0a52559e629b58,,idealo,32,,20,manual,Sticky products experiment
+3d9af71b60b548f1938e8260b418921b,,idealo,32,,20,manual,Sticky products experiment
+9d931e595c9b4b85a0526399f97d923c,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+dbda7fb0870d47f495e8f52df8f9e3e2,,idealo,32,,20,manual,Sticky products experiment
+383d6b6f751c483fa59efd43899dbe17,,idealo,32,,20,manual,Sticky products experiment
+dc6bcf797d934941a679bc3769dcd438,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+54d3c5b469f44d2cb6a7c9170c34da34,,idealo,32,,20,manual,Sticky products experiment
+e7fda9f6d6d24cc4bfda0e9bfeea3107,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+b09fbf56a74942d18d49c389a7f1530a,,idealo,32,,20,manual,Sticky products experiment
+964411c5f16046918743bb3902d1ba42,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+f2c28b25b7ee4c859973ccbbb8ab02d1,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+383d6b6f751c483fa59efd43899dbe17,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+86b589e66af249c5b6ce48d538ac29ca,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+9d931e595c9b4b85a0526399f97d923c,,idealo,32,,20,manual,Sticky products experiment
+6203af5062dc4a02bf0a52559e629b58,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+1f64a648e0ac49f383a23374961d8aea,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+5a167de3e78641bea0227f897497a686,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+bf151ee0a6ec47f68734b54d3ffae762,,idealo,32,,20,manual,Sticky products experiment
+17d05f7b9df149c083efee9bbc683d21,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+938f63b5f2a84ea9ad5dbe3cc770cc4e,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+f96def93b62845d986a18d38cad64174,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+7f0425eaf0e94b2d8b5c993d778b41e8,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+9a320b5e45914b9380e6f1d55f1dd509,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+e07495176c9143e5b141f83cd7e9d774,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+0c89638b9219492997cd9f504113cc3d,,idealo,32,,20,manual,Sticky products experiment
+17d05f7b9df149c083efee9bbc683d21,,idealo,32,,20,manual,Sticky products experiment
+a9a0248fb3a943ee884561160547f54d,,idealo,32,,20,manual,Sticky products experiment
+bf151ee0a6ec47f68734b54d3ffae762,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+871986af3aad4c9582394bb56703daf7,,idealo,32,,20,manual,Sticky products experiment
+938f63b5f2a84ea9ad5dbe3cc770cc4e,,idealo,32,,20,manual,Sticky products experiment
+d6cf3051bcc6458a96cc83da0d30932b,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+dbda7fb0870d47f495e8f52df8f9e3e2,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+7caf896aaba246d9af3c50bf79024a4d,,idealo,32,,20,manual,Sticky products experiment
+2e6f33aa9e2e4bd8a967f22471ed5b05,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+7a65a1c4fa134af4995e874feb81c284,,idealo,32,,20,manual,Sticky products experiment
+d6cf3051bcc6458a96cc83da0d30932b,,idealo,32,,20,manual,Sticky products experiment
+5d890d9831c14527beebe8f469d8e5f2,,idealo,32,,20,manual,Sticky products experiment
+9a320b5e45914b9380e6f1d55f1dd509,,idealo,32,,20,manual,Sticky products experiment
+7caf896aaba246d9af3c50bf79024a4d,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+5f175b8a7a8f4c89af87d608ae3e40c1,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+f96def93b62845d986a18d38cad64174,,idealo,32,,20,manual,Sticky products experiment
+cca248fff65741ae9e3fe882114d3eaa,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+1af4dbb426924d3aa7fc3c0d55bcbb70,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+5f175b8a7a8f4c89af87d608ae3e40c1,,idealo,32,,20,manual,Sticky products experiment
+2e6f33aa9e2e4bd8a967f22471ed5b05,,idealo,32,,20,manual,Sticky products experiment
+b0c50c81756f4eaf949297990797f9ee,,idealo,32,,20,manual,Sticky products experiment
+86b589e66af249c5b6ce48d538ac29ca,,idealo,32,,20,manual,Sticky products experiment
+dc6bcf797d934941a679bc3769dcd438,,idealo,32,,20,manual,Sticky products experiment
+96bd3829444244b1ae073794274afd13,,idealo,32,,20,manual,Sticky products experiment
+f934405854cc435dbff817bcd96c2aed,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+e7fda9f6d6d24cc4bfda0e9bfeea3107,,idealo,32,,20,manual,Sticky products experiment
+f934405854cc435dbff817bcd96c2aed,,idealo,32,,20,manual,Sticky products experiment
+a7d4698a50244a1194c93a2f062bf52f,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
+3d9af71b60b548f1938e8260b418921b,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
 e583cd55737c42d494c4b36de124b93a,,idealo,45,,17,manual,Unitex
