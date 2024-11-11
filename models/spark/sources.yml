@@ -84,7 +84,6 @@ sources:
       - name: product_fbj_demand_sk_us_daily_snapshot
       - name: logistics_replenishments_v3_daily_snapshot
       - name: product_committed_fulfillment_daily_snapshot
-      - name: core_pickup_request_boxes_daily_snapshot
       - name: logistics_bags_daily_snapshot
       - name: logistics_channels_daily_snapshot 
   - name: default
