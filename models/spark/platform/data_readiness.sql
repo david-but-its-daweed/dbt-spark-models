@@ -64,7 +64,10 @@ dependencies AS (
         output_producer_tasks.dag_id AS output_dag_id,
         output_producer_tasks.task_id AS output_task_id
     FROM deps
-    LEFT JOIN slo_tables ON deps.output_name = slo_tables.table_name AND deps.output_type = slo_tables.table_type
+    LEFT JOIN slo_tables
+        ON
+            deps.output_name = slo_tables.table_name
+            AND deps.output_type = slo_tables.table_type
     LEFT JOIN producer_tasks
         ON
             deps.input_name = producer_tasks.table_name
