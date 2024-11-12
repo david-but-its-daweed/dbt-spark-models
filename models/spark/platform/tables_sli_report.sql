@@ -20,7 +20,7 @@ WITH data_readiness_aggregate (
     WHERE
         partition_date > NOW() - INTERVAL 3 MONTHS
         AND partition_date <= TO_DATE(NOW())
-        AND input_rank = 2
+        AND input_rank = 1
     GROUP BY source_id, input_name, input_type, partition_date, day_of_week_no
 ),
 
