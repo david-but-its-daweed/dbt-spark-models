@@ -19,7 +19,7 @@ WITH deps AS (
     WHERE
         TRUE
         AND NOT `input`.`table`.isSeed
-        AND NOT (`input`.`table`.tableName = output.tableName AND `input`.`table`.tableType = output.tableType)
+        -- AND NOT (`input`.`table`.tableName = output.tableName AND `input`.`table`.tableType = output.tableType)
         AND (`input`.`table`.`tableName`, `input`.`table`.`tableType`)
         NOT IN (
             SELECT
