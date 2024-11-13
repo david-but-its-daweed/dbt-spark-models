@@ -10,9 +10,31 @@
 ) }}
 
 WITH dates AS (
-    SELECT DISTINCT DATE(created) AS report_date
+    SELECT DISTINCT
+        1 as key,
+        DATE(created) AS report_date
     FROM {{ source('pharmacy_landing', 'order') }}
     WHERE DATE(created) >= '2022-06-01'
+),
+
+pzns_list as 
+(
+    SELECT DISTINCT 
+        1 as key,
+        pzn,
+        product_name
+    FROM {{ source('onfy', 'orders_info') }}
+),
+
+pzns_by_date as 
+(
+    SELECT 
+        report_date,
+        pzn,
+        product_name
+    FROM dates
+    JOIN pzns_list
+        on dates.key = pzns_list.key
 ),
 
 stocks_raw AS (
@@ -36,36 +58,18 @@ stocks_raw AS (
 ),
 ------------------------------------------------------------------------------------------------------------------------------------
 
-orders_info AS (
-    SELECT DISTINCT
-        DATE_TRUNC('day', order_created_time_cet) AS order_day,
-        pzn,
-        product_name
-    FROM {{ source('onfy', 'orders_info') }}
-    WHERE order_created_time_cet >= '2022-06-01'
-),
-
-pzns AS (
-    SELECT DISTINCT
-        dates.report_date,
-        orders_info.pzn,
-        orders_info.product_name
-    FROM dates
-    LEFT JOIN orders_info
-        ON dates.report_date BETWEEN (orders_info.order_day - INTERVAL '30 days') AND orders_info.order_day
-),
 
 orders_daily AS (
     SELECT
-        pzns.report_date AS event_date,
-        pzns.pzn,
-        pzns.product_name,
+        pzns_by_date.report_date AS event_date,
+        pzns_by_date.pzn,
+        pzns_by_date.product_name,
         COALESCE(SUM(orders_info.quantity), 0) AS quantity
-    FROM pzns
+    FROM pzns_by_date
     LEFT JOIN {{ source('onfy', 'orders_info') }}
         ON
-            pzns.pzn = orders_info.pzn
-            and pzns.report_date = date(orders_info.order_created_time_cet)
+            pzns_by_date.pzn = orders_info.pzn
+            and pzns_by_date.report_date = date(orders_info.order_created_time_cet)
             and orders_info.order_created_time_cet >= '2022-06-01'
     GROUP BY 1, 2, 3
 ),
