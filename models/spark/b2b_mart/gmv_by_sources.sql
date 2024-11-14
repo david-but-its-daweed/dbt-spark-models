@@ -48,7 +48,7 @@ SELECT
     when order_id = '671fde6c67fab66c22a898c7' then 9061.22 
     when order_id = '672bd1eae546571cec885466' then 28837.93 
     when order_id = '671a91380c96a194287a22b8' then 15665.74
-    else gmv_initial end gmv_initial,
+    else gmv_initial end as gmv_initial,
     case 
     when order_id = '65a7d6926b3328d3107aaf8b' then 0.0 
     when order_id = '65b151c026cb950b2054ff08' then 0.0 
@@ -85,7 +85,7 @@ SELECT
     when order_id = '671fde6c67fab66c22a898c7' then -2225.68 
     when order_id = '672bd1eae546571cec885466' then -5665.12 
     when order_id = '671a91380c96a194287a22b8' then -739.83
-    else initial_gross_profit as initial_gross_profit,
+    else initial_gross_profit end as initial_gross_profit,
 
     case
     when order_id = '65a7d6926b3328d3107aaf8b' then 0.0 
@@ -123,7 +123,7 @@ SELECT
     when order_id = '671fde6c67fab66c22a898c7' then -2225.68 
     when order_id = '672bd1eae546571cec885466' then -5665.12 
     when order_id = '671a91380c96a194287a22b8' then -739.83
-    else final_gross_profit end final_gross_profit,
+    else final_gross_profit end as final_gross_profit,
     utm_campaign,
     utm_source,
     utm_medium,
