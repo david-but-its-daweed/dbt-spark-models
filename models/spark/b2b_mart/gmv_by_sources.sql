@@ -11,21 +11,21 @@
 
 SELECT
     CASE
-        WHEN order_id = '66fd958cec11d5d880d7ba68' THEN CAST('10-10-2024' AS DATE)
-        WHEN order_id = '67085785af548d5f4a765b41' THEN CAST('11-10-2024' AS DATE)
-        WHEN order_id = '67002b6fd209d6e661514f43' THEN CAST('11-10-2024' AS DATE)
-        WHEN order_id = '6708070daf548d5f4a765ab5' THEN CAST('18-10-2024' AS DATE)
-        WHEN order_id = '67100be95b651d83f456c2c2' THEN CAST('21-10-2024' AS DATE)
-        WHEN order_id = '6706cf558e0c878cdb3f7ce7' THEN CAST('21-10-2024' AS DATE)
-        WHEN order_id = '671ba3300c96a194287a269b' THEN CAST('25-10-2024' AS DATE)
-        WHEN order_id = '6717f865b041cd7b62d34daf' THEN CAST('28-10-2024' AS DATE)
-        WHEN order_id = '670fd3f45b651d83f456c0dc' THEN CAST('28-10-2024' AS DATE)
-        WHEN order_id = '6718ee957df3ac3b21ff9685' THEN CAST('29-10-2024' AS DATE)
-        WHEN order_id = '671a7f758f8f5d11638e8526' THEN CAST('29-10-2024' AS DATE)
-        WHEN order_id = '671fde6c67fab66c22a898c7' THEN CAST('31-10-2024' AS DATE)
-        WHEN order_id = '672bd1eae546571cec885466' THEN CAST('08-11-2024' AS DATE)
-        WHEN order_id = '671a91380c96a194287a22b8' THEN CAST('04-11-2024' AS DATE)
-        WHEN order_id = '6735ffb2f182e3f4a318c0ee' THEN CAST('14-11-2024' AS DATE)
+        WHEN order_id = '66fd958cec11d5d880d7ba68' THEN CAST('2024-10-10' AS DATE)
+        WHEN order_id = '67085785af548d5f4a765b41' THEN CAST('2024-10-11' AS DATE)
+        WHEN order_id = '67002b6fd209d6e661514f43' THEN CAST('2024-10-11' AS DATE)
+        WHEN order_id = '6708070daf548d5f4a765ab5' THEN CAST('2024-10-18' AS DATE)
+        WHEN order_id = '67100be95b651d83f456c2c2' THEN CAST('2024-10-21' AS DATE)
+        WHEN order_id = '6706cf558e0c878cdb3f7ce7' THEN CAST('2024-10-21' AS DATE)
+        WHEN order_id = '671ba3300c96a194287a269b' THEN CAST('2024-10-25' AS DATE)
+        WHEN order_id = '6717f865b041cd7b62d34daf' THEN CAST('2024-10-28' AS DATE)
+        WHEN order_id = '670fd3f45b651d83f456c0dc' THEN CAST('2024-10-28' AS DATE)
+        WHEN order_id = '6718ee957df3ac3b21ff9685' THEN CAST('2024-10-29' AS DATE)
+        WHEN order_id = '671a7f758f8f5d11638e8526' THEN CAST('2024-10-29' AS DATE)
+        WHEN order_id = '671fde6c67fab66c22a898c7' THEN CAST('2024-10-31' AS DATE)
+        WHEN order_id = '672bd1eae546571cec885466' THEN CAST('2024-11-08' AS DATE)
+        WHEN order_id = '671a91380c96a194287a22b8' THEN CAST('2024-11-04' AS DATE)
+        WHEN order_id = '6735ffb2f182e3f4a318c0ee' THEN CAST('2024-11-14' AS DATE)
         ELSE t
     END AS t,
     order_id,
