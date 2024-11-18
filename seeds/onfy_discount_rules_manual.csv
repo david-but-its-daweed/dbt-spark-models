@@ -5,6 +5,7 @@ product_id,store_id,channel,weight,pessimization_type,discount_percent,source,co
 ,,idealo,10,,18,manual,idealo
 ,,billiger,10,,15,manual,billiger
 ,7631548fbb5649f28a9523f661a8dac3,,11,,15,manual,fliegende-pillen
+,7631548fbb5649f28a9523f661a8dac3,billiger,12,,12,manual,fliegende-pillen at billiger
 ,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,13,manual,frauenapotheke
 ,f818f7e2da64439890e406b3fe87e35e,,45,,15.5,manual,weitling
 3d3a2b1a5ad84ad0b0292c5ed7e522f1,f818f7e2da64439890e406b3fe87e35e,,42,,15.5,manual,wetiling pilot
