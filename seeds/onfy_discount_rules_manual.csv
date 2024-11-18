@@ -3,7 +3,7 @@ product_id,store_id,channel,weight,pessimization_type,discount_percent,source,co
 ,,apomio,10,,18,manual,apomio
 ,,medizinfuchs,10,,18,manual,medizinfuchs
 ,,idealo,10,,18,manual,idealo
-,,billiger,10,,18,manual,billiger
+,,billiger,10,,15,manual,billiger
 ,7631548fbb5649f28a9523f661a8dac3,,11,,15,manual,fliegende-pillen
 ,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,13,manual,frauenapotheke
 ,f818f7e2da64439890e406b3fe87e35e,,45,,15.5,manual,weitling
@@ -350,3 +350,10 @@ f934405854cc435dbff817bcd96c2aed,,idealo,32,,20,manual,Sticky products experimen
 a7d4698a50244a1194c93a2f062bf52f,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
 3d9af71b60b548f1938e8260b418921b,7631548fbb5649f28a9523f661a8dac3,idealo,33,,17,manual,Sticky products experiment
 e583cd55737c42d494c4b36de124b93a,,idealo,45,,17,manual,Unitex
+db58422a3f5744898e70f1b0861e6a45,b03df824cbe343648077f75fb0b42a12,idealo,45,,25,manual,Medice partnership
+229c3507b3e54ef59a6404c88fc61c6d,b03df824cbe343648077f75fb0b42a12,idealo,45,,25,manual,Medice partnership
+15b8dcf39dbc49b39a4d6ccc8b3c02b2,b03df824cbe343648077f75fb0b42a12,idealo,45,,25,manual,Medice partnership
+03500ec58a3340d1bcdb3ae35122dfde,b03df824cbe343648077f75fb0b42a12,idealo,45,,25,manual,Medice partnership
+705c218851994dd189dcc7cd5994e229,b03df824cbe343648077f75fb0b42a12,idealo,45,,25,manual,Medice partnership
+638f8718c3c24a21b25fd2e255f7b925,b03df824cbe343648077f75fb0b42a12,idealo,45,,25,manual,Medice partnership
+dd22e836cf9f4fb4b379c6a7bf9dfdf8,b03df824cbe343648077f75fb0b42a12,idealo,45,,25,manual,Medice partnership
