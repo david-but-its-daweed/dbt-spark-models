@@ -185,10 +185,12 @@ awin_costs as
         'awin' as source,
         'onfy' as partner,
         'web' as campaign_platform,
-        click_date as date,
+        coalesce(click_date, validation_date) as date,
         sum(commission_amount) as spend,
         count(id) as clicks
     from {{source('pharmacy', 'awin_insights')}}
+    where 1=1
+        and commission_status = 'approved'
     group by 
         site_name,
         publisher_url,
