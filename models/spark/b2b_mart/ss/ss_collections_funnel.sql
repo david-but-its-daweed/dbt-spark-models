@@ -131,5 +131,5 @@ SELECT main.type,
        main.add_to_cart_at,
        main.move_to_deal_at
 FROM main
-LEFT JOIN {{ source('b2b_mart', 'scd2_mongo_promotions') }} AS pi ON pi.dbt_valid_to IS NULL
-                                                                 AND main.promotion_id = pi.promotion_id
+LEFT JOIN {{ ref('scd2_mongo_promotions') }} AS pi ON pi.dbt_valid_to IS NULL
+                                                  AND main.promotion_id = pi.promotion_id
