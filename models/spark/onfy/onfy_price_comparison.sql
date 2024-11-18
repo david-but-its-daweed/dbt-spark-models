@@ -11,32 +11,28 @@
 
 -- calculating orders per day
 with products_day as
-(
-    select  
-        date_trunc('day', from_utc_timestamp(item.created, 'Europe/Berlin')) as order_date_cet,
-        product_id,
-        medicine.country_local_id as pzn,
-        store.name as store_name,
-        parcel.store_id as store_id,
-        avg(item.price) as avg_product_price,
-        sum(item.quantity) as sum_quantity
-    from
-        {{ source('pharmacy_landing', 'order_parcel_item') }} as item
-        left join {{ source('pharmacy_landing', 'medicine') }} as medicine
-            on translate(item.product_id, '-', '') = medicine.id
-        left join {{ source('pharmacy_landing', 'order_parcel') }}  as parcel
-            on item.order_parcel_id = parcel.id
-        left join {{ source('pharmacy_landing', 'store') }} as store
-            on parcel.store_id = store.id
-    where 1=1
-        and item.product_id is not null
+(    
+    select 
+        date_trunc('day', order_created_time_cet) as order_date_cet,
+        orders_info.product_id,
+        orders_info.pzn,
+        orders_info.store_name,
+        orders_info.store_id,
+        avg(orders_info.item_price) as avg_product_price,
+        sum(orders_info.quantity) as sum_quantity,
+        avg(dim_product.price) as avg_price
+    from {{ source('onfy', 'orders_info') }}
+    join {{ source('onfy_mart', 'dim_product') }}
+        on orders_info.product_id = dim_product.product_id
+        and orders_info.store_id = dim_product.store_id
+        and orders_info.order_created_time_cet between from_utc_timestamp(dim_product.effective_ts, 'Europe/Berlin') 
+            and from_utc_timestamp(dim_product.next_effective_ts, 'Europe/Berlin')
     group by 
-        date_trunc('day', from_utc_timestamp(item.created, 'Europe/Berlin')),
-        product_id,
-        medicine.country_local_id,
-        store_id,
-        store.name
-
+        date_trunc('day', order_created_time_cet),
+        orders_info.product_id,
+        orders_info.pzn,
+        orders_info.store_name,
+        orders_info.store_id
 ),
 
 -- calculating order per month (I take only 7 days of the month to make the comparison)
@@ -49,7 +45,8 @@ products_month as
         store_name,
         store_id,
         avg(avg_product_price) as avg_product_price,
-        avg(sum_quantity) as sum_quantity
+        avg(sum_quantity) as sum_quantity,
+        avg(avg_price) as avg_price
     from products_day
         where order_date_cet <= date_add(date_trunc('month', order_date_cet), 7)
     group by 
@@ -70,7 +67,8 @@ products_quarter as
         store_name,
         store_id,
         avg(avg_product_price) as avg_product_price,
-        avg(sum_quantity) as sum_quantity
+        avg(sum_quantity) as sum_quantity,
+        avg(avg_price) as avg_price
     from products_day
         where order_date_cet <= date_add(date_trunc('quarter', order_date_cet), 10)
     group by 
@@ -91,7 +89,8 @@ products_year as
         store_name,
         store_id,
         avg(avg_product_price) as avg_product_price,
-        avg(sum_quantity) as sum_quantity
+        avg(sum_quantity) as sum_quantity,
+        avg(avg_price) as avg_price
     from products_day
         where order_date_cet <= date_add(date_trunc('year', order_date_cet), 15)
     group by 
@@ -137,9 +136,10 @@ price_dynamics as
     select 
         table_prep.*,
         
-        round(coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price), 2) as price_to_compare,
-        round(table_prep.avg_product_price / coalesce(previous_day.avg_product_price, month.avg_product_price, quarter.avg_product_price, year.avg_product_price) - 1, 4) as price_comparison,
-        round(coalesce(previous_day.sum_quantity, month.sum_quantity, quarter.sum_quantity, year.sum_quantity), 2) as quantity_comparison
+        round(coalesce(previous_day.avg_price, month.avg_price, quarter.avg_price, year.avg_price), 2) as price_to_compare,
+        coalesce(round(table_prep.avg_price / coalesce(previous_day.avg_price, month.avg_price, quarter.avg_price, year.avg_price) - 1, 4), 0) as price_comparison,
+        round(coalesce(previous_day.sum_quantity, month.sum_quantity, quarter.sum_quantity, year.sum_quantity), 2) as quantity_comparison,
+        sum(table_prep.sum_quantity) over (partition by comparison_type, table_prep.order_date_cet) as total_period_quantity
     from 
         table_prep 
         left join products_day as previous_day
@@ -167,5 +167,4 @@ price_dynamics as
 select 
     *
 from price_dynamics
-where 1=1
-    and price_comparison is not null -- excluding products that we're unable to compare
+where 1=1 
