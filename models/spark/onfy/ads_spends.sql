@@ -194,7 +194,7 @@ awin_costs as
     group by 
         site_name,
         publisher_url,
-        click_date
+        coalesce(click_date, validation_date)
 ),
               
 ----------------------------------------------------
