@@ -289,8 +289,5 @@ select *
 from precalculation 
 where 1=1
     and product_id not in (select distinct product_id from manufacturers_products)
-    and product_id not in ('4340de8447994f77b34d42db817c70f1', 'e6c284f62c734376962348ca01b22a9c',
-                           'dc167779d09a4f46b6f269c72874fea3', 'e583cd55737c42d494c4b36de124b93a',
-                           'f56dd00850364a9f954293a09888be00') -- Unitex 
 
 
