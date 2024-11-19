@@ -1,7 +1,7 @@
 {{
   config(
     meta = {
-      'model_owner' : '@ilypavlov',
+      'model_owner' : '@operational.analytics.duty',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'day',
       'priority_weight': '1000',
@@ -38,7 +38,7 @@ tickets AS (
         e.message_source
     FROM
         babylone_ticket_create_joom_100 AS e
-            LATERAL VIEW OUTER EXPLODE(order_ids) ol AS order_id
+        LATERAL VIEW OUTER EXPLODE(order_ids) ol AS order_id
 ),
 
 active_users AS (

@@ -9,7 +9,7 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'alerts_channel': "#olc_dbt_alerts",
-       'model_owner' : '@ilypavlov'
+       'model_owner' : '@operational.analytics.duty'
      }
  ) }}
 
@@ -34,7 +34,7 @@ ranking_pre_pre AS (
         b.email,
         t.payload.authortype AS author_type,
         t.payload.entrytype AS entry_type,
-        t.payload.text AS text,
+        t.payload.text,
         MIN(t.partition_date) AS partition_date,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM {{ source('mart', 'babylone_events') }} AS t
@@ -78,7 +78,7 @@ ranking_pre_pre_cust AS (
         b.email,
         t.payload.authortype AS author_type,
         t.payload.entrytype AS entry_type,
-        t.payload.text AS text,
+        t.payload.text,
         t.partition_date,
         t.event_ts_msk
     FROM {{ source('mart', 'babylone_events') }} AS t
@@ -218,7 +218,7 @@ agent_support_actions AS (
         t.event_ts_msk,
         t.previous_text,
         t.text,
-        a.email AS email,
+        a.email,
         CASE
             WHEN ((t.previous_author_type = 'customer' OR t.previous_author_type IS NULL) AND t.author_id != '000000000000050001000001' AND t.entry_type = 'message') THEN 'reply to customer'
             WHEN ((t.previous_author_type = 'customer' OR t.previous_author_type IS NULL) AND t.author_id != '000000000000050001000001' AND t.entry_type = 'privateNote') THEN 'note after customer'

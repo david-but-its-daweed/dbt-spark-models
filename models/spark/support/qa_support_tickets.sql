@@ -8,17 +8,18 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'alerts_channel': "#olc_dbt_alerts",
-       'model_owner' : '@ilypavlov'
+       'model_owner' : '@operational.analytics.duty'
      }
  ) }}
- 
+
 WITH last_ticket_review_id AS (
     SELECT
-        payload.ticketId AS ticketId,
-        payload.reviewedAgentId AS reviewedAgentId,
+        payload.ticketId,
+        payload.reviewedAgentId,
         MAX(payload.publishedAtTs) AS publishedAtTs
     FROM {{ source('mart', 'babylone_events') }}
-    WHERE partition_date >= '2022-01-01'
+    WHERE
+        partition_date >= '2022-01-01'
         AND `type` = 'qaTicketReview'
         AND payload.operation = 'publish'
     GROUP BY 1, 2
@@ -32,11 +33,13 @@ scores AS (
         EXPLODE(t.payload.results.score) AS score,
         t.payload.results.maxScore
     FROM {{ source('mart', 'babylone_events') }} AS t
-    JOIN last_ticket_review_id AS a
-        ON t.payload.ticketId = a.ticketId
-        AND t.payload.reviewedAgentId = a.reviewedAgentId
-        AND t.payload.publishedAtTs = a.publishedAtTs
-    WHERE t.partition_date >= '2022-01-01'
+    INNER JOIN last_ticket_review_id AS a
+        ON
+            t.payload.ticketId = a.ticketId
+            AND t.payload.reviewedAgentId = a.reviewedAgentId
+            AND t.payload.publishedAtTs = a.publishedAtTs
+    WHERE
+        t.partition_date >= '2022-01-01'
         AND t.`type` = 'qaTicketReview'
         AND t.payload.operation = 'publish'
 ),

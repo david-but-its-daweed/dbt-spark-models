@@ -10,7 +10,7 @@
        'bigquery_load': 'true',
        'bigquery_overwrite': 'true',
        'alerts_channel': "#olc_dbt_alerts",
-       'model_owner' : '@ilypavlov'
+       'model_owner' : '@operational.analytics.duty'
      }
  ) }}
 
@@ -20,7 +20,7 @@ WITH prebase_marketplace AS (
         payload.changedbytype AS state_owner,
         EXPLODE(payload.tagids) AS tag,
         partition_date,
-        event_ts_msk AS event_ts_msk
+        event_ts_msk
     FROM {{ source('mart', 'babylone_events') }}
     WHERE
         type = 'ticketChangeJoom'
@@ -35,7 +35,7 @@ t_marketplace AS (
         a.name AS tag,
         a.type AS tag_type,
         b.name AS subject_category,
-        t.state_owner AS state_owner,
+        t.state_owner,
         t.partition_date,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_marketplace AS t
@@ -107,7 +107,7 @@ prebase_jl AS (
         payload.changedbytype AS state_owner,
         EXPLODE(payload.tagids) AS tag,
         partition_date,
-        event_ts_msk AS event_ts_msk
+        event_ts_msk
     FROM mart.logistics_babylone_events
     WHERE
         type = 'ticketChange'
@@ -122,7 +122,7 @@ t_jl AS (
         a.name AS tag,
         a.type AS tag_type,
         b.name AS subject_category,
-        t.state_owner AS state_owner,
+        t.state_owner,
         t.partition_date,
         MIN(t.event_ts_msk) AS event_ts_msk
     FROM prebase_jl AS t
