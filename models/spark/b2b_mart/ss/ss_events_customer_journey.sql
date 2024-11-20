@@ -22,11 +22,13 @@
     payload.pageUrl,
     payload.pageName,
     payload.source,
-    payload.isRegistrationCompleted
+    payload.isRegistrationCompleted,
+    payload.productId as product_id
     from  {{ source('b2b_mart', 'device_events') }} AS de
     where partition_date >= '2024-04-01'
          and  type in ( 'sampleCheckoutOpen',
                         'pageLeave',
-                        'userProfileClick'
+                        'userProfileClick',
+                        'addToCart'
                         )
                             
