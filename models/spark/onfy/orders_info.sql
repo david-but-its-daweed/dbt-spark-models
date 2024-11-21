@@ -2,7 +2,7 @@
     schema='onfy',
     materialized='table',
     meta = {
-      'model_owner' : '@easaltykova',
+      'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': 'onfy-etl-monitoring'
@@ -60,7 +60,11 @@ SELECT
     product_names_cte.product_name,
     order_parcel_item.quantity,
     CAST(order_parcel_item.price AS DOUBLE) AS item_price,
-    CAST(order_parcel_item.price * order_parcel_item.quantity AS DOUBLE) AS products_price
+    CAST(order_parcel_item.price * order_parcel_item.quantity AS DOUBLE) AS products_price,
+    COALESCE(price_applier_applied_for_object.before_price, order_parcel_item.price) AS before_item_price,
+    COALESCE(price_applier_applied_for_object.before_price, order_parcel_item.price) * order_parcel_item.quantity AS before_products_price,
+    COALESCE(price_applier_applied_for_object.before_price - price_applier_applied_for_object.after_price, 0) AS item_discount,
+    COALESCE((price_applier_applied_for_object.before_price - price_applier_applied_for_object.after_price), 0) * order_parcel_item.quantity AS products_discount
 FROM {{ source('pharmacy_landing', 'order') }} AS ord
 INNER JOIN {{ source('pharmacy_landing', 'order_parcel') }} AS order_parcel
     ON ord.id = order_parcel.order_id
@@ -76,6 +80,11 @@ LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS store
 INNER JOIN {{ source('pharmacy_landing', 'store_delivery') }} AS store_delivery
     ON
         store.id = store_delivery.store_id
+LEFT JOIN  {{ source('pharmacy_landing', 'price_applier_applied_for_object') }} as price_applier_applied_for_object
+    ON
+        price_applier_applied_for_object.object_id = order_parcel_item.id
+        AND price_applier_applied_for_object.object_type = 'ORDER_PARCEL_ITEM'
+        AND price_applier_applied_for_object.applier_type = 'DISCOUNT_BY_TOKEN'
 LEFT JOIN {{ source('pharmacy_landing', 'medicine') }} AS medicine
     ON
         order_parcel_item.product_id = medicine.id
