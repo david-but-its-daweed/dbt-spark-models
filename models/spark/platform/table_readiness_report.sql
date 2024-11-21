@@ -17,6 +17,7 @@ WITH final_data AS (
     SELECT
         dr.source_id,
         dr.partition_date,
+        dr.day_of_week_no,
         dr.run_id,
         dr.input_name,
         dr.input_type,
@@ -45,27 +46,43 @@ WITH final_data AS (
         dr.try_number,
         dr.is_ftu_record,
         dr.is_daily,
-        dr.is_output_has_ftu_sensor,
         dr.is_not_updated_last_day,
 
+        at_es.median_start_time AS airflow_median_start_time,
         at_es.median_end_time AS airflow_median_ready_time,
+        at_es.median_duration AS airflow_median_duration,
         at_es.p50_effective_duration AS airflow_p50_effective_duration,
         at_es.p80_effective_duration AS airflow_p80_effective_duration,
+        at_es.p50_effective_duration_cleared AS airflow_p50_effective_duration_cleared,
+        at_es.p80_effective_duration_cleared AS airflow_p80_effective_duration_cleared,
 
+        ftu_es.median_start_time AS ftu_median_start_time,
         ftu_es.median_end_time AS ftu_median_ready_time,
+        ftu_es.median_duration AS ftu_median_duration,
         ftu_es.p50_effective_duration AS ftu_p50_effective_duration,
         ftu_es.p80_effective_duration AS ftu_p80_effective_duration,
+        ftu_es.p50_effective_duration_cleared AS ftu_p50_effective_duration_cleared,
+        ftu_es.p80_effective_duration_cleared AS ftu_p80_effective_duration_cleared,
 
+        COALESCE(ftu_es.median_start_time, at_es.median_start_time) AS median_start_time,
         COALESCE(ftu_es.median_end_time, at_es.median_end_time) AS median_ready_time,
+        COALESCE(ftu_es.median_duration, at_es.median_duration) AS median_duration,
         COALESCE(ftu_es.p50_effective_duration, at_es.p50_effective_duration) AS p50_effective_duration,
         COALESCE(ftu_es.p80_effective_duration, at_es.p80_effective_duration) AS p80_effective_duration,
+        COALESCE(ftu_es.p50_effective_duration_cleared, at_es.p50_effective_duration_cleared) AS p50_effective_duration_cleared,
+        COALESCE(ftu_es.p80_effective_duration_cleared, at_es.p80_effective_duration_cleared) AS p80_effective_duration_cleared,
 
 
         airflow_task_esd.effective_start_hours AS airflow_task_effective_start_hours,
         tables_esd.effective_start_hours AS tables_effective_start_hours,
         COALESCE(tables_esd.effective_start_hours, airflow_task_esd.effective_start_hours) AS effective_start_hours,
 
-        dr.ready_time_hours_msk - COALESCE(tables_esd.effective_start_hours_msk, airflow_task_esd.effective_start_hours_msk, 0) AS effective_duration
+        airflow_task_esd.effective_start_hours_cleared AS airflow_task_effective_start_hours_cleared,
+        tables_esd.effective_start_hours_cleared AS tables_effective_start_hours_cleared,
+        COALESCE(tables_esd.effective_start_hours_cleared, airflow_task_esd.effective_start_hours_cleared) AS effective_start_hours_cleared,
+
+        dr.ready_time_hours_msk - COALESCE(tables_esd.effective_start_hours_msk, airflow_task_esd.effective_start_hours_msk, 0) AS effective_duration,
+        dr.ready_time_hours_msk - COALESCE(tables_esd.effective_start_hours_cleared_msk, airflow_task_esd.effective_start_hours_cleared_msk, 0) AS effective_duration_cleared
 
     FROM {{ ref("data_readiness") }} AS dr
 
@@ -96,20 +113,25 @@ WITH final_data AS (
 
 SELECT
     *,
-    {{ format_time('airflow_median_ready_time') }} AS airflow_median_ready_time_human,
-    {{ format_time('ftu_median_ready_time') }} AS ftu_median_ready_time_human,
+    {{ format_time('median_start_time') }} AS median_start_time_human,
     {{ format_time('median_ready_time') }} AS median_ready_time_human,
-
-    {{ format_time('airflow_task_effective_start_hours') }} AS airflow_task_effective_start_hours_human,
-    {{ format_time('tables_effective_start_hours') }} AS tables_effective_start_hours_human,
     {{ format_time('effective_start_hours') }} AS effective_start_hours_human,
+    {{ format_time('effective_start_hours_cleared') }} AS effective_start_hours_cleared_human,
 
     effective_duration / p50_effective_duration AS slowness_ratio,
     (effective_duration - p50_effective_duration) * 60 AS slowdown_minutes,
 
+    effective_duration_cleared / p50_effective_duration_cleared AS slowness_ratio_cleared,
+    (effective_duration_cleared - p50_effective_duration_cleared) * 60 AS slowdown_minutes_cleared,
+
     effective_duration * 60 AS effective_duration_minutes,
     p50_effective_duration * 60 AS p50_effective_duration_minutes,
     p80_effective_duration * 60 AS p80_effective_duration_minutes,
+
+    effective_duration_cleared * 60 AS effective_duration_minutes_cleared,
+    p50_effective_duration_cleared * 60 AS p50_effective_duration_minutes_cleared,
+    p80_effective_duration_cleared * 60 AS p80_effective_duration_minutes_cleared,
+
     CASE
         WHEN state = 'failed' THEN '999'
         ELSE COALESCE(ready_time_human, '999')

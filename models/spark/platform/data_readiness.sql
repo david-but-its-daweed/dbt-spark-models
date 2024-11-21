@@ -6,45 +6,13 @@
     materialized='view'
 ) }}
 
-WITH deps AS (
-    SELECT
-        output.tableName AS output_name,
-        output.tableType AS output_type,
-        `input`.`table`.tableName AS input_name,
-        `input`.`table`.tableType AS input_type,
-        `input`.`table`.isSeed AS input_is_seed,
-        `input`.`input_path` AS input_path,
-        SIZE(`input`.`input_path`) AS input_rank
-    FROM platform.table_dependencies_v2
-    WHERE
-        TRUE
-        AND NOT `input`.`table`.isSeed
-        -- AND NOT (`input`.`table`.tableName = output.tableName AND `input`.`table`.tableType = output.tableType)
-        AND (`input`.`table`.`tableName`, `input`.`table`.`tableType`)
-        NOT IN (
-            SELECT
-                mt.full_table_name,
-                mt.type
-            FROM {{ ref("manual_tables") }} AS mt
-        )
-),
-
-slo_tables AS (
+WITH slo_tables AS (
     SELECT
         COLLECT_LIST(slo_id) AS slo_ids,
         table_name,
         table_type
     FROM {{ ref("slo_tables") }}
     GROUP BY table_name, table_type
-),
-
-producer_tasks AS (
-    SELECT
-        `table`.tableName AS table_name,
-        `table`.tableType AS table_type,
-        airflow_task.dagId AS dag_id,
-        airflow_task.taskId AS task_id
-    FROM platform.table_producers
 ),
 
 dependencies AS (
@@ -59,23 +27,15 @@ dependencies AS (
             COALESCE(slo_tables.slo_ids, ARRAY()),
             ARRAY(deps.output_name || '_' || deps.output_type)
         )) AS source_id,
-        producer_tasks.dag_id,
-        producer_tasks.task_id,
-        output_producer_tasks.dag_id AS output_dag_id,
-        output_producer_tasks.task_id AS output_task_id
-    FROM deps
+        deps.dag_id,
+        deps.task_id,
+        deps.output_dag_id,
+        deps.output_task_id
+    FROM platform.dependency_producers AS deps
     LEFT JOIN slo_tables
         ON
             deps.output_name = slo_tables.table_name
             AND deps.output_type = slo_tables.table_type
-    LEFT JOIN producer_tasks
-        ON
-            deps.input_name = producer_tasks.table_name
-            AND deps.input_type = producer_tasks.table_type
-    LEFT JOIN producer_tasks AS output_producer_tasks
-        ON
-            deps.output_name = output_producer_tasks.table_name
-            AND deps.output_type = output_producer_tasks.table_type
 ),
 
 airflow_data AS (
@@ -84,23 +44,23 @@ airflow_data AS (
     WHERE run_number = 1
 ),
 
-airflow_ftu_sensors AS (
-    SELECT
-        ti.partition_date,
-        ti.dag_id,
-        CASE
-            WHEN ti.task_id LIKE '%_bq_update_sensor' THEN 'bq'
-            ELSE 'spark'
-        END AS sensor_type,
-        CASE
-            WHEN ti.task_id LIKE '%_bq_update_sensor' THEN SUBSTR(ti.task_id, 1, LENGTH(ti.task_id) - 17)
-            ELSE SUBSTR(ti.task_id, 1, LENGTH(ti.task_id) - 14)
-        END AS sensor_table_name
-    FROM airflow_data AS ti
-    WHERE
-        ti.operator = 'HttpSensorAsync'
-        AND ti.task_id LIKE '%_bq_update_sensor'
-),
+-- airflow_ftu_sensors AS (
+--     SELECT
+--         ti.partition_date,
+--         ti.dag_id,
+--         CASE
+--             WHEN ti.task_id LIKE '%_bq_update_sensor' THEN 'bq'
+--             ELSE 'spark'
+--         END AS sensor_type,
+--         CASE
+--             WHEN ti.task_id LIKE '%_bq_update_sensor' THEN SUBSTR(ti.task_id, 1, LENGTH(ti.task_id) - 17)
+--             ELSE SUBSTR(ti.task_id, 1, LENGTH(ti.task_id) - 14)
+--         END AS sensor_table_name
+--     FROM airflow_data AS ti
+--     WHERE
+--         ti.operator = 'HttpSensorAsync'
+--         AND ti.task_id LIKE '%_bq_update_sensor'
+-- ),
 
 ftu AS (
     SELECT
@@ -124,7 +84,7 @@ ftu AS (
             WHEN HOUR(start_time) >= 22 THEN DATE_TRUNC('Day', start_time + INTERVAL 24 HOURS)
             ELSE DATE_TRUNC('Day', start_time)
         END) AS partition_date,
-        MIN(start_time) AS start_date,
+        MIN(IF(table_name LIKE 'mongo%', start_time, COALESCE(next_start_time, start_time))) AS start_date,
         MIN(dttm) AS end_date,
         UNIX_TIMESTAMP(MIN(dttm)) - UNIX_TIMESTAMP(MIN(start_time)) AS duration
     FROM platform.fact_table_update
@@ -145,6 +105,16 @@ spark_updated_tables AS (
         'spark' AS table_type
     FROM platform.beacon
     WHERE create_datetime / 1000 >= UNIX_TIMESTAMP(DATE(NOW()) - INTERVAL 1 DAY)
+),
+
+dates AS (
+    SELECT
+        dates.id,
+        dates.day_of_week_no
+    FROM mart.dim_date AS dates
+    WHERE
+        dates.id <= TO_DATE(NOW())
+        AND dates.id >= TO_DATE(NOW()) - INTERVAL 3 MONTH
 ),
 
 final_data AS (
@@ -175,16 +145,16 @@ final_data AS (
         airflow_data.end_date AS airflow_end_date,
         COALESCE(ftu.start_date, airflow_data.start_date) AS start_date,
         COALESCE(ftu.end_date, airflow_data.end_date) AS end_date,
-        airflow_data.duration AS airflow_duration,
-        ftu.duration AS ftu_duration,
-        COALESCE(ftu.duration, airflow_data.duration) AS duration,
+        ROUND(airflow_data.duration / 60) AS airflow_duration,
+        ROUND(ftu.duration / 60) AS ftu_duration,
+        ROUND(COALESCE(ftu.duration, airflow_data.duration) / 60) AS duration,
         airflow_data.try_number,
         COALESCE(ftu.table_name IS NOT NULL, FALSE) AS is_ftu_record,
         COALESCE(airflow_data.run_cnt = 1, FALSE) AS is_daily,
-        COALESCE(aftus.partition_date IS NOT NULL, FALSE) AS is_output_has_ftu_sensor,
+        -- COALESCE(aftus.partition_date IS NOT NULL, FALSE) AS is_output_has_ftu_sensor,
         COALESCE(dependencies.input_type == 'spark' AND sut.table_name IS NULL, FALSE) AS is_not_updated_last_day
     FROM dependencies
-    LEFT JOIN mart.dim_date AS dates
+    LEFT JOIN dates
     LEFT JOIN airflow_data
         ON
             dependencies.dag_id = airflow_data.dag_id
@@ -195,12 +165,12 @@ final_data AS (
             dependencies.input_name = ftu.table_name
             AND dependencies.input_type = ftu.platform
             AND dates.id = ftu.partition_date
-    LEFT JOIN airflow_ftu_sensors AS aftus
-        ON
-            dependencies.output_dag_id = aftus.dag_id
-            AND dependencies.input_name = aftus.sensor_table_name
-            AND dependencies.input_type = aftus.sensor_type
-            AND dates.id = aftus.partition_date
+    -- LEFT JOIN airflow_ftu_sensors AS aftus
+    --     ON
+    --         dependencies.output_dag_id = aftus.dag_id
+    --         AND dependencies.input_name = aftus.sensor_table_name
+    --         AND dependencies.input_type = aftus.sensor_type
+    --         AND dates.id = aftus.partition_date
 
     LEFT JOIN spark_updated_tables AS sut
         ON
@@ -208,8 +178,7 @@ final_data AS (
             AND dependencies.input_type = sut.table_type
 
     WHERE
-        dates.id <= TO_DATE(NOW())
-        AND dates.id >= TO_DATE(NOW()) - INTERVAL 6 MONTH
+        airflow_data.partition_date IS NOT NULL
 )
 
 SELECT

@@ -16,9 +16,10 @@ SELECT
         WHEN HOUR(start_time) >= 22 THEN DATE_TRUNC('Day', start_time + INTERVAL 24 HOURS)
         ELSE DATE_TRUNC('Day', start_time)
     END) AS partition_date,
-    MIN(start_time) AS start_date,
+    -- we don't use next_start_time in mongo table because they run in parallel and next_start_time is incorrect
+    MIN(IF(table_name LIKE 'mongo%', start_time, COALESCE(next_start_time, start_time))) AS start_date,
     MIN(dttm) AS end_date,
-    UNIX_TIMESTAMP(MIN(dttm)) - UNIX_TIMESTAMP(MIN(start_time)) AS duration
+    UNIX_TIMESTAMP(MIN(dttm)) - UNIX_TIMESTAMP(MIN(IF(table_name LIKE 'mongo%', start_time, COALESCE(next_start_time, start_time)))) AS duration
 FROM platform.fact_table_update
 WHERE
     start_time IS NOT NULL
