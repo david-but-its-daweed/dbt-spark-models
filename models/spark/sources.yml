@@ -181,7 +181,6 @@ sources:
       - name: auth_proxy_dim_devices
       - name: sellers_for_outreach
       - name: contacts_cpf
-      - name: mercadolibre_categories
   
   - name: joompro_analytics_mart
     tables:
