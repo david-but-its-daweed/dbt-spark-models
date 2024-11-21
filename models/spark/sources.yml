@@ -181,10 +181,16 @@ sources:
       - name: auth_proxy_dim_devices
       - name: sellers_for_outreach
       - name: contacts_cpf
+      - name: mercadolibre_categories
   
   - name: joompro_analytics_mart
     tables:
       - name: mercadolibre_products_snapshot
+      - name: cube_mlb_products
+
+  - name: joompro_analytics
+    tables:
+      - name: mercadolibre_categories_reviews_cube_js_weekly
 
   - name: category_management
     tables:
