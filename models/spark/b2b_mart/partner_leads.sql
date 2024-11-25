@@ -9,7 +9,7 @@
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',
-      'bigquery_known_gaps': [ '2024-01-27', '2024-01-26' ]
+      'bigquery_known_gaps': ['2024-01-27', '2024-01-26', '2024-05-21', '2024-07-18', '2024-05-14']
     }
 ) }}
 
