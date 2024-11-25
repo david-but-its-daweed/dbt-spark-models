@@ -113,6 +113,24 @@ WITH bots AS (
             AND atc.user_id = mtd.user_id
             AND atc.productId = mtd.productId
     GROUP BY 1,2,3,4,5,6,7,8,9
+),
+     promotions AS (
+    SELECT p.promotion_id,
+           p.promotion_name,
+           SUM(ppg.pids_count) AS count_products
+    FROM (
+        SELECT *,
+               explode(pgs) AS (exploded_key, exploded_value)
+        FROM {{ ref('scd2_mongo_promotions') }}
+        WHERE dbt_valid_to IS NULL
+    ) AS p
+    LEFT JOIN (
+        SELECT *,
+               size(from_json(content, 'STRUCT<pids: ARRAY<STRING>>').pids) AS pids_count
+        FROM {{ ref('scd2_mongo_promo_product_groups') }}
+        WHERE dbt_valid_to IS NULL
+    ) AS ppg ON p.exploded_key = ppg.product_groups_id
+    GROUP BY 1,2    
 )
 
 
@@ -123,7 +141,7 @@ SELECT main.type,
        main.user_id,
        main.promotion_id,
        pi.promotion_name,
-       pi.pgs,
+       pi.count_products,
        main.position,
        main.product_id,
        main.index,
@@ -131,5 +149,4 @@ SELECT main.type,
        main.add_to_cart_at,
        main.move_to_deal_at
 FROM main
-LEFT JOIN {{ ref('scd2_mongo_promotions') }} AS pi ON pi.dbt_valid_to IS NULL
-                                                  AND main.promotion_id = pi.promotion_id
+LEFT JOIN promotions AS pi ON main.promotion_id = pi.promotion_id
