@@ -95,7 +95,7 @@ ttfr AS (
         ((UNIX_SECONDS(TIMESTAMP(replies.ts_first_replied)) - UNIX_SECONDS(TIMESTAMP(tickets.ts_created))) / 3600) AS ttfr
     FROM ticket_create_events AS tickets
     LEFT JOIN messages_first_replies AS replies
-        ON tickets.ticket_id = messages_first_replies.ticket_id
+        ON tickets.ticket_id = replies.ticket_id
 ),
 
 ttfr_author_type AS (
