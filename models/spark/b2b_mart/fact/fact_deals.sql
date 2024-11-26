@@ -25,7 +25,7 @@ owner AS (
         fi.assignee_role AS owner_role,
         fi.first_time_assigned AS owner_ts,
         fi.status_time,
-        fi.status,
+        case when lower(fi.status) = 'delivering' then 'Delivery' else fi.status end as status,
         ks.id as status_int, 
         fi.reject_id,
         fi.reject_reason,
