@@ -5,7 +5,8 @@
       'model_owner' : '@amitiushkina',
       'team': 'general_analytics',
       'bigquery_load': 'true',
-      'priority_weight': '150'
+      'priority_weight': '150',
+      'bigquery_check_counts': 'false'
     }
 ) }}
 
