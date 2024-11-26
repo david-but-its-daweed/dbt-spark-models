@@ -15,7 +15,7 @@ with day as (
 ,
 gmv as (
     select distinct
-    t as date_payed, 
+    cast(t as date) as date_payed, 
     g.order_id,
     g.gmv_initial,
     g.initial_gross_profit,
@@ -26,10 +26,10 @@ gmv as (
     grade,
     1 as for_join,
     country,
-    min(t) over (partition by g.user_id, grade) as min_date_payed
+    cast(min(t) over (partition by g.user_id, grade) as date) as min_date_payed
     FROM {{ ref('gmv_by_sources') }} g
     left join (select distinct user_id, coalesce(grade, 'unknown') as grade from {{ ref('users_daily_table') }}
-          where partition_date_msk = (select max(partition_date_msk) from {{ ref('users_daily_table') }})
+          where cast(partition_date_msk as date) = (select max(cast(partition_date_msk as date)) from {{ ref('users_daily_table') }})
         and date_payed is not null
         ) u on u.user_id = g.user_id
 )
