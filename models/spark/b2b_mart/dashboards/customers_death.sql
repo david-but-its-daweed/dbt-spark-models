@@ -28,10 +28,11 @@ gmv as (
     country,
     cast(min(t) over (partition by g.user_id, grade) as date) as min_date_payed
     FROM {{ ref('gmv_by_sources') }} g
-    left join (select distinct user_id, coalesce(grade, 'unknown') as grade from {{ ref('users_daily_table') }}
-          where cast(partition_date_msk as date) = (select max(cast(partition_date_msk as date)) from {{ ref('users_daily_table') }})
-        and date_payed is not null
-        ) u on u.user_id = g.user_id
+    LEFT JOIN (
+        SELECT user_id,
+               grade
+        FROM {{ ref('fact_customers') }}
+    ) AS u ON u.user_id = g.user_id
 )
 
 
