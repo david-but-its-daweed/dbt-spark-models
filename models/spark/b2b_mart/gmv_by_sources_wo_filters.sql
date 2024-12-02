@@ -39,7 +39,7 @@ order_v2_mongo AS (
         u.owner_moderator_id
     FROM {{ ref('fact_order') }} AS fo
     INNER JOIN not_jp_users AS u ON fo.user_id = u.user_id
-    WHERE (order_id = '6735ffb2f182e3f4a318c0ee'  AND fo.next_effective_ts_msk IS NULL) or 
+    WHERE (order_id in ('6735ffb2f182e3f4a318c0ee','673b8dd150f7107c6a2ee8f0' ) AND fo.next_effective_ts_msk IS NULL) or 
         (fo.last_order_status < 60
         AND fo.last_order_status >= 10
         AND fo.next_effective_ts_msk IS NULL
