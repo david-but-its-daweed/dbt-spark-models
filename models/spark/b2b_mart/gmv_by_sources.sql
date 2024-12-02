@@ -26,6 +26,8 @@ SELECT
         WHEN order_id = '672bd1eae546571cec885466' THEN CAST('2024-11-08' AS DATE)
         WHEN order_id = '671a91380c96a194287a22b8' THEN CAST('2024-11-04' AS DATE)
         WHEN order_id = '6735ffb2f182e3f4a318c0ee' THEN CAST('2024-11-14' AS DATE)
+        WHEN order_id = '672cd8ed1656e9dd7f4e785c' THEN CAST('2024-11-27' AS DATE)
+        WHEN order_id = '673b8dd150f7107c6a2ee8f0' THEN CAST('2024-11-29' AS DATE)
         ELSE t
     END AS t,
     order_id,
@@ -66,6 +68,8 @@ SELECT
         WHEN order_id = '672bd1eae546571cec885466' THEN 28837.93
         WHEN order_id = '671a91380c96a194287a22b8' THEN 15665.74
         WHEN order_id = '6735ffb2f182e3f4a318c0ee' THEN 14175.91
+        WHEN order_id = '672cd8ed1656e9dd7f4e785c' THEN 15744.0
+        WHEN order_id = '673b8dd150f7107c6a2ee8f0' THEN 51098.0
         ELSE gmv_initial
     END AS gmv_initial,
     CASE
@@ -105,6 +109,8 @@ SELECT
         WHEN order_id = '672bd1eae546571cec885466' THEN -5665.12
         WHEN order_id = '671a91380c96a194287a22b8' THEN -739.83
         WHEN order_id = '6735ffb2f182e3f4a318c0ee' THEN 271.00
+        WHEN order_id = '672cd8ed1656e9dd7f4e785c' THEN -208.64
+        WHEN order_id = '673b8dd150f7107c6a2ee8f0' THEN -8593.85
         ELSE initial_gross_profit
     END AS initial_gross_profit,
 
@@ -145,6 +151,8 @@ SELECT
         WHEN order_id = '672bd1eae546571cec885466' THEN -5665.12
         WHEN order_id = '671a91380c96a194287a22b8' THEN -739.83
         WHEN order_id = '6735ffb2f182e3f4a318c0ee' THEN 271.00
+        WHEN order_id = '672cd8ed1656e9dd7f4e785c' THEN -208.64
+        WHEN order_id = '673b8dd150f7107c6a2ee8f0' THEN -8593.85
         ELSE final_gross_profit
     END AS final_gross_profit,
     utm_campaign,
