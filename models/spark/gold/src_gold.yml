@@ -604,6 +604,8 @@ models:
       description: Flag indicating whether the Special Price discount was used for a particular `order_id`. More details can be found here https://www.notion.so/joomteam/Special-Price-a33c18353de6458c8a300b95d7a3e51c
     - name: special_price_discount
       description: Discount amount due to Special Price converted to USD. More details can be found here https://www.notion.so/joomteam/Special-Price-a33c18353de6458c8a300b95d7a3e51c
+    - name: special_price_potential_discount
+      description: Potential discount amount due to Special Price for product converted to USD. That's the discount which could be given for the purchased product if user completed Special Price condition (3+ items in cart). Only SP1 discount, not including SP2 (6+ items). 0$ if product_id not taking part in SpecialPrice
     - name: discounts
       description: Dictionary storing applied discounts
     - name: is_refunded

@@ -109,6 +109,7 @@ orders_ext0 AS (
         points_final,
         COALESCE(ARRAY_CONTAINS(discounts.type, 'specialPriceFinal'), FALSE) AS is_with_special_price,
         ROUND(COALESCE(FILTER(discounts, x -> x.type = 'specialPriceFinal')[0].amount * 1e6, 0), 3) AS special_price_discount,
+        ROUND(COALESCE(FILTER(discounts, x -> x.type = 'specialPrice')[0].amount * 1e6, 0), 3) AS special_price_potential_discount,
         discounts,
 
         refund_reason IS NOT NULL AS is_refunded,
@@ -316,6 +317,7 @@ orders_ext2 AS (
         points_final,
         is_with_special_price,
         special_price_discount,
+        special_price_potential_discount,
         discounts,
         is_refunded,
         refund_reason,
@@ -440,6 +442,7 @@ orders_ext5 AS (
         a.points_final,
         a.is_with_special_price,
         a.special_price_discount,
+        a.special_price_potential_discount,
         a.discounts,
         a.is_refunded,
         a.refund_reason,
@@ -586,6 +589,7 @@ SELECT
     points_final,
     is_with_special_price,
     special_price_discount,
+    special_price_potential_discount,
     discounts,
 
     is_refunded,
