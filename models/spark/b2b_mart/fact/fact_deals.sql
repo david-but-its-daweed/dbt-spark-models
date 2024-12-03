@@ -25,7 +25,8 @@ owner AS (
         fi.assignee_role AS owner_role,
         fi.first_time_assigned AS owner_ts,
         fi.status_time,
-        case when lower(fi.status) = 'delivering' then 'Delivery' else fi.status end as status,
+        ---case when lower(fi.status) = 'delivering' then 'Delivery' else fi.status end as status,
+        fi.status,
         ks.id as status_int, 
         fi.reject_id,
         fi.reject_reason,
@@ -84,8 +85,15 @@ from {{ ref('scd2_calculations_snapshot') }}
 where deal_id is not null 
     and dbt_valid_to is null
 group by 1,2
+),
+friendly_statuses as (
+select 
+    val as friendly_status, 
+    lower(replace(key,'issue[dot]status[dot]','')) as key_j 
+from {{ source('mongo', 'b2b_core_i18ndata_daily_snapshot') }}
+where langCode = 'en' and
+key like  '%issue[dot]status[dot]%'
 )
-
 
 
 SELECT DISTINCT
@@ -130,8 +138,9 @@ SELECT DISTINCT
     owner.owner_role,
     owner.owner_ts,
     owner.status_time,
-    owner.status,
+    case when lower(owner.status) = 'delivering' then 'Delivery' else owner.status end as status,
     owner.status_int,
+    friendly_statuses.friendly_status,
     owner.reject_id,
     owner.reject_reason,
     owner.reject_reason_comment,
@@ -158,3 +167,4 @@ LEFT JOIN purchase ON d._id = purchase.deal_id
 LEFT JOIN source ON source.user_id = d.userId
 LEFT JOIN users ON users.user_id = d.userId
 LEFT JOIN paymentmethod ON d._id = paymentmethod.deal_id
+LEFT JOIN friendly_statuses on friendly_statuses.key_j = lower(owner.status) 
