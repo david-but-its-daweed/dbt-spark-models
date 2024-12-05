@@ -78,14 +78,18 @@ users AS (
 ),
 
 paymentmethod AS (
-    select 
-    deal_id,
-    payment_method
-from {{ ref('scd2_calculations_snapshot') }}
-where deal_id is not null 
-    and dbt_valid_to is null
-group by 1,2
+    SELECT *
+    FROM (
+        SELECT deal_id,
+               payment_method,
+               ROW_NUMBER() OVER (PARTITION BY deal_id ORDER BY created_ts_msk) AS row_n
+        FROM {{ ref('scd2_calculations_snapshot') }}
+        WHERE deal_id IS NOT NULL
+          AND dbt_valid_to IS NULL
+    ) AS main
+    WHERE row_n = 1
 ),
+    
 friendly_statuses as (
 select 
     val as friendly_status, 
