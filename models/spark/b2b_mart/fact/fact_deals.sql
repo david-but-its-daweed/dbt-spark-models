@@ -136,6 +136,10 @@ SELECT DISTINCT
         WHEN d.requestType = 1 THEN 'standard'
         WHEN d.requestType = 2 THEN 'vip'
         END AS deal_type,
+    CASE
+        WHEN d.sourcingDealType = 0 THEN 'standard'
+        WHEN d.sourcingDealType = 1 THEN 'vip'
+    END AS sourcing_deal_type,
     owner.issue_friendly_id,
     owner.owner_id,
     owner.owner_email,
