@@ -55,7 +55,8 @@ select subsequent_agg.user_id,
       subsequent_agg.event_ts_msk,
       subsequent_agg.event_msk_date,
       subsequent_agg.current_qty as current_qty,
-      coalesce(a.current_qty,0) as sub_qty 
+      coalesce(a.current_qty,0) as sub_qty,
+    row_number() over (partition by subsequent_agg.user_id,subsequent_agg.sub_product_id,event_ts_msk,a.sub_product_id order by ts_hold desc    ) rn 
 from subsequent_agg 
 left join (select user_id, product_id,sub_product_id, event_ts_msk as ts_hold , current_qty from  
 subsequent_agg 
@@ -63,7 +64,8 @@ subsequent_agg
       and a.product_id = subsequent_agg.product_id 
       and a.sub_product_id != subsequent_agg.sub_product_id 
       and a.ts_hold <= subsequent_agg.event_ts_msk
- qualify row_number() over (partition by subsequent_agg.user_id,subsequent_agg.sub_product_id,event_ts_msk,a.sub_product_id order by ts_hold desc    )  = 1 )
+ )
+where rn = 1 
  group by 1,2,3,4,5
 ) , 
 data_ as (
@@ -82,7 +84,13 @@ subsequent_product.event_ts_msk,
 subsequent_product.event_msk_date,
 current_qty + sub_qty  as product_qty,
 b.product_id  as other_product ,
-other_product_qty
+other_product_qty,
+row_number() Over(partition by 
+  subsequent_product.user_id, 
+  subsequent_product.product_id, subsequent_product.event_ts_msk,
+   b.product_id
+   order by ts_hold desc 
+    ) rn 
 from  subsequent_product
 left join (
   select 
@@ -95,14 +103,9 @@ left join (
   subsequent_product.user_id = b.user_id 
   and subsequent_product.event_ts_msk >=  b.ts_hold 
   and subsequent_product.product_id != b.product_id 
-
-qualify  row_number() Over(partition by 
-  subsequent_product.user_id, 
-  subsequent_product.product_id, subsequent_product.event_ts_msk,
-   b.product_id
-   order by ts_hold desc 
-    )  = 1 
- )  group  by 1,2,3,4)
+ )  
+    where rn = 1 
+    group  by 1,2,3,4)
  
  select 
 user_id,
