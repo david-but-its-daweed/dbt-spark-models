@@ -52,6 +52,7 @@ SELECT
         'merchant_gmv', CAST(mi.m.t AS DOUBLE) / 1000000,
         'merchant_revenue', CAST(mi.m.r AS DOUBLE) / 1000000,
         'merchant_unit_price', CAST(mi.m.up AS DOUBLE) / 1000000,
+        'merchant_unit_shipping_price', CAST(mi.m.us AS DOUBLE) / 1000000,
         'merchant_refund_amount', CAST(mi.m.ra AS DOUBLE) / 1000000,
         'merchant_revenue_from_invoice', CAST(mi.m.ri AS DOUBLE) / 1000000,
         'customer_vat', CAST(mi.c.vat AS DOUBLE) / 1000000,
