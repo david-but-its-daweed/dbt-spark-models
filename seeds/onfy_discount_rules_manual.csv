@@ -1,14 +1,13 @@
 product_id,store_id,channel,weight,pessimization_type,discount_percent,source,comment
 ,,,0,,0,manual,no default discount
-,,apomio,10,,20,manual,apomio
-,,medizinfuchs,10,,20,manual,medizinfuchs
-,,idealo,10,,20,manual,idealo
-,,billiger,10,,16,manual,billiger
-,7631548fbb5649f28a9523f661a8dac3,,11,,17,manual,fliegende-pillen
-,7631548fbb5649f28a9523f661a8dac3,billiger,12,,13,manual,fliegende-pillen at billiger
+,,apomio,10,,19,manual,apomio
+,,medizinfuchs,10,,19,manual,medizinfuchs
+,,idealo,10,,19,manual,idealo
+,,billiger,10,,19,manual,billiger
+,7631548fbb5649f28a9523f661a8dac3,,11,,16,manual,fliegende-pillen
 ,83a79b1478ab4c5faf89e7bbc2a89afa,,11,,13,manual,frauenapotheke
 ,f818f7e2da64439890e406b3fe87e35e,,45,,0,manual,weitling
-,0957abe85f5d42cebb7dc813788068de,,45,,14.5,manual,weitling
+,0957abe85f5d42cebb7dc813788068de,,45,,14.5,manual,petersberg
 42b847d90dc54c63aecc61e234c1feb6,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 8aca7948ea8c4bd0998cfaf825327b09,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 1926ba92ad3b4e64a6bf6eaade04dd74,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
