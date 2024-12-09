@@ -1,7 +1,7 @@
 {{
   config(
     meta = {
-      'model_owner' : '@acherezova',
+      'model_owner' : '@operational.analytics.duty',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'date',
       'priority_weight': '1000',
