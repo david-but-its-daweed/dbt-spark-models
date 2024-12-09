@@ -5,7 +5,7 @@
     schema='gold',
     file_format='parquet',
     meta = {
-        'model_owner' : '@general_analytics',
+        'model_owner' : '@analytics.duty',
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true',
         'priority_weight': '1000',

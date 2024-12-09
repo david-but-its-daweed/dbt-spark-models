@@ -8,7 +8,7 @@
     partition_by=['order_month_msk'],
     on_schema_change='sync_all_columns',
     meta = {
-        'model_owner' : '@general_analytics',
+        'model_owner' : '@analytics.duty',
         'bigquery_load': 'true',
         'bigquery_partitioning_date_column': 'order_date_msk',
         'bigquery_upload_horizon_days': '230',

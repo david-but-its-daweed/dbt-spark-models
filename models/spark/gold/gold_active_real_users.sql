@@ -6,7 +6,7 @@
         clustered_by=['real_user_id'],
         file_format='parquet',
         meta = {
-            'model_owner' : '@general_analytics',
+            'model_owner' : '@analytics.duty',
             'bigquery_load': 'true',
             'bigquery_partitioning_date_column': 'date_msk',
             'bigquery_check_counts_max_diff_fraction': '0.01',

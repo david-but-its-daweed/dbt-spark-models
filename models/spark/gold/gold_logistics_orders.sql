@@ -5,7 +5,7 @@
     schema='gold',
     file_format='parquet',
     meta = {
-        'model_owner' : '@general_analytics',
+        'model_owner' : '@analytics.duty',
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true',
         'bigquery_partitioning_date_column': 'order_date_msk',
@@ -45,9 +45,9 @@ SELECT
     a.initial_channel_id AS channel_id_initial,
     a.channel_id AS channel_id_final,
     a.category_id AS merchant_category_id,
-    mc.business_line AS business_line,
+    mc.business_line,
     a.warehouse_country AS warehouse_country_code,
-    a.merchant_id AS merchant_id,
+    a.merchant_id,
 
     a.is_consolidated OR a.consolidation_group_id IS NOT NULL AS is_planned_for_consolidation_by_hecny,
     a.is_consolidated AS is_consolidated_by_hecny,
