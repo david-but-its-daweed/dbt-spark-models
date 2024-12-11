@@ -180,7 +180,7 @@ idealo_data as
         count(distinct idealo_transactions.order_id) as payments,
         if(
             count(distinct idealo_transactions.order_id) = 0 or 
-            sum(gross_profit_initial + promocode_discount) / (count(distinct idealo_sessions.window_event_id) * 0.44 + sum(promocode_discount)) <= 0.4, 0, 
+            sum(gross_profit_initial + promocode_discount) / (count(distinct idealo_sessions.window_event_id) * 0.44 + sum(promocode_discount)) <= 0.5, 0, 
             count(distinct idealo_transactions.order_id) / count(distinct idealo_sessions.event_id)
         ) as cr,
         latest_price.latest_price_decrease,
