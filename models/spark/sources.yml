@@ -178,6 +178,7 @@ sources:
   - name: joompro_mart
     tables:
       - name: mercadolibre_categories
+      - name: mercadolibre_categories_view
       - name: auth_proxy_dim_devices
       - name: sellers_for_outreach
       - name: contacts_cpf
@@ -190,6 +191,8 @@ sources:
   - name: joompro_analytics
     tables:
       - name: mercadolibre_categories_reviews_cube_js_weekly
+      - name: mercadolibre_categories_cube_js_monthly
+      - name: ods_mlb_mobile_api_product_previews
 
   - name: category_management
     tables:
