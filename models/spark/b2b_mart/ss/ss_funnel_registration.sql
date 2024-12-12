@@ -53,8 +53,58 @@ select
 
     max(case when type = 'selfServiceRegistrationFinished' then 1 else 0 end)  selfServiceRegistrationFinished,
     min(case when type = 'selfServiceRegistrationFinished' then event_ts_msk end) as selfServiceRegistrationFinished_ts,
-    cast(min(case when type = 'selfServiceRegistrationFinished' then event_ts_msk end) as Date) as selfServiceRegistrationFinished_Date
+    cast(min(case when type = 'selfServiceRegistrationFinished' then event_ts_msk end) as Date) as selfServiceRegistrationFinished_Date,
     
+    
+    max(case when type = 'registrationOpen' and payload.step = '0.0' then 1 else 0 end) AS first_step_start,
+    min(case when type = 'registrationOpen' and payload.step = '0.0' then event_ts_msk end) AS first_step_start_ts,
+    cast(min(case when type = 'registrationOpen' and payload.step = '0.0' then event_ts_msk end) AS Date) AS first_step_start_date,
+
+    max(case when type = 'registrationSubmitStep' and payload.step = '0.0' then 1 else 0 end) AS first_step_end,
+    min(case when type = 'registrationSubmitStep' and payload.step = '0.0' then event_ts_msk end) AS first_step_end_ts,
+    cast(min(case when type = 'registrationSubmitStep' and payload.step = '0.0' then event_ts_msk end) AS Date) AS first_step_end_date,
+
+    max(case when type = 'registrationOpen' and payload.step = '1.0' then 1 else 0 end) AS second_step_start,
+    min(case when type = 'registrationOpen' and payload.step = '1.0'  then event_ts_msk end) AS second_step_start_ts,
+    cast(min(case when type = 'registrationOpen' and payload.step = '1.0' then event_ts_msk end) AS Date) AS second_step_start_date,
+
+    MAX(
+        CASE 
+            WHEN type = 'registrationSubmitStep'
+             AND payload.step = (
+                     CASE
+                         WHEN DATE(event_ts_msk) >= '2024-11-18' THEN '1.0'
+                         ELSE '3.0'
+                     END
+             )
+            THEN 1
+            ELSE 0
+        END
+    ) AS second_step_end,
+    MIN(
+        CASE 
+            WHEN type = 'registrationSubmitStep'
+             AND payload.step = (
+                     CASE
+                         WHEN DATE(event_ts_msk) >= '2024-11-18' THEN '1.0'
+                         ELSE '3.0'
+                     END
+             )
+            THEN event_ts_msk
+        END
+    ) AS second_step_end_ts,
+    DATE(MIN(
+        CASE 
+            WHEN type = 'registrationSubmitStep'
+             AND payload.step = (
+                     CASE
+                         WHEN DATE(event_ts_msk) >= '2024-11-18' THEN '1.0'
+                         ELSE '3.0'
+                     END
+             )
+            THEN event_ts_msk
+        END
+    )) AS second_step_end_date
 from  {{ source('b2b_mart', 'device_events') }}
 where partition_date >= '2024-04-01'
 and type in (
