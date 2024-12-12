@@ -114,4 +114,5 @@ event_msk_date,
 product_qty + other_qty as all_qty,
 main_product+other_products as products 
 from data_ 
+where event_msk_date >= '2024-06-01'
 order by event_ts_msk
