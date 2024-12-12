@@ -18,7 +18,12 @@ WITH bounce AS (
     GROUP BY 1
     HAVING SUM(IF(type IN ('sessionStart', 'bounceCheck', "productPreview", "searchOpen", "categoryClick", "orderPreview", "productGalleryScroll", "categoryOpen", "popupFormSubmit", "popupFormNext", "mainClick", "orderClick"), 1, 0)) > 0
 ),
-
+samples as (
+    select deal_id, 
+    max(case when sample_type is not null then 0 else 1 end) as sample 
+ from {{ ref('fact_customer_requests') }}
+ group by 1
+    ),
 deals as (
     SELECT
         user_id,
@@ -26,9 +31,10 @@ deals as (
         CAST(created_ts_msk - INTERVAL 3 hours AS DATE) AS deal_created_date,
         CASE WHEN owner_email is not null then owner_ts - INTERVAL 3 hours end AS owner_ts_msk,
         CAST(CASE WHEN owner_email is not null then owner_ts - INTERVAL 3 hours end AS DATE) AS owner_date_msk
-    FROM {{ ref('fact_deals') }}
+    FROM {{ ref('fact_deals') }} 
+    join samples using(deal_id)
     WHERE next_effective_ts_msk is null
-        AND deal_name not like '%Self service sample%'
+        and sample = 0 
         AND (self_service or ss_customer)
 ),
 
@@ -96,6 +102,11 @@ SELECT * FROM (
         min(case when type = 'checkoutStartClick' then event_ts_msk end - INTERVAL 3 hours) as checkoutStartClick_ts,
         CAST(min(case when type = 'checkoutStartClick' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as checkoutStartClick_date,
         max(case when type = 'checkoutStartClick' then 1 else 0 end) as checkoutStartClick,
+
+        min(case when type = 'checkoutFinishClick' then event_ts_msk end - INTERVAL 3 hours) as checkoutFinishClick_ts,
+        CAST(min(case when type = 'checkoutFinishClick' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as checkoutFinishClick_date,
+        max(case when type = 'checkoutFinishClick' then 1 else 0 end) as checkoutFinishClick,
+    
         
         min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) as order_create_ts,
         CAST(min(case when type = 'orderCreateClick' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as order_create_date,
