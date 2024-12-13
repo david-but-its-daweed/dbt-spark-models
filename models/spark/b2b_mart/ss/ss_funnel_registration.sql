@@ -12,6 +12,8 @@
     }
 ) }}
 
+
+WITH main AS (
 select 
 
     user['userId'] as user_id,
@@ -113,3 +115,51 @@ and type in (
     'registrationSubmitStep',
     'selfServiceRegistrationFinished')
 group by 1
+)
+
+
+SELECT 
+    user_id,
+    signIn,
+    signIn_ts,
+    signIn_Date,
+    UserInfo_start,
+    UserInfo_start_ts,
+    UserInfo_start_Date,
+    UserInfo_end,
+    UserInfo_end_ts,
+    UserInfo_end_Date,
+    CompanyInfo_start,
+    CompanyInfo_start_ts,
+    CompanyInfo_start_Date,
+    CompanyInfo_end,
+    CompanyInfo_end_ts,
+    CompanyInfo_end_Date,
+    ImportInfo_start,
+    ImportInfo_start_ts,
+    ImportInfo_start_Date,
+    ImportInfo_end,
+    ImportInfo_end_ts,
+    ImportInfo_end_Date,
+    cnpgInfo_start,
+    cnpgInfo_start_ts,
+    cnpgInfo_start_Date,
+    cnpgInfo_end,
+    cnpgInfo_end_ts,
+    cnpgInfo_end_Date,
+    selfServiceRegistrationFinished,
+    selfServiceRegistrationFinished_ts,
+    selfServiceRegistrationFinished_Date,
+    greatest(selfServiceRegistrationFinished, second_step_end, second_step_start, first_step_end, first_step_start) AS first_step_start,
+    first_step_start_ts,
+    first_step_start_date,
+    greatest(selfServiceRegistrationFinished, second_step_end, second_step_start, first_step_end) AS first_step_end,
+    first_step_end_ts,
+    first_step_end_date,
+    greatest(selfServiceRegistrationFinished, second_step_end, second_step_start) AS second_step_start,
+    second_step_start_ts,
+    second_step_start_date,
+    greatest(selfServiceRegistrationFinished, second_step_end) AS second_step_end,
+    second_step_end_ts,
+    second_step_end_date
+FROM main
