@@ -28,3 +28,4 @@ SELECT _id AS quote_id,
 FROM {{ ref('scd2_mongo_quotes') }}
 LATERAL VIEW EXPLODE(products) AS product
 LATERAL VIEW EXPLODE(product.variants) AS variant
+WHERE dbt_valid_to IS NULL

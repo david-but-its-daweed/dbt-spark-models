@@ -18,3 +18,4 @@ FROM {{ ref('scd2_mongo_quotes') }}
 LATERAL VIEW EXPLODE(products) AS product
 LATERAL VIEW EXPLODE(product.variants) AS variant
 LATERAL VIEW EXPLODE(MAP_ENTRIES(variant.priceComponents)) AS pc
+WHERE dbt_valid_to IS NULL
