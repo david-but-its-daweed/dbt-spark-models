@@ -365,26 +365,26 @@ non_perf_spends as
 (
     select distinct
         'non-performance' as type,
-        if(pharmacy.manual_ads_spends.spend is null, 1, 0) as forecasted_spend,
-        coalesce(pharmacy.manual_ads_spends.campaign_id, forecasted_spends.campaign_id) as campaign_id,
-        coalesce(pharmacy.manual_ads_spends.campaign_name, forecasted_spends.campaign_name) as campaign_name,
-        coalesce(pharmacy.manual_ads_spends.source, forecasted_spends.source) as source,
-        coalesce(pharmacy.manual_ads_spends.medium, forecasted_spends.medium) as medium,
-        coalesce(pharmacy.manual_ads_spends.partner, forecasted_spends.partner) as partner,
-        coalesce(pharmacy.manual_ads_spends.campaign_platform, forecasted_spends.campaign_platform) as campaign_platform,
-        coalesce(pharmacy.manual_ads_spends.app_device_type, forecasted_spends.app_device_type) as app_device_type,
+        if(onfy_nonperf_spend.spend is null, 1, 0) as forecasted_spend,
+        coalesce(onfy_nonperf_spend.campaign_id, forecasted_spends.campaign_id) as campaign_id,
+        coalesce(onfy_nonperf_spend.campaign_name, forecasted_spends.campaign_name) as campaign_name,
+        coalesce(onfy_nonperf_spend.source, forecasted_spends.source) as source,
+        coalesce(onfy_nonperf_spend.medium, forecasted_spends.medium) as medium,
+        coalesce(onfy_nonperf_spend.partner, forecasted_spends.partner) as partner,
+        coalesce(onfy_nonperf_spend.campaign_platform, forecasted_spends.campaign_platform) as campaign_platform,
+        coalesce(onfy_nonperf_spend.app_device_type, forecasted_spends.app_device_type) as app_device_type,
         cast(dates.campaign_date_utc as date) as campaign_date_utc,
         campaign_month,
         days_in_month,
-        coalesce(pharmacy.manual_ads_spends.spend, forecasted_spends.spend) / days_in_month as spend,
+        coalesce(onfy_nonperf_spend.spend, forecasted_spends.spend) / days_in_month as spend,
         0 as clicks
     from dates
-    left join pharmacy.manual_ads_spends
-        on cast(manual_ads_spends.campaign_date_utc as date) = dates.campaign_month
-    left join pharmacy.manual_ads_spends as forecasted_spends
+    left join {{ ref("onfy_nonperf_spend") }} as onfy_nonperf_spend
+        on cast(onfy_nonperf_spend.campaign_date_utc as date) = dates.campaign_month
+    left join {{ ref("onfy_nonperf_spend") }} as forecasted_spends
         on cast(forecasted_spends.campaign_date_utc as date) = dates.previous_month
     where 1=1
-        and coalesce(pharmacy.manual_ads_spends.campaign_name, forecasted_spends.campaign_name) is not null
+        and coalesce(onfy_nonperf_spend.campaign_name, forecasted_spends.campaign_name) is not null
     
 ),
 
@@ -452,7 +452,7 @@ final_calculation as
         dayofmonth(last_day(tmp_onfy_gmbh_spend.campaign_date_utc)) as days_in_month,
         spend,
         clicks
-    from pharmacy.tmp_onfy_gmbh_spend
+    from {{ ref("onfy_manual_marketing_spends") }}
     union all
     select 
         *
