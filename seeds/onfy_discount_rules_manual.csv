@@ -1,12 +1,12 @@
 product_id,store_id,channel,weight,pessimization_type,discount_percent,source,comment
 ,,,0,,0,manual,no default discount
-,,apomio,10,,19,manual,apomio
-,,medizinfuchs,10,,19,manual,medizinfuchs
-,,idealo,10,,19,manual,idealo
-,,billiger,10,,19,manual,billiger
-,7631548fbb5649f28a9523f661a8dac3,,11,,16,manual,fliegende-pillen
+,,apomio,10,,18,manual,apomio
+,,medizinfuchs,10,,18,manual,medizinfuchs
+,,idealo,10,,18,manual,idealo
+,,billiger,10,,18,manual,billiger
+,7631548fbb5649f28a9523f661a8dac3,,11,,15,manual,fliegende-pillen
 ,f818f7e2da64439890e406b3fe87e35e,,11,,0,manual,weitling
-,0957abe85f5d42cebb7dc813788068de,,11,,13.5,manual,petersberg
+,0957abe85f5d42cebb7dc813788068de,,11,,12.5,manual,petersberg
 42b847d90dc54c63aecc61e234c1feb6,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 8aca7948ea8c4bd0998cfaf825327b09,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 1926ba92ad3b4e64a6bf6eaade04dd74,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
