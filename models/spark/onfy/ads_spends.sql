@@ -447,12 +447,12 @@ final_calculation as
         partner, 
         campaign_platform,
         app_device_type,
-        cast(tmp_onfy_gmbh_spend.campaign_date_utc as date) as campaign_date_utc,
-        date_trunc('month', tmp_onfy_gmbh_spend.campaign_date_utc) as campaign_month,
-        dayofmonth(last_day(tmp_onfy_gmbh_spend.campaign_date_utc)) as days_in_month,
+        cast(onfy_manual_marketing_spends.campaign_date_utc as date) as campaign_date_utc,
+        date_trunc('month', onfy_manual_marketing_spends.campaign_date_utc) as campaign_month,
+        dayofmonth(last_day(onfy_manual_marketing_spends.campaign_date_utc)) as days_in_month,
         spend,
         clicks
-    from {{ ref("onfy_manual_marketing_spends") }}
+    from {{ ref("onfy_manual_marketing_spends") }} as onfy_manual_marketing_spends
     union all
     select 
         *
