@@ -69,6 +69,7 @@ sources:
       - name: logistics_jl_obligatory_channels_daily_snapshot
       - name: abu_core_catalog_daily_snapshot
       - name: product_merchant_joom_select_proposals_daily_snapshot
+      - name: product_fixed_price_variant_items_v2_daily_snapshot
       - name: core_paid_post_tenders_daily_snapshot
       - name: user_paid_post_bids_daily_snapshot
       - name: social_social_users_daily_snapshot

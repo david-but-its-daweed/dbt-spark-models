@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: fixed_price_promotions
+    description: "Table containing details about fixed price promotions"
+    columns:
+      - name: promo_id
+        description: "Unique identifier for the promotion"
+        data_type: "STRING"
+
+      - name: promo_title
+        description: "Name of the promotion"
+        data_type: "STRING"
+
+      - name: promo_start_date
+        description: "Start date of the promotion"
+        data_type: "DATE"
+
+      - name: promo_end_date
+        description: "End date (EXCLUDED) of the promotion"
+        data_type: "DATE"
+
+      - name: product_group_id
+        description: "Identifier for the product group associated with the promotion. One product_group_id belongs to only one promo_id"
+        data_type: "STRING"
+
+      - name: product_id
+        description: "ID of product"
+        data_type: "STRING"
+
+      - name: product_variant_id
+        description: "ID of variant of product"
+        data_type: "STRING"
+
+      - name: promo_price
+        description: "Promo price of the product variant"
+        data_type: "FLOAT"
+
+      - name: currency
+        description: "Currency code for the promo price (e.g., USD, EUR)."
+        data_type: "STRING"
