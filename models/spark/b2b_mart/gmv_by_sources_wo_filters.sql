@@ -213,4 +213,6 @@ SELECT
 FROM after_second_qrt_new_order AS a
 LEFT JOIN users ON a.user_id = users.user_id AND a.t = users.day
 LEFT JOIN country AS c ON a.user_id = c.user_id
-WHERE a.gmv_initial > 0
+WHERE a.gmv_initial > 0 or
+    a.order_id in ( '67606db7f7660794452fa237',
+                    '6765968e7c2acf46df9a3a82')
