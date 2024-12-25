@@ -10,4 +10,4 @@ FROM (
     WHERE c.level = 1
 ) AS categories
 CROSS JOIN cub
-WHERE cub.items_cube / categories.items_categories < 0.65
+WHERE cub.items_cube / categories.items_categories < 0.5
