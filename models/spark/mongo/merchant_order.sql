@@ -63,6 +63,8 @@ SELECT
         'logistics_ndi_compensation', IF(mi.l IS NOT NULL, CAST(mi.l.nc AS DOUBLE) / 1000000, NULL),
         'logistics_freebie_charge', IF(mi.l IS NOT NULL, CAST(mi.l.fsc AS DOUBLE) / 1000000, NULL),
         'logistics_price_usd', IF(mi.l IS NOT NULL, CAST(mi.l.pusd AS DOUBLE) / 1000000, NULL),
+        'orig_total_price', CAST(mi.m.ot AS DOUBLE) / 1000000,
+        'orig_total_price_usd', CAST(mi.m.otd AS DOUBLE) / 1000000,
         'discounts', IF(mi.d IS NOT NULL, TRANSFORM(mi.d.ds, discount -> NAMED_STRUCT(
             'amount', CAST(discount.a AS DOUBLE) / 1000000,
             'type', CASE
