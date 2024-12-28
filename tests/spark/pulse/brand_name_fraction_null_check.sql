@@ -4,4 +4,4 @@ FROM (
     FROM {{ source('joompro_analytics_mart', 'mercadolibre_products_snapshot') }}
     WHERE activity_status = "active"
 ) AS T
-WHERE null_fraction >= 0.07
+WHERE null_fraction >= 0.1

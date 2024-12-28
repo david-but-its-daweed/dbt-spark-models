@@ -6,4 +6,4 @@ FROM (
         brand_name IS NULL
         AND activity_status = "active"
 ) AS T
-WHERE null_count >= 10000000
+WHERE null_count >= 15000000
