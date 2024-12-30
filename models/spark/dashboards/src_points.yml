@@ -14,6 +14,10 @@ models:
         description: User ID
       - name: point_transaction_type
         description: Type of points accrual
+      - name: business_point_transaction_type
+        description: Type of points accrual (business name)
+      - name: point_transaction_group
+        description: group of points
       - name: point_usd
         description: Points amount in $
       - name: num_transactions
