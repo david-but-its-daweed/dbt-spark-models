@@ -32,7 +32,10 @@ finalized AS (
 ),
 
 types_for_finalize AS (
-    SELECT * FROM UNNEST(["referral", "cashback"])  -- this list will be expanded in future
+    SELECT INLINE(ARRAY(
+        STRUCT("referral" AS type),
+        STRUCT("cashback" AS type)  -- this list will be expanded in future
+    ))
 ),
 
 points AS (
@@ -69,7 +72,7 @@ base AS (
 
 points_type_to_group_mapping AS (
     SELECT *
-    FROM UNNEST([
+    FROM INLINE(ARRAY(
         STRUCT("cashback" AS point_transaction_type, "Marketing" AS point_transaction_group),
         STRUCT("refund" AS point_transaction_type, "Refund" AS point_transaction_group),
         STRUCT("customUserRefund" AS point_transaction_type, "Refund" AS point_transaction_group),
@@ -94,26 +97,26 @@ points_type_to_group_mapping AS (
         STRUCT("initial" AS point_transaction_type, "Marketing" AS point_transaction_group),
         STRUCT("crowdSource" AS point_transaction_type, "Marketing" AS point_transaction_group),
         STRUCT("deliveryMethodChanged" AS point_transaction_type, "Refund" AS point_transaction_group)
-    ])
+    ))
 ),
 
 points_type_rename_mapping AS (
     SELECT *
-    FROM UNNEST([
+    FROM INLINE(ARRAY(
         STRUCT("customUserRefund" AS point_transaction_type, "top-up refunds" AS business_point_transaction_type),
         STRUCT("refund" AS point_transaction_type, "refundrefund after using points" AS business_point_transaction_type),
         STRUCT("revenueShareExternalLink" AS point_transaction_type, "bloggers referral" AS business_point_transaction_type)
-    ])
+    ))
 ),
 
 admin_points AS (
     SELECT
-        b.* EXCEPT (point_transaction_type),
+        b.*,
         CASE
             WHEN b.point_transaction_type != "admin" THEN b.point_transaction_type
             WHEN rb.user_id IS NOT NULL THEN "admin_bloggers"
             ELSE "admin_refunds"
-        END AS point_transaction_type
+        END AS technical_point_transaction_type
     FROM base AS b
     LEFT JOIN ads.referral_bloggers AS rb
         ON (b.user_id = rb.user_id)
@@ -125,6 +128,6 @@ SELECT
     COALESCE(rn.business_point_transaction_type, t.point_transaction_type) AS business_point_transaction_type
 FROM admin_points AS t
 LEFT JOIN points_type_to_group_mapping AS m
-    ON t.point_transaction_type = m.point_transaction_type
+    ON t.technical_point_transaction_type = m.point_transaction_type
 LEFT JOIN points_type_rename_mapping AS rn
     ON t.point_transaction_type = rn.point_transaction_type
