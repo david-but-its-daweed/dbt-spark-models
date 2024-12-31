@@ -33,8 +33,8 @@ finalized AS (
 
 types_for_finalize AS (
     SELECT INLINE(ARRAY(
-        STRUCT("referral" AS type),
-        STRUCT("cashback" AS type)  -- this list will be expanded in future
+        STRUCT("referral" AS transaction_type),
+        STRUCT("cashback" AS transaction_type)  -- this list will be expanded in future
     ))
 ),
 
