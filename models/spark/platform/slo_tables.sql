@@ -9,7 +9,7 @@
     tags=['data_readiness']
 ) }}
 
-SELECT
+SELECT DISTINCT
     sds.slo_id,
     hap.full_table_name AS table_name,
     "bq" AS table_type

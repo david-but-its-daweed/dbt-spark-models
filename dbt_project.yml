@@ -45,10 +45,10 @@ snapshots:
     spark:
       b2b_mart:
         +tags: "b2b_mart"
-      onfy:
-        +tags: "onfy"
-      platform:
-        +tags: "platform"
+      # onfy:
+      #   +tags: "onfy"
+      # platform:
+      #   +tags: "platform"
 
 tests:
   platform_dbt_etl:
