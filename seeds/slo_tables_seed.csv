@@ -2,7 +2,7 @@ slo_id,table_name,table_type
 slo_ads,ads.advertising_costs_v3,spark
 slo_analytics_reports,cube.time_refunds_days,spark
 slo_analytics_reports,cube.time_orders_costs_cube_10_days,spark
-slo_analytics_reports,pharmacy.etl_pharmacy.order_cube,spark
+slo_analytics_reports,cube.onfy_order_cube_v5_days,spark
 slo_analytics_reports,cube.time_orders_additional_cube_2_days,spark
 slo_analytics_reports,cube.cohort_buying_devices_absolute_days,spark
 slo_jl_external_cube,cube.jl_external_cube_v10_days,spark
