@@ -34,7 +34,7 @@ exp as (
         from {{ source('b2b_mart', 'device_events') }} de
       left join bots on de.device.id = bots.device_id
             where  
-                    partition_date >= {date}
+                    partition_date >= '2024-01-01'
             and  type = 'sessionStart'
        
             )
