@@ -109,7 +109,7 @@ billiger_data as
         count(distinct billiger_transactions.order_id) as payments,
         if(
             count(distinct billiger_transactions.order_id) = 0 or 
-            sum(gross_profit_initial + promocode_discount) / (count(distinct billiger_sessions.window_event_id) * 0.28 + sum(promocode_discount)) <= 0.5, 0, 
+            sum(gross_profit_initial + promocode_discount) / (count(distinct billiger_sessions.window_event_id) * 0.28 + sum(promocode_discount)) <= 0.7, 0, 
             count(distinct billiger_transactions.order_id) / count(distinct billiger_sessions.event_id)
         ) as cr,
         latest_price.latest_price_decrease,
