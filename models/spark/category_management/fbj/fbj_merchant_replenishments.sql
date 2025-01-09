@@ -54,6 +54,8 @@ SELECT
     m.merchant_name,
     k.main_merchant_name,
     k.kam,
+    k.main_bl AS main_merchant_bl,
+
     CASE
         WHEN r.src = 1 THEN "Joom"
         WHEN r.src = 2 THEN "Warehouse"
@@ -73,15 +75,31 @@ SELECT
         ELSE
             "Status Unknown"
     END AS current_status,
+
     r.ct AS created_at,
     s.2_pending_inbound_dt,
     s.3_pending_shipping_dt,
     s.4_shipped_dt,
     s.5_action_required_dt,
     s.6_on_review_dt,
+    IF(
+        s.last_status >= 5,
+        COALESCE(s.5_action_required_dt, s.6_on_review_dt, last_updated_at),
+        NULL
+    ) AS completed_dt,
+
     r.ut AS last_updated_at,
     r.adt AS approve_due_to,
     r.shdt AS shipment_due_to,
+
+    ROUND((UNIX_TIMESTAMP(s.2_pending_inbound_dt) - UNIX_TIMESTAMP(created_at)) / 60 / 60 / 24, 2) AS create_to_approve_days,
+    IF(
+        s.last_status IN (4, 5, 6, 7) -- считаем метрику только для зашипленных репленишментов
+        AND s.4_shipped_dt > s.2_pending_inbound_dt, -- для перестраховки, чтобы не сломать метрику
+        ROUND((UNIX_TIMESTAMP(s.4_shipped_dt) - UNIX_TIMESTAMP(s.2_pending_inbound_dt)) / 60 / 60 / 24, 2),
+        NULL
+    ) AS approve_to_ship_days,
+    ROUND((UNIX_TIMESTAMP(completed_dt) - UNIX_TIMESTAMP(created_at)) / 60 / 60 / 24, 2) AS create_to_complete_days,
     r.inbid AS inbound_id,
     r.winbid AS warehouse_inbound_id,
     COALESCE(r.dreq.min, r.min) AS min_count,

@@ -1,113 +1,375 @@
-merchant_id,main_merchant_name,kam
-"630eb548702239d492312b92","Yinchi","Laura"
-"62c5a53aea137a907d895a89","AyoM","Ida"
-"6163eb6e0a0fedafa7de86e1","ChengDuBanJiDianZiShangWuYouXianGongSi","Monica"
-"62d77078bb5753b09633911f","Yinchi","Victoria Chu"
-"638601b226b41eaf729b1897","ETST WENDY 09","Yilia"
-"5f190a1b4c282b0b0662c9a6","Pujiang Haotong","Ida"
-"60b872f7fec8bf4a0f001588","Bengbu zhuoan","Laura"
-"6285fc4f1749549dd898ec2b","YEJET","Victoria Chu"
-"62907f4d4e2bbccd1a972a65","YEJET","Victoria Chu"
-"627f680722ba3f6d46ee0969","YEJET","Victoria Chu"
-"5cb5a04b8b45130b01ef959f","YEJET","Victoria Chu"
-"5cbe6c098b45130b01afd403","YEJET","Victoria Chu"
-"5d75e63b8b2c370b01fe5eb7","YEJET","Victoria Chu"
-"63eb17f4f0eea59ef11d653e","YEJET","Victoria Chu"
-"61454ee1c6e41ea59e261ee4","YEJET","Victoria Chu"
-"60407cbbada9250006530eff","Guangzhou gull lion Trade","Allen"
-"5ac442438b2c370bcfb1286d","Guangzhou gull lion Trade","Annan"
-"5aec376f1436d40b397a96cf","Guangzhou gull lion Trade","Annan"
-"5afe66a41436d40b1b1ab173","Guangzhou gull lion Trade","Annan"
-"5fe454cc2a00670006c879f0","Guangzhou gull lion Trade","Annan"
-"600a46d865469b0006c746fd","Guangzhou gull lion Trade","Annan"
-"600fb4af98ee4600062de394","Guangzhou gull lion Trade","Annan"
-"60d5711f27f1400af24cd69a","Guangzhou gull lion Trade","Annan"
-"60ead1142f83d2623330329e","huangdaliang","Laura"
-"60cb48f4e94ffb48d2f72131","YUTUO","Maria Pershina"
-"5b701e368b45130b8ad49a8e","Ningbo Kezhou Trading Co.Ltd.","Vadim"
-"5d55257c1436d40b01544dbc","Ningbo Kezhou Trading Co.Ltd.","Vadim"
-"5eb8ce5b28fc710b013b1192","Ningbo Kezhou Trading Co.Ltd.","Vadim"
-"63fb431709b87a94992c37e7","Beijing XuanYuan","Laura"
-"6110bf39e44964693d38036b","Beijing XuanYuan","Laura"
-"1517924985630665084-21-5-26193-1051806676","Beijing XuanYuan","Laura"
-"1520647263159820043-18-11-39131-3552227459","Beijing XuanYuan","Laura"
-"60fa73354b3d296565960440","Beijing XuanYuan","Laura"
-"60ffa7be3afde8fc027ee9a4","Beijing XuanYuan","Laura"
-"5ad9c38a8b45130b59fa77ae","Hangzhou Huitong","Maria Pershina"
-"60e7ba4cf65451dcd05a41fa","shanghaixianyidianzikeji","Laura"
-"612884ad72911793b45d10a5","shanghaixianyidianzikeji","Monica"
-"1520647475183396773-20-11-709-4164857933","shanghaixianyidianzikeji","Monica"
-"1520648254991575208-24-11-709-3506316919","shanghaixianyidianzikeji","Monica"
-"1518094866517982452-21-5-26193-774862761","Anhui Gecheng","Katya"
-"5ca7399a36b54d0b0148d13e","81076072 Yiwu ZhenLan E-commerce","Katya"
-"5e0e9e1b8b45130b017b839b","5e0e9e1b8b45130b017b839b","Katya"
-"633d6fd63b6bb54a681acb3b","qiming zheng","Laura"
-"614ef300d0c120afd676e487","flarixa","Mengping"
-"616e633eb0f8c24dcf3aa867","Lydia Wang","Monica"
-"5c7a3e9e6ecda80b0173eb85","Luke","Mengping"
-"5ed5fa951436d40b01acd754","ywhj88888","Monica"
-"5e1028c61436d40b0175e69e","Shijin","Vadim"
-"5ef815482258420b06db46a4","Shijin","Vadim"
-"6163e18e29ae412f02e12685","VVGUOWEI","Vadim"
-"635422303c0ebf3ba5d89643","AoyM","Ida"
-"5aec09758b45130b850a0201","Yiwu Huayi E-commerce","Katya"
-"624c0acec55a8ee17cfc7e1c","July Dream","Katya"
-"630eba68a6ea4a92ced2c278","Yinchi","Vadim"
-"61c5be7e01147a48a427b1d0","edotrade","Monica"
-"61a5d165f02667e1d8cef70b","Yinchi","Vadim"
-"61dbd76253bb9e46c1a035e5","Yinchi","Vadim"
-"62d7795535e438ba44a008a3","Yinchi","Victoria Chu"
-"5f8a897ed737740b0631738b","Jiuge","Yilia"
-"636373fc330961cbae001756","duoda","Maria Pershina"
-"1479114284851820051-11-11-118-1970104862","Fashion Store - Lalang","Annan"
-"5ac43f6a8b45130b8772d38e","Friends Shanghai Industrial","Laura"
-"5b9291521436d40bb8c14f02","Friends Shanghai Industrial","Laura"
-"5afd875b8b45130b38d095b7","He Fei Fang Ren Mao Yi","Monica"
-"5af16c518b2c370b5b8034dc","He Fei Fang Ren Mao Yi","Monica"
-"5db7c81b8b45130b0112cb46","He Fei Fang Ren Mao Yi","Monica"
-"1500576977570108288-152-11-26193-85614368","He Fei Fang Ren Mao Yi","Monica"
-"1502961949267705410-44-11-26193-4193379420","He Fei Fang Ren Mao Yi","Monica"
-"609a239ade517cfd64e7e997","He Fei Fang Ren Mao Yi","Monica"
-"5afd879c8b45130b38d095b8","He Fei Fang Ren Mao Yi","Monica"
-"5dbbcf5b8b2c370b0129a27c","He Fei Fang Ren Mao Yi","Monica"
-"5dc389ca1436d40b0126dc79","He Fei Fang Ren Mao Yi","Monica"
-"5af16d231436d40b36a737fc","He Fei Fang Ren Mao Yi","Monica"
-"6088cd769cf1075b85b69592","He Fei Fang Ren Mao Yi","Monica"
-"60f0edbaf0d46294abaaa7bc","He Fei Fang Ren Mao Yi","Monica"
-"5dc394c236b54d0b01b67a30","He Fei Fang Ren Mao Yi","Monica"
-"614068bcd3840b31d03da109","He Fei Fang Ren Mao Yi","Monica"
-"5db7c84b36b54d0b015c6fcd","He Fei Fang Ren Mao Yi","Monica"
-"60e5575303efaebfda97807a","He Fei Fang Ren Mao Yi","Monica"
-"6088cb517d0c6d69361439dd","He Fei Fang Ren Mao Yi","Monica"
-"60c85ac2b764865736c0bd3c","He Fei Fang Ren Mao Yi","Monica"
-"60f50e0f40755d674ae73f02","He Fei Fang Ren Mao Yi","Monica"
-"6163cd5fd4ed6ecb47969fcb","He Fei Fang Ren Mao Yi","Monica"
-"60dc12af85e9054318338091","He Fei Fang Ren Mao Yi","Monica"
-"60e657d3d1d6118fbe6f7e84","He Fei Fang Ren Mao Yi","Monica"
-"609a2192219213f1106fc320","He Fei Fang Ren Mao Yi","Monica"
-"6160ed0e0a0fedafa718d56a","He Fei Fang Ren Mao Yi","Monica"
-"61459a28e742955dc2d81ba1","He Fei Fang Ren Mao Yi","Monica"
-"60c1c1b9964a1dae3d5a0711","He Fei Fang Ren Mao Yi","Monica"
-"63120e0405108f49e0d3879e","HUAJIE","Ida"
-"628d8ff5d4c2f3db30328190","JR-Studio","Laura"
-"1482771513982567966-23-11-582-1649842769","KaiTingu","Monica"
-"5b10fdfd8b2c370b646908a6","LiChuan XianRongXing DianZiShangWu","Katya"
-"5afe5e201436d40b1b1ab16b","Nanjing Choubo Garden Engineering","Katya"
-"5ace2b9d8b2c370bd215d25f","Nanjing Huding Liquor","Katya"
-"61adc3e2e433caeeea2580c3","YWhongma","Victoria"
-"60d2ad5baf7385a6c330eeeb","YWhongma","Victoria"
-"614443d4e5e9a5042dc3d383","YEJET","Victoria"
-"63e99f02b4a8d23d5b888261","YEJET","Victoria Chu"
-"640035cb1eeb7c562b17a6b7","YEJET","Victoria Chu"
-"629078b6e25d94d357ff41ea","YEJET","Victoria Chu"
-"60b6eb4c77edde5fe96077fd","CHENEY","Henry"
-"1481623505174558053-240-11-629-1881556930","Bluelans","Annan"
-"1515013786717211647-27-11-26193-3983838569","Bluelans","Annan"
-"5daa6d0a28fc710b019e6323","Bluelans","Monica"
-"1518097623192235060-23-5-26193-1798970017","Bluelans","Monica"
-"62184be4040e613b2c8f42c9","dang140030","Laura"
-"5aec039b8b2c370bdbc59f20","hua yi lv you","Annan"
-"5c40493b1436d40b01d4f394","Meigu","Monica"
-"60d7e6d5e4b7cd4de955c799","Qinqingmaoyi","Loria"
-"1521655194930946012-6-11-39131-1938131666","Shanghai Zhenhao","Maria Pershina"
-"1504894628287625256-116-11-26193-2228825576","Shenguo","Maria Pershina"
+merchant_id,kam,main_merchant_name,main_bl
+61a5d165f02667e1d8cef70b,Vadim,Yinchi,Fashion
+630eb548702239d492312b92,Laura,Yinchi,Home & Kitchen
+630eba68a6ea4a92ced2c278,Vadim,Yinchi,Home & Kitchen
+5ad9c38a8b45130b59fa77ae,Maria,Hangzhou Huitong,Health & Beauty
+5aec09758b45130b850a0201,Katya,Yiwu Huayi E-commerce,Fashion
+62d7795535e438ba44a008a3,Victoria,Yinchi,Health & Beauty
+62d77078bb5753b09633911f,Victoria,Yinchi,Health & Beauty
+60cb48f4e94ffb48d2f72131,Maria,YUTUO,Health & Beauty
+5e1028c61436d40b0175e69e,Vadim,Shijin,Fashion
+5aec376f1436d40b397a96cf,Annan,Guangzhou gull lion Trade,Fashion
+6163eb6e0a0fedafa7de86e1,Monica,ChengDuBanJiDianZiShangWuYouXianGongSi,Home & Kitchen
+614ef300d0c120afd676e487,Mengping,flarixa,Fashion
+638601b226b41eaf729b1897,Yilia,ETST WENDY 09,Fashion
+5cb5a04b8b45130b01ef959f,Victoria,YEJET,Health & Beauty
+5ed5fa951436d40b01acd754,Monica,ywhj88888,Home & Kitchen
+1518094866517982452-21-5-26193-774862761,Katya,Anhui Gecheng,Fashion
+5ef815482258420b06db46a4,Vadim,Shijin,Fashion
+5ac442438b2c370bcfb1286d,Annan,Guangzhou gull lion Trade,Fashion
+600fb4af98ee4600062de394,Annan,Guangzhou gull lion Trade,Fashion
+1517924985630665084-21-5-26193-1051806676,Laura,Beijing XuanYuan,Home & Kitchen
+1520647263159820043-18-11-39131-3552227459,Laura,Beijing XuanYuan,Home & Kitchen
+633d6fd63b6bb54a681acb3b,Laura,qiming zheng,Home & Kitchen
+624c0acec55a8ee17cfc7e1c,Katya,July Dream,Fashion
+61dbd76253bb9e46c1a035e5,Vadim,Yinchi,Fashion
+5f190a1b4c282b0b0662c9a6,Ida,Pujiang Haotong,Fashion
+5d75e63b8b2c370b01fe5eb7,Victoria,YEJET,Health & Beauty
+612884ad72911793b45d10a5,Monica,shanghaixianyidianzikeji,Home & Kitchen
+1520647475183396773-20-11-709-4164857933,Monica,shanghaixianyidianzikeji,Home & Kitchen
+1520648254991575208-24-11-709-3506316919,Monica,shanghaixianyidianzikeji,Home & Kitchen
+5ca7399a36b54d0b0148d13e,Katya,81076072 Yiwu ZhenLan E-commerce,Fashion
+60b872f7fec8bf4a0f001588,Laura,Bengbu zhuoan,Home & Kitchen
+5cbe6c098b45130b01afd403,Victoria,YEJET,Health & Beauty
+5b701e368b45130b8ad49a8e,Vadim,Ningbo Kezhou Trading Co.Ltd.,Fashion
+63fb431709b87a94992c37e7,Laura,Beijing XuanYuan,Home & Kitchen
+6110bf39e44964693d38036b,Laura,Beijing XuanYuan,Health & Beauty
+60e7ba4cf65451dcd05a41fa,Laura,shanghaixianyidianzikeji,Home & Kitchen
+6163e18e29ae412f02e12685,Vadim,VVGUOWEI,Fashion
+60407cbbada9250006530eff,Allen,Guangzhou gull lion Trade,Home & Kitchen
+62c5a53aea137a907d895a89,Ida,AyoM,Fashion
+5f8a897ed737740b0631738b,Yilia,Jiuge,Fashion
+5e0e9e1b8b45130b017b839b,Katya,5e0e9e1b8b45130b017b839b,Fashion
+635422303c0ebf3ba5d89643,Ida,AoyM,Fashion
+6285fc4f1749549dd898ec2b,Victoria,YEJET,Home & Kitchen
+62907f4d4e2bbccd1a972a65,Victoria,YEJET,Health & Beauty
+627f680722ba3f6d46ee0969,Victoria,YEJET,Health & Beauty
+63eb17f4f0eea59ef11d653e,Victoria,YEJET,Health & Beauty
+61454ee1c6e41ea59e261ee4,Victoria,YEJET,Fashion
+5afe66a41436d40b1b1ab173,Annan,Guangzhou gull lion Trade,Fashion
+5fe454cc2a00670006c879f0,Annan,Guangzhou gull lion Trade,Fashion
+600a46d865469b0006c746fd,Annan,Guangzhou gull lion Trade,Fashion
+60d5711f27f1400af24cd69a,Annan,Guangzhou gull lion Trade,Fashion
+60ead1142f83d2623330329e,Laura,huangdaliang,Home & Kitchen
+5d55257c1436d40b01544dbc,Vadim,Ningbo Kezhou Trading Co.Ltd.,Fashion
+5eb8ce5b28fc710b013b1192,Vadim,Ningbo Kezhou Trading Co.Ltd.,Fashion
+60fa73354b3d296565960440,Laura,Beijing XuanYuan,Home & Kitchen
+60ffa7be3afde8fc027ee9a4,Laura,Beijing XuanYuan,Home & Kitchen
+616e633eb0f8c24dcf3aa867,Monica,Lydia Wang,Home & Kitchen
+5c7a3e9e6ecda80b0173eb85,Mengping,Luke,Fashion
+61c5be7e01147a48a427b1d0,Monica,edotrade,Home & Kitchen
+617270e729a35dd87866ace8,w/o KAM,,
+636373fc330961cbae001756,Maria,duoda,Health & Beauty
+1479114284851820051-11-11-118-1970104862,Annan,Fashion Store - Lalang,Fashion
+5b10fdfd8b2c370b646908a6,Katya,LiChuan XianRongXing DianZiShangWu,Fashion
+5af16c518b2c370b5b8034dc,Monica,He Fei Fang Ren Mao Yi,
+609a239ade517cfd64e7e997,Monica,He Fei Fang Ren Mao Yi,
+5afd879c8b45130b38d095b8,Monica,He Fei Fang Ren Mao Yi,
+5dbbcf5b8b2c370b0129a27c,Monica,He Fei Fang Ren Mao Yi,
+5dc389ca1436d40b0126dc79,Monica,He Fei Fang Ren Mao Yi,
+5af16d231436d40b36a737fc,Monica,He Fei Fang Ren Mao Yi,
+6088cd769cf1075b85b69592,Monica,He Fei Fang Ren Mao Yi,
+60f0edbaf0d46294abaaa7bc,Monica,He Fei Fang Ren Mao Yi,
+614068bcd3840b31d03da109,Monica,He Fei Fang Ren Mao Yi,
+5db7c84b36b54d0b015c6fcd,Monica,He Fei Fang Ren Mao Yi,
+60e5575303efaebfda97807a,Monica,He Fei Fang Ren Mao Yi,
+6088cb517d0c6d69361439dd,Monica,He Fei Fang Ren Mao Yi,
+60c85ac2b764865736c0bd3c,Monica,He Fei Fang Ren Mao Yi,
+60f50e0f40755d674ae73f02,Monica,He Fei Fang Ren Mao Yi,
+6163cd5fd4ed6ecb47969fcb,Monica,He Fei Fang Ren Mao Yi,
+60dc12af85e9054318338091,Monica,He Fei Fang Ren Mao Yi,
+60e657d3d1d6118fbe6f7e84,Monica,He Fei Fang Ren Mao Yi,
+609a2192219213f1106fc320,Monica,He Fei Fang Ren Mao Yi,
+6160ed0e0a0fedafa718d56a,Monica,He Fei Fang Ren Mao Yi,
+61459a28e742955dc2d81ba1,Monica,He Fei Fang Ren Mao Yi,
+60c1c1b9964a1dae3d5a0711,Monica,He Fei Fang Ren Mao Yi,
+1482771513982567966-23-11-582-1649842769,Monica,KaiTingu,Home & Kitchen
+5ac43f6a8b45130b8772d38e,Laura,Friends Shanghai Industrial,Home & Kitchen
+60d2ad5baf7385a6c330eeeb,Victoria,YWhongma,
+5dc394c236b54d0b01b67a30,Monica,He Fei Fang Ren Mao Yi,
+5afe5e201436d40b1b1ab16b,Katya,Nanjing Choubo Garden Engineering,Health & Beauty
+61adc3e2e433caeeea2580c3,Victoria,YWhongma,Fashion
+5ace2b9d8b2c370bd215d25f,Katya,Nanjing Huding Liquor,Health & Beauty
+63120e0405108f49e0d3879e,Ida,HUAJIE,Fashion
+628d8ff5d4c2f3db30328190,Laura,JR-Studio,Home & Kitchen
+5b9291521436d40bb8c14f02,Laura,Friends Shanghai Industrial,
+614443d4e5e9a5042dc3d383,Victoria,YEJET,Health & Beauty
+5afd875b8b45130b38d095b7,Monica,He Fei Fang Ren Mao Yi,Home & Kitchen
+63e99f02b4a8d23d5b888261,Victoria,YEJET,
+640035cb1eeb7c562b17a6b7,Victoria,YEJET,
+629078b6e25d94d357ff41ea,Victoria,YEJET,
+60bc4d57a3c178e496c22eee,w/o KAM,,
+623496e13fc314cccfefd7ac,w/o KAM,,
+5db7c81b8b45130b0112cb46,Monica,He Fei Fang Ren Mao Yi,
+1500576977570108288-152-11-26193-85614368,Monica,He Fei Fang Ren Mao Yi,
+60b6eb4c77edde5fe96077fd,Henry,CHENEY,Electronics & HA
+6411558a846e9f8bb439b9b0,w/o KAM,,
+1505147231995465152-25-11-709-2323271847,w/o KAM,,
+61ca79e7fb3833b47f6d6d12,w/o KAM,,
+1479114284851830144-24-11-118-1744978788,w/o KAM,,
+61320a81b5971074603ea9f8,w/o KAM,,
+5dc8df571436d40b019087d2,w/o KAM,,
+619862799eea7daf970171c9,w/o KAM,,
+662757a712ee138aa0049e28,Ida,TrendyCloset Hub,
+1502961949267705410-44-11-26193-4193379420,Monica,He Fei Fang Ren Mao Yi,Home & Kitchen
+638dc12f256d1d70b1bafb63,Yilia,ShengHe,
+630338c1e189d16c9279994f,Marf,Bessie,
+62ff3472ce95e7e5cba716b9,Marf,Bessie,
+62ff4021f5068bc5a39d528c,Marf,Bessie,
+64268e3f2b89b43846007dfd,Victoria,TOSP,
+60c194c7539e38a83aa7e436,Ida,maoyuyu,
+640adb7613eca89df943d7f5,Monica,Licao,
+640adc9149f3106f6e515fee,Monica,Licao,
+640adeb5dd924704fd9324f0,Monica,Licao,
+640ae6076762e1e1de533744,Monica,Licao,
+640ae86049f3106f6e51d9d7,Monica,Licao,
+640ae97649f3106f6e51fdfe,Monica,Licao,
+640aeb7cdd924704fd93d044,Monica,Licao,
+640aec8f49f3106f6e5229b3,Monica,Licao,
+640ad7c449f3106f6e512a1e,Monica,Licao,
+640ad9d06762e1e1de52e306,Monica,Licao,
+628711d7c213c18df2f58a66,Yilia,ETST WENDY 09,
+6272257421190b164a89a603,Yilia,ETST WENDY 09,
+61da883f5228fce47e9a332e,Yilia,ETST WENDY 09,
+628afdf112bf4667e9d05cce,Yilia,ETST WENDY 09,
+63f072cd9702223dc88c9bf9,Yilia,ETST WENDY 09,
+638dbbe1d72ac94180c3388f,Yilia,ETST WENDY 09,
+62f226c61d1a73e763aee9ff,Yilia,ETST WENDY 09,
+62b42f5efbe8dd862b5804cd,Yilia,ETST WENDY 09,
+61cf1c58075d9c94982c1176,Maria,qianze,
+1521655194930946012-6-11-39131-1938131666,Maria,Shanghai Zhenhao,
+60cc9cff3ab7320b9fcfc134,Annan,dongjoom01,
+5bf750918b45130b012ff178,Marf,Bessie,Health & Beauty
+628f99204e2bbccd1a5a483a,Annan,dongjoom01,
+5dc67fa58b2c370b01d912be,Marf,fsihkingftk,Health & Beauty
+5f83b6a722e9f00b0692880a,Ida,maoyuyu,
+60b788c5e68365c96bf9e35a,Maria,qianze,Health & Beauty
+5aec039b8b2c370bdbc59f20,Annan,hua yi lv you,
+60825d6808595a67023e50af,Ida,sabangdewensuhua,
+610958a1172cafdb2b39dd84,Laura,JR-Studio,Home & Kitchen
+611f58a31c37d2fc0f55f799,Mengping,989XXCV,
+5c11b18136b54d0b01434366,Marf,Tringa,Fashion
+5f0e8b19de3d390b067fe930,Ida,sabangdewensuhua,
+5bdb01201436d40b73a6a02c,Mengping,GELANFEN NEIYI,Fashion
+6225b0c95f0e5f0820c60bf2,Monica,Licao,Home & Kitchen
+650d475e0fe2168d180ebb48,Yilia,CICI Global Home Store,
+5c40493b1436d40b01d4f394,Monica,Meigu,
+634bccf1abdeab42a560d15e,Mengping,xuqiangqiang,Fashion
+640f0bb7fdf5c3b6d0e4b756,Yilia,jinrui Fashion 3D Clothing,
+5af5776b8b45130beb9b1a56,Maria,Nanyang Nanke Electronic Commerce,
+61724deb29a35dd8785f0562,Ida,GOGNGTR,
+5ba7a2708b45130bf91532f1,Laura,Shenzhen Binchi Keji,
+60f91b41f234e528f9d4b191,Laura,kaylee,
+6153041a49b80146968377c5,Yilia,Zorioneko,
+630e20fb80fec607fc8bdb5b,Kristina,Popular,
+61aec8361dd0181987eb8448,Victoria,Supsex,
+5ae2a81d8b45130b95e911a9,w/o KAM,Wuhan Yingjiang,
+5b4467fb8b2c370b355a2a23,Katya,Love Match,
+5be42ef01436d40bab4277f3,Mengping,Yiyang County Ditong,
+5d1586788b45130b0122226f,Victoria,TOSP,
+60aca67678b22dd2d228219e,Vadim,Bairuilun,
+6141f5b7451fcb6b034054f0,Mengping,21 top,Fashion
+61b07803ea6ef6255e83353e,Vadim,milphen,
+61dc37f728ca9742b7eeef81,w/o KAM,XiuQiao,
+623c361f46b2d36f4477ac02,Laura,louhansong,
+63f07bf46048bc4fdb033a10,Yilia,ETST WENDY 09,Fashion
+5d5f7b3f36b54d0b0113aa66,Vadim,PanMy,
+5ea3b1bb8b2c370b014e93c3,Yilia,Xishui,
+61485acc9b2b7fdb617531b8,w/o KAM,yutang,
+60c8809294d51466f73dcbf7,Katya,Million soft,
+61cbd53d53bb9e46c1652c5e,Katya,Wucifang,
+5ae95f0b1436d40b8f82666b,Annan,Fashion Store - Lalang,
+5aec01928b2c370bdbc59f1f,Annan,Fashion Store - Lalang,
+1481824589704878804-104-11-629-1394496859,Loria He,Comeandbuytech,
+61b2dd2f14cf51d7aa774a81,Maria,e76547740,
+5d7f32458b45130b012e0440,Monica,Junuotuo,
+5cfcd9101436d40b0199ffd8,Ida,2019qihanghao,
+5d64ec2228fc710b0170b0b3,Ida,torries999,
+5dc643f236b54d0b014018a7,Maria,Xinbaogou,
+5ba62a318b45130bf9153283,Annan,Feitong,
+5de6283736b54d0b01fe7010,Annan,Feitong,
+6080ee74f404daec4263a8a8,Annan,Feitong,
+60a4aa4ede13f695bd172ff3,Annan,Feitong,
+60a4a53a11331c2f7b095c4d,Annan,Feitong,
+60c9a9c694d51466f78e20ed,Annan,Feitong,
+608bc3301c305bd866d98d2b,Annan,Feitong,
+60e839c6488e9d4bc447f32b,Annan,Feitong,
+60d2cbdc12c0841d9ed6c6cc,Annan,Feitong,
+608bd368826171c8ceefac51,Annan,Feitong,
+5d00b9086ecda80b01e6b7b5,Annan,Feitong,
+60d57c2e18f7357816c6309c,Annan,Feitong,
+5c3ef6df8b45130b01b21a3d,Annan,Feitong,
+1512058985611205639-76-11-709-314937559,Annan,Feitong,
+5bc8d8db6ecda80bc7254831,Annan,Feitong,
+5ba626181436d40baca1af8b,Annan,Feitong,
+5bed26ba1436d40be19c6db3,Annan,Feitong,
+6129fddbe826530c57d3a689,Yilia,Eastway Brand,
+5df74cf18b2c370b01121fef,Loria He,Guyi,
+60c857698037e279a134a5d6,Ida,Little bee,
+1510770926014486775-107-11-709-2088178538,Monica,Jinhua Ruijin,
+5b9224688b2c370bf83e294e,Mengping,Anhui Milano Trading,Fashion
+60c84f0e0413d990a62e3cc6,w/o KAM,Tongji,
+5ffbf7e26b280a0006ffb9f4,Annan,ChangShu XiaoDiLe,
+619ca235b0a5ade7b4be33fe,w/o KAM,,
+5dfd96ac8b45130b015923f5,Monica,,
+641191e9846e9f8bb43d4429,w/o KAM,,
+1479114284851799852-2-11-118-1577502676,Annan,Feitong,
+640c1d53cbad7d37ad47c290,w/o KAM,91440118MAC465GY97,
+6166f9790b137e8f522fea49,Ida,,
+5d43c1fa36b54d0b01821245,w/o KAM,,
+60c321b29379309661ba163e,w/o KAM,,
+61a1fcc9d5fbb21c4b4b4df1,w/o KAM,,
+62171e32584d0f7edf26187f,w/o KAM,,
+6409b7f17cc342371b633907,w/o KAM,,
+1520647879878453437-15-11-26193-2691442827,Olina,,
+5fca5546c7d7ec0006124ffa,Vadim,ymjy,Fashion
+60c96fd994d51466f7860441,Marf,yanghuiqi,
+6125b42dd3bea33a562b2901,w/o KAM,Katyusha,
+60d2e0724b7eac2c3c884a7d,Vadim,YCC,
+61d78ef8f370d409fe8b0782,Maia,,
+5cef87b41436d40b013da892,Vadim,,
+5e7310bd8b2c370b014e7a49,Monica,,
+5b9259fb8b45130bc3f92e14,w/o KAM,,
+60b7111c472b7fb79eccafd5,w/o KAM,,
+60c7400c8f956b61dad5ac04,w/o KAM,,
+610f84577db242985e066425,w/o KAM,,
+611d0fba4772f6d77beb2028,w/o KAM,,
+61cbf90eb3d862a216c88129,w/o KAM,,
+61dbb3bb53bb9e46c19a5bde,w/o KAM,,
+6424ee2f8916d914783e5020,w/o KAM,,
+66a113e08a48cda79c501812,Kristina,,
+62184be4040e613b2c8f42c9,Laura,,
+628b805fe039969b0cbf32de,Laura,,
+1512147441503724891-11-11-26193-4230517898,Olina,Shenzhen Yafex,
+5b9222a78b2c370bf83e2947,Olina,Shenzhen Yafex,
+619465a710e9f8d98c7dc8fd,Olina,Shenzhen Yafex,
+1484841008919671217-60-11-26341-1068133473,Katya,Hanna Fashion,
+60d7e6d5e4b7cd4de955c799,Henry,Qinqingmaoyi,Electronics & HA
+611b3a8ef6ce56d4324c87da,Marf,QM Store,
+5ae2aa3c8b45130b95e911aa,w/o KAM,yiwushi yuanhe trading,
+6603ee9ab1270bdbb91ae592,Kristina,Shenzhen Stone E-Commerce,
+5bed1c9a36b54d0b388f9355,Marf,yiwugangan,
+1506537463480033756-238-11-709-1777528824,w/o KAM,Shake,
+5c2478a81436d40b01b0f201,Marf,LE SKY Store,
+5ae2a7ef8b2c370b99719b27,Mengping,Ningbo Sameng,
+61c28919f41ad1f48a1d4027,Ida,GeorgeLiu,
+5d7691bd8b45130b01d3aff0,Mengping,Chentao,
+60b9e16aa3c178e4965dd504,Yilia,Dahe,
+5b10fd7d8b45130bd0562bda,Olina,PanMy,
+641e67c2f07cfa2f6ca1d068,Maria,Fancy Carp,
+5bef92c71436d40b015c0f2d,Maria,LAMUSELAND,
+61655521f56352b5a82fef40,w/o KAM,ayevin,
+64115d448033c9bf89423f88,w/o KAM,HXLED,
+1505933012451752510-73-11-26193-2886475205,Vadim,Jiang,
+5af169aa1436d40bb1c5e301,Vadim,jinmeige,
+5bf4fe528b45130b012135ce,Vadim,JSG,
+63744e9c9083c17f3a567eb3,w/o KAM,xgxdgdeex,
+5dbbe8841436d40b014e8b64,Victoria,phoenixy,
+5c00e04236b54d0b01910c0b,Victoria,phoenixy,
+1509388547961061766-126-11-709-848684924,Vadim,PanMy,
+5d0c8e478b45130b01b8ddc4,Loria,,
+5f0d4a15cf72d10b07ee1fbb,Loria,,
+628ce3ce09d6ea431b2b8045,Mengping,,
+60d988eae4b7cd4de99ccee5,Monica,,
+61938b2915e12144f952d948,Vadim,,
+62f510f30812a97e5ef2d811,Vadim,,
+5d19e7ba6ecda80b018bd17a,w/o KAM,,
+60ae2369a46bb729cc4c4068,w/o KAM,,
+60cfea49e09fea9cd4e8704d,w/o KAM,,
+60f6f38d62d7b85f6a6d9752,w/o KAM,,
+6137af923e1e08053f371cea,w/o KAM,,
+613ebbfbff5cfe697e4b017f,w/o KAM,,
+614de49e7d1abc8a410ae923,w/o KAM,,
+6363ef61b0bf8b0197ad0f72,w/o KAM,,
+63749d4a92dfa037aefd847c,w/o KAM,,
+63798192ada2061eb8a1cac2,w/o KAM,,
+6381d91a928704ffabbd0ce1,w/o KAM,,
+63e3b86e066048e9c4344e2b,w/o KAM,,
+642ad6887e66bc2091090c43,w/o KAM,,
+1497881878700009222-15-11-709-1684470921,Yilia,,
+600a8cb165469b0006d4730b,Chloe,,
+5caffa3b28fc710b0196331c,Katya,,
+61bc36d042cbb1d84d892c3f,Loria He,,
+61b05f31903cf88d4eff3f57,Vadim,,
+600e4085b04f440007c3b6a0,w/o KAM,,
+1482217588208168831-90-11-26341-2408148238,w/o KAM,,
+1505932731403448319-195-11-709-2426410575,w/o KAM,,
+1518095746845237235-22-5-26193-2374591640,w/o KAM,,
+5acfa4768b45130bb8de8e0f,w/o KAM,,
+5ae2b1a18b2c370b99719b31,w/o KAM,,
+5aec2b518b45130b850a023a,w/o KAM,,
+5af56d918b2c370b2d35785b,w/o KAM,,
+5b10f1128b45130bd0562bca,w/o KAM,,
+5b889a4b1436d40b119ce199,w/o KAM,,
+5be6f8c58b45130b5d386fd8,w/o KAM,,
+5becb0178b45130bcb2176f7,w/o KAM,,
+5becc7071436d40be1897730,w/o KAM,,
+5bf4f91b8b45130b011fd1f8,w/o KAM,,
+5c49c72e36b54d0b01bc37f1,w/o KAM,,
+5c7a85be6ecda80b01d24443,w/o KAM,,
+5c8c3f0a6ecda80b011dee1f,w/o KAM,,
+5c9adc551436d40b01b1eca6,w/o KAM,,
+5ca1b6c48b2c370b01e65b7f,w/o KAM,,
+5d2553891436d40b014d9eac,w/o KAM,,
+5d2f36766ecda80b01aa2d3c,w/o KAM,,
+5e0724c328fc710b01fc8c6f,w/o KAM,,
+5e0d86e636b54d0b019a0b64,w/o KAM,,
+5ec49bce8b2c370b01efdca0,w/o KAM,,
+5fd843d84fd8e600061a260f,w/o KAM,,
+6045bec2cdc19c000646eeff,w/o KAM,,
+604ef3047f87d60006c8b24c,w/o KAM,,
+60a3c7dfbab0677a61d885c0,w/o KAM,,
+60b647e6ac1dd0286653fd8d,w/o KAM,,
+60ba3a24406cd09cb7913819,w/o KAM,,
+60bc9cbe8f26571a77c4b987,w/o KAM,,
+60c32bdd5b6d54ae69ce1e34,w/o KAM,,
+60c69f9eb0a40f2fa4722fa4,w/o KAM,,
+60d5901adea90a4eb1bcfb71,w/o KAM,,
+610666b906471aa27e29cff6,w/o KAM,,
+613494e68571aac36a7e1eb1,w/o KAM,,
+613ac5b38a65cf4a74a871b9,w/o KAM,,
+6160f36fc409f63cba8bc666,w/o KAM,,
+616fdb559e02071c81ee68ea,w/o KAM,,
+617688e86e234e30ea4e6fc7,w/o KAM,,
+619f65822522010e45472737,w/o KAM,,
+61ada41da94c8fe346acbcd5,w/o KAM,,
+61c444cef1f68cbbd59498da,w/o KAM,,
+61cda7fc53bb9e46c14c85d5,w/o KAM,,
+61f683fbb77d12a20fa93294,w/o KAM,,
+6208c17fb3f7b848ab5ffc79,w/o KAM,,
+6211e37e4ac5cee9d8bb65f2,w/o KAM,,
+6213134472d8a0a4cf097963,w/o KAM,,
+62146194eede7d8f9397c45b,w/o KAM,,
+6217282c584d0f7edf28b26a,w/o KAM,,
+621b20fb78b2829441e21e45,w/o KAM,,
+622488facfa31e84e8b024c3,w/o KAM,,
+6229c9b1aadc9fa3f79e25c9,w/o KAM,,
+623c7a27d1ac5a4e71cdc2f3,w/o KAM,,
+6241f790987bc25e080bc873,w/o KAM,,
+62558263b7a500e56d33454e,w/o KAM,,
+6266546dff3d7741b9203446,w/o KAM,,
+62734479d38c67da1566bc6a,w/o KAM,,
+627a58c51923eaf2b170ee27,w/o KAM,,
+62877e6b8dda6b912a8686f2,w/o KAM,,
+628da839d4c2f3db303664ce,w/o KAM,,
+6298bdcabbda442cfb821529,w/o KAM,,
+62b954678fc3ea89eaab53b3,w/o KAM,,
+62d4b746f8d999f766176723,w/o KAM,,
+62e36c456e3bbb333b8711de,w/o KAM,,
+62f3a9bf5e3a8aa5d05eca55,w/o KAM,,
+62f5aaf2b7854be208110334,w/o KAM,,
+6321c1b13a3c32e33dc72abb,w/o KAM,,
+6322827800322400e72f7dc5,w/o KAM,,
+63326030a4db36aa8f8fbc47,w/o KAM,,
+6393f4b85c52b34c3420b255,w/o KAM,,
+63f30c31b6bb4389ee6405c7,w/o KAM,,
+63fedf24ebff0b4c3eae7890,w/o KAM,,
+6410353e98e347dd40b9424d,w/o KAM,,
+641504a69589c3211c8518c9,w/o KAM,,
+6058107b863c0354b1e78527,Victoria Chu,,
+63f480f0c45afcb3c8b8bb87,Mengping,,
+6261647a8991238b8ff393d7,w/o KAM,,
+6262c6631ee11e4f335b0ce6,w/o KAM,,
+6277cde3fa4c0a7b9d19002d,Yilia,,
+61e901d8db5ce1cfd7d306c1,w/o KAM,,
+633547ff3fd02e056b9f4691,w/o KAM,,
