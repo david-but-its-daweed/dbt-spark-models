@@ -52,7 +52,16 @@ order_v2_mongo AS (
                         '675c69e52e1d04dfe94289c5',
                         '67606db7f7660794452fa237',
                         '6762d82cf7660794452faf52',
-                         '6765968e7c2acf46df9a3a82'
+                         '6765968e7c2acf46df9a3a82',
+                        '677e7b72dfbe6dd93320672e',
+                         '677eafa37104bc79f2a8bb6c',
+                         '677eb6a4dfbe6dd933206831',
+                         '677edff8dfbe6dd9332068d6',
+                         '677ed4487104bc79f2a8bc04',
+                         '677ee0d67104bc79f2a8bc29',
+                         '677fd23a7104bc79f2a8c055',
+                         '677fe6597104bc79f2a8c0e8',
+                         '6761acb706c420992f837ae0'
     ) AND fo.next_effective_ts_msk IS NULL) or 
         (fo.last_order_status < 60
         AND fo.last_order_status >= 10
