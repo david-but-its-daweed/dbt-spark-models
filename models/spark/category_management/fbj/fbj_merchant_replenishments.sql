@@ -82,16 +82,16 @@ SELECT
     s.4_shipped_dt,
     s.5_action_required_dt,
     s.6_on_review_dt,
-    IF(
-        s.last_status >= 5,
-        COALESCE(s.5_action_required_dt, s.6_on_review_dt, last_updated_at),
-        NULL
-    ) AS completed_dt,
 
     r.ut AS last_updated_at,
     r.adt AS approve_due_to,
     r.shdt AS shipment_due_to,
 
+    IF(
+        s.last_status >= 5,
+        COALESCE(s.5_action_required_dt, s.6_on_review_dt, last_updated_at),
+        NULL
+    ) AS completed_dt,
     ROUND((UNIX_TIMESTAMP(s.2_pending_inbound_dt) - UNIX_TIMESTAMP(created_at)) / 60 / 60 / 24, 2) AS create_to_approve_days,
     IF(
         s.last_status IN (4, 5, 6, 7) -- считаем метрику только для зашипленных репленишментов
