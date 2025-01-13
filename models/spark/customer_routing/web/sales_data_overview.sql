@@ -3,7 +3,7 @@
     materialized='view',
     meta = {
       'team': 'clan',
-      'model_owner': '@ekutynina',
+      'model_owner': '@product-analytics.duty',
       'bigquery_load': 'true'
     }
 ) }}

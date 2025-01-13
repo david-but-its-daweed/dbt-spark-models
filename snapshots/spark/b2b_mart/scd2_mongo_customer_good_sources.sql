@@ -3,7 +3,7 @@
 {{
     config(
     meta = {
-      'model_owner' : '@ekutynina'
+      'model_owner' : '@kirill_melnikov'
     },
       target_schema='b2b_mart',
       unique_key='id',

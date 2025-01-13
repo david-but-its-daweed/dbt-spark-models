@@ -7,7 +7,7 @@
     incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
     meta = {
-        'model_owner' : '@ekutynina',
+        'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'false'
     },
   )

@@ -6,7 +6,7 @@
     partition_by=['partition_date_msk'],
     meta = {
       'team': 'clan',
-      'model_owner': '@ekutynina',
+      'model_owner': '@product-analytics.duty',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',
       'bigquery_fail_on_missing_partitions': 'false'

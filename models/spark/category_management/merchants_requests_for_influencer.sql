@@ -5,7 +5,7 @@
     file_format='parquet',
     schema='category_management',
     meta = {
-        'model_owner' : '@ekutynina',
+        'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'true'
     }
   )

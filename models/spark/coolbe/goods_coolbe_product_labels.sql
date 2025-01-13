@@ -3,7 +3,7 @@
     materialized='table',
     file_format='parquet',
     meta = {
-      'model_owner' : '@ekutynina',
+      'model_owner' : '@product-analytics.duty',
       'team': 'clan',
       'bigquery_load': 'true'
     }

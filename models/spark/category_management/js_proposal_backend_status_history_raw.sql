@@ -4,7 +4,7 @@
     alias='js_proposal_backend_status_history_raw',
     schema='category_management',
     meta = {
-        'model_owner' : '@ekutynina',
+        'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'true'
     }
   )
