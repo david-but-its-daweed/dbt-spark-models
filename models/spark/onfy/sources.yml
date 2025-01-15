@@ -8,6 +8,8 @@ sources:
       - name: ads_dashboard
       - name: refunds
       - name: auto_discount_rules
+      - name: onfy_search_conversion
+
   - name: pharmacy_landing
     tables:
       - name: product_category_flat
@@ -19,6 +21,7 @@ sources:
       - name: dosage_form
       - name: order_parcel_delivery
       - name: price_applier_applied_for_object
+      
   - name: pharmacy
     tables:
       - name: bing_partner_insights
