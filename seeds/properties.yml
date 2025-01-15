@@ -8,6 +8,16 @@ seeds:
   - name: slo_details_seed
     config:
       schema: platform
+
+  - name: table_dependencies_exclusions
+    description: Some exclusions for the dependency table
+    config:
+      schema: platform
+
+  - name: table_producers_overrides
+    description: Overrides for table producers tasks
+    config:
+      schema: platform
   
   - name: product_outliers_seed
     config:
