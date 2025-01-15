@@ -115,7 +115,7 @@ proposals_collections AS (
         ON h.product_id = bl.product_id
     WHERE status_effective_to IS NULL
         AND current_status != "cancelled"
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
     UNION ALL
 ------- Proposals to cancel because of bad rating 
     SELECT
@@ -131,7 +131,7 @@ proposals_collections AS (
         ON h.product_id = t.product_id
     WHERE status_effective_to IS NULL
         AND current_status != "cancelled"
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+    GROUP BY 1, 2, 3, 4, 5, 6, 7
 )
 
 SELECT
