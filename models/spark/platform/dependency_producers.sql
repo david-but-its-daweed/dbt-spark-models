@@ -11,6 +11,7 @@ WITH deps AS (
     SELECT
         output.tableName AS output_name,
         output.tableType AS output_type,
+        output.isSeed AS output_is_seed,
         `input`.`table`.tableName AS input_name,
         `input`.`table`.tableType AS input_type,
         `input`.`table`.isSeed AS input_is_seed,
@@ -32,11 +33,13 @@ WITH deps AS (
 
 producer_tasks AS (
     SELECT
+        partition_date,
         `table`.tableName AS table_name,
         `table`.tableType AS table_type,
         airflow_task.dagId AS dag_id,
         airflow_task.taskId AS task_id
     FROM {{ source('platform', 'table_producers') }}
+    WHERE partition_date = (SELECT MAX(tp.partition_date) FROM {{ source('platform', 'table_producers') }} AS tp)
 )
 
 SELECT
