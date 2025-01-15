@@ -40,6 +40,7 @@ producer_tasks AS (
         MAX(partition_date) AS last_observed_time
     FROM {{ source('platform', 'table_producers') }}
     WHERE partition_date >= TO_DATE(NOW()) - INTERVAL 3 MONTH
+    GROUP BY `table`, airflow_task
 )
 
 SELECT
