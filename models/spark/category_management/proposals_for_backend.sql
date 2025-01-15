@@ -61,8 +61,7 @@ new_proposals AS
         t.target_price / p.rate AS price,
         "new" AS type,
         "new" AS current_status,
-        "" AS cancel_reason,
-        NULL AS warnings
+        "" AS cancel_reason
     FROM {{ ref('products_with_target_price') }} AS t
     LEFT JOIN products_n_variants AS p
         ON
@@ -98,7 +97,6 @@ proposals_collections AS (
         type,
         current_status,
         cancel_reason,
-        ARRAY_AGG(warnings) AS warnings,
         ARRAY_AGG(STRUCT(variant_id, price)) AS  target_prices
     FROM new_proposals
     GROUP BY 1, 2, 3, 4, 5, 6
@@ -111,7 +109,6 @@ proposals_collections AS (
         "cancel" AS type,
         h.current_status AS current_status,
         "productRemovedFromJoomSelect" AS cancel_reason,
-        NULL AS warnings,
         NULL AS  target_prices
     FROM {{ ref('js_proposal_backend_status_history_raw') }} AS h
     INNER JOIN products_from_black_list AS bl
@@ -128,7 +125,6 @@ proposals_collections AS (
         "cancel" AS type,
         h.current_status AS current_status,
         "productRemovedFromJoomSelect" AS cancel_reason,
-        NULL AS warnings,
         NULL AS  target_prices
     FROM {{ ref('js_proposal_backend_status_history_raw') }} AS h
     INNER JOIN products_w_bad_rating AS t
@@ -145,6 +141,5 @@ SELECT
     type,
     current_status,
     cancel_reason,
-    warnings,
     target_prices
 FROM proposals_collections
