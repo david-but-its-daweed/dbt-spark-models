@@ -217,5 +217,8 @@ SELECT
         ), NULL)
     ), NULL) AS cancelled_by_jl_info,
     cft,
-    ci.t AS user_ordered_time_utc
+    ci.t AS user_ordered_time_utc,
+    fi.isfa AS is_fulfillment_allowed,
+    fi.fat AS fulfillment_allowed_time,
+    fi.oat AS offset_approved_time
 FROM {{ source('mongo', 'merchant_order_orders_daily_snapshot') }}
