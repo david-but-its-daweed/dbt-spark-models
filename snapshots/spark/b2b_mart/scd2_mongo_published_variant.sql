@@ -24,6 +24,7 @@
         origColors AS orig_colors,
         origMainImageUrl AS orig_main_image_url,
         productid AS product_id,
+        null AS public,
         MILLIS_TO_TS_MSK(createdTimeMs) AS published_ts_msk,
         shippingWeight AS shipping_weight,
         sku,
