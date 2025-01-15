@@ -33,13 +33,13 @@ WITH deps AS (
 
 producer_tasks AS (
     SELECT
-        partition_date,
         `table`.tableName AS table_name,
         `table`.tableType AS table_type,
         airflow_task.dagId AS dag_id,
-        airflow_task.taskId AS task_id
+        airflow_task.taskId AS task_id,
+        MAX(partition_date) AS last_observed_time
     FROM {{ source('platform', 'table_producers') }}
-    WHERE partition_date = (SELECT MAX(tp.partition_date) FROM {{ source('platform', 'table_producers') }} AS tp)
+    WHERE partition_date >= TO_DATE(NOW()) - INTERVAL 3 MONTH
 )
 
 SELECT
