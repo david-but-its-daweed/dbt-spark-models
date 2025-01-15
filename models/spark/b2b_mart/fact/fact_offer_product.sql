@@ -17,6 +17,7 @@ select
         op.trademark,
         op.hs_code,
         op.manufacturer_id,
+        op.name AS product_name,
         op.type as product_type,
         op.disabled,
         op.created_time_msk as offer_product_created_time,
