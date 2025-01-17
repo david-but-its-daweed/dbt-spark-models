@@ -50,7 +50,8 @@
         utms,
         workScheme,
         isSelfService,
-        MILLIS_TO_TS_MSK(utms + 2) AS update_ts_msk
+        isSmallBatch,
+        MILLIS_TO_TS_MSK(utms + 3) AS update_ts_msk
     FROM {{ source('mongo', 'b2b_core_deals_daily_snapshot') }}
 
 {% endsnapshot %}
