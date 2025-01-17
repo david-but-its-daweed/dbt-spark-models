@@ -15,34 +15,7 @@ with interactions as (
     from {{ ref('fact_attribution_interaction') }}
     where type = 'Web' AND source = 'selfService' AND interaction_type = 10
     group by user_id
-    ),
-
-utm_labels as (
-    SELECT DISTINCT
-        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
-        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
-        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
-        user_id
-    from
-    (
-    select
-    map_from_arrays(transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> case when split_part(x, '=', 1) != "gclid" then split_part(x, '=', 1) else "gclid" || uuid() end
-        ),
-        
-        transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> split_part(x, '=', 2)
-        )
-        ) as labels,
-        user.userId as user_id, event_ts_msk
-    from {{ source('b2b_mart', 'device_events') }}
-    where type = 'sessionStart' and payload.pageUrl like "%utm%" and payload.pageUrl not like  '%https://joompro.ru/ru%'
-    )
-)
-,
-    
+    ), 
 phone_numbers as (
         select distinct uid as user_id, _id as phone_number
         from {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
@@ -82,7 +55,7 @@ select * from interactions
 left join phone_numbers using (user_id)
 left join users_info using (user_id)
 left join company_info using (user_id)
-left join utm_labels using (user_id)
+---left join utm_labels using (user_id)
 ),
 
 users_info_1 AS (
@@ -114,9 +87,9 @@ users_info_1 AS (
         company_annual_turnover_range,
         grade,
         cnpj,
-        utm_source,
-        utm_medium,
-        utm_campaign,
+        None as utm_source,
+        None as utm_medium,
+        None as utm_campaign,
         landing_id, 
         contact_id 
     FROM joompro_users_table
