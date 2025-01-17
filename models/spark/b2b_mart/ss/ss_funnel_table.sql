@@ -71,8 +71,7 @@ autorisation_date as (
     GROUP BY user['userId']
 )
 
-SELECT * FROM (
-    -- визиты
+
     SELECT DISTINCT
         user_id,
         max(case when type in ('sessionStart', 'bounceCheck')
@@ -125,7 +124,6 @@ SELECT * FROM (
         ON bounce.user_id = user['userId']
      LEFT JOIN deals USING (user_id)
      LEFT JOIN autorisation_date USING (user_id)
+        WHERE  partition_date >= '2024-04-06'
      GROUP BY user_id
-)
-LEFT JOIN utm_labels USING (user_id)
-WHERE visit_date >= '2024-04-06'
+
