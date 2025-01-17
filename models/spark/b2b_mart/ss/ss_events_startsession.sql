@@ -33,7 +33,7 @@ WITH
                 split_part(x, '=', 2) AS value
             )
         ) AS params
-    FROM b2b_mart.device_events
+    FROM {{ source('b2b_mart', 'device_events') }}
     WHERE 
         type = 'sessionStart'
         AND payload.pageUrl NOT LIKE '%https://joompro.ru/ru%'
