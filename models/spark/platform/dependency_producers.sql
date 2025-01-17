@@ -20,6 +20,7 @@ WITH deps AS (
     FROM {{ source('platform', 'table_dependencies_v2') }}
     WHERE
         TRUE
+        AND partition_date = (SELECT MAX(td.partition_date) FROM {{ source('platform', 'table_dependencies_v2') }} AS td)
         AND NOT `input`.`table`.isSeed
         -- AND NOT (`input`.`table`.tableName = output.tableName AND `input`.`table`.tableType = output.tableType)
         AND (`input`.`table`.`tableName`, `input`.`table`.`tableType`)
