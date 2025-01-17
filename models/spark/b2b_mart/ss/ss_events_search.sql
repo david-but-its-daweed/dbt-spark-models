@@ -14,63 +14,104 @@
 ) }}
 
 
-with search_events as (
-Select user['userId'] AS user_id, 
-        event_ts_msk, 
-        type, 
-        payload.pageUrl, 
-        payload.source,
-        payload.productId as product_id,
-        payload.timeBeforeClick,
-        payload.categories,
-        payload.productsNumber,
-        payload.page as page_num, 
-        payload.query,
-        payload.hotPriceProductsNumber,
-        payload.topProductsNumber,
-        payload.hasNextPage,
-        payload.searchResultsUniqId,
-        payload.page,
-        payload.isSearchByImage as is_search_by_image,
-        payload.index as index,
-        row_number() Over(partition by payload.searchResultsUniqId, type order by event_ts_msk) as event_number 
-        from {{ source('b2b_mart', 'device_events') }} 
-                            where partition_date >= '2024-07-01' 
-                            and type in ('productClick','search') 
-                            and payload.searchResultsUniqId is not null ),
-        search as (
-        select 
-        user_id, 
-        searchResultsUniqId,
-        event_ts_msk as search_ts_msk , 
-        type, 
-        productsNumber as product_number, 
-        query,
-        is_search_by_image
-        from search_events 
-        where type = 'search' 
-        ),
-        clicks as (
-        select 
-        searchResultsUniqId, 
-        event_ts_msk as click_ts_msk, 
-        index as position,
-        product_id,
-        row_number() over (partition by searchResultsUniqId order by event_ts_msk) as click_number 
-        from search_events 
-        where type = 'productClick' )
-        
-        select 
-        user_id, 
-        searchResultsUniqId as search_results_uniq_id,
-        search_ts_msk , 
-        cast(search_ts_msk as date) as search_date,
-        product_number, 
-        query,
-        is_search_by_image,
-        click_ts_msk,
-        position,
-        product_id,
-        click_number 
-        from search 
-        left join clicks using(searchResultsUniqId)
+WITH search_events AS (
+    SELECT user['userId'] AS user_id, 
+           event_ts_msk, 
+           type, 
+           payload.pageUrl, 
+           payload.source, 
+           payload.productId AS product_id, 
+           payload.timeBeforeClick, 
+           payload.categories, 
+           payload.productsNumber, 
+           payload.page AS page_num, 
+           payload.query AS query, 
+           payload.hotPriceProductsNumber, 
+           payload.topProductsNumber, 
+           payload.hasNextPage, 
+           payload.searchResultsUniqId, 
+           payload.page, 
+           payload.isSearchByImage AS is_search_by_image,
+           payload.index AS index,
+           ROW_NUMBER() OVER (
+               PARTITION BY payload.searchResultsUniqId, type 
+               ORDER BY event_ts_msk
+           ) AS event_number
+      FROM {{ source('b2b_mart', 'device_events') }}
+     WHERE partition_date >= '2024-07-01'
+       AND type IN ('productClick', 'search')
+       AND payload.searchResultsUniqId IS NOT NULL
+),
+
+search AS (
+    SELECT *,
+           /* Определяем номер сессии поиска клиента в рамках одного запроса */
+           SUM(
+               CASE
+                   WHEN prev_same_search_ts_msk IS NULL THEN 1
+                   WHEN search_ts_msk >= prev_same_search_ts_msk + INTERVAL 15 MINUTE THEN 1 
+                   ELSE 0
+               END
+           ) OVER (
+               PARTITION BY user_id, query 
+               ORDER BY search_ts_msk
+           ) AS session_id
+    FROM (
+        SELECT user_id, 
+               searchResultsUniqId, 
+               event_ts_msk AS search_ts_msk, 
+               type, 
+               productsNumber AS product_number, 
+               query, 
+               is_search_by_image,
+               LAG(event_ts_msk) OVER (
+                   PARTITION BY user_id, query
+                   ORDER BY event_ts_msk
+               ) AS prev_same_search_ts_msk
+          FROM search_events
+         WHERE type = 'search'
+    ) AS s
+),
+
+clicks AS (
+    SELECT searchResultsUniqId, 
+           event_ts_msk AS click_ts_msk, 
+           index AS position, 
+           product_id, 
+           ROW_NUMBER() OVER (
+               PARTITION BY searchResultsUniqId 
+               ORDER BY event_ts_msk
+           ) AS click_number
+      FROM search_events
+     WHERE type = 'productClick'
+)
+
+
+SELECT *
+FROM (
+    SELECT search.user_id, 
+           search.searchResultsUniqId AS search_results_uniq_id, 
+           search.search_ts_msk, 
+           CAST(search.search_ts_msk AS DATE) AS search_date, 
+           search.product_number, 
+           search.query, 
+           search.is_search_by_image, 
+           clicks.click_ts_msk, 
+           clicks.position, 
+           clicks.product_id, 
+           clicks.click_number,
+           CASE
+               /* Если запрос пустой, то есть событие поиска произошло из каталога, считаем каждое событие уникальным поиском */
+               WHEN coalesce(query, '') = '' THEN 1
+               /* Проставляем флаг первого поиска в сессии */
+               WHEN search_ts_msk = MIN(search_ts_msk) OVER (
+                        PARTITION BY user_id, query, session_id
+                    ) THEN 1
+               ELSE 0
+           END AS is_first_search_by_session
+    FROM search
+    LEFT JOIN clicks ON search.searchResultsUniqId = clicks.searchResultsUniqId
+) AS m
+/* Оставляем первый поиск в сессии и события с кликами */
+WHERE is_first_search_by_session = 1
+   OR click_ts_msk IS NOT NULL
