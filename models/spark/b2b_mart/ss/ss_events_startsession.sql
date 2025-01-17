@@ -42,7 +42,7 @@ WITH
             OR payload.pageUrl LIKE '%gad_source%'
             OR payload.pageUrl LIKE '%gclid%'
         )
-        AND event_ts_msk >= '2025-01-16'
+       AND partition_date >= '2024-04-06'
 ),
 flattened_params AS (
     SELECT
