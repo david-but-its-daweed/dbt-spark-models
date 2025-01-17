@@ -48,14 +48,22 @@ company_info as (
         gradeInfo.grade as grade
         from {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
     ),
-
+utm_labels as (
+    SELECT DISTINCT
+        first_value(utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
+        first_value(utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
+        first_value(utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
+        user_id
+    from   {{ ref('ss_events_startsession') }}   
+    where type = 'sessionStart'
+),
 
 joompro_users_table as (
 select * from interactions
 left join phone_numbers using (user_id)
 left join users_info using (user_id)
 left join company_info using (user_id)
----left join utm_labels using (user_id)
+left join utm_labels using (user_id)
 ),
 
 users_info_1 AS (
@@ -87,9 +95,9 @@ users_info_1 AS (
         company_annual_turnover_range,
         grade,
         cnpj,
-        None as utm_source,
-        None as utm_medium,
-        None as utm_campaign,
+        utm_source,
+        utm_medium,
+        utm_campaign,
         landing_id, 
         contact_id 
     FROM joompro_users_table
