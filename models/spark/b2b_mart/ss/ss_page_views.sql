@@ -24,31 +24,6 @@ deals as (
         AND (self_service or ss_customer)
 ),
 
-utm_labels as (
-    SELECT DISTINCT
-        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
-        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
-        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
-        user_id
-    from
-    (
-    select
-    map_from_arrays(transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> case when split_part(x, '=', 1) != "gclid" then split_part(x, '=', 1) else "gclid" || uuid() end
-        ),
-        transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> split_part(x, '=', 2)
-        )
-        ) as labels,
-        user.userId as user_id, event_ts_msk
-    from {{ source('b2b_mart', 'device_events') }}
-    where type = 'sessionStart' and payload.pageUrl like "%utm%" and payload.pageUrl not like  '%https://joompro.ru/ru%'
-    )
-)
-,
-
 products AS (
     SELECT
         l1_merchant_category_name,
@@ -110,9 +85,6 @@ categories as (
         AND CAST(event_ts_msk AS DATE) >= '2024-01-01'
 )
 
-
-SELECT * FROM
-(
 SELECT
         l1_merchant_category_name,
         l2_merchant_category_name,
@@ -152,4 +124,4 @@ SELECT
         0 as deal_assigned,
         'categories' as page_type
 FROM categories
-) LEFT JOIN utm_labels USING (user_id)
+
