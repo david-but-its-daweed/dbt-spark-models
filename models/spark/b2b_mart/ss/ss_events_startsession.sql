@@ -64,14 +64,12 @@ flattened_params AS (
 utm_labels AS (
     SELECT
         id,
-        user_id,
-        event_ts_msk,
         MAX(CASE WHEN key = 'utm_source' THEN merged_values ELSE NULL END) AS utm_source,
         MAX(CASE WHEN key = 'utm_medium' THEN merged_values ELSE NULL END) AS utm_medium,
         MAX(CASE WHEN key = 'utm_campaign' THEN merged_values ELSE NULL END) AS utm_campaign,
         MAX(CASE WHEN key = 'gad_source' THEN merged_values ELSE NULL END) AS gad_source
     FROM flattened_params
-    GROUP BY id, user_id, event_ts_msk
+    GROUP BY id
 ),
   users AS (
   SELECT
