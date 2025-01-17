@@ -165,6 +165,7 @@ SELECT DISTINCT
     users.grade AS client_grade,
     users.company_name AS client_company_name,
     d.isSelfService AS self_service,
+    d.isSmallBatch as small_batch,
     users.ss_customer,
     paymentmethod.payment_method,
     TIMESTAMP(d.dbt_valid_from) AS effective_ts_msk,
