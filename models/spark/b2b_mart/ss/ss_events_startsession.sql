@@ -21,37 +21,57 @@ WITH
                         from threat.bot_devices_joompro 
                         where is_device_marked_as_bot or is_retrospectively_detected_bot
                         group by 1 ) ,
-    utm_labels as (
-    SELECT /*DISTINCT
-        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
-        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
-        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
-        first_value(labels.gad_source) over (partition by user_id order by event_ts_msk) as gad_source, */
-        labels.utm_source as utm_source,
-        labels.utm_medium as utm_medium,
-        labels.utm_campaign as utm_campaign,
-        labels.gad_source as gad_source,
+    extracted_params AS (
+    SELECT
         id,
-        user_id
-    from
-      (
-    select
-    map_from_arrays(transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> case when split_part(x, '=', 1) != "gclid" then split_part(x, '=', 1) else "gclid" || uuid() end
-        ),
-        
+        user.userId AS user_id,
+        event_ts_msk,
         transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> split_part(x, '=', 2)
+            split(split_part(payload.pageUrl, "?", -1), '&'),
+            x -> struct(
+                split_part(x, '=', 1) AS key,
+                split_part(x, '=', 2) AS value
+            )
+        ) AS params
+    FROM b2b_mart.device_events
+    WHERE 
+        type = 'sessionStart'
+        AND payload.pageUrl NOT LIKE '%https://joompro.ru/ru%'
+        AND (
+            payload.pageUrl LIKE '%utm%'
+            OR payload.pageUrl LIKE '%gad_source%'
+            OR payload.pageUrl LIKE '%gclid%'
         )
-        ) as labels,
-        user.userId as user_id, event_ts_msk, id
-    from {{ source('b2b_mart', 'device_events') }}
-    where type = 'sessionStart' and payload.pageUrl not like  '%https://joompro.ru/ru%' and ( payload.pageUrl like "%utm%" 
-                                        or payload.pageUrl like "%gad_source%" 
-                                        or payload.pageUrl like "%gclid%" )
+        AND event_ts_msk >= '2025-01-16'
+),
+flattened_params AS (
+    SELECT
+        id,
+        user_id,
+        event_ts_msk,
+        key,
+        concat_ws('_tech_merged_', collect_set(value)) AS merged_values
+    FROM (
+        SELECT
+            id,
+            user_id,
+            event_ts_msk,
+            inline(params) AS (key, value)
+        FROM extracted_params
     )
+    GROUP BY id, user_id, event_ts_msk, key
+),
+utm_labels AS (
+    SELECT
+        id,
+        user_id,
+        event_ts_msk,
+        MAX(CASE WHEN key = 'utm_source' THEN merged_values ELSE NULL END) AS utm_source,
+        MAX(CASE WHEN key = 'utm_medium' THEN merged_values ELSE NULL END) AS utm_medium,
+        MAX(CASE WHEN key = 'utm_campaign' THEN merged_values ELSE NULL END) AS utm_campaign,
+        MAX(CASE WHEN key = 'gad_source' THEN merged_values ELSE NULL END) AS gad_source
+    FROM flattened_params
+    GROUP BY id, user_id, event_ts_msk
 ),
   users AS (
   SELECT
