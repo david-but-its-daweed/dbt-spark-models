@@ -62,6 +62,29 @@ SELECT
      WHEN order_id = '675b40fb3703512d44aaa412' THEN CAST('2024-12-24' AS DATE) 
      WHEN order_id = '6769b2e66cc818d350e04793' THEN CAST('2024-12-27' AS DATE) 
      WHEN order_id = '676ab681270b1f328d8f7cc2' THEN CAST('2024-12-27' AS DATE)
+    WHEN order_id = '6784f1bd7294db47e074844d' THEN CAST('10.01.2025' AS DATE) 
+ WHEN order_id = '6781628b54880f4bf013c566' THEN CAST('10.01.2025' AS DATE) 
+ WHEN order_id = '6781672b4f74fe5dab4f0cbc' THEN CAST('10.01.2025' AS DATE) 
+ WHEN order_id = '67815ca154880f4bf013c533' THEN CAST('10.01.2025' AS DATE) 
+ WHEN order_id = '6784eb1af7e293bf7267b519' THEN CAST('11.01.2025' AS DATE) 
+ WHEN order_id = '678567232583002a9a42efa2' THEN CAST('13.01.2025' AS DATE) 
+ WHEN order_id = '6785603c5362eed40410d47c' THEN CAST('13.01.2025' AS DATE) 
+ WHEN order_id = '67855e342583002a9a42ef84' THEN CAST('13.01.2025' AS DATE) 
+ WHEN order_id = '67868f632583002a9a42f5f6' THEN CAST('13.01.2025' AS DATE) 
+ WHEN order_id = '67865e4c5362eed40410d955' THEN CAST('13.01.2025' AS DATE) 
+ WHEN order_id = '678692cc2583002a9a42f608' THEN CAST('13.01.2025' AS DATE) 
+ WHEN order_id = '67866bd05362eed40410d9b9' THEN CAST('14.01.2025' AS DATE) 
+ WHEN order_id = '6788203e2583002a9a42fc1e' THEN CAST('15.01.2025' AS DATE) 
+ WHEN order_id = '6787d94b5362eed40410df41' THEN CAST('15.01.2025' AS DATE) 
+ WHEN order_id = '678805352583002a9a42fb85' THEN CAST('15.01.2025' AS DATE) 
+ WHEN order_id = '6788e90a5362eed40410e435' THEN CAST('15.01.2025' AS DATE) 
+ WHEN order_id = '6789660f46dd05f18e97ab1b' THEN CAST('16.01.2025' AS DATE) 
+ WHEN order_id = '67897626e4dd3a64d0d31119' THEN CAST('16.01.2025' AS DATE) 
+ WHEN order_id = '678970a2e4dd3a64d0d310ff' THEN CAST('16.01.2025' AS DATE) 
+ WHEN order_id = '678abd0e7958f9ced43ba45e' THEN CAST('16.01.2025' AS DATE) 
+ WHEN order_id = '678ac3e67958f9ced43ba483' THEN CAST('17.01.2025' AS DATE) 
+ WHEN order_id = '678aaf15e4dd3a64d0d3193f' THEN CAST('17.01.2025' AS DATE) 
+ WHEN order_id = '6740d51a4bd146113e694424' THEN CAST('19.01.2025' AS DATE) 
         ELSE t
     END AS t,
     order_id,
@@ -138,6 +161,29 @@ SELECT
      WHEN order_id = '675b40fb3703512d44aaa412' THEN 12434.53  
      WHEN order_id = '6769b2e66cc818d350e04793' THEN 23511.33  
      WHEN order_id = '676ab681270b1f328d8f7cc2' THEN 35136.69
+    WHEN order_id = '6784f1bd7294db47e074844d' THEN 1810.98  
+ WHEN order_id = '6781628b54880f4bf013c566' THEN 204.86  
+ WHEN order_id = '6781672b4f74fe5dab4f0cbc' THEN 428.22  
+ WHEN order_id = '67815ca154880f4bf013c533' THEN 155.25  
+ WHEN order_id = '6784eb1af7e293bf7267b519' THEN 675.92  
+ WHEN order_id = '678567232583002a9a42efa2' THEN 575.94  
+ WHEN order_id = '6785603c5362eed40410d47c' THEN 2911.60  
+ WHEN order_id = '67855e342583002a9a42ef84' THEN 426.75  
+ WHEN order_id = '67868f632583002a9a42f5f6' THEN 976.27  
+ WHEN order_id = '67865e4c5362eed40410d955' THEN 341.02  
+ WHEN order_id = '678692cc2583002a9a42f608' THEN 261.89  
+ WHEN order_id = '67866bd05362eed40410d9b9' THEN 568.92  
+ WHEN order_id = '6788203e2583002a9a42fc1e' THEN 797.11  
+ WHEN order_id = '6787d94b5362eed40410df41' THEN 1099.57  
+ WHEN order_id = '678805352583002a9a42fb85' THEN 1377.71  
+ WHEN order_id = '6788e90a5362eed40410e435' THEN 3443.76  
+ WHEN order_id = '6789660f46dd05f18e97ab1b' THEN 120.92  
+ WHEN order_id = '67897626e4dd3a64d0d31119' THEN 876.32  
+ WHEN order_id = '678970a2e4dd3a64d0d310ff' THEN 393.62  
+ WHEN order_id = '678abd0e7958f9ced43ba45e' THEN 4191.91  
+ WHEN order_id = '678ac3e67958f9ced43ba483' THEN 250.45  
+ WHEN order_id = '678aaf15e4dd3a64d0d3193f' THEN 1629.78  
+ WHEN order_id = '6740d51a4bd146113e694424' THEN 5026.04
         ELSE gmv_initial
     END AS gmv_initial,
     CASE
@@ -211,7 +257,30 @@ SELECT
          WHEN order_id = '6765968e7c2acf46df9a3a82' THEN 8.62  
          WHEN order_id = '675b40fb3703512d44aaa412' THEN -859.6  
          WHEN order_id = '6769b2e66cc818d350e04793' THEN 1444.6  
-         WHEN order_id = '676ab681270b1f328d8f7cc2' THEN -3057.86  
+         WHEN order_id = '676ab681270b1f328d8f7cc2' THEN -3057.86
+    WHEN order_id = '6784f1bd7294db47e074844d' THEN 0.00  
+ WHEN order_id = '6781628b54880f4bf013c566' THEN 0.00  
+ WHEN order_id = '6781672b4f74fe5dab4f0cbc' THEN 0.00  
+ WHEN order_id = '67815ca154880f4bf013c533' THEN 0.00  
+ WHEN order_id = '6784eb1af7e293bf7267b519' THEN 0.00  
+ WHEN order_id = '678567232583002a9a42efa2' THEN 0.00  
+ WHEN order_id = '6785603c5362eed40410d47c' THEN 0.00  
+ WHEN order_id = '67855e342583002a9a42ef84' THEN 0.00  
+ WHEN order_id = '67868f632583002a9a42f5f6' THEN 0.00  
+ WHEN order_id = '67865e4c5362eed40410d955' THEN 0.00  
+ WHEN order_id = '678692cc2583002a9a42f608' THEN 0.00  
+ WHEN order_id = '67866bd05362eed40410d9b9' THEN 0.00  
+ WHEN order_id = '6788203e2583002a9a42fc1e' THEN 0.00  
+ WHEN order_id = '6787d94b5362eed40410df41' THEN 0.00  
+ WHEN order_id = '678805352583002a9a42fb85' THEN 0.00  
+ WHEN order_id = '6788e90a5362eed40410e435' THEN 0.00  
+ WHEN order_id = '6789660f46dd05f18e97ab1b' THEN 0.00  
+ WHEN order_id = '67897626e4dd3a64d0d31119' THEN 0.00  
+ WHEN order_id = '678970a2e4dd3a64d0d310ff' THEN 0.00  
+ WHEN order_id = '678abd0e7958f9ced43ba45e' THEN 0.00  
+ WHEN order_id = '678ac3e67958f9ced43ba483' THEN 0.00  
+ WHEN order_id = '678aaf15e4dd3a64d0d3193f' THEN 0.00  
+ WHEN order_id = '6740d51a4bd146113e694424' THEN 0.00  
         ELSE initial_gross_profit
     END AS initial_gross_profit,
 
@@ -288,6 +357,29 @@ SELECT
          WHEN order_id = '675b40fb3703512d44aaa412' THEN -859.6  
          WHEN order_id = '6769b2e66cc818d350e04793' THEN 1444.6  
          WHEN order_id = '676ab681270b1f328d8f7cc2' THEN -3057.86  
+         WHEN order_id = '6784f1bd7294db47e074844d' THEN 0.00  
+         WHEN order_id = '6781628b54880f4bf013c566' THEN 0.00  
+         WHEN order_id = '6781672b4f74fe5dab4f0cbc' THEN 0.00  
+         WHEN order_id = '67815ca154880f4bf013c533' THEN 0.00  
+         WHEN order_id = '6784eb1af7e293bf7267b519' THEN 0.00  
+         WHEN order_id = '678567232583002a9a42efa2' THEN 0.00  
+         WHEN order_id = '6785603c5362eed40410d47c' THEN 0.00  
+         WHEN order_id = '67855e342583002a9a42ef84' THEN 0.00  
+         WHEN order_id = '67868f632583002a9a42f5f6' THEN 0.00  
+         WHEN order_id = '67865e4c5362eed40410d955' THEN 0.00  
+         WHEN order_id = '678692cc2583002a9a42f608' THEN 0.00  
+         WHEN order_id = '67866bd05362eed40410d9b9' THEN 0.00  
+         WHEN order_id = '6788203e2583002a9a42fc1e' THEN 0.00  
+         WHEN order_id = '6787d94b5362eed40410df41' THEN 0.00  
+         WHEN order_id = '678805352583002a9a42fb85' THEN 0.00  
+         WHEN order_id = '6788e90a5362eed40410e435' THEN 0.00  
+         WHEN order_id = '6789660f46dd05f18e97ab1b' THEN 0.00  
+         WHEN order_id = '67897626e4dd3a64d0d31119' THEN 0.00  
+         WHEN order_id = '678970a2e4dd3a64d0d310ff' THEN 0.00  
+         WHEN order_id = '678abd0e7958f9ced43ba45e' THEN 0.00  
+         WHEN order_id = '678ac3e67958f9ced43ba483' THEN 0.00  
+         WHEN order_id = '678aaf15e4dd3a64d0d3193f' THEN 0.00  
+         WHEN order_id = '6740d51a4bd146113e694424' THEN 0.00  
         ELSE final_gross_profit
     END AS final_gross_profit,
     utm_campaign,
