@@ -61,7 +61,32 @@ order_v2_mongo AS (
                          '677ee0d67104bc79f2a8bc29',
                          '677fd23a7104bc79f2a8c055',
                          '677fe6597104bc79f2a8c0e8',
-                         '6761acb706c420992f837ae0'
+                         '6761acb706c420992f837ae0',
+                        '6776e4f7dfbe6dd933205c82',
+                        '678156514f74fe5dab4f0c6c',
+                        '6784f1bd7294db47e074844d',
+                        '6781672b4f74fe5dab4f0cbc',
+                        '67815ca154880f4bf013c533',
+                        '6784eb1af7e293bf7267b519',
+                        '678567232583002a9a42efa2',
+                        '6785603c5362eed40410d47c',
+                        '67855e342583002a9a42ef84',
+                        '67868f632583002a9a42f5f6',
+                        '67865e4c5362eed40410d955',
+                        '678692cc2583002a9a42f608',
+                        '67866bd05362eed40410d9b9',
+                        '6788203e2583002a9a42fc1e',
+                        '6787d94b5362eed40410df41',
+                        '678805352583002a9a42fb85',
+                        '6788e90a5362eed40410e435',
+                        '6789660f46dd05f18e97ab1b',
+                        '67897626e4dd3a64d0d31119',
+                        '678970a2e4dd3a64d0d310ff',
+                        '678abd0e7958f9ced43ba45e',
+                        '678ac3e67958f9ced43ba483',
+                        '678aaf15e4dd3a64d0d3193f',
+                        '6740d51a4bd146113e694424'
+        
     ) AND fo.next_effective_ts_msk IS NULL) or 
         (fo.last_order_status < 60
         AND fo.last_order_status >= 10
