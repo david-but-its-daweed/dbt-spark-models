@@ -110,6 +110,11 @@ sources:
   - name: recom
     tables:
       - name: context_device_counters_v6
+
+  - name: holistics
+    tables:
+      - name: datamodel_sources
+
   - name: platform
     tables:
       - name: aws_service_costs

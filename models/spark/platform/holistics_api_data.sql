@@ -43,4 +43,4 @@ LEFT JOIN holistics.datasets AS datasets ON widgets_datasets.dataset_id = datase
 LEFT JOIN holistics.users AS users ON datasets.dataset_owner_id = users.user_id
 LEFT JOIN holistics.widgets_datamodels AS widgets_datamodels ON dashboards_widgets.widget_id = widgets_datamodels.widget_id
 LEFT JOIN holistics.datamodels AS datamodels ON widgets_datamodels.datamodel_id = datamodels.datamodel_id
-LEFT JOIN holistics.datamodel_sources AS sources ON datamodels.datamodel_title = sources.holistics_data_model
+LEFT JOIN {{ source('holistics', 'datamodel_sources') }} AS sources ON datamodels.datamodel_title = sources.holistics_data_model
