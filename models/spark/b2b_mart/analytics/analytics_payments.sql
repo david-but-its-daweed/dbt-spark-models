@@ -27,5 +27,12 @@ select
         price.ccy as currency,
         promocodeSnapshot._id as promocode_id,
         promocodeSnapshot.code as promocode,
+        rate,
         status
 from {{ source('mongo', 'b2b_core_analytics_payments_daily_snapshot') }}
+join (select
+            1000000/rate as rate,
+            explode(sequence(effective_date, least(next_effective_date - interval 1 day, current_date()), interval 1 day)) AS date
+         from mart.dim_currency_rate
+where currency_code = "BRL"
+    ) ON to_date(millis_to_ts(paidTimeMs)) = date
