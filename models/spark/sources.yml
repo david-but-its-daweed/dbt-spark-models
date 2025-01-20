@@ -120,6 +120,7 @@ sources:
       - name: fact_removed_device_event
       - name: table_dependencies_v2
       - name: table_producers
+      - name: manual_tables_bq_seed
   - name: onfy_mart
     tables:
       - name: device_events
