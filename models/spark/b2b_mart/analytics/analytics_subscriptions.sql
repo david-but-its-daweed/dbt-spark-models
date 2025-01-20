@@ -30,6 +30,7 @@ select
         promocode,
         status,
         subscribtion_months,
+        rate,
         time_payed
 from
 (
@@ -50,6 +51,7 @@ select
         promocode,
         status,
         subscribtion_months,
+        rate,
         posexplode(
             array_repeat(
                     price,
@@ -75,6 +77,7 @@ select
         promocodeSnapshot._id as promocode_id,
         promocodeSnapshot.code as promocode,
         status,
+        rate,
         ceil(
             case when status = "active"
                 then months_between(
@@ -96,5 +99,11 @@ select
             ) 
             as subscribtion_months
 from {{ source('mongo', 'b2b_core_analytics_subscriptions_daily_snapshot') }}
+join (select
+            1000000/rate as rate,
+            explode(sequence(effective_date, least(next_effective_date - interval 1 day, current_date()), interval 1 day)) AS date
+         from mart.dim_currency_rate
+where currency_code = "BRL"
+    ) ON to_date(millis_to_ts(createdTimeMs)) = date
 )
 )
