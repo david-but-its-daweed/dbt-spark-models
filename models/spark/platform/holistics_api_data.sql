@@ -13,7 +13,7 @@ SELECT
     dashboards.dashboard_title,
     dashboards.dashboard_url,
     dashboards.dashboard_category_id,
-    CAST(dashboards_widgets.widget_id AS BIGINT),
+    CAST(dashboards_widgets.widget_id AS BIGINT) AS widget_id,
     COALESCE(widgets.widget_title, "Text Widget") AS widget_title,
     widgets.widget_url,
     widgets_datasets.dataset_id,
@@ -29,8 +29,11 @@ SELECT
     sources.gbq_dataset,
     sources.gbq_table,
     sources.table_type,
-    CONCAT(sources.gbq_dataset, ".", sources.gbq_table) AS full_table_name,
-    mt.full_table_name IS NOT NULL AS is_manual
+    sources.full_table_name,
+    sources.is_manual,
+    sources.dag_id,
+    sources.task_id,
+    sources.last_update_time
 
 FROM holistics.dashboards AS dashboards
 LEFT JOIN holistics.dashboards_widgets AS dashboards_widgets ON dashboards.dashboard_id = dashboards_widgets.dashboard_id
@@ -41,6 +44,3 @@ LEFT JOIN holistics.users AS users ON datasets.dataset_owner_id = users.user_id
 LEFT JOIN holistics.widgets_datamodels AS widgets_datamodels ON dashboards_widgets.widget_id = widgets_datamodels.widget_id
 LEFT JOIN holistics.datamodels AS datamodels ON widgets_datamodels.datamodel_id = datamodels.datamodel_id
 LEFT JOIN holistics.datamodel_sources AS sources ON datamodels.datamodel_title = sources.holistics_data_model
-LEFT JOIN {{ ref('manual_tables') }} AS mt ON
-    mt.full_table_name = CONCAT(sources.gbq_dataset, ".", sources.gbq_table)
-    AND mt.type = "bq"
