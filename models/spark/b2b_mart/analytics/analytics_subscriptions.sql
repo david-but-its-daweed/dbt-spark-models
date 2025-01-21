@@ -79,7 +79,7 @@ select
         status,
         rate,
         ceil(
-            case when status = "active"
+            case when status != "cancelled"
                 then months_between(
                 
                     greatest(to_timestamp(current_date()),
