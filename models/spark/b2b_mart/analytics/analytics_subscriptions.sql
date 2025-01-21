@@ -55,7 +55,7 @@ select
         posexplode(
             array_repeat(
                     price,
-                    cast(ceil(subscribtion_months)/package_duration as int)
+                    cast(ceil(subscribtion_months/package_duration) as int)
                 )
             ) as (time_payed, price_2)
 from
