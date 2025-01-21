@@ -82,7 +82,7 @@ French Polynesia,PF,CFP Franc,XPF,Other,Other
 French Southern Territories,TF,Euro,EUR,Other,Other
 Gabon,GA,CFA Franc BEAC,XAF,Other,Other
 Gambia,GM,Dalasi,GMD,Other,Other
-Georgia,GE,Lari,GEL,Moldova & Georgia,CIS
+Georgia,GE,Lari,GEL,Other,CIS
 Germany,DE,Euro,EUR,Western Europe,WE
 Ghana,GH,Ghana Cedi,GHS,Other,Other
 Gibraltar,GI,Gibraltar Pound,GIP,Western Europe,Other
@@ -147,7 +147,7 @@ Mauritius,MU,Mauritius Rupee,MUR,Other,Other
 Mayotte,YT,Euro,EUR,Other,Other
 Mexico,MX,Mexican Peso,MXN,Other,Other
 Micronesia Federated States of,FM,US Dollar,USD,Other,Other
-Moldova Republic of,MD,Moldovan Leu,MDL,Moldova & Georgia,EE
+Moldova Republic of,MD,Moldovan Leu,MDL,Moldova,EE
 Monaco,MC,Euro,EUR,Western Europe,Other
 Mongolia,MN,Tugrik,MNT,Other,Other
 Montenegro,ME,Euro,EUR,Eastern Europe,Other
