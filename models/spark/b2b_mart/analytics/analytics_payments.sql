@@ -35,4 +35,4 @@ join (select
             explode(sequence(effective_date, least(next_effective_date - interval 1 day, current_date()), interval 1 day)) AS date
          from mart.dim_currency_rate
 where currency_code = "BRL"
-    ) ON to_date(millis_to_ts(paidTimeMs)) = date
+    ) ON to_date(millis_to_ts(createdTimeMs)) = date
