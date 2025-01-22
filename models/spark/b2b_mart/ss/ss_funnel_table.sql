@@ -38,31 +38,6 @@ deals as (
         AND (self_service or ss_customer)
 ),
 
-utm_labels as (
-    SELECT DISTINCT
-        first_value(labels.utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
-        first_value(labels.utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
-        first_value(labels.utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
-        user_id
-    from
-    (
-    select
-    map_from_arrays(transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> case when split_part(x, '=', 1) != "gclid" then split_part(x, '=', 1) else "gclid" || uuid() end
-        ),
-        
-        transform(
-            split(split_part(payload.pageUrl, "?", -1), '&'), 
-            x -> split_part(x, '=', 2)
-        )
-        ) as labels,
-        user.userId as user_id, event_ts_msk
-    from {{ source('b2b_mart', 'device_events') }}
-    where type = 'sessionStart' and payload.pageUrl like "%utm%" and payload.pageUrl not like  '%https://joompro.ru/ru%'
-    )
-),
-
 autorisation_date as (
      SELECT DISTINCT
         user['userId'] AS user_id,
@@ -86,6 +61,10 @@ autorisation_date as (
             AND (event_ts_msk <= autorisation_ts OR autorisation_ts IS NULL)
             then 1 else 0 end) AS visit,
          
+        min(case when type = 'pageView' and payload.pageName = 'product' then event_ts_msk end - INTERVAL 3 hours) as product_view_ts,
+        CAST(min(case when type = 'pageView' and payload.pageName = 'product' then event_ts_msk end - INTERVAL 3 hours) AS DATE) as product_view_date,
+        max(case when type = 'pageView' and payload.pageName = 'product' then 1 else 0 end) as product_view,
+        
         min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) as autorisation_ts,
         CAST(min(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then event_ts_msk end - INTERVAL 3 hours) AS DATE) as autorisation_date,
         max(case when type = 'signIn' AND payload.signInType = 'phone' AND payload.success = TRUE  then 1 else 0 end) AS autorisation,
