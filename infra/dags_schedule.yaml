@@ -16,6 +16,7 @@ default:
   profiles-dir: "production/profiles"
   profile-name: spark
   excluded-tags: ["manual"]
+  slo-hour: 18
 platform:
   dag-name: dbt-platform
   alerts-channel: "#analytics-monitoring"
@@ -39,3 +40,8 @@ pulse:
   crontab: 0 9 * * *
   alerts-channel: "#jpa-monitoring"
   tags: ["pulse"]
+gold:
+  dag-name: gold
+  alerts-channel: "#dbt-spark-monitoring"
+  tags: ["gold"]
+  slo-hour: 8

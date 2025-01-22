@@ -35,6 +35,8 @@ models:
         +tags: "platform"
       pulse:
         +tags: "pulse"
+      gold:
+        +tags: "gold"
   
   +persist_docs:
     relation: true
