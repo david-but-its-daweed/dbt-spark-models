@@ -9,23 +9,31 @@
 ) }}
 
 
+WITH wide_data AS (
+    SELECT _id AS customer_request_id,
+           millis_to_ts_msk(ctms) AS date,
+           merchantPrices.currency AS merchant_price_currency,
+           merchantPrices.priceAmountPerItem AS merchant_price_per_item,
+           merchantPrices.totalAmountPrice AS merchant_price_total_amount,
+           dealId AS deal_id,
+           explode(variants)
+    FROM {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }}
+)
 
-WITH wide_data AS
-  (SELECT _id AS customer_request_id,
-          millis_to_ts_msk(ctms) AS date,
-          dealId AS deal_id,
-          explode(variants)
-   FROM {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }} )
+
 SELECT customer_request_id,
        deal_id,
        col.id AS sub_product_id,
-       col.expectedQuantity as expectedQuantity, 
+       col.expectedQuantity as expectedQuantity,
+       merchant_price_currency,
+       merchant_price_per_item,
+       merchant_price_total_amount,
        col.prices.ddpPerItem.amount as ddpPerItem,
        col.prices.ddpPerItem.ccy as ddpPerItem_ccy,
        col.prices.exwPerItem.amount as exwPerItem,
        col.prices.exwPerItem.ccy as exwPerItem_ccy,
-       col.prices.taxBasePerItem.amount as taxBasePerItem, 
-       col.prices.taxBasePerItem.ccy as taxBasePerItem_ccy, 
+       col.prices.taxBasePerItem.amount as taxBasePerItem,
+       col.prices.taxBasePerItem.ccy as taxBasePerItem_ccy,
        col.prices.totalPerItem.amount as totalPerItem,
        col.prices.totalPerItem.ccy as totalPerItem_ccy,
        col.sampleDDPPrice.amount as sampleDDPPrice,
