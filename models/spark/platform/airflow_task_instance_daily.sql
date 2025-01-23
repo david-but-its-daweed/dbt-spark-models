@@ -17,7 +17,8 @@ WITH airflow_data AS (
         start_date,
         end_date,
         duration,
-        try_number
+        try_number,
+        pool
     FROM {{ ref("airflow_task_instance_archive") }}
     WHERE
         partition_date < TO_DATE(NOW()) - INTERVAL 1 DAY
@@ -39,7 +40,8 @@ WITH airflow_data AS (
         start_date,
         end_date,
         duration,
-        try_number
+        try_number,
+        pool
     FROM platform.airflow_task_instance
     WHERE
         start_date >= DATE_SUB(TO_DATE(NOW()), 1) - INTERVAL 2 HOUR
@@ -57,6 +59,7 @@ SELECT
     end_date,
     duration,
     try_number,
+    pool,
     ROW_NUMBER() OVER (PARTITION BY task_id, dag_id, partition_date ORDER BY start_date ASC) AS run_number,
     COUNT(*) OVER (PARTITION BY task_id, dag_id, partition_date) AS run_cnt
 FROM airflow_data

@@ -141,6 +141,7 @@ final_data AS (
         dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type AS input_table,
         CASE WHEN ftu.end_date IS NOT NULL THEN 'success' ELSE airflow_data.state END AS state,
         airflow_data.priority_weight,
+        airflow_data.pool AS airflow_pool,
         ftu.start_date AS ftu_start_date,
         ftu.end_date AS ftu_end_date,
         airflow_data.start_date AS airflow_start_date,

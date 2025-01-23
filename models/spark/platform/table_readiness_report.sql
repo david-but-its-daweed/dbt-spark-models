@@ -34,6 +34,7 @@ WITH final_data AS (
         dr.start_time_human,
         dr.state,
         dr.priority_weight,
+        dr.airflow_pool,
         dr.ftu_start_date,
         dr.ftu_end_date,
         dr.airflow_start_date,
@@ -46,7 +47,6 @@ WITH final_data AS (
         dr.try_number,
         dr.is_ftu_record,
         dr.is_daily,
-        dr.is_not_updated_last_day,
 
         at_es.median_start_time AS airflow_median_start_time,
         at_es.median_end_time AS airflow_median_ready_time,
