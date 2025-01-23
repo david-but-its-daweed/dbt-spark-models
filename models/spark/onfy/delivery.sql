@@ -1,12 +1,13 @@
 {{ config(
     schema='onfy',
-    materialized='view',
+    materialized='table',
+    file_format='parquet',
     incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': 'onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring'
     }
 ) }}
 

@@ -5,7 +5,7 @@
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'false',
-      'alerts_channel': 'onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring'
     }
 ) }}
 

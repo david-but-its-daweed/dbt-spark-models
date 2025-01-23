@@ -2,10 +2,10 @@
     schema='onfy',
     materialized='view',
     meta = {
-      'model_owner' : '@easaltykova',
+      'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': 'onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring'
     }
 ) }}
 
