@@ -14,7 +14,7 @@ SELECT DISTINCT
     "bq" AS table_type,
     "holistics" AS slo_type
 FROM {{ ref("slo_details") }} AS sds
-INNER JOIN {{ ref('holistics_api_data') }} AS hap
+INNER JOIN holistics.holistics_api_data AS hap
     ON TRIM(sds.business_name) = TRIM(hap.dashboard_title)
 WHERE
     hap.full_table_name IS NOT NULL

@@ -30,8 +30,9 @@ dependencies AS (
         deps.dag_id,
         deps.task_id,
         deps.output_dag_id,
-        deps.output_task_id
-    FROM platform.dependency_producers AS deps
+        deps.output_task_id,
+        deps.partition_date
+    FROM {{ ref('dependency_producers') }} AS deps
     LEFT JOIN slo_tables
         ON
             deps.output_name = slo_tables.table_name
@@ -99,29 +100,30 @@ ftu AS (
         END)
 ),
 
-spark_updated_tables AS (
-    SELECT
-        table_full_name AS table_name,
-        'spark' AS table_type
-    FROM platform.beacon
-    WHERE create_datetime / 1000 >= UNIX_TIMESTAMP(DATE(NOW()) - INTERVAL 1 DAY)
-),
+-- spark_updated_tables AS (
+--     SELECT
+--         table_full_name AS table_name,
+--         'spark' AS table_type
+--     FROM platform.beacon
+--     WHERE create_datetime / 1000 >= UNIX_TIMESTAMP(DATE(NOW()) - INTERVAL 1 DAY)
+-- ),
 
-dates AS (
-    SELECT
-        dates.id,
-        dates.day_of_week_no
-    FROM mart.dim_date AS dates
-    WHERE
-        dates.id <= TO_DATE(NOW())
-        AND dates.id >= TO_DATE(NOW()) - INTERVAL 3 MONTH
-),
+-- dates AS (
+--     SELECT
+--         dates.id,
+--         dates.day_of_week_no
+--     FROM mart.dim_date AS dates
+--     WHERE
+--         dates.id <= TO_DATE(NOW())
+--         AND dates.id >= TO_DATE(NOW()) - INTERVAL 3 MONTH
+-- ),
 
 final_data AS (
     SELECT
         dependencies.source_id,
-        airflow_data.partition_date,
-        dates.day_of_week_no,
+        dependencies.partition_date,
+        (DAYOFWEEK(dependencies.partition_date) + 5) % 7 + 1 AS day_of_week_no,
+        -- dates.day_of_week_no,
         airflow_data.run_id,
         dependencies.input_name,
         dependencies.input_type,
@@ -150,21 +152,21 @@ final_data AS (
         ROUND(COALESCE(ftu.duration, airflow_data.duration) / 60) AS duration,
         airflow_data.try_number,
         COALESCE(ftu.table_name IS NOT NULL, FALSE) AS is_ftu_record,
-        COALESCE(airflow_data.run_cnt = 1, FALSE) AS is_daily,
+        COALESCE(airflow_data.run_cnt = 1, FALSE) AS is_daily
         -- COALESCE(aftus.partition_date IS NOT NULL, FALSE) AS is_output_has_ftu_sensor,
-        COALESCE(dependencies.input_type == 'spark' AND sut.table_name IS NULL, FALSE) AS is_not_updated_last_day
+        -- COALESCE(dependencies.input_type == 'spark' AND sut.table_name IS NULL, FALSE) AS is_not_updated_last_day
     FROM dependencies
-    LEFT JOIN dates
+    -- LEFT JOIN dates
     LEFT JOIN airflow_data
         ON
             dependencies.dag_id = airflow_data.dag_id
             AND dependencies.task_id = airflow_data.task_id
-            AND dates.id = airflow_data.partition_date
+            AND dependencies.partition_date = airflow_data.partition_date
     LEFT JOIN ftu
         ON
             dependencies.input_name = ftu.table_name
             AND dependencies.input_type = ftu.platform
-            AND dates.id = ftu.partition_date
+            AND dependencies.partition_date = ftu.partition_date
     -- LEFT JOIN airflow_ftu_sensors AS aftus
     --     ON
     --         dependencies.output_dag_id = aftus.dag_id
@@ -172,13 +174,13 @@ final_data AS (
     --         AND dependencies.input_type = aftus.sensor_type
     --         AND dates.id = aftus.partition_date
 
-    LEFT JOIN spark_updated_tables AS sut
-        ON
-            dependencies.input_name = sut.table_name
-            AND dependencies.input_type = sut.table_type
+    -- LEFT JOIN spark_updated_tables AS sut
+    --     ON
+    --         dependencies.input_name = sut.table_name
+    --         AND dependencies.input_type = sut.table_type
 
-    WHERE
-        airflow_data.partition_date IS NOT NULL
+    -- WHERE
+    --     airflow_data.partition_date IS NOT NULL
 )
 
 SELECT
