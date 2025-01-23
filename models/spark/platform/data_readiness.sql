@@ -167,20 +167,20 @@ final_data AS (
             dependencies.input_name = ftu.table_name
             AND dependencies.input_type = ftu.platform
             AND dependencies.partition_date = ftu.partition_date
-    -- LEFT JOIN airflow_ftu_sensors AS aftus
-    --     ON
-    --         dependencies.output_dag_id = aftus.dag_id
-    --         AND dependencies.input_name = aftus.sensor_table_name
-    --         AND dependencies.input_type = aftus.sensor_type
-    --         AND dates.id = aftus.partition_date
+-- LEFT JOIN airflow_ftu_sensors AS aftus
+--     ON
+--         dependencies.output_dag_id = aftus.dag_id
+--         AND dependencies.input_name = aftus.sensor_table_name
+--         AND dependencies.input_type = aftus.sensor_type
+--         AND dates.id = aftus.partition_date
 
-    -- LEFT JOIN spark_updated_tables AS sut
-    --     ON
-    --         dependencies.input_name = sut.table_name
-    --         AND dependencies.input_type = sut.table_type
+-- LEFT JOIN spark_updated_tables AS sut
+--     ON
+--         dependencies.input_name = sut.table_name
+--         AND dependencies.input_type = sut.table_type
 
-    -- WHERE
-    --     airflow_data.partition_date IS NOT NULL
+-- WHERE
+--     airflow_data.partition_date IS NOT NULL
 )
 
 SELECT
