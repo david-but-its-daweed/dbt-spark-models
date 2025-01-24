@@ -75,6 +75,7 @@ customers as (
     grades.grade,
     grades_prob.grade_prob as grade_probability,
     grades_initial.grade as initial_grade,
+    grades_current.grade as current_grade,
     first_deal_planning_volume,
     first_deal_planning_currency,
     first_deal_planning_volume_usd,
@@ -83,6 +84,7 @@ customers as (
     left join grades on coalesce(m.grade, 0) = grades.value
     left join grades_prob on coalesce(m.grade_probability, 0) = grades_prob.value
     left join grades grades_initial on coalesce(m.initial_grade, 0) = grades_initial.value
+    left join grades grades_current on coalesce(m.current_grade, 0) = grades_current.value
 
     where next_effective_ts_msk is null
 ),
@@ -139,6 +141,7 @@ select distinct
     coalesce(grade, "unknown") as grade,
     coalesce(grade_probability, "unknown") as grade_probability,
     coalesce(initial_grade, "unknown") as initial_grade,
+    coalesce(current_grade, "unknown") as current_grade,
     amo_crm_id, 
     amo_id, 
     invited_by_promo,

@@ -10,8 +10,36 @@
 ) }}
 
 
+WITH current_grade AS (
+    WITH exploded AS (
+        SELECT _id,
+               EXPLODE(gradeInfoHistory) AS grade_info
+        FROM {{ ref('scd2_customers_snapshot') }}
+    ),
+    
+         sorted AS (
+        SELECT _id,
+               grade_info
+        FROM exploded
+        ORDER BY _id, grade_info.utms DESC
+    ),
+    
+         main AS (
+        SELECT _id,
+               COLLECT_LIST(grade_info) AS sorted_grade_info
+        FROM sorted
+        GROUP BY _id
+    )
+    
+    
+    SELECT _id,
+           sorted_grade_info[0].grade AS current_grade
+    FROM main
+)
+
+
 SELECT
-    _id AS customer_id,
+    t1._id AS customer_id,
     millis_to_ts_msk(utms) AS update_ts_msk,
     companyName AS company_name,
     est AS year_of_establishment,
@@ -26,6 +54,7 @@ SELECT
     isPartner AS is_partner,
     gradeInfo.grade AS grade,
     initialGrade AS initial_grade,
+    t2.current_grade,
     gradeInfo.prob AS grade_probability,
     firstDealPlanningVolume.amount AS first_deal_planning_volume,
     firstDealPlanningVolume.ccy AS first_deal_planning_currency,
@@ -34,7 +63,8 @@ SELECT
     cnpj,
     TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
     TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
-FROM {{ ref('scd2_customers_snapshot') }}
+FROM {{ ref('scd2_customers_snapshot') }} AS t1
+LEFT JOIN current_grade AS t2 ON t1._id = t2._id
 
 
 
