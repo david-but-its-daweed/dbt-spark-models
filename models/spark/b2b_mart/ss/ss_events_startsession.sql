@@ -113,6 +113,12 @@ SELECT
   case when utm_source is Null and gad_source is not null then 'unrecognized_google_advertising' else utm_source end as utm_source ,
   utm_medium,
   utm_campaign,
+  CASE 
+        WHEN POSITION('gclid=' IN pageUrl) > 0 THEN
+            SUBSTRING(pageUrl FROM POSITION('gclid=' IN pageUrl) + 6 FOR
+                      COALESCE(NULLIF(POSITION('&' IN SUBSTRING(pageUrl FROM POSITION('gclid=' IN pageUrl) + 6)), 0) - 1, LENGTH(pageUrl)))
+        ELSE NULL
+     END AS gclid ,
   coalesce(bot_flag,0) as bot_flag
 FROM
    {{ source('b2b_mart', 'device_events') }} AS de
