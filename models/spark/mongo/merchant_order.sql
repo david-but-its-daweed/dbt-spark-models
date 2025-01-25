@@ -218,7 +218,9 @@ SELECT
     ), NULL) AS cancelled_by_jl_info,
     cft,
     ci.t AS user_ordered_time_utc,
-    fi.isfa AS is_fulfillment_allowed,
-    fi.fat AS fulfillment_allowed_time,
-    fi.oat AS offset_approved_time
+    IF(fi IS NOT NULL, NAMED_STRUCT(
+        'is_fulfillment_allowed', fi.isfa,
+        'fulfillment_allowed_time', fi.fat,
+        'offset_approved_time', fi.oat
+    ), NULL) AS fulfillment_info
 FROM {{ source('mongo', 'merchant_order_orders_daily_snapshot') }}
