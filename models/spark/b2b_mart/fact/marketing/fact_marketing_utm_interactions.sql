@@ -18,13 +18,15 @@ utm_source,
 case when utm_source = 'unrecognized_google_advertising' and utm_medium is Null then 'unrecognized_google_advertising' else utm_medium end utm_medium ,
 utm_campaign, 
 case when utm_source is Null and utm_medium is Null  then 'organic' else 'advertising' end as traffic_type,
+gclid,
 ---row_number() Over(partition by user_id order by event_ts_msk ) rn_1,
 ---row_number() Over(partition by user_id order by event_ts_msk desc ) rn_2,
 'events' as data_source
 
 from 
   {{ ref('ss_events_startsession') }}
-where landing = 'pt-br' and bot_flag = 0 
+where landing = 'pt-br'
+    and bot_flag = 0 
 ----qualify max(bot_flag) Over(partition by user_id order by event_msk_date ) = 0
 ),
 interactions as (
@@ -60,6 +62,7 @@ when  type = 'Offline' then 'Offline'
 when coalesce(i.utm_source,i.source) is null then 'organic'
 else  'advertising'
   end as traffic_type,
+null as gclid, 
 ---row_number() Over(partition by user_id order by interaction_create_time ) rn_1,
 ---row_number() Over(partition by user_id order by interaction_create_time desc ) rn_2,
 'admin' as data_source
