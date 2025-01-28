@@ -29,6 +29,8 @@
          and  type in ( 'sampleCheckoutOpen',
                         'pageLeave',
                         'userProfileClick',
-                        'addToCart'
+                        'addToCart',
+                        'checkoutStartClick',
+                        'checkoutFinishClick'
                         )
                             
