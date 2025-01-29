@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: adtech_revenue
+    description: Table with info about adtech_revenue per device_id, user_id and real_user_id
+    columns:
+      - name: date_msk
+        description: Order date (msk)
+      - name: device_id
+        description: User device ID (In case of app reinstallation, `device_id` is reset. On `web`, `device_id` can expire)
+      - name: user_id
+        description: User ID
+      - name: real_user_id
+        description: Unique user ID, not account ID [`user_id`] (solves the problem that the same user can have multiple `user_id` and have multiple devices). All devices within each connected graph are merged into one user. More details can be found here https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
+      - name: country_code
+        description: Country code (A2 code).
+      - name: platform
+        description: User device platform
+      - name: adtech_revenue
+        description: Revenue from Adtech

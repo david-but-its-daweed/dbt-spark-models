@@ -33,6 +33,9 @@ sources:
       - name: dim_joom_select_proposal
       - name: dim_product_review
       - name: unclassified_events
+      - name: dim_device
+      - name: adtech_revenues
+      - name: link_device_real_user
       
   - name: cube
     tables:
