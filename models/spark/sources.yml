@@ -126,7 +126,6 @@ sources:
       - name: s3_accesses_with_tables
       - name: s3_inventory_with_tables
       - name: context_product_counters_v5
-      - name: fact_removed_device_event
       - name: table_dependencies_v2
       - name: table_producers
       - name: manual_tables_bq_seed
