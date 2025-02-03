@@ -42,4 +42,4 @@ LEFT JOIN {{ ref("effective_start_dates") }} AS tables_esd
         AND dr.partition_date = tables_esd.partition_date
 WHERE
     dr.partition_date > DATE(NOW()) - INTERVAL 2 MONTH
-    AND dr.partition_date < DATE(NOW())
+    AND dr.partition_date <= DATE(NOW())
