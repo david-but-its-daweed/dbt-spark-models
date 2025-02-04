@@ -54,6 +54,8 @@ SELECT
     order_parcel.store_id,
     store.name AS store_name,
     store_delivery.express,
+    manufacturer.name AS manufacturer_name,
+    manufacturer.short_name AS manufacturer_short_name,
     COALESCE(order_paketshop.order_id IS NOT NULL, FALSE) AS is_packetshop,
     order_parcel.delivery_price AS parcel_delivery_price,
     order_parcel_item.product_id,
@@ -75,6 +77,10 @@ LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_item') }} AS order_parcel_
     ON
         order_parcel.id = order_parcel_item.order_parcel_id
         AND order_parcel_item.type = 'PRODUCT'
+LEFT JOIN {{ source('pharmacy_landing', 'product') }} AS product
+    ON order_parcel_item.product_id = product.id
+LEFT JOIN {{ source('pharmacy_landing', 'manufacturer') }} AS manufacturer
+    ON product.manufacturer_id = manufacturer.id
 LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS store
     ON
         store.id = order_parcel.store_id
