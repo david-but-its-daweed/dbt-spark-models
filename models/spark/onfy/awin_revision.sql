@@ -73,15 +73,15 @@ select
     sum(products_price_before_vat - coalesce(products_price_refund_before_vat, 0)) as products_price_before_vat_final,
     sum(products_price_before_vat) as products_price_before_vat,
     case
-        when sum(discount) = 0 and purchase_num = 1 then 0.15
-        when sum(discount) > 0 and purchase_num = 1 then 0.1
-        when sum(discount) = 0 and purchase_num > 1 then 0.045
+        when sum(discount) = 0 and purchase_num = 1 then 0.12
+        when sum(discount) > 0 and purchase_num = 1 then 0.08
+        when sum(discount) = 0 and purchase_num > 1 then 0.04
         when sum(discount) > 0 and purchase_num > 1 then 0.03
     end as comission,
     case
-        when sum(discount) = 0 and purchase_num = 1 then 0.15
-        when sum(discount) > 0 and purchase_num = 1 then 0.1
-        when sum(discount) = 0 and purchase_num > 1 then 0.045
+        when sum(discount) = 0 and purchase_num = 1 then 0.12
+        when sum(discount) > 0 and purchase_num = 1 then 0.08
+        when sum(discount) = 0 and purchase_num > 1 then 0.04
         when sum(discount) > 0 and purchase_num > 1 then 0.03
     end * sum(products_price_before_vat) as comission_sum
 from {{source('onfy', 'ads_dashboard')}} as ad
