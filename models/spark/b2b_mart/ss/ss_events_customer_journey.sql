@@ -12,25 +12,48 @@
     }
 ) }}
 
-                 
- Select
-    user['userId'] AS user_id,
-    de.device.id as device_id,
-    type,
-    event_ts_msk,
-    CAST(event_ts_msk AS DATE) AS event_msk_date,
-    payload.pageUrl,
-    payload.pageName,
-    payload.source,
-    payload.isRegistrationCompleted,
-    payload.productId as product_id
-    from  {{ source('b2b_mart', 'device_events') }} AS de
-    where partition_date >= '2024-04-01'
-         and  type in ( 'sampleCheckoutOpen',
-                        'pageLeave',
-                        'userProfileClick',
-                        'addToCart',
-                        'checkoutStartClick',
-                        'checkoutFinishClick'
-                        )
-                            
+
+WITH bots AS (
+    SELECT device_id,
+           MAX(1) AS bot_flag
+    FROM threat.bot_devices_joompro
+    WHERE is_device_marked_as_bot
+       OR is_retrospectively_detected_bot
+    GROUP BY 1
+)
+
+
+SELECT user['userId'] AS user_id,
+       de.device.id AS device_id,
+       type,
+       event_ts_msk,
+       CAST(event_ts_msk AS DATE) AS event_msk_date,
+       payload.pageUrl,
+       payload.pageName,
+       payload.source,
+       payload.isRegistrationCompleted,
+       payload.productId AS product_id,
+       payload.position
+FROM {{ source('b2b_mart', 'device_events') }} AS de
+LEFT JOIN bots ON de.device.id = bots.device_id
+WHERE partition_date >= '2024-04-01'
+  AND bot_flag IS NULL
+  AND type IN (
+        'rfqOpen',
+        'cartOpen',
+        'addToCart',
+        'pageLeave',
+        'orderOpen',
+        'ordersOpen',
+        'productClick',
+        'categoryOpen',
+        'categoryClick',
+        'contactUsClick',
+        'userProfileClick',
+        'removeOneFromCart',
+        'sampleCheckoutOpen',
+        'checkoutStartClick',
+        'checkoutFinishClick',
+        'contactUsRequestSubmit',
+        'checkoutCustomizationButtonClick'
+  )
