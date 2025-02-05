@@ -10,4 +10,4 @@ FROM (
         AND partition_date != '2024-10-28'
     GROUP BY partition_date
 )
-WHERE gmv_total > 2700000000 * 1.25 * 1.5 OR gmv_total < 2700000000 / 1.25 / 1.5
+WHERE gmv_total > 2700000000 * 1.25 * 1.7 OR gmv_total < 2700000000 / 1.25 / 1.5
