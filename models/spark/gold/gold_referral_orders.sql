@@ -62,7 +62,10 @@ product_purchase_100 AS (
         payload.orderid AS order_id,
         partition_date
     FROM {{ source("mart", "device_events") }}
-    WHERE type = "productPurchase"
+    WHERE
+        1 = 1
+        AND type = "productPurchase"
+        AND partition_date >= DATE_TRUNC("YEAR", DATE_SUB(CURRENT_DATE(), 2 * 365))
 ),
 
 orders_old AS (
