@@ -159,7 +159,30 @@ order_v2_mongo AS (
                         '679d373163be474e81be1fe7',
                         '679d2b1861c09318cde8191f',
                         '679d258763be474e81be1ee7',
-                        '679d2c6e63be474e81be1f56'
+                        '679d2c6e63be474e81be1f56',
+'679d3b6561c09318cde819ea',
+'67a10f1a72b672afc4f47b91',
+'67a11ae562f5db5e83f0ced7',
+'67a0ff6909fec9cbdd45b05b',
+'67a10ea072b672afc4f47b85',
+'67a11bc162f5db5e83f0cee5',
+'67a12a1762f5db5e83f0f2e2',
+'67a2786f72b672afc4f4b124',
+'67a25cb262f5db5e83f0fc53',
+'67a2315672b672afc4f4b05f',
+'67a257f672b672afc4f4b0ba',
+'67a2418362f5db5e83f0fc0e',
+'67a38493e5e4959a3b39f0f1',
+'67a3aa15950775cbf83f5a77',
+'67a39736e5e4959a3b39f131',
+'67a38149e5e4959a3b39f0cb',
+'67a3ac0d950775cbf83f5a8b',
+'67a4a81d54470e5eb2c34048',
+'67a503b1fefad648d1bea592',
+'67a50ea9ac4136f0de8615fa',
+'67a50e37ac4136f0de8615f2',
+'67a66860ad358c9c8df75052',
+'67a661d1a0df8d70aee629b3'
         
     ) AND fo.next_effective_ts_msk IS NULL) or 
         (fo.last_order_status < 60
