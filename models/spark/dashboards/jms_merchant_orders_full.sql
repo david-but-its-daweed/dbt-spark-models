@@ -10,7 +10,7 @@
         'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true',        
-        'bigquery_partitioning_date_column': 'order_date_utc',
+        'bigquery_partitioning_date_column': 'order_month_utc',
     }
   )
 }}
@@ -28,8 +28,9 @@ WITH cr_data AS (
 
 merchant_orders AS (
     SELECT
-        TRUNC(TO_DATE(created_time_utc), 'MM') AS order_month_utc,
-        TO_DATE(created_time_utc) AS order_date_utc,
+        marketplace_created_time,
+        TRUNC(TO_DATE(marketplace_created_time), 'MM') AS order_month_utc,
+        TO_DATE(marketplace_created_time) AS order_date_utc,
 
         merchant_id,
         store_id,
@@ -58,6 +59,7 @@ merchant_orders AS (
         is_fraud,
 
         cft,
+        created_time_utc,
         user_ordered_time_utc,
         fulfilled_online_time_utc,
         shipped_time_utc,
@@ -86,6 +88,8 @@ jl_orders AS (
 SELECT
     mo.order_month_utc,
     mo.order_date_utc,
+
+    mo.marketplace_created_time AS order_datetime_utc,
 
     mo.merchant_id,
     gm.merchant_name,
@@ -134,11 +138,12 @@ SELECT
     mo.fulfilled_online_time_utc,
     mo.shipped_time_utc,
     mo.updated_time_utc,
-    mo.cancelled_time_utc
+    mo.cancelled_time_utc,
+    mo.created_time_utc
 FROM merchant_orders AS mo
 LEFT JOIN cr_data AS cr
     ON
-        mo.order_date_utc BETWEEN cr.effective_date AND cr.next_effective_date
+        mo.marketplace_created_time BETWEEN cr.effective_date AND cr.next_effective_date
         AND mo.merchant_currency = cr.currency_code
 LEFT JOIN {{ ref('gold_products') }} AS gp ON mo.product_id = gp.product_id
 LEFT JOIN {{ ref('gold_merchants') }} AS gm ON mo.merchant_id = gm.merchant_id
