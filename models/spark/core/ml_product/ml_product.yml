@@ -16,5 +16,7 @@ models:
         description: Country code (A2 code).
       - name: platform
         description: User device platform
+      - name: app_entity
+        description: The name of the online store where the order was placed
       - name: adtech_revenue
         description: Revenue from Adtech
