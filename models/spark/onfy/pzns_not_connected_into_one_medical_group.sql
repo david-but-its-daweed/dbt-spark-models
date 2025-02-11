@@ -12,8 +12,8 @@
 
 ---------------------------------------------------------------------
 
--- RU: Собираем pzn, у которых есть аналоги, из других medical_id групп 
--- ENG: Collect pzn that have analogs from other medical_id groups 
+-- RU: Собираем pzn, у которых есть аналоги, из других medical_id групп (при условии наличия хотя бы одного заказа в истории)
+-- ENG: Collect pzn that have analogs from other medical_id groups (if there has been at least one order in history)
 
 -- They are the same analogues
 --     the same active ingredients
@@ -23,8 +23,12 @@
 
 ---------------------------------------------------------------------
 
+WITH pzns_with_orders AS (
+    SELECT DISTINCT pzn
+    FROM {{ source('onfy', 'orders_info') }}
+),
 
-WITH product_ingredient AS (
+product_ingredient AS (
     SELECT
         medicine.country_local_id AS pzn,
         medicine_ingredient.medicine_id AS product_id,
@@ -53,13 +57,14 @@ WITH product_ingredient AS (
         AND medicine_ingredient.quantity IS NOT NULL
         AND medicine_ingredient.unit IS NOT NULL
         AND dosage_form.short_name IS NOT NULL
-    ORDER BY
-        pzn,
-        dosage_form_short_name,
-        ingredient.name,
-        medicine_ingredient.index,
-        medicine_ingredient.quantity,
-        medicine_ingredient.unit
+),
+
+product_ingredient_with_orders AS (
+    SELECT product_ingredient.*
+    FROM product_ingredient
+    INNER JOIN
+        pzns_with_orders
+        ON product_ingredient.pzn = pzns_with_orders.pzn
 ),
 
 base AS (
@@ -71,7 +76,7 @@ base AS (
         manufacturer_name,
         dosage_form_short_name,
         dosage_form_long_name
-    FROM product_ingredient
+    FROM product_ingredient_with_orders
     GROUP BY
         pzn,
         product_id,
@@ -94,7 +99,7 @@ active_ingredients AS (
     SELECT
         product_id,
         SORT_ARRAY(COLLECT_LIST(STRUCT(index, name, quantity, unit))) AS tmp_active
-    FROM product_ingredient
+    FROM product_ingredient_with_orders
     WHERE is_active = TRUE
     GROUP BY product_id
 ),
@@ -110,7 +115,7 @@ extra_ingredients AS (
     SELECT
         product_id,
         SORT_ARRAY(COLLECT_LIST(STRUCT(index, name, quantity, unit))) AS tmp_extra
-    FROM product_ingredient
+    FROM product_ingredient_with_orders
     WHERE is_active = FALSE
     GROUP BY product_id
 ),
