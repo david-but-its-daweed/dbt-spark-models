@@ -1,5 +1,6 @@
 {{
   config(
+    enabled=false,
     materialized='incremental',
     alias='proposals_for_backend',
     file_format='parquet',
