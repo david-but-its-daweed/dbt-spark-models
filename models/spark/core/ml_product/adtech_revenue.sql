@@ -18,7 +18,21 @@ SELECT
     link.real_user_id,
     COALESCE(active_devices.country_code, UPPER(dim_device.pref_country), UPPER(adtech.country)) AS country_code,
     COALESCE(active_devices.platform, dim_device.os_type, adtech.os_type) AS platform,
-    COALESCE(active_devices.app_entity, dim_device.app_entity) AS app_entity,
+    COALESCE(
+        active_devices.app_entity,
+        CASE
+            WHEN dim_device.app_entity = 'joom'
+                THEN 'Joom'
+            WHEN dim_device.app_entity = 'joom_geek'
+                THEN 'Joom Geek'
+            WHEN dim_device.app_entity = 'cool_be'
+                THEN 'CoolBe'
+            WHEN dim_device.app_entity = 'cool_be_com'
+                THEN 'CoolBeCom'
+            WHEN dim_device.app_entity = 'cool_be_trending'
+                THEN 'CoolBe Trending'
+        END
+    ) AS app_entity,
     SUM(adtech.adtech_revenue) AS adtech_revenue
 FROM {{ source('mart', 'adtech_revenues') }} AS adtech
 LEFT JOIN {{ source('mart', 'dim_device') }} AS dim_device -- используем в случае, если по gold не находится пара (из-за стыка дат)
