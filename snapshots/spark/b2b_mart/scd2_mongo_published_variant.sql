@@ -24,7 +24,7 @@
         origColors AS orig_colors,
         origMainImageUrl AS orig_main_image_url,
         productid AS product_id,
-        CAST(null AS STRING) AS public,
+        CAST('' AS STRING) AS public,
         MILLIS_TO_TS_MSK(createdTimeMs) AS published_ts_msk,
         shippingWeight AS shipping_weight,
         sku,
