@@ -15,6 +15,9 @@ SELECT     _id as product_id,
            level_1_category_name,
            level_2_category_name,
            level_3_category_name, 
+           level_1_category_id ,
+           level_2_category_id,
+           level_3_category_id,
            millis_to_ts_msk(createdTimeMs) as created_ts_msk,
            date(millis_to_ts_msk(createdTimeMs)) as created_date,
            dangerousKind as dangerous_kind,
@@ -39,8 +42,8 @@ select category_id,
     level_2_category.name as level_2_category_name,
     level_3_category.name as level_3_category_name, 
     level_1_category.id as level_1_category_id ,
-    level_1_category.id as level_2_category_id,
-    level_1_category.id as level_3_category_id
+    level_2_category.id as level_2_category_id,
+    level_3_category.id as level_3_category_id
     from {{ source('mart', 'category_levels') }}
 ) cat on pp.categoryId = cat.category_id
 where dbt_valid_to is null
