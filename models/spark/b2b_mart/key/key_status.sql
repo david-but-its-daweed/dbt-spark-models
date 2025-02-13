@@ -10,14 +10,12 @@
 ) }}
 
 
-SELECT
-    key,
-    status_id,
-    status_name
+SELECT key,
+       CAST(id AS INT) AS id,
+       name
 FROM (
-    SELECT
-        key,
-        EXPLODE(values) AS (status_id, status_name)
+    SELECT key,
+           EXPLODE(values) AS (id, name)
     FROM {{ source('mongo', 'b2b_core_enumregistry_daily_snapshot') }}
 ) AS m
 ORDER BY 1, 2
