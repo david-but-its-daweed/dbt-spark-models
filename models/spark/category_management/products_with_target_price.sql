@@ -1,5 +1,6 @@
 {{
   config(
+    enabled=false,
     materialized='incremental',
     alias='products_with_target_price',
     file_format='parquet',

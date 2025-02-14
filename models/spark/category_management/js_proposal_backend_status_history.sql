@@ -1,5 +1,6 @@
 {{
   config(
+    enabled=false,
     materialized='table',
     alias='js_proposal_backend_status_history',
     file_format='parquet',

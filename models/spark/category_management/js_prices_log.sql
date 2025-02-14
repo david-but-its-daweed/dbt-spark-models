@@ -1,5 +1,6 @@
 {{
   config(
+    enabled=false,
     materialized='table',
     alias='js_prices_log',
     file_format='parquet',

@@ -29,7 +29,6 @@ sources:
       - name: dim_merchant
       - name: dim_date
       - name: dim_pair_currency_rate
-      - name: dim_published_variant_with_merchant
       - name: dim_joom_select_proposal
       - name: dim_product_review
       - name: unclassified_events
@@ -206,7 +205,6 @@ sources:
   - name: category_management
     tables:
       - name: joom_select_manual_criteria
-      - name: js_merchant_discount_rate
       - name: joom_select_product_white_list
       - name: joom_select_product_black_list
       - name: categories_with_ce_requirements
