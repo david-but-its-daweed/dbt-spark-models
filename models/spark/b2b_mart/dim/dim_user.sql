@@ -23,7 +23,6 @@ SELECT
   TIMESTAMP(t.update_ts_msk) AS update_ts_msk,
   t.country,
   reject_reason.reason as reject_reason,
-  hr.reason as hold_reason,
   key_validation_status.status as validation_status,
   t.owner_id AS owner_id,
   t.amo_crm_id,
@@ -51,6 +50,5 @@ left join {{ ref('key_validation_reject_reason') }} rr on cast(funnel_state.rjRs
 left join {{ ref('key_partner_type') }} pt on cast(t.partner_type as int) = cast(pt.id as int)
 left join {{ ref('key_validation_status') }} on key_validation_status.id = t.validation_status
 left join {{ ref('key_validation_reject_reason') }} reject_reason on reject_reason.id = t.reject_reason
-left join {{ ref('key_validation_reject_reason') }} hr on  cast(hr.id as int) = t.hold_reason
 left join phone_number pn ON pn.user_id = t.user_id
 where not is_test_user or is_test_user is null
