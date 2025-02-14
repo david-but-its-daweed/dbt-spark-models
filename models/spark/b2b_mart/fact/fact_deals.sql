@@ -90,13 +90,18 @@ paymentmethod AS (
     WHERE row_n = 1
 ),
     
-friendly_statuses as (
-select 
-    val as friendly_status, 
-    lower(replace(key,'issue[dot]status[dot]','')) as key_j 
-from {{ source('mongo', 'b2b_core_i18ndata_daily_snapshot') }}
-where langCode = 'en' and
-key like  '%issue[dot]status[dot]%'
+friendly_statuses AS (
+    SELECT lower(replace(key,'issue[dot]status[dot]','')) AS key_j,
+           MAX(
+               CASE
+                   WHEN lower(replace(key,'issue[dot]status[dot]','')) = 'delivering' THEN 'Delivery'
+                   ELSE val
+               END
+           ) AS friendly_status
+    FROM {{ source('mongo', 'b2b_core_i18ndata_daily_snapshot') }}
+    WHERE langCode = 'en'
+      AND key LIKE '%issue[dot]status[dot]%'
+    GROUP BY 1
 )
 
 
