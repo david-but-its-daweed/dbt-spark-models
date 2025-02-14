@@ -14,5 +14,5 @@ select key as id, value as reason
 from (
     select explode(values)
     from {{ source('mongo', 'b2b_core_enumregistry_daily_snapshot') }}
-    where key = 'user.rejectReason'
+    where key = 'user.rejectReason' or key = 'user.onHoldReason'
     )
