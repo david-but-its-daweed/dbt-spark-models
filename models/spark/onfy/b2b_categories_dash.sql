@@ -134,15 +134,18 @@ sold_products as
 (
     select 
         date_trunc('day', order_created_time_cet) as order_day,
+        store_name,
         pzn,
         product_id,
         product_name,
+        sum(before_products_price) as before_products_price,
         sum(products_price) as products_price,
         sum(quantity) as quantity,
         count(distinct order_id) as orders
     from {{source('onfy', 'orders_info')}}
     group by 
         date_trunc('day', order_created_time_cet),
+        store_name,
         pzn,
         product_id,
         product_name
