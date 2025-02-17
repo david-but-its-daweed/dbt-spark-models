@@ -9,23 +9,23 @@
 ) }}
 
 
-select 
-_id as offer_id,
-brokerTableLink as broker_table_link,
-comment,
-csmrReqId as customer_request_id,
-dealId as deal_id,
-merchantId as merchant_id,
-ot.type as offer_type,
-orderId as order_id,
-ko.status,
-userId as user_id,
-brokerProps.link as broker_link,
-millis_to_ts_msk(ctms) as created_time,
-millis_to_ts_msk(utms) as updated_time,
-TIMESTAMP(dbt_valid_from) as effective_ts_msk,
-TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
-from {{ ref('scd2_customer_offers_snapshot') }} co
-left join {{ ref('key_offer_status') }} ko on co.status = cast(ko.id as int)
-left join {{ ref('key_offer_type') }} ot on co.offerType = cast(ot.id as int)
-
+SELECT 
+    _id AS offer_id,
+    brokertablelink AS broker_table_link,
+    comment,
+    csmrreqid AS customer_request_id,
+    dealid AS deal_id,
+    merchantid AS merchant_id,
+    ot.type AS offer_type,
+    orderid AS order_id,
+    ko.status,
+    userid AS user_id,
+    moderatorId AS moderator_id,
+    brokerprops.link AS broker_link,
+    millis_to_ts_msk(ctms) AS created_time,
+    millis_to_ts_msk(utms) AS updated_time,
+    TIMESTAMP(dbt_valid_from) AS effective_ts_msk,
+    TIMESTAMP(dbt_valid_to) AS next_effective_ts_msk
+FROM {{ ref('scd2_customer_offers_snapshot') }} AS co
+LEFT JOIN {{ ref('key_offer_status') }} AS ko ON co.status = CAST(ko.id AS INT)
+LEFT JOIN {{ ref('key_offer_type') }} AS ot ON co.offertype = CAST(ot.id AS INT)
