@@ -3,12 +3,14 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
+    partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'priority_weight': '150'
+      'priority_weight': '150',
+      'bigquery_partitioning_date_column': 'partition_date'
     }
 ) }}
 
@@ -218,6 +220,7 @@ transactions_eur AS (
         transactions_psp.campaign,
         transactions_psp.order_created_time_cet,
         transactions_psp.transaction_date,
+        CAST(transactions_psp.transaction_date AS DATE) AS partition_date,
         CAST(price AS float) AS price,
         transactions_psp.currency,
         CAST(
@@ -264,6 +267,7 @@ transactions_usd AS (
         transactions_eur.campaign,
         transactions_eur.order_created_time_cet,
         transactions_eur.transaction_date,
+        CAST(transactions_eur.transaction_date AS DATE) AS partition_date,
         transactions_eur.price * eur.rate / usd.rate AS price,
         'USD' AS currency,
         transactions_eur.gmv_initial * eur.rate / usd.rate AS gmv_initial,

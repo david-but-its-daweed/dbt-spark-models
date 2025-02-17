@@ -1,11 +1,13 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    partition_by=['report_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_partitioning_date_column': 'report_date'
     }
 ) }}
 

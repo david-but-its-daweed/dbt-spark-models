@@ -1,11 +1,13 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    partition_by=['session_start_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_partitioning_date_column': 'session_start_date'
     }
 ) }}
 
@@ -155,6 +157,8 @@ output AS (
         FIRST_VALUE(utm_medium, TRUE) AS medium,
         MIN(event_ts_cet) AS session_start,
         MAX(event_ts_cet) AS session_end,
+        CAST(MIN(event_ts_cet) AS DATE) AS session_start_date,
+        CAST(MAX(event_ts_cet) AS DATE) AS session_end_date,
         MIN_BY(type, event_ts_cet) AS starting_session_event,
         MAX_BY(type, event_ts_cet) AS ending_session_event,
         COUNT(type) AS events_in_session,

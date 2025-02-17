@@ -2,11 +2,13 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
+    partition_by=['search_event_dt'],
     meta = {
       'model_owner' : '@andrewocean',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_partitioning_date_column': 'search_event_dt'
     }
 ) }}
 

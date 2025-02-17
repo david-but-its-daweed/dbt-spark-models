@@ -2,11 +2,13 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
+    partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_partitioning_date_column': 'partition_date'
     }
 ) }}
 
@@ -19,7 +21,7 @@ WITH product_names_cte AS (
 
 devices_mart_cte AS (
     SELECT
-        order.device_id,
+        orders.device_id,
         CASE
             WHEN device.app_type = 'WEB' AND device.device_type = 'DESKTOP' THEN 'web_desktop'
             WHEN device.app_type = 'WEB' AND device.device_type IN ('PHONE', 'TABLET') THEN 'web_mobile'
@@ -27,10 +29,10 @@ devices_mart_cte AS (
             WHEN device.app_type = 'IOS' THEN 'ios'
             ELSE device.app_type || '_' || device.device_type
         END AS app_device_type,
-        MIN(order.created) AS min_purchase_ts
-    FROM {{ source('pharmacy_landing', 'order') }} AS order
+        MIN(orders.created) AS min_purchase_ts
+    FROM {{ source('pharmacy_landing', 'order') }} AS orders
     INNER JOIN {{ source('pharmacy_landing', 'device') }} AS device
-        ON device.id = order.device_id
+        ON device.id = orders.device_id
     GROUP BY 1, 2
 )
 
@@ -46,6 +48,7 @@ SELECT
     DENSE_RANK() OVER (PARTITION BY ord.user_email_hash ORDER BY FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') ASC) AS purchase_num,
     ord.id AS order_id,
     FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') AS order_created_time_cet,
+    CAST(FROM_UTC_TIMESTAMP(ord.created, 'Europe/Berlin') AS DATE) AS partition_date,
     ord.city,
     ord.payment_method,
     order_parcel.id AS parcel_id,
@@ -87,7 +90,7 @@ LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS store
 INNER JOIN {{ source('pharmacy_landing', 'store_delivery') }} AS store_delivery
     ON
         store.id = store_delivery.store_id
-LEFT JOIN  {{ source('pharmacy_landing', 'price_applier_applied_for_object') }} as price_applier_applied_for_object
+LEFT JOIN {{ source('pharmacy_landing', 'price_applier_applied_for_object') }} AS price_applier_applied_for_object
     ON
         price_applier_applied_for_object.object_id = order_parcel_item.id
         AND price_applier_applied_for_object.object_type = 'ORDER_PARCEL_ITEM'
