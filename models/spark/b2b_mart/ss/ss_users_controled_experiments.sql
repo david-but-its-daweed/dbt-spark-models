@@ -41,7 +41,7 @@ exp as (
     select 
     user_id, 
     key as test,
-    value as group,
+    value as test_group,
     min(start_int_ts) as first_session_ts, 
     max(bot_flag) as bot_flag,
     min(event_ts_msk) as start_exp 
