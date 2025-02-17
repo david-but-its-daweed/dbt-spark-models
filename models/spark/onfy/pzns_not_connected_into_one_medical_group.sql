@@ -24,8 +24,11 @@
 ---------------------------------------------------------------------
 
 WITH pzns_with_orders AS (
-    SELECT DISTINCT pzn
+    SELECT
+        pzn,
+        SUM(products_price) AS gmv
     FROM {{ source('onfy', 'orders_info') }}
+    GROUP BY pzn
 ),
 
 product_ingredient AS (
@@ -60,7 +63,9 @@ product_ingredient AS (
 ),
 
 product_ingredient_with_orders AS (
-    SELECT product_ingredient.*
+    SELECT
+        product_ingredient.*,
+        pzns_with_orders.gmv
     FROM product_ingredient
     INNER JOIN
         pzns_with_orders
@@ -75,7 +80,8 @@ base AS (
         manufacturer_id,
         manufacturer_name,
         dosage_form_short_name,
-        dosage_form_long_name
+        dosage_form_long_name,
+        gmv
     FROM product_ingredient_with_orders
     GROUP BY
         pzn,
@@ -84,7 +90,8 @@ base AS (
         manufacturer_id,
         manufacturer_name,
         dosage_form_short_name,
-        dosage_form_long_name
+        dosage_form_long_name,
+        gmv
     ORDER BY
         pzn,
         product_id,
@@ -92,7 +99,8 @@ base AS (
         manufacturer_id,
         manufacturer_name,
         dosage_form_short_name,
-        dosage_form_long_name
+        dosage_form_long_name,
+        gmv
 ),
 
 active_ingredients AS (
@@ -136,6 +144,7 @@ final AS (
         base.manufacturer_name,
         base.dosage_form_short_name,
         base.dosage_form_long_name,
+        base.gmv,
         actives.active,
         extras.extra,
         STRUCT(actives.active AS active, extras.extra AS extra) AS ingredients
@@ -144,39 +153,79 @@ final AS (
         ON base.product_id = actives.product_id
     LEFT JOIN extras
         ON base.product_id = extras.product_id
+),
+
+full_joined_result AS (
+    SELECT
+        base.pzn,
+        base.product_id,
+        base.medicine_group_id,
+        base.manufacturer_id,
+        base.manufacturer_name,
+        base.dosage_form_short_name,
+        base.dosage_form_long_name,
+        base.active,
+        base.extra,
+        base.ingredients,
+        base.gmv,
+        SORT_ARRAY(ARRAY_AGG(DISTINCT analogs_all.pzn)) AS analog_pzns_all,
+        SORT_ARRAY(ARRAY_AGG(DISTINCT analogs_all.medicine_group_id)) AS analog_medicine_group_ids_all,
+        COUNT(DISTINCT analogs_all.pzn) AS analogs_count_all,
+        SORT_ARRAY(ARRAY_AGG(DISTINCT analogs.pzn)) AS analog_pzns,
+        SORT_ARRAY(ARRAY_AGG(DISTINCT analogs.medicine_group_id)) AS analog_medicine_group_ids,
+        COUNT(DISTINCT analogs.pzn) AS analogs_count
+    FROM final AS base
+    LEFT JOIN final AS analogs_all -- To gather analogs from the same medical_id_group (including target pzn) for ranking
+        ON
+            base.ingredients = analogs_all.ingredients
+            AND base.dosage_form_short_name = analogs_all.dosage_form_short_name
+            AND base.manufacturer_id = analogs_all.manufacturer_id
+    LEFT JOIN final AS analogs -- To gather analogs from different medical_id_groups
+        ON
+            base.ingredients = analogs.ingredients
+            AND base.product_id != analogs.product_id
+            AND base.medicine_group_id != analogs.medicine_group_id
+            AND base.dosage_form_short_name = analogs.dosage_form_short_name
+            AND base.manufacturer_id = analogs.manufacturer_id
+    GROUP BY
+        base.pzn,
+        base.product_id,
+        base.medicine_group_id,
+        base.manufacturer_id,
+        base.manufacturer_name,
+        base.dosage_form_short_name,
+        base.dosage_form_long_name,
+        base.active,
+        base.extra,
+        base.ingredients,
+        base.gmv
+    HAVING
+        analogs_count > 0
+),
+
+distinctArrays AS (
+    SELECT DISTINCT analog_pzns_all AS sortedArray
+    FROM full_joined_result
+),
+
+rankedArrays AS (
+    SELECT
+        sortedArray,
+        DENSE_RANK() OVER (ORDER BY CONCAT_WS(',', sortedArray)) AS group_id
+    FROM distinctArrays
 )
 
 SELECT
-    base.pzn,
-    base.product_id,
-    base.medicine_group_id,
-    base.manufacturer_id,
-    base.manufacturer_name,
-    base.dosage_form_short_name,
-    base.dosage_form_long_name,
-    base.active,
-    base.extra,
-    base.ingredients,
-    ARRAY_AGG(analogs.pzn) AS analog_pzns,
-    COUNT(analogs.pzn) AS analogs_count
-FROM final AS base
-LEFT JOIN final AS analogs
-    ON
-        SHA2(TO_JSON(base.ingredients), 256) = SHA2(TO_JSON(analogs.ingredients), 256)
-        AND base.product_id != analogs.product_id
-        AND base.medicine_group_id != analogs.medicine_group_id
-        AND base.dosage_form_short_name = analogs.dosage_form_short_name
-        AND base.manufacturer_id = analogs.manufacturer_id
-GROUP BY
-    base.pzn,
-    base.product_id,
-    base.medicine_group_id,
-    base.manufacturer_id,
-    base.manufacturer_name,
-    base.dosage_form_short_name,
-    base.dosage_form_long_name,
-    base.active,
-    base.extra,
-    base.ingredients
-HAVING
-    analogs_count > 0
+    r.group_id AS new_cluster_id,
+    full_joined_result.medicine_group_id,
+    full_joined_result.pzn,
+    full_joined_result.product_id,
+    full_joined_result.manufacturer_name AS product_name,
+    full_joined_result.manufacturer_id,
+    full_joined_result.dosage_form_short_name,
+    full_joined_result.gmv,
+    SUM(full_joined_result.gmv) OVER (PARTITION BY r.group_id) AS cluster_gmv
+FROM full_joined_result
+INNER JOIN rankedArrays AS r
+    ON full_joined_result.analog_pzns_all = r.sortedArray
+ORDER BY cluster_gmv DESC
