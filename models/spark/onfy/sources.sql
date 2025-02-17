@@ -2,12 +2,14 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
+    partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'priority_weight': '150'
+      'priority_weight': '150',
+      'bigquery_partitioning_date_column': 'partition_date'
     }
 ) }}
 
@@ -16,6 +18,7 @@ WITH sources AS (
         device_id,
         type,
         event_ts_cet AS source_dt,
+        CAST(event_ts_cet AS DATE) AS partition_date,
         LEAD(event_ts_cet) OVER (PARTITION BY device_id ORDER BY event_ts_cet) AS next_source_dt,
         COALESCE(
             CASE

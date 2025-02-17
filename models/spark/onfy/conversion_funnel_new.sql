@@ -1,11 +1,13 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    partition_by=['session_start_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_partitioning_date_column': 'session_start_date'
     }
 ) }}
 
@@ -215,31 +217,32 @@ WHERE rnk_payment_start = 1
 
 )
 
-, filter_double_payments as (
-SELECT 
-    device_id,
-    session_id,
-    session_num,
-    session_start,
-    session_end,
-    source,
-    campaign,
-    channel_type,
-    app_device_type,
-    CASE
-        WHEN session_start > min_order_dt THEN True
-        ELSE False
+, filter_double_payments AS (
+    SELECT 
+        device_id,
+        session_id,
+        session_num,
+        session_start,
+        CAST(session_start AS DATE) AS session_start_date,
+        session_end,
+        source,
+        campaign,
+        channel_type,
+        app_device_type,
+        CASE
+            WHEN session_start > min_order_dt THEN True
+            ELSE False
         END AS is_buyer,
-    minenv_type,
-    minimal_involvement_dt,
-    add_to_cart_dt,
-    cart_open_dt,
-    checkout_dt,
-    payment_start_dt,
-    payment_dt,
-    RANK() over(PARTITION BY device_id, payment_dt ORDER BY session_start) as rnk_session_payment
-FROM successful_payment_sessions
-WHERE rnk_payment = 1
+        minenv_type,
+        minimal_involvement_dt,
+        add_to_cart_dt,
+        cart_open_dt,
+        checkout_dt,
+        payment_start_dt,
+        payment_dt,
+        RANK() over(PARTITION BY device_id, payment_dt ORDER BY session_start) as rnk_session_payment
+    FROM successful_payment_sessions
+    WHERE rnk_payment = 1
 )
 
 SELECT *

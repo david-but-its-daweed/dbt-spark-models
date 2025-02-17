@@ -2,23 +2,25 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
+    partition_by=['event_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_partitioning_date_column': 'event_date'
     }
 ) }}
 
 WITH dates AS (
     SELECT DISTINCT
-        1 as key,
+        1 AS key,
         DATE(created) AS report_date
     FROM {{ source('pharmacy_landing', 'order') }}
     WHERE DATE(created) >= '2022-06-01'
 ),
 
-pzns_list as 
+pzns_list AS
 (
     SELECT DISTINCT 
         1 as key,
@@ -27,7 +29,7 @@ pzns_list as
     FROM {{ source('onfy', 'orders_info') }}
 ),
 
-pzns_by_date as 
+pzns_by_date AS 
 (
     SELECT 
         report_date,
@@ -35,7 +37,7 @@ pzns_by_date as
         product_name
     FROM dates
     JOIN pzns_list
-        on dates.key = pzns_list.key
+        ON dates.key = pzns_list.key
 ),
 
 stocks_raw AS (

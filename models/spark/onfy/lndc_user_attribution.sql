@@ -1,12 +1,14 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'priority_weight': '150'
+      'priority_weight': '150',
+      'bigquery_partitioning_date_column': 'partition_date'
     }
 ) }}
 
@@ -160,5 +162,7 @@ users_corrected as (
         last_not_unknown_devices_partners
 )
 
-select *
-from users_corrected
+SELECT
+    t.*,
+    CAST(source_ts_cet AS DATE) AS partition_date
+FROM users_corrected AS t

@@ -1,11 +1,13 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    partition_by=['session_start_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring'
+      'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_partitioning_date_column': 'session_start_date'
     }
 ) }}
 
@@ -143,6 +145,7 @@ SELECT
     sessions.app_device_type,
     sessions.is_buyer,
     sessions.session_start,
+    CAST(sessions.session_start AS DATE) AS session_start_date,
     sessions.source,
     sessions.campaign,
     product_preview_reco.sourcescreen AS source_screen,
@@ -186,6 +189,7 @@ SELECT
     sessions.app_device_type,
     sessions.is_buyer,
     sessions.session_start,
+    CAST(sessions.session_start AS DATE) AS session_start_date,
     sessions.source,
     sessions.campaign,
     product_preview_reco.sourcescreen AS source_screen,
