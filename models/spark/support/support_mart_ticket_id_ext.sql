@@ -30,7 +30,7 @@ ticket_create_events AS (
         MIN(t.payload.deviceId) AS device_id,
         MIN(t.payload.customerExternalId) AS user_id,
         MIN(t.payload.lang) AS language,
-        MIN(t.payload.country) AS country,
+        MIN(IF(t.payload.country NOT IN ('', 'Unknown'), t.payload.country, NULL)) AS country,
         MIN(t.payload.messageSource) AS os,
         MIN(t.payload.isHidden) AS is_hidden
     FROM {{ source('mart', 'babylone_events') }} AS t
