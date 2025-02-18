@@ -8,7 +8,7 @@ product_id,store_id,channel,weight,pessimization_type,discount_percent,source,co
 ,7c0538da9fe5425d8ad61f96b0aff6f1,,11,,18,manual,arzneiDoc
 ,c4191b579b634b2592b64bf0cf174bf4,,11,,16,manual,disapo
 ,f6d85f9f5ca847c89d030f1b9e506d76,,11,,17,manual,welapo
-,7631548fbb5649f28a9523f661a8dac3,,11,,15,manual,st. bernward apotheke
+,42d0e7c3c8754984b302831006f2143c,,11,,15,manual,st. bernward apotheke
 ,f818f7e2da64439890e406b3fe87e35e,,11,,0,manual,weitling
 ,0957abe85f5d42cebb7dc813788068de,,11,,13.5,manual,petersberg
 ,b03df824cbe343648077f75fb0b42a12,,11,,15,manual,schiller apotheke
@@ -21,6 +21,18 @@ dd22e836cf9f4fb4b379c6a7bf9dfdf8,,,45,,25,manual,07567371 boost
 638f8718c3c24a21b25fd2e255f7b925,,,45,,25,manual,10192710 boost
 ad51fbe682904e2ea173567fe7ef33ff,,,45,,25,manual,14447325 boost
 e72ad660847e4aaba7116248dbfb9561,,,45,,25,manual,14447331 boost
+f95d1438064f4d2491c891865aeb3c1d,,,45,,25,manual,05852222 boost
+64744c376d814663aad2f7c2ada01bcf,,,45,,25,manual,18661506 boost
+4e7b831734f2400c8f9adaf9cb21140d,,,45,,25,manual,06465237 boost
+75bac0bdbcc84384bf877a67aff27213,,,45,,25,manual,18892559 boost
+3de4b62322e5443ab98d871e8a2b2e92,,,45,,25,manual,18661417 boost
+80299cc316584ea5839e1ce3f1f0aa59,,,45,,25,manual,06465220 boost
+4b30167f840847e68af87d586d5d83bc,,,45,,25,manual,06552232 boost
+2c9dd606d6334c91ba876b98b6e5a523,,,45,,25,manual,05852191 boost
+e451639b161240ce8338e4be5ed6a049,,,45,,25,manual,06552226 boost
+82e53c3ab3e64b57a6e6b58f4f7d8c99,,,45,,25,manual,04482674 boost
+6b01d7a967db405a90ad5e5939c8e785,,,45,,25,manual,18892565 boost
+613ad96e17814e268b86c0aa825da38e,,,45,,25,manual,13229388 boost
 42b847d90dc54c63aecc61e234c1feb6,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 8aca7948ea8c4bd0998cfaf825327b09,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 1926ba92ad3b4e64a6bf6eaade04dd74,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
