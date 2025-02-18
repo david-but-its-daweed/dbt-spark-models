@@ -401,4 +401,22 @@ LEFT JOIN users ON a.user_id = users.user_id AND a.t = users.day
 LEFT JOIN country AS c ON a.user_id = c.user_id
 WHERE a.gmv_initial > 0 or
     a.order_id in ( '67606db7f7660794452fa237',
-                    '6765968e7c2acf46df9a3a82')
+                    '6765968e7c2acf46df9a3a82',
+                    '6797e073e1842903112967a7',
+                    '67992de23e283bd9790a7bff',
+                    '679a8be56fe9614353c8244f',
+                    '679bb58763be474e81bdc75c',
+                    '679bc9a163be474e81bdc883',
+                    '67a3aa15950775cbf83f5a77',
+                    '67a3ac0d950775cbf83f5a8b',
+                    '67a50e37ac4136f0de8615f2',
+                    '67a66860ad358c9c8df75052',
+                    '67aa5dec51715bab47e68682',
+                    '67aa54a951715bab47e68664',
+                    '67aa5efd51715bab47e68690',
+                    '67aa4b5e47d717642ccf41ca',
+                    '67aa4ff1e7e15b582830f223',
+                    '67abaaf1e7e15b58283133bf',
+                    '67ae340471e3ebc3ad12b011',
+                    '67ae365b618b75db93159c28'
+    )
