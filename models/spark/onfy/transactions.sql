@@ -3,9 +3,7 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
-    partition_by={
-       "field": "partition_date"
-    },
+    partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
