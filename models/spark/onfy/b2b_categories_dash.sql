@@ -135,7 +135,7 @@ with product_categories as
 sold_products as 
 (
     select 
-        date_trunc('day', order_created_time_cet) as order_day,
+        cast(date_trunc('day', order_created_time_cet) as date) as order_day,
         store_name,
         pzn,
         product_id,

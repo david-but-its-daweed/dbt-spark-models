@@ -2,13 +2,13 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
-    partition_by=['search_event_dt'],
+    partition_by=['search_event_date'],
     meta = {
       'model_owner' : '@andrewocean',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'bigquery_partitioning_date_column': 'search_event_dt'
+      'bigquery_partitioning_date_column': 'search_event_date'
     }
 ) }}
 
@@ -204,6 +204,7 @@ pre_final_flat_table AS (
 
 SELECT
     search_event_dt,
+    cast(date_trunc('day', search_event_dt) as date) as search_event_date,
     search_query,
     is_category_search,
     product_id,
@@ -218,6 +219,7 @@ SELECT
 FROM pre_final_flat_table
 GROUP BY
     search_event_dt,
+    cast(date_trunc('day', search_event_dt) as date),
     search_query,
     is_category_search,
     product_id,
