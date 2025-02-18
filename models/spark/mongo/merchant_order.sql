@@ -23,6 +23,7 @@ SELECT
     ELEMENT_AT(TRANSFORM(FILTER(st.st, element -> element.s == 0), x -> x.t), 1) AS created_time_utc,
     ELEMENT_AT(TRANSFORM(FILTER(st.st, element -> element.s == 1), x -> x.t), 1) AS fulfilled_online_time_utc,
     ELEMENT_AT(TRANSFORM(FILTER(st.st, element -> element.s == 2), x -> x.t), 1) AS shipped_time_utc,
+    ELEMENT_AT(TRANSFORM(FILTER(st.st, element -> element.s == 3), x -> x.t), 1) AS cancelled_by_merchant_time_utc,
     upd AS updated_time_utc,
     mid AS merchant_id,
     `sid` AS store_id,
