@@ -2,7 +2,6 @@
   config(
     materialized='table',
     file_format='parquet',
-    clustered_by=['marketplace_name'],
     partition_by=['order_date_utc'],
     fail_on_missing_partitions=False,
     meta = {
@@ -149,3 +148,4 @@ LEFT JOIN jl_orders AS jlo ON mo.online_order_id = jlo.order_number
 LEFT JOIN {{ ref('gold_products') }} AS gp ON mo.product_id = gp.product_id
 LEFT JOIN {{ ref('gold_merchants') }} AS gm ON mo.merchant_id = gm.merchant_id
 LEFT JOIN {{ ref('gold_merchant_categories') }} AS gmc ON gp.merchant_category_id = gmc.merchant_category_id
+DISTRIBUTE BY order_date_utc
