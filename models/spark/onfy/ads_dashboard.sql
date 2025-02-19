@@ -1,13 +1,13 @@
 {{ config(
     schema='onfy',
     materialized='table',
-    partition_by=['report_date'],
+    partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'bigquery_partitioning_date_column': 'report_date'
+      'bigquery_partitioning_date_column': 'partition_date'
     }
 ) }}
 
@@ -486,6 +486,7 @@ select
     attributed_session_dt,
     report_month,
     report_date,
+    CAST(report_date AS DATE) as partition_date,
     source,
     source_significant,
     source_corrected as session_source,
