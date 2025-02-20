@@ -82,6 +82,11 @@ paymentmethod AS (
     FROM (
         SELECT deal_id,
                payment_method,
+               delivery_channel_id, 
+               case 
+                   when delivery_channel_id = 9 then 'Aero Br'
+                   when delivery_channel_id = 8 then 'Sea Br' 
+               end as delivery_channel_type,
                ROW_NUMBER() OVER (PARTITION BY deal_id ORDER BY created_ts_msk) AS row_n
         FROM {{ ref('scd2_calculations_snapshot') }}
         WHERE deal_id IS NOT NULL
@@ -173,6 +178,7 @@ SELECT DISTINCT
     d.isSmallBatch as small_batch,
     users.ss_customer,
     paymentmethod.payment_method,
+    paymentmethod.delivery_channel_type,
     TIMESTAMP(d.dbt_valid_from) AS effective_ts_msk,
     TIMESTAMP(d.dbt_valid_to) AS next_effective_ts_msk
 FROM {{ ref('scd2_deals_snapshot') }} AS d
