@@ -240,7 +240,7 @@ WHERE rnk_payment_start = 1
         checkout_dt,
         payment_start_dt,
         payment_dt,
-        RANK() over(PARTITION BY device_id, payment_dt ORDER BY session_start) as rnk_session_payment
+        RANK() OVER (PARTITION BY device_id, payment_dt ORDER BY session_start) as rnk_session_payment
     FROM successful_payment_sessions
     WHERE rnk_payment = 1
 )
@@ -248,3 +248,4 @@ WHERE rnk_payment_start = 1
 SELECT *
 FROM filter_double_payments
 WHERE rnk_session_payment = 1
+DISTRIBUTE BY session_start_date
