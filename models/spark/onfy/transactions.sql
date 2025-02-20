@@ -287,3 +287,4 @@ transactions_usd AS (
 SELECT * FROM transactions_eur
     UNION
 SELECT * FROM transactions_usd
+DISTRIBUTE BY partition_date

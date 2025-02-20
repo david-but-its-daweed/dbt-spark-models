@@ -116,3 +116,4 @@ corrected_sources AS (
 
 SELECT *
 FROM corrected_sources
+DISTRIBUTE BY partition_date

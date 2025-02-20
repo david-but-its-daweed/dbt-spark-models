@@ -107,3 +107,4 @@ INNER JOIN product_names_cte
 LEFT JOIN {{ source('pharmacy_landing', 'order_paketshop') }} AS order_paketshop
     ON
         ord.id = order_paketshop.order_id
+DISTRIBUTE BY partition_date

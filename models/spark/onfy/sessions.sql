@@ -178,3 +178,4 @@ output AS (
 
 SELECT *
 FROM output
+DISTRIBUTE BY session_start_date

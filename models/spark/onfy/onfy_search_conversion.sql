@@ -225,3 +225,4 @@ GROUP BY
     product_id,
     product_name,
     pzn
+DISTRIBUTE BY search_event_date

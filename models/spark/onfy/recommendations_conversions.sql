@@ -227,3 +227,4 @@ LEFT JOIN orders
         AND orders.order_ts BETWEEN add_to_cart.add_to_cart_ts AND (add_to_cart.add_to_cart_ts + INTERVAL 2 HOUR)
 WHERE sessions.app_device_type NOT IN ('android', 'ios')
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+DISTRIBUTE BY session_start_date

@@ -217,3 +217,4 @@ join products_info
     using(product_id)
 left join product_categories
     using(product_id)
+DISTRIBUTE BY order_day

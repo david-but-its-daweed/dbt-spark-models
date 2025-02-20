@@ -166,3 +166,4 @@ SELECT
     t.*,
     CAST(source_ts_cet AS DATE) AS partition_date
 FROM users_corrected AS t
+DISTRIBUTE BY partition_date

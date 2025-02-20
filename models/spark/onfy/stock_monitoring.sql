@@ -109,3 +109,4 @@ LEFT JOIN stocks_raw AS stocks
     ON
         orders.event_date = stocks.report_date
         AND orders.pzn = stocks.pzn
+DISTRIBUTE BY partition_date

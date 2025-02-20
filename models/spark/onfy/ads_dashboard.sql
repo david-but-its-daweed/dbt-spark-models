@@ -547,3 +547,4 @@ select
     gclid,
     landing_pzn
 from spend_distributed
+DISTRIBUTE BY partition_date
