@@ -95,7 +95,7 @@ WITH base_deal AS (
     deals_agg_stat AS (
     SELECT m.*,
            products,
-           current_status_date,
+           current_status_date
     FROM (
         SELECT
             deal_id,
@@ -158,19 +158,23 @@ WITH base_deal AS (
 ),
 
     order_data AS (
-    SELECT
-        order_id,
-        order_created_date,
-        order_friendly_id,
-        order_current_status,
-        total_confirmed_price,
-        final_gross_profit,
-        initial_gross_profit,
-        owner_moderator_id,
-        final_gmv
-    FROM {{ ref('fact_order_change') }}
-    JOIN base_order USING (order_id)
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) = 1
+    SELECT *
+    FROM (
+        SELECT
+            order_id,
+            order_created_date,
+            order_friendly_id,
+            order_current_status,
+            total_confirmed_price,
+            final_gross_profit,
+            initial_gross_profit,
+            owner_moderator_id,
+            final_gmv,
+            ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) AS row_n
+        FROM {{ ref('fact_order_change') }}
+        JOIN base_order USING (order_id)
+    )
+    WHERE row_n = 1
 ),
 
     marketing_deals_interactions AS (
