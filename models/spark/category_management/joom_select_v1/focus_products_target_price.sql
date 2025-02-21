@@ -13,7 +13,7 @@
   )
 }}
 -- TODO: залодить логику approved > cancelled > pending
-WITH focused_products_list AS (
+WITH products_list_w_edlp AS (
     SELECT
         product_id,
         COUNT_IF(label = 'focused') > 0 AS is_focused,
@@ -27,7 +27,17 @@ WITH focused_products_list AS (
             partition_date = DATE("2025-02-17")
         {% endif %}
     GROUP BY 1
-    HAVING is_focused AND NOT is_js AND NOT is_edlp
+    HAVING is_focused AND NOT is_js
+),
+
+focused_products_list AS (
+    SELECT f.product_id
+    FROM products_list_w_edlp AS f
+    INNER JOIN {{ ref('gold_products') }} USING (product_id)
+    INNER JOIN {{ ref('gold_merchants') }} AS m USING (merchant_id)
+    WHERE
+        NOT f.is_edlp
+        OR (f.is_edlp AND m.origin_name IN ('Chinese', 'Korean', 'Singaporean', 'Turkish', 'Japanese'))
 ),
 
 orders AS (
@@ -101,7 +111,7 @@ promo_info AS (
         p.discount,
         DATE(p.promo_start_time_utc) AS promo_start_date,
         DATE(p.promo_end_time_utc) AS promo_end_date
-    FROM {{  source('mart', 'promotions') }} AS p
+    FROM {{ source('mart', 'promotions') }} AS p
     INNER JOIN focused_products_list USING (product_id)
     WHERE DATE(p.promo_end_time_utc) >= '2025-01-01'
 ),
