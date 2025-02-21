@@ -2,13 +2,11 @@
     schema='onfy',
     materialized='table',
     file_format='parquet',
-    partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
-      'alerts_channel': '#onfy-etl-monitoring',
-      'bigquery_partitioning_date_column': 'partition_date'
+      'alerts_channel': '#onfy-etl-monitoring'
     }
 ) }}
 
@@ -94,7 +92,6 @@ popularity_ranks_orders AS (
 
 SELECT
     orders.event_date,
-    CAST(orders.event_date AS DATE) AS partition_date,
     orders.pzn,
     orders.product_name,
     orders.quantity AS items_quantity,
@@ -109,4 +106,3 @@ LEFT JOIN stocks_raw AS stocks
     ON
         orders.event_date = stocks.report_date
         AND orders.pzn = stocks.pzn
-DISTRIBUTE BY partition_date
