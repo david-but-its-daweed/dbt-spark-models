@@ -5,7 +5,7 @@
          "field": "event_msk_date"
     },
     meta = {
-      'model_owner' : '@a.badoyan',
+      'model_owner' : '@abadoyan',
       'team': 'general_analytics',
       'bigquery_load': 'true',
       'priority_weight': '150'
