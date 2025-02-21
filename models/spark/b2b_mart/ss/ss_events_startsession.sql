@@ -71,6 +71,9 @@ utm_labels AS (
     FROM flattened_params
     GROUP BY id
 ),
+  users_auth as (select user_id,max(1) as with_auth 
+                from  {{ ref('ss_events_authentication') }}
+                group by 1 ), 
   users AS (
   SELECT
     user['userId'] AS user_id,
@@ -119,7 +122,7 @@ SELECT
                       COALESCE(NULLIF(POSITION('&' IN SUBSTRING(pageUrl FROM POSITION('gclid=' IN pageUrl) + 6)), 0) - 1, LENGTH(pageUrl)))
         ELSE NULL
      END AS gclid ,
-  coalesce(bot_flag,0) as bot_flag
+  coalesce(case when users_auth.with_auth = 1 then 0 else bot_flag end ,0) as bot_flag
 FROM
    {{ source('b2b_mart', 'device_events') }} AS de
 LEFT JOIN
@@ -129,6 +132,7 @@ ON
   AND CAST(de.event_ts_msk AS DATE) >= users.valid_msk_date
 LEFT JOIN utm_labels  ON de.id = utm_labels.id   --- de.user['userId'] = utm_labels.user_id 
 left join bots on bots.device_id = de.device.id
+left join users_auth on users_auth.user_id = de.user['userId']
 WHERE
   partition_date >= '2024-04-06'
   AND type IN ('sessionStart',
