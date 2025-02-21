@@ -1,7 +1,6 @@
 {{ config(
     schema='b2b_mart',
-    materialized='table',
-    file_format='parquet',
+    materialized='view',
     meta = {
       'model_owner' : '@abadoyan',
       'bigquery_load': 'true',
