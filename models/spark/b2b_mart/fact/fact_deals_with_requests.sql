@@ -40,7 +40,7 @@ WITH base_deal AS (
         country,
         estimated_gmv,
         small_batch
-    FROM b2b_mart.fact_deals
+    FROM {{ ref('fact_deals') }}
     WHERE CAST(created_ts_msk AS DATE) >= '2024-04-01'
       AND next_effective_ts_msk IS NULL
       AND country = 'BR'
@@ -56,7 +56,7 @@ WITH base_deal AS (
         rfq_deal,
         sample,
         category_name
-    FROM b2b_mart.fact_customer_requests
+    FROM {{ ref('fact_customer_requests') }}
     WHERE next_effective_ts_msk IS NULL
 ),
 
@@ -83,7 +83,7 @@ WITH base_deal AS (
         CAST(expectedQuantity AS INT) * sampleDDPPrice / 1000000 AS sample_ddp,
         merchant_price_per_item / 1000000 AS merchant_price_per_item,
         merchant_price_total_amount / 1000000 AS merchant_price_total_amount
-    FROM b2b_mart.fact_customer_requests_variants
+    FROM {{ ref('fact_customer_requests_variants') }}
 ),
 
     wide_table AS (
@@ -134,13 +134,13 @@ WITH base_deal AS (
     LEFT JOIN (
         SELECT deal_id,
                COUNT(product_id) AS products
-        FROM b2b_mart.dim_deal_products
+        FROM {{ ref('dim_deal_products') }}
         GROUP BY deal_id
     ) USING (deal_id)
     LEFT JOIN (
         SELECT deal_id,
                current_status_date
-        FROM b2b_mart.fact_deals_statuses
+        FROM {{ ref('fact_deals_statuses') }}
     ) USING (deal_id)
 ),
 
@@ -150,10 +150,10 @@ WITH base_deal AS (
         CAST(created_ts_msk AS DATE) AS order_created_date,
         friendly_id AS order_friendly_id,
         current_status AS order_current_status
-    FROM b2b_mart.fact_order
+    FROM {{ ref('fact_order') }}
     JOIN (
         SELECT order_id, current_status
-        FROM b2b_mart.fact_order_statuses
+        FROM {{ ref('fact_order_statuses') }}
     ) st USING (order_id)
     WHERE next_effective_ts_msk IS NULL
 ),
@@ -169,7 +169,7 @@ WITH base_deal AS (
         initial_gross_profit,
         owner_moderator_id,
         final_gmv
-    FROM b2b_mart.fact_order_change
+    FROM {{ ref('fact_order_change') }}
     JOIN base_order USING (order_id)
     QUALIFY ROW_NUMBER() OVER (PARTITION BY order_id ORDER BY event_ts_msk DESC) = 1
 ),
@@ -191,7 +191,7 @@ WITH base_deal AS (
            first_source,
            first_type,
            number_of_interactions
-    FROM b2b_mart.fact_marketing_deals_interactions
+    FROM {{ ref('fact_marketing_deals_interactions') }}
 )
 
 
