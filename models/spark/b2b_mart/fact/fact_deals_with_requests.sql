@@ -62,7 +62,7 @@ WITH base_deal AS (
     requests_variants AS (
     SELECT
         customer_request_id,
-        ROW_NUMBER() OVER (PARTITION BY customer_request_id) AS variant_num,
+        ROW_NUMBER() OVER (PARTITION BY customer_request_id ORDER BY customer_request_id) AS variant_num,
         CAST(expectedQuantity AS INT) AS qty,
         COUNT(
             CASE
