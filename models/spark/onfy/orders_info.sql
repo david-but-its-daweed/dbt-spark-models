@@ -8,7 +8,8 @@
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'bigquery_partitioning_date_column': 'partition_date'
+      'bigquery_partitioning_date_column': 'partition_date',
+      'bigquery_overwrite': 'true'
     }
 ) }}
 
