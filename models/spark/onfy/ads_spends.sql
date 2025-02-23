@@ -50,44 +50,25 @@ with fb_google_bing_base as
 -- calculating adchampagne: 2 * GMV 0 week
 ----------------------------------------------------
 
-adchampagne_total as 
-(
-    select *,
-        explode(gmv1w_per_date)
-    from {{source('pharmacy', 'adjust_raw_cohort_insights')}}
-    where 1=1
-        and lower(campaign_name) like '%adcha%'
-),
-
 adchampagne_costs as 
 (
-    select distinct
-        null as campaign_id,
-        campaign_name as campaign_name,
+    select 
+        regexp_extract(campaign_name, '(\\d{16})', 1) as campaign_id,
+        split(campaign_name, " ")[0] as campaign_name,
         null as medium,
         'adchampagne' as source,
         'adchampagne' as partner,
-        case 
-            when lower(campaign_name) like '%ios%' then 'ios'
-            when lower(campaign_name) like '%android%' then 'android'
-            when lower(campaign_name) like '%web%' then 'web'
-            else 'other'
-         end as campaign_platform,
-        join_date as join_date,
-        round(sum(value*2), 2) as spend
-    from adchampagne_total
-    where 1=1
-        and (date(join_date) + interval 5 day) >= date(key) 
-    group by 
+        os_type as campaign_platform,
         join_date,
+        sum(revenue_W0) * 2 as spend
+    from {{source('pharmacy', 'adjust_report_cohort_insights')}}
+    where 1=1
+        and (lower(campaign_name) like '%adc_%'
+            or lower(campaign_name) like '%adcha%%')
+    group by 
         campaign_name,
-        case 
-            when lower(campaign_name) like '%ios%' then 'ios'
-            when lower(campaign_name) like '%android%' then 'android'
-            when lower(campaign_name) like '%web%' then 'web'
-            else 'other'
-         end
-        
+        campaign_platform,
+        join_date
 ),
 
 ----------------------------------------------------
@@ -96,13 +77,21 @@ adchampagne_costs as
 
 adchampagne_costs_with_clicks as
 (
-    select distinct
-        adchampagne_costs.*,
-        sum(adjust_raw_deliverables_insights.clicks) as clicks
+    select 
+        adchampagne_costs.campaign_id,
+        adchampagne_costs.campaign_name,
+        adchampagne_costs.medium,
+        adchampagne_costs.source,
+        adchampagne_costs.partner,
+        adchampagne_costs.campaign_platform,
+        adchampagne_costs.join_date,
+        adchampagne_costs.spend,
+        sum(clicks) as clicks
     from adchampagne_costs
-    left join {{source('pharmacy', 'adjust_raw_deliverables_insights')}} as adjust_raw_deliverables_insights
-        on adchampagne_costs.campaign_name = adjust_raw_deliverables_insights.campaign_name
-        and adchampagne_costs.join_date = adjust_raw_deliverables_insights.join_date
+    left join {{source('pharmacy', 'adjust_report_deliverables_insights')}} as adchampagne_clicks
+        on adchampagne_costs.campaign_name = adchampagne_clicks.campaign_name
+        and adchampagne_costs.join_date = adchampagne_clicks.join_date
+        and adchampagne_costs.campaign_platform = adchampagne_clicks.os_type
     group by 
         adchampagne_costs.campaign_id,
         adchampagne_costs.campaign_name,

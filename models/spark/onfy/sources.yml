@@ -22,8 +22,6 @@ sources:
   - name: pharmacy
     tables:
       - name: bing_partner_insights
-      - name: adjust_raw_cohort_insights
-      - name: adjust_raw_deliverables_insights
       - name: criteo_insights
       - name: google_campaign_insights
       - name: fbads_adset_country_insights
@@ -31,3 +29,5 @@ sources:
       - name: partners_insights
       - name: mindbox_events
       - name: awin_insights
+      - name: adjust_report_deliverables_insights
+      - name: adjust_report_cohort_insights
