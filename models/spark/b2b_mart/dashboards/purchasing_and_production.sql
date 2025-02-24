@@ -1,0 +1,461 @@
+{{ config(
+    schema='b2b_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'model_owner' : '@abadoyan',
+      'bigquery_load': 'true'
+    }
+) }}
+
+
+WITH procurement_orders AS (
+    SELECT 
+        _id AS procurement_order_id,
+        friendlyId AS procurement_order_friendly_id,
+        dealId AS deal_id,
+        dealType AS deal_type,
+        country,
+        CASE WHEN isSmallBatch IS TRUE THEN 1 ELSE 0 END AS is_small_batch,
+        coreEmpty AS core_empty,
+        id AS product_id,
+        name AS product_name,
+        type,
+        procurementStatuses AS procurement_statuses,
+        psiStatusID AS current_psi_status_id_long,
+        manufacturerId AS manufacturer_id,
+        productionDeadLine AS production_deadline,
+        productionRange AS production_range,
+        warehouse,
+        TO_DATE(SUBSTR(minPickupDate, 1, 8), 'yyyyMMdd') AS min_pickup_date,
+        merchOrdId AS merchant_order_id,
+        payment,
+        prices,
+        productRoles AS product_roles,
+        variants AS procurement_order_variants,
+        millis_to_ts_msk(ctms) AS created_ts,
+        millis_to_ts_msk(utms) AS updated_ts
+    FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} AS op
+    JOIN (
+        SELECT _id AS deal_id,
+               country
+        FROM {{ source('mongo', 'b2b_core_deals_daily_snapshot') }}
+        WHERE country IN ('BR', 'KZ')
+    ) AS d ON op.dealId = d.deal_id
+    WHERE isDeleted IS NOT TRUE
+),
+
+     procurement_orders_last_assignee AS (
+    WITH assignee_history AS (
+        SELECT _id AS procurement_order_id,
+               role_key AS role,
+               role_value.type AS role_type,
+               role_value.moderatorId AS assignee_id,
+               millis_to_ts_msk(role_value.updatedTime) AS assignee_ts,
+               ROW_NUMBER() OVER (PARTITION BY _id ORDER BY role_value.updatedTime DESC) AS assignee_row_n_desc
+        FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
+        LATERAL VIEW EXPLODE(productRoles.roles) exploded_roles AS role_key, role_value
+    )
+
+    SELECT ah.procurement_order_id,
+           ah.role AS assignee_role,
+           ah.assignee_id,
+           au.email AS assignee_email,
+           ah.assignee_ts
+    FROM assignee_history AS ah
+    LEFT JOIN {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }} AS au ON ah.assignee_id = au._id
+    WHERE assignee_row_n_desc = 1
+),
+
+     procurement_statuses_history AS (
+    SELECT procurement_order_id,
+           MIN(status_time) AS first_status_ts,
+           /* Current Status and Sub Status */
+           MAX_BY(procurement_status_name, status_time) AS current_status,
+           MAX_BY(procurement_sub_status_name, status_time) AS current_sub_status,
+           MAX(status_time) AS current_status_ts,
+           /* Status */
+           MIN(CASE WHEN procurement_status_name = 'preProcessing' THEN status_time END) AS status_pre_processing_ts,
+           MIN(CASE WHEN procurement_status_name = 'formingOrder' THEN status_time END) AS status_forming_order_ts,
+           MIN(CASE WHEN procurement_status_name = 'awaitingForClientConfirmation' THEN status_time END) AS status_awaiting_for_client_confirmation_ts,
+           MIN(CASE WHEN procurement_status_name = 'ali1688' THEN status_time END) AS status_ali_1688_ts,
+           MIN(CASE WHEN procurement_status_name = 'receiving' THEN status_time END) AS status_receiving_ts,
+           MIN(CASE WHEN procurement_status_name = 'preparingOrder' THEN status_time END) AS status_preparing_order_ts,
+           MIN(CASE WHEN procurement_status_name = 'signingWithMerchant' THEN status_time END) AS status_signing_with_merchant_ts,
+           MIN(CASE WHEN procurement_status_name = 'payment' THEN status_time END) AS status_payment_ts,
+           MIN(CASE WHEN procurement_status_name = 'manufacturing' THEN status_time END) AS status_manufacturing_ts,
+           MIN(CASE WHEN procurement_status_name = 'psi' THEN status_time END) AS status_psi_ts,
+           MIN(CASE WHEN procurement_status_name = 'packingAndLabeling' THEN status_time END) AS status_packing_and_labeling_ts,
+           MIN(CASE WHEN procurement_status_name = 'readyForShipment' THEN status_time END) AS status_ready_for_shipment_ts,
+           MIN(CASE WHEN procurement_status_name = 'shippedBy3PL' THEN status_time END) AS status_shipped_by_3pl_ts,
+           MIN(CASE WHEN procurement_status_name = 'pickUpPayment' THEN status_time END) AS status_pick_up_payment_ts,
+           MIN(CASE WHEN procurement_status_name = 'completed' THEN status_time END) AS status_completed_ts,
+           MIN(CASE WHEN procurement_status_name = 'cancelled' THEN status_time END) AS status_cancelled_ts,
+           /* Sub Status */
+           MIN(CASE WHEN procurement_sub_status_name = 'preProcessing' THEN status_time END) AS sub_status_pre_processing_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'formingOrderUnassigned' THEN status_time END) AS sub_status_forming_order_unassigned_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'fillingInInformation' THEN status_time END) AS sub_status_filling_in_information_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'confirmedByProcurement' THEN status_time END) AS sub_status_confirmed_by_procurement_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'awaitingForClientConfirmation' THEN status_time END) AS sub_status_awaiting_for_client_confirmation_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'waitingForPayment' THEN status_time END) AS sub_status_waiting_for_payment_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'merchantPreparingOrder' THEN status_time END) AS sub_status_merchant_preparing_order_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'merchantShippedTheGoods' THEN status_time END) AS sub_status_merchant_shipped_the_goods_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'issues' THEN status_time END) AS sub_status_issues_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'preparingOrder' THEN status_time END) AS sub_status_preparing_order_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'awaitingForSigning' THEN status_time END) AS sub_status_awaiting_for_signing_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'merchantSigned' THEN status_time END) AS sub_status_merchant_signed_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'clientPaymentReceived' THEN status_time END) AS sub_status_client_payment_received_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'advancePaymentRequested' THEN status_time END) AS sub_status_advance_payment_requested_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'advancePaymentInProgress' THEN status_time END) AS sub_status_advance_payment_in_progress_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'manufacturing' THEN status_time END) AS sub_status_manufacturing_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'psiBeingConducted' THEN status_time END) AS sub_status_psi_being_conducted_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'psiIsPlanned' THEN status_time END) AS sub_status_psi_is_planned_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'psiWaitingForConfirmation' THEN status_time END) AS sub_status_psi_waiting_for_confirmation_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'psiProblemsAreToBeFixed' THEN status_time END) AS sub_status_psi_problems_are_to_be_fixed_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'psiResultsAccepted' THEN status_time END) AS sub_status_psi_results_accepted_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'psiApprovedManually' THEN status_time END) AS sub_status_psi_approved_manually_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'packingAndLabeling' THEN status_time END) AS sub_status_packing_and_labeling_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'readyForShipment' THEN status_time END) AS sub_status_ready_for_shipment_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'shippedBy3PL' THEN status_time END) AS sub_status_shipped_by_3pl_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'finalPaymentRequested' THEN status_time END) AS sub_status_final_payment_requested_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'finalPaymentInProgress' THEN status_time END) AS sub_status_final_payment_in_progress_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'finalPaymentAcquired' THEN status_time END) AS sub_status_final_payment_acquired_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'pickUpPaymentPickedUp' THEN status_time END) AS sub_status_pick_up_payment_picked_up_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'completed' THEN status_time END) AS sub_status_completed_ts,
+           MIN(CASE WHEN procurement_sub_status_name = 'cancelled' THEN status_time END) AS sub_status_cancelled_ts
+    FROM (
+        SELECT ps.*,
+               ks1.name AS procurement_status_name,
+               ks2.name AS procurement_sub_status_name /* preparingOrder - это Awaiting for KAM */
+        FROM (
+            SELECT po.procurement_order_id,
+                   ps.comment,
+                   ps.status,
+                   ps.subStatus,
+                   millis_to_ts_msk(ps.statusTime) AS status_time
+            FROM procurement_orders AS po
+            LATERAL VIEW EXPLODE(po.procurement_statuses) AS ps
+        ) AS ps
+        LEFT JOIN {{ ref('key_status') }} AS ks1 ON ks1.key = 'orderproduct.procurementStatus' AND ps.status = ks1.id
+        LEFT JOIN {{ ref('key_status') }} AS ks2 ON ks2.key = 'orderproduct.procurementSubStatus' AND ps.subStatus = ks2.id
+    ) AS ps
+    GROUP BY 1
+),
+
+     payments_history AS (
+    /* Нужно вытащить статусы платежей из Биллинга */
+    SELECT po.procurement_order_id,
+           ph.id AS payment_id,
+           ph.price.amount / 1000000 AS payment_price_amount,
+           ph.price.ccy AS payment_price_ccy,
+           millis_to_ts_msk(ph.ctms) AS payment_requested_ts_msk,
+           millis_to_ts_msk(ph.utms) AS payment_received_ts_msk
+    FROM procurement_orders AS po
+    LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
+),
+
+     psi_history AS (
+    WITH psi AS (
+        SELECT _id AS psi_status_id_long,
+               LAST_VALUE(_id) OVER (
+                   PARTITION BY get_json_object(context, '$.moId'), get_json_object(context, '$.pId')
+                   ORDER BY millis_to_ts_msk(stms)
+                   ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+               ) AS current_psi_status_id_long,
+               statusId AS psi_status_id,
+               CASE statusId
+                   WHEN 10 THEN 'PSIStatusWaiting'
+                   WHEN 20 THEN 'PSIStatusRunning'
+                   WHEN 30 THEN 'PSIStatusReady'
+                   WHEN 40 THEN 'PSIStatusFail'
+                   WHEN 50 THEN 'PSIStatusSuccess'
+               END AS psi_status,
+               get_json_object(context, '$.moId') AS merchant_order_id,
+               get_json_object(context, '$.pId') AS product_id,
+               millis_to_ts_msk(stms) AS status_ts,
+               payloadNew AS payload_new
+        FROM {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }}
+    ),
+
+         psi_problems AS (
+        SELECT psi_status_id_long,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'goodQuality' THEN 1 ELSE 0 END) AS quality,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'goodQuality' THEN 1 ELSE 0 END) AS client_quality,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'customsAndLogisticsRequirements' THEN 1 ELSE 0 END) AS customs_and_logistics,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'customsAndLogisticsRequirements' THEN 1 ELSE 0 END) AS client_customs_and_logistics,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'customsRequirements' THEN 1 ELSE 0 END) AS customs,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'customsRequirements' THEN 1 ELSE 0 END) AS client_customs,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'logisticsRequirements' THEN 1 ELSE 0 END) AS logistics,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'logisticsRequirements' THEN 1 ELSE 0 END) AS client_logistics,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'discrepancy' THEN 1 ELSE 0 END) AS discrepancy,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'discrepancy' THEN 1 ELSE 0 END) AS client_discrepancy,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'clientsRequirements' THEN 1 ELSE 0 END) AS requirements,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'clientsRequirements' THEN 1 ELSE 0 END) AS client_requirements,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'other' THEN 1 ELSE 0 END) AS other,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'other' THEN 1 ELSE 0 END) AS client_other,
+               MAX(CASE WHEN name = 'problems' AND problem.value = 'other' THEN problem.comment END) AS comment,
+               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'other' THEN problem.comment END) AS client_comment
+        FROM (
+            SELECT psi_status_id_long,
+                   col.name,
+                   EXPLODE(col.enumPayload.selectedItems) AS problem
+            FROM (
+                SELECT _id AS psi_status_id_long,
+                       EXPLODE(payloadNew)
+                FROM {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }}
+                WHERE payloadNew IS NOT NULL
+            )
+            WHERE col.name IN ('problems', 'failureProblems')
+        )
+        GROUP BY 1
+    ),
+    
+         psi_inspection AS (
+        SELECT psi_status_id_long,
+               col.datePayload.value,
+               TIMESTAMP(col.datePayload.value) AS inspection_ts
+        FROM (
+            SELECT _id AS psi_status_id_long,
+                   EXPLODE(payloadNew)
+            FROM {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }}
+            WHERE payloadNew IS NOT NULL
+        )
+        WHERE col.type = 'date' 
+          AND col.name = 'dateOfInspection' 
+          AND col.datePayload IS NOT NULL
+    ),
+    
+         psi_solution AS (
+        SELECT psi_status_id_long,
+               col.enumPayload.selectedItems[0].value AS solution
+        FROM (
+            SELECT _id AS psi_status_id_long,
+                   EXPLODE(payloadNew)
+            FROM {{ source('mongo', 'b2b_core_form_with_status_daily_snapshot') }}
+            WHERE payloadNew IS NOT NULL
+        )
+        WHERE col.name = 'solution'
+    )
+
+
+    SELECT current_psi_status_id_long,
+           MAX_BY(psi_status, status_ts) AS current_psi_status,
+           MAX(status_ts) AS current_psi_status_ts,
+           MIN(CASE WHEN psi_status = 'PSIStatusWaiting' THEN status_ts END) AS psi_waiting_ts,
+           MIN(CASE WHEN psi_status = 'PSIStatusRunning' THEN status_ts END) AS psi_running_ts,
+           MIN(CASE WHEN psi_status = 'PSIStatusReady' THEN status_ts END) AS psi_ready_ts,
+           MIN(CASE WHEN psi_status = 'PSIStatusFail' THEN status_ts END) AS psi_fail_ts,
+           MAX(CASE WHEN psi_status = 'PSIStatusSuccess' THEN status_ts END) AS psi_success_ts,
+           MIN(inspection_ts) AS inspection_ts,
+           MAX(solution) AS solution,
+           MAX(quality) AS problem_quality,
+           MAX(client_quality) AS problem_client_quality,
+           MAX(customs_and_logistics) AS problem_customs_and_logistics,
+           MAX(client_customs_and_logistics) AS problem_client_customs_and_logistics,
+           MAX(customs) AS problem_customs,
+           MAX(client_customs) AS problem_client_customs,
+           MAX(logistics) AS problem_logistics,
+           MAX(client_logistics) AS problem_client_logistics,
+           MAX(discrepancy) AS problem_discrepancy,
+           MAX(client_discrepancy) AS problem_client_discrepancy,
+           MAX(requirements) AS problem_requirements,
+           MAX(client_requirements) AS problem_client_requirements,
+           MAX(other) AS problem_other,
+           MAX(client_other) AS problem_client_other,
+           MAX(comment) AS problem_comment,
+           MAX(client_comment) AS problem_client_comment
+    FROM psi AS p
+    LEFT JOIN psi_inspection AS pp USING (psi_status_id_long)
+    LEFT JOIN psi_solution AS pp USING (psi_status_id_long)
+    LEFT JOIN psi_problems AS pp USING (psi_status_id_long)
+    GROUP BY 1
+),
+
+     merchant_orders AS (
+    SELECT _id AS merchant_order_id,
+           friendlyId AS merchant_order_friendly_id,
+           orderId AS client_order_id,
+           merchantId AS merchant_id,
+           manDays AS manufacturing_days
+    FROM {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
+    WHERE deleted IS NOT TRUE
+),
+
+     offer_products AS (
+    SELECT _id AS procurement_order_id,
+           offerId AS customer_offer_id,
+           id AS product_id,
+           name AS product_name,
+           manufacturerId AS manufacturer_id,
+           variants AS offer_products_variants,
+           millis_to_ts_msk(ctms) AS offer_product_created_ts
+    FROM {{ source('mongo', 'b2b_core_offer_products_daily_snapshot') }}
+    WHERE isDeleted IS NOT TRUE
+),
+
+     customer_offers AS (
+    SELECT _id AS customer_offer_id,
+           moderatorId AS customer_offer_owner_id,
+           type.name AS customer_offer_type,
+           status.name AS customer_offer_status,
+           millis_to_ts_msk(ctms) AS customer_offer_created_ts,
+           millis_to_ts_msk(utms) AS customer_offer_updated_ts
+    FROM {{ source('mongo', 'b2b_core_customer_offers_daily_snapshot') }} AS co
+    LEFT JOIN {{ ref('key_status') }} AS type ON type.key = 'offer.type' AND co.offerType = type.id
+    LEFT JOIN {{ ref('key_status') }} AS status ON status.key = 'offer.status' AND co.status = status.id
+    WHERE isDeleted IS NOT TRUE
+),
+
+     core_product AS (
+    /* Если coreEmpty = True, то сущность продукта берется из offerProduts, иначе из orderProducts */
+    /* Если coreEmpty = True и запись offerProduts удалена или отсутствует, то такой orderProduct удаляем */
+    SELECT
+        t1.procurement_order_id,
+        t1.procurement_order_friendly_id,
+        t1.deal_id,
+        t1.deal_type,
+        t1.country,
+        t1.is_small_batch,
+        t1.core_empty,
+        CASE WHEN t1.core_empty = TRUE THEN t2.product_id ELSE t1.product_id END AS product_id,
+        CASE WHEN t1.core_empty = TRUE THEN t2.product_name ELSE t1.product_name END AS product_name,
+        t1.type,
+        t1.procurement_statuses,
+        t1.current_psi_status_id_long,
+        CASE WHEN t1.core_empty = TRUE THEN t2.manufacturer_id ELSE t1.manufacturer_id END AS manufacturer_id,
+        t1.production_deadline,
+        t1.production_range,
+        t1.warehouse,
+        t1.min_pickup_date,
+        t1.merchant_order_id,
+        t1.payment,
+        t1.prices,
+        t1.product_roles,
+        CASE WHEN t1.core_empty = TRUE THEN t2.offer_products_variants ELSE t1.procurement_order_variants END AS variants,
+        CASE WHEN t1.core_empty = TRUE THEN t2.offer_product_created_ts ELSE t1.created_ts END AS created_ts,
+        t1.updated_ts
+    FROM procurement_orders AS t1
+    LEFT JOIN offer_products AS t2 ON t1.procurement_order_id = t2.procurement_order_id
+    WHERE t1.core_empty IS NOT TRUE
+       OR (t1.core_empty = TRUE AND t2.procurement_order_id IS NOT NULL)
+)
+
+
+SELECT po.procurement_order_id,
+       po.procurement_order_friendly_id,
+       po.deal_id,
+       po.deal_type,
+       po.country,
+       po.is_small_batch,
+       po.product_roles,
+       pola.assignee_id,
+       pola.assignee_email,
+       pola.assignee_role,
+       pola.assignee_ts,
+       po.core_empty,
+       po.product_id,
+       po.product_name,
+       po.type,
+       po.prices,
+       po.payment,
+       po.variants,
+       po.production_deadline,
+       po.production_range,
+       po.warehouse,
+       po.min_pickup_date,
+       mo.client_order_id,
+       po.merchant_order_id,
+       mo.merchant_order_friendly_id,
+       mo.merchant_id,
+       po.manufacturer_id,
+       mo.manufacturing_days,
+       op.customer_offer_id,
+       co.customer_offer_owner_id,
+       co.customer_offer_type,
+       co.customer_offer_status,
+       coalesce(po.created_ts, pch.first_status_ts) AS created_ts,
+                                                                       DATE_TRUNC('week', coalesce(po.created_ts, pch.first_status_ts)) AS created_week,
+       greatest(po.updated_ts, coalesce(po.created_ts, pch.first_status_ts)) AS updated_ts,
+       po.procurement_statuses,
+       pch.current_status,
+       pch.current_sub_status,
+       pch.current_status_ts,
+       --pch.status_pre_processing_ts,
+       --pch.sub_status_pre_processing_ts,
+       --pch.status_forming_order_ts,
+       pch.sub_status_forming_order_unassigned_ts,             -- Заказ попал в очередь
+       pch.sub_status_filling_in_information_ts,               -- Заказ был заасайнен
+       --pch.sub_status_confirmed_by_procurement_ts,
+       --pch.status_awaiting_for_client_confirmation_ts,
+       --pch.sub_status_awaiting_for_client_confirmation_ts,
+       --pch.status_ali_1688_ts,
+       --pch.sub_status_waiting_for_payment_ts,
+       --pch.sub_status_merchant_preparing_order_ts,
+       --pch.status_receiving_ts,
+       --pch.sub_status_merchant_shipped_the_goods_ts,
+       --pch.sub_status_issues_ts,
+       --pch.status_preparing_order_ts,
+       pch.sub_status_preparing_order_ts,                      -- Ждем KAM'а
+       --pch.status_signing_with_merchant_ts,
+       pch.sub_status_awaiting_for_signing_ts,                 -- Ждем подписания контракта мерчантом
+       pch.sub_status_merchant_signed_ts,                      -- Мерчант подписал
+       pch.sub_status_client_payment_received_ts,              -- Нам пришли деньги от клиента
+       --pch.status_payment_ts,
+       pch.sub_status_advance_payment_requested_ts,            -- Отправили деньги мерчанту 
+       pch.sub_status_advance_payment_in_progress_ts,          -- Время апррува от финансов
+       --pch.status_manufacturing_ts,
+       pch.sub_status_manufacturing_ts,                        -- Мерчант получил деньги, начал производство
+       --pch.status_psi_ts,
+       pch.sub_status_psi_being_conducted_ts,                  -- Время окончания производства, назначен инспектор для проверки
+       --pch.sub_status_psi_is_planned_ts,
+       pch.sub_status_psi_waiting_for_confirmation_ts,         -- Инспектор проверил товар, отправил отчет
+       pch.sub_status_psi_problems_are_to_be_fixed_ts,         -- Клиент выявил проблемы, требуются исправления
+       pch.sub_status_psi_results_accepted_ts,                 -- Результаты PSI приняты
+       --pch.sub_status_psi_approved_manually_ts,
+       --pch.status_packing_and_labeling_ts,
+       --pch.sub_status_packing_and_labeling_ts,
+       --pch.status_ready_for_shipment_ts,
+       --pch.sub_status_ready_for_shipment_ts,
+       --pch.status_shipped_by_3pl_ts,
+       --pch.sub_status_shipped_by_3pl_ts,
+       --pch.status_pick_up_payment_ts,
+       pch.sub_status_final_payment_requested_ts,              -- Отправили финальный платеж мерчанту
+       pch.sub_status_final_payment_in_progress_ts,            -- Время аппрува от финансов
+       pch.sub_status_final_payment_acquired_ts,               -- Мерчант подтвердил получение финального платежа
+       pch.sub_status_pick_up_payment_picked_up_ts,            -- Можно забирать товар (?)
+       --pch.status_completed_ts,
+       pch.sub_status_completed_ts,
+       --pch.status_cancelled_ts,
+       pch.sub_status_cancelled_ts,
+       ph.current_psi_status,
+       ph.current_psi_status_ts,
+       ph.psi_waiting_ts,
+       ph.psi_running_ts,
+       ph.psi_ready_ts,
+       ph.psi_fail_ts,
+       ph.psi_success_ts,
+       ph.inspection_ts,
+       ph.solution,
+       ph.problem_quality,
+       ph.problem_client_quality,
+       ph.problem_customs_and_logistics,
+       ph.problem_client_customs_and_logistics,
+       ph.problem_customs,
+       ph.problem_client_customs,
+       ph.problem_logistics,
+       ph.problem_client_logistics,
+       ph.problem_discrepancy,
+       ph.problem_client_discrepancy,
+       ph.problem_requirements,
+       ph.problem_client_requirements,
+       ph.problem_other,
+       ph.problem_client_other,
+       ph.problem_comment,
+       ph.problem_client_comment
+FROM core_product AS po
+LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
+LEFT JOIN merchant_orders AS mo ON po.merchant_order_id = mo.merchant_order_id
+LEFT JOIN offer_products AS op ON po.procurement_order_id = op.procurement_order_id
+LEFT JOIN customer_offers AS co ON op.customer_offer_id = co.customer_offer_id
+LEFT JOIN procurement_statuses_history AS pch ON po.procurement_order_id = pch.procurement_order_id
+LEFT JOIN psi_history AS ph ON po.current_psi_status_id_long = ph.current_psi_status_id_long
