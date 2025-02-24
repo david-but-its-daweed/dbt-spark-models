@@ -28,7 +28,7 @@ payment_types AS (
 
 SELECT
     fo.*,
-    pt.payment_type AS payment_type_new
+    pt.payment_type
 FROM {{ source('mart', 'fact_order_2020') }} AS fo
 LEFT JOIN payment_types AS pt
     ON fo.order_group_id = pt.order_group_id
