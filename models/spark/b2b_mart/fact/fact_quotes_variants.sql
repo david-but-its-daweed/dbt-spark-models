@@ -13,10 +13,7 @@
 SELECT _id AS quote_id,
        dealId AS deal_id,
        product.productId AS product_id,
-       --product.productName AS product_name,
-       --product.totalQuantity AS product_total_quantity,
-       --product.totalPrice.amount AS product_total_price,
-       --product.totalPrice.ccy AS product_total_price_ccy,
+       product.customerRequestID AS customer_request_id,
        variant.variantId AS variant_id,
        variant.quantity,
        variant.ddpPerItem.amount AS ddp_per_item,
@@ -25,7 +22,6 @@ SELECT _id AS quote_id,
        variant.exwTotalPrice.ccy AS exw_total_price_ccy,
        variant.totalPrice.amount AS total_price,
        variant.totalPrice.ccy AS total_price_ccy
-FROM {{ ref('scd2_mongo_quotes') }}
+FROM {{ source('mongo', 'b2b_core_quotes_daily_snapshot') }}
 LATERAL VIEW EXPLODE(products) AS product
 LATERAL VIEW EXPLODE(product.variants) AS variant
-WHERE dbt_valid_to IS NULL
