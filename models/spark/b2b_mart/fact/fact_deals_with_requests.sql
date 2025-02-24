@@ -21,7 +21,7 @@ WITH base_deal AS (
         status,
         CAST(status_int AS INT) AS status_int,
         CASE
-            WHEN reject_reason IS NULL OR status IN (
+            WHEN reject_reason IS NOT NULL OR status IN (
                 'Other', 'MarketResearch', 'PriceTooHigh', 'Duplicated',
                 'ClientNoResponseAfterDDPQuotation', 'ClientNoResponseAtAll',
                 'Certification', 'ProductNotFound', 'PriceTooHighComparedToCargo',
@@ -243,6 +243,7 @@ SELECT d.deal_id,
        source,
        type,
        first_utm_campaign,
+       first_utm_sourceas,
        first_utm_medium,
        first_source,
        first_type,
