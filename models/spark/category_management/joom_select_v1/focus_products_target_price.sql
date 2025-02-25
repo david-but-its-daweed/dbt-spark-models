@@ -1,6 +1,7 @@
 {{
   config(
     materialized='incremental',
+    on_schema_change='sync_all_columns',
     alias='focus_products_target_price',
     file_format='parquet',
     schema='category_management',
@@ -12,7 +13,7 @@
     },
   )
 }}
--- TODO: залодить логику approved > cancelled > pending
+-- TODO: заложить логику approved > cancelled > pending
 WITH products_list_w_edlp AS (
     SELECT
         product_id,
@@ -31,7 +32,9 @@ WITH products_list_w_edlp AS (
 ),
 
 focused_products_list AS (
-    SELECT f.product_id
+    SELECT
+        f.product_id,
+        f.is_edlp
     FROM products_list_w_edlp AS f
     INNER JOIN {{ ref('gold_products') }} USING (product_id)
     INNER JOIN {{ ref('gold_merchants') }} AS m USING (merchant_id)
@@ -149,6 +152,19 @@ manual_discount AS (
         MAX_BY(discount, date) AS discount
     FROM category_management.joom_select_product_white_list
     GROUP BY 1
+),
+
+manual_variant_targets AS (
+    SELECT
+        product_id,
+        variant_id,
+        MAX_BY(target_price, report_date) AS target_variant_price
+    FROM category_management.joom_select_variant_target_prices
+    WHERE
+        product_id IS NOT NULL
+        AND variant_id IS NOT NULL
+        AND target_price IS NOT NULL
+    GROUP BY 1, 2
 )
 
 SELECT
@@ -156,6 +172,10 @@ SELECT
     ph.merchant_id,
     ph.product_id,
     ph.variant_id,
+    CASE
+        WHEN fpl.is_edlp THEN 'edlp'
+        ELSE 'focused'
+    END AS product_type, -- could be focused, edlp, 1688
     ph.original_currency,
     ph.original_currency_rate,
     o.sum_gmv_initial,
@@ -168,13 +188,16 @@ SELECT
     ROUND(o.min_merchant_list_price, 2) AS min_merchant_list_price,
     m.rate AS merchant_discount_rate,
     d.discount AS product_discount_rate,
+    mvt.target_variant_price AS variant_target_price,
     ROUND(COALESCE(
+        mvt.target_variant_price,
         current_price * product_discount_rate,
         current_price * merchant_discount_rate,
-        LEAST(o.min_merchant_list_price, o.min_merchant_sale_price, ph.min_price_with_promo, ph.min_price) * 0.97
+        LEAST(o.min_merchant_list_price, o.min_merchant_sale_price, ph.min_price_with_promo, ph.min_price) * IF(fpl.is_edlp, 0.99, 0.97)
     ), 2) AS target_price
-FROM focused_products_list
+FROM focused_products_list AS fpl
 LEFT JOIN price_history AS ph USING (product_id)
+LEFT JOIN manual_variant_targets AS mvt USING (product_id, variant_id)
 LEFT JOIN manual_discount AS d USING (product_id)
 LEFT JOIN category_management.js_merchant_discount_rate AS m USING (merchant_id)
 LEFT JOIN orders AS o USING (product_id, variant_id)
