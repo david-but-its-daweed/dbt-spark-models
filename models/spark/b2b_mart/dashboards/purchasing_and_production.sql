@@ -10,7 +10,7 @@
 
 
 WITH procurement_orders AS (
-    SELECT 
+    SELECT
         _id AS procurement_order_id,
         friendlyId AS procurement_order_friendly_id,
         dealId AS deal_id,
@@ -30,6 +30,7 @@ WITH procurement_orders AS (
         TO_DATE(SUBSTR(minPickupDate, 1, 8), 'yyyyMMdd') AS min_pickup_date,
         merchOrdId AS merchant_order_id,
         payment,
+        nullIf(size(payment.paymentScheme), 0) AS payment_count_plan,
         prices,
         productRoles AS product_roles,
         variants AS procurement_order_variants,
@@ -144,14 +145,26 @@ WITH procurement_orders AS (
 
      payments_history AS (
     /* Нужно вытащить статусы платежей из Биллинга */
-    SELECT po.procurement_order_id,
-           ph.id AS payment_id,
-           ph.price.amount / 1000000 AS payment_price_amount,
-           ph.price.ccy AS payment_price_ccy,
-           millis_to_ts_msk(ph.ctms) AS payment_requested_ts_msk,
-           millis_to_ts_msk(ph.utms) AS payment_received_ts_msk
-    FROM procurement_orders AS po
-    LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
+    SELECT procurement_order_id,
+           COUNT(payment_id) AS payment_count_fact,
+           COUNT(CASE WHEN payment_received_ts_msk IS NOT NULL THEN payment_id END) AS received_payment_count,
+           COUNT(CASE WHEN sla_fact > sla_plan THEN payment_id END) AS overdue_payment_count,
+           SUM(CASE WHEN payment_price_ccy = 'USD' THEN payment_price_amount ELSE 0 END) AS payment_sum_usd,
+           SUM(CASE WHEN payment_price_ccy = 'CNH' THEN payment_price_amount ELSE 0 END) AS payment_sum_cnh,
+           SUM(CASE WHEN payment_price_ccy NOT IN('USD', 'CNH') THEN payment_price_amount ELSE 0 END) AS payment_sum_other
+    FROM (
+        SELECT po.procurement_order_id,
+               ph.id AS payment_id,
+               ph.price.amount / 1000000 AS payment_price_amount,
+               ph.price.ccy AS payment_price_ccy,
+               millis_to_ts_msk(ph.ctms) AS payment_requested_ts_msk,
+               millis_to_ts_msk(ph.utms) AS payment_received_ts_msk,
+               DATEDIFF(millis_to_ts_msk(ph.utms), millis_to_ts_msk(ph.ctms)) AS sla_fact,
+               4 AS sla_plan
+        FROM procurement_orders AS po
+        LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
+    ) AS p
+    GROUP BY 1
 ),
 
      psi_history AS (
@@ -329,6 +342,7 @@ WITH procurement_orders AS (
         t1.min_pickup_date,
         t1.merchant_order_id,
         t1.payment,
+        t1.payment_count_plan,
         t1.prices,
         t1.product_roles,
         CASE WHEN t1.core_empty = TRUE THEN t2.offer_products_variants ELSE t1.procurement_order_variants END AS variants,
@@ -358,6 +372,13 @@ SELECT po.procurement_order_id,
        po.type,
        po.prices,
        po.payment,
+       po.payment_count_plan,
+       pah.payment_count_fact,
+       pah.received_payment_count,
+       pah.overdue_payment_count,
+       pah.payment_sum_usd,
+       pah.payment_sum_cnh,
+       pah.payment_sum_other,
        po.variants,
        po.production_deadline,
        po.production_range,
@@ -374,58 +395,29 @@ SELECT po.procurement_order_id,
        co.customer_offer_type,
        co.customer_offer_status,
        coalesce(po.created_ts, pch.first_status_ts) AS created_ts,
-                                                                       DATE_TRUNC('week', coalesce(po.created_ts, pch.first_status_ts)) AS created_week,
        greatest(po.updated_ts, coalesce(po.created_ts, pch.first_status_ts)) AS updated_ts,
        po.procurement_statuses,
        pch.current_status,
        pch.current_sub_status,
        pch.current_status_ts,
-       --pch.status_pre_processing_ts,
-       --pch.sub_status_pre_processing_ts,
-       --pch.status_forming_order_ts,
-       pch.sub_status_forming_order_unassigned_ts,             -- Заказ попал в очередь
-       pch.sub_status_filling_in_information_ts,               -- Заказ был заасайнен
-       --pch.sub_status_confirmed_by_procurement_ts,
-       --pch.status_awaiting_for_client_confirmation_ts,
-       --pch.sub_status_awaiting_for_client_confirmation_ts,
-       --pch.status_ali_1688_ts,
-       --pch.sub_status_waiting_for_payment_ts,
-       --pch.sub_status_merchant_preparing_order_ts,
-       --pch.status_receiving_ts,
-       --pch.sub_status_merchant_shipped_the_goods_ts,
-       --pch.sub_status_issues_ts,
-       --pch.status_preparing_order_ts,
-       pch.sub_status_preparing_order_ts,                      -- Ждем KAM'а
-       --pch.status_signing_with_merchant_ts,
-       pch.sub_status_awaiting_for_signing_ts,                 -- Ждем подписания контракта мерчантом
-       pch.sub_status_merchant_signed_ts,                      -- Мерчант подписал
-       pch.sub_status_client_payment_received_ts,              -- Нам пришли деньги от клиента
-       --pch.status_payment_ts,
-       pch.sub_status_advance_payment_requested_ts,            -- Отправили деньги мерчанту 
-       pch.sub_status_advance_payment_in_progress_ts,          -- Время апррува от финансов
-       --pch.status_manufacturing_ts,
-       pch.sub_status_manufacturing_ts,                        -- Мерчант получил деньги, начал производство
-       --pch.status_psi_ts,
-       pch.sub_status_psi_being_conducted_ts,                  -- Время окончания производства, назначен инспектор для проверки
-       --pch.sub_status_psi_is_planned_ts,
-       pch.sub_status_psi_waiting_for_confirmation_ts,         -- Инспектор проверил товар, отправил отчет
-       pch.sub_status_psi_problems_are_to_be_fixed_ts,         -- Клиент выявил проблемы, требуются исправления
-       pch.sub_status_psi_results_accepted_ts,                 -- Результаты PSI приняты
-       --pch.sub_status_psi_approved_manually_ts,
-       --pch.status_packing_and_labeling_ts,
-       --pch.sub_status_packing_and_labeling_ts,
-       --pch.status_ready_for_shipment_ts,
-       --pch.sub_status_ready_for_shipment_ts,
-       --pch.status_shipped_by_3pl_ts,
-       --pch.sub_status_shipped_by_3pl_ts,
-       --pch.status_pick_up_payment_ts,
-       pch.sub_status_final_payment_requested_ts,              -- Отправили финальный платеж мерчанту
-       pch.sub_status_final_payment_in_progress_ts,            -- Время аппрува от финансов
-       pch.sub_status_final_payment_acquired_ts,               -- Мерчант подтвердил получение финального платежа
-       pch.sub_status_pick_up_payment_picked_up_ts,            -- Можно забирать товар (?)
-       --pch.status_completed_ts,
+       pch.sub_status_forming_order_unassigned_ts,
+       pch.sub_status_filling_in_information_ts,
+       pch.sub_status_preparing_order_ts,
+       pch.sub_status_awaiting_for_signing_ts,
+       pch.sub_status_merchant_signed_ts,
+       pch.sub_status_client_payment_received_ts,
+       pch.sub_status_advance_payment_requested_ts,
+       pch.sub_status_advance_payment_in_progress_ts,
+       pch.sub_status_manufacturing_ts,
+       pch.sub_status_psi_being_conducted_ts,
+       pch.sub_status_psi_waiting_for_confirmation_ts,
+       pch.sub_status_psi_problems_are_to_be_fixed_ts,
+       pch.sub_status_psi_results_accepted_ts,
+       pch.sub_status_final_payment_requested_ts,
+       pch.sub_status_final_payment_in_progress_ts,
+       pch.sub_status_final_payment_acquired_ts,
+       pch.sub_status_pick_up_payment_picked_up_ts,
        pch.sub_status_completed_ts,
-       --pch.status_cancelled_ts,
        pch.sub_status_cancelled_ts,
        ph.current_psi_status,
        ph.current_psi_status_ts,
@@ -454,6 +446,7 @@ SELECT po.procurement_order_id,
        ph.problem_client_comment
 FROM core_product AS po
 LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
+LEFT JOIN payments_history AS pah ON po.procurement_order_id = pah.procurement_order_id
 LEFT JOIN merchant_orders AS mo ON po.merchant_order_id = mo.merchant_order_id
 LEFT JOIN offer_products AS op ON po.procurement_order_id = op.procurement_order_id
 LEFT JOIN customer_offers AS co ON op.customer_offer_id = co.customer_offer_id
