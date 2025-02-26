@@ -8,7 +8,8 @@
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'bigquery_partitioning_date_column': 'search_event_date'
+      'bigquery_partitioning_date_column': 'search_event_date',
+      'bigquery_upload_horizon_days': '30',
     }
 ) }}
 
@@ -144,7 +145,7 @@ pre_final_flat_table AS (
     -- joining SEARCHES with OPENINGS by device_id and product_id
     LEFT JOIN product_opens AS po
         ON
-            po.product_id = sp.product_id
+            sp.product_id = po.product_id
             AND po.device_id = sp.device_id
             -- restricting the time window – before next search of the same product or before interval
             -- 99% products addings to cart happens within 30 minutes
@@ -154,16 +155,16 @@ pre_final_flat_table AS (
     -- joining SEARCHES with CART_ADDINGS by device_id and product_id
     LEFT JOIN cart_addings AS ca
         ON
-            ca.product_id = sp.product_id
-            AND ca.device_id = sp.device_id
+            sp.product_id = ca.product_id
+            AND sp.device_id = ca.device_id
             AND ca.event_ts_cet -- 99% products addings to cart happens within 30 minutes
             BETWEEN sp.event_ts_cet AND COALESCE(sp.next_event_ts_cet, sp.event_ts_cet + INTERVAL 30 MINUTE)
 
     -- joining CART_ADDINGS with ORDERS by device_id and product_id
     LEFT JOIN {{ source('onfy', 'orders_info') }} AS oi
         ON
-            oi.product_id = ca.product_id
-            AND oi.device_id = ca.device_id
+            ca.product_id = oi.product_id
+            AND ca.device_id = oi.device_id
             AND oi.order_created_time_cet -- 99% products bougth happens within 36 hours
             BETWEEN ca.event_ts_cet AND ca.event_ts_cet + INTERVAL 36 HOUR
 
@@ -204,7 +205,7 @@ pre_final_flat_table AS (
 
 SELECT
     search_event_dt,
-    cast(date_trunc('day', search_event_dt) as date) as search_event_date,
+    CAST(DATE_TRUNC('day', search_event_dt) AS DATE) AS search_event_date,
     search_query,
     is_category_search,
     product_id,
@@ -219,7 +220,7 @@ SELECT
 FROM pre_final_flat_table
 GROUP BY
     search_event_dt,
-    cast(date_trunc('day', search_event_dt) as date),
+    CAST(DATE_TRUNC('day', search_event_dt) AS DATE),
     search_query,
     is_category_search,
     product_id,

@@ -11,7 +11,18 @@
       'alerts_channel': '#onfy-etl-monitoring',
       'priority_weight': '150',
       'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_overwrite': 'true'
+      'bigquery_overwrite': 'true',
+      'bigquery_partition_date': '{{ next_ds }}',
+      'bigquery_upload_horizon_days': '30',
+      'bigquery_known_gaps': [
+          '2022-11-04', '2022-11-22', '2022-12-01', '2022-11-14', 
+          '2022-11-09', '2022-11-24', '2022-11-03', '2022-11-20', 
+          '2022-11-07', '2022-11-06', '2022-11-27', '2022-11-13', 
+          '2022-12-22', '2022-11-28', '2022-11-08', '2022-11-15', 
+          '2022-11-25', '2022-11-23', '2022-11-21', '2022-11-19', 
+          '2022-11-16', '2022-11-18', '2022-11-05', '2022-11-17', 
+          '2022-11-10', '2022-11-11'
+      ],
     }
 ) }}
 
@@ -277,10 +288,10 @@ transactions_usd AS (
         transactions_eur.gross_profit_final * eur.rate / usd.rate AS gross_profit_final
     FROM
         transactions_eur
-        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} eur
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} AS eur
             ON eur.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
             AND eur.currency_code = 'EUR'
-        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} usd
+        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} AS usd
             ON usd.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
             AND usd.currency_code = 'USD'
 )
