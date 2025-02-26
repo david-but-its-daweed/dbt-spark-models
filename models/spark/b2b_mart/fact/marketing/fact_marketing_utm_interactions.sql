@@ -105,6 +105,7 @@ LOWER(utm_source) like '%acebook%' or LOWER(utm_source) like '%instagram%' or LO
     when LOWER(utm_source) like '%youtube%' or  LOWER(utm_medium) like '%youtube%' then 'Youtube'
     when LOWER(utm_source) like '%social%' or  LOWER(utm_medium) like '%social%' then 'Social'
     when LOWER(utm_source) like '%partners%' or  LOWER(utm_medium) like '%partners%' then 'Partners'
+    when utm_source like '%SDR%' or utm_campaign  like '%SDR%' or utm_medium like '%SDR%' then 'SDR'
     when LOWER(utm_medium) like '%sponsored%' or LOWER(utm_medium) like '%event_folder%' or  LOWER(utm_medium) like '%content%' 
     or (utm_medium is Null and utm_source is not null)  then 'Unrecognised_source' 
     else utm_medium 
@@ -129,9 +130,9 @@ utm_campaign,
 friendly_source,
 number_visit,
 gclid,
- case when number_visit = 1
+case when number_visit = 1
         then True else False end as first_visit_flag, 
- case when desc_number_visit = 1 
+case when desc_number_visit = 1 
         then True else False end as last_visit_flag,
      data_source,
      ts_visit_duplicate_rn
