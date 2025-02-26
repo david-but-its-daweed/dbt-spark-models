@@ -51,10 +51,11 @@ merchant_orders AS (
         money_info.merchant_revenue,
         money_info.merchant_unit_price,
 
-        refund.time_utc IS NULL AS is_refunded,
+        refund.time_utc IS NOT NULL AS is_refunded,
         TO_DATE(refund.time_utc) AS refund_date,
         refund.merchant_reason AS refund_merchant_reason,
         refund.customer_reason AS refund_customer_reason,
+
         is_fraud,
 
         cft,
