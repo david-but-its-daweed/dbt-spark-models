@@ -13,18 +13,7 @@
   )
 }}
 
-WITH product_numbers AS (
-    SELECT
-        order_id,
-        partition_date AS day,
-        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
-    FROM {{ source('mart', 'star_order_2020') }}
-    WHERE
-        TRUE
-        AND NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL)
-),
-
-orders_ext0 AS (
+WITH orders_ext0 AS (
     SELECT
         partition_date AS day,
         created_time_utc,
@@ -156,19 +145,12 @@ orders_ext0 AS (
             WHEN customer_refund_reason = 33 THEN 'shippingUnavailable'
             ELSE 'Unknown'
         END AS detailed_refund_reason,
-        gmv_initial <= 0.05 AS is_influencer_order
+        gmv_initial <= 0.05 AS is_influencer_order,
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
     FROM {{ source('mart', 'star_order_2020') }}
     WHERE
         TRUE
         AND NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL)
-),
-
-orders_ext1 AS (
-    SELECT
-        o.*,
-        n.product_order_number
-    FROM orders_ext0 AS o
-    LEFT JOIN product_numbers AS n USING (order_id, day)
 ),
 
 logistics_orders AS (
@@ -176,81 +158,6 @@ logistics_orders AS (
         order_id,
         tracking_delivered_time_utc
     FROM {{ source('logistics_mart', 'fact_order') }}
-),
-
-orders_ext2 AS (
-    SELECT
-        day,
-        created_time_utc,
-        device_id,
-        real_user_id,
-        user_id,
-        order_id,
-        friendly_order_id,
-        order_group_id,
-        merchant_id,
-        store_id,
-        product_quantity,
-        psp,
-        product_id,
-        product_variant_id,
-        category_id,
-        refund_reason,
-        refund_date_msk,
-        country,
-        platform,
-        last_context,
-        gmv_initial,
-        gmv_final,
-        gmv_refunded,
-        ecgp_initial,
-        ecgp_final,
-        order_gross_profit_final,
-        merchant_revenue_initial,
-        order_gross_profit_final_estimated,
-        merchant_revenue_final,
-        item_gmv,
-        item_gmv_rounded,
-        item_merchant_revenue_initial_rounded,
-        logistics_price_initial,
-        item_merchant_revenue_initial,
-        item_logistics_price_initial,
-        merchant_sale_price,
-        merchant_list_price,
-        extra_charge,
-        ecgp_in_gmv,
-        psp_initial,
-        psp_refund_fee,
-        psp_chargeback_fee,
-        estimated_delivery_min_days,
-        estimated_delivery_max_days,
-        is_not_delivered_refund,
-        is_quality_refund,
-        is_finalized,
-        used_coupon_id,
-        with_coupon,
-        coupon_discount,
-        with_points,
-        points_initial,
-        points_final,
-        discounts,
-        shipping_type,
-        review_day,
-        review_stars,
-        review_has_text,
-        review_media_count,
-        review_image_count,
-        customer_refund_reason,
-        is_join_month_order,
-        number_of_reviews,
-        is_negative_feedback,
-        detailed_refund_reason,
-        is_influencer_order,
-
-        IF(number_of_reviews > 0, ROUND(total_product_rating / number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
-        COALESCE(number_of_reviews >= 15, FALSE) AS is_product_with_stable_rating, -- был ли рейтинг стабильным на момент покупки
-        product_order_number -- номер покупки товара
-    FROM orders_ext1
 ),
 
 support_tickets AS (
@@ -261,18 +168,89 @@ support_tickets AS (
     GROUP BY order_id
 ),
 
-orders_ext3 AS (
-    -- добавляем id тикета сапорта, если есть 
+orders_ext1 AS (
     SELECT
-        a.*,
-        COALESCE(b.ticket_id, c.ticket_id) AS support_ticket_id
-    FROM orders_ext2 AS a
-    LEFT JOIN support_tickets AS b ON a.order_id = b.order_id
-    LEFT JOIN support_tickets AS c ON a.friendly_order_id = c.order_id
+        o.day,
+        o.created_time_utc,
+        o.device_id,
+        o.real_user_id,
+        o.user_id,
+        o.order_id,
+        o.friendly_order_id,
+        o.order_group_id,
+        o.merchant_id,
+        o.store_id,
+        o.product_quantity,
+        o.psp,
+        o.product_id,
+        o.product_variant_id,
+        o.category_id,
+        o.refund_reason,
+        o.refund_date_msk,
+        o.country,
+        o.platform,
+        o.last_context,
+        o.gmv_initial,
+        o.gmv_final,
+        o.gmv_refunded,
+        o.ecgp_initial,
+        o.ecgp_final,
+        o.order_gross_profit_final,
+        o.merchant_revenue_initial,
+        o.order_gross_profit_final_estimated,
+        o.merchant_revenue_final,
+        o.item_gmv,
+        o.item_gmv_rounded,
+        o.item_merchant_revenue_initial_rounded,
+        o.logistics_price_initial,
+        o.item_merchant_revenue_initial,
+        o.item_logistics_price_initial,
+        o.merchant_sale_price,
+        o.merchant_list_price,
+        o.extra_charge,
+        o.ecgp_in_gmv,
+        o.psp_initial,
+        o.psp_refund_fee,
+        o.psp_chargeback_fee,
+        o.estimated_delivery_min_days,
+        o.estimated_delivery_max_days,
+        o.is_not_delivered_refund,
+        o.is_quality_refund,
+        o.used_coupon_id,
+        o.with_coupon,
+        o.coupon_discount,
+        o.with_points,
+        o.points_initial,
+        o.points_final,
+        o.discounts,
+        o.shipping_type,
+        o.review_day,
+        o.review_stars,
+        o.review_has_text,
+        o.review_media_count,
+        o.review_image_count,
+        o.customer_refund_reason,
+        o.is_join_month_order,
+        o.number_of_reviews,
+        o.is_negative_feedback,
+        o.detailed_refund_reason,
+        o.is_influencer_order,
+
+        IF(o.number_of_reviews > 0, ROUND(o.total_product_rating / o.number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
+        COALESCE(o.number_of_reviews >= 15, FALSE) AS is_product_with_stable_rating, -- был ли рейтинг стабильным на момент покупки
+        o.product_order_number, -- номер покупки товара
+        COALESCE(b.ticket_id, c.ticket_id) AS support_ticket_id,
+        IF(l.tracking_delivered_time_utc IS NOT NULL, TRUE, o.is_finalized) AS is_finalized
+
+    FROM orders_ext0 AS o
+    -- Не менять порядок джойнов - джойны по order_id должны идти подряд, чтобы избежать лишних шафлов
+    LEFT JOIN logistics_orders AS l USING (order_id)
+    -- добавляем id тикета сапорта, если есть 
+    LEFT JOIN support_tickets AS b USING (order_id)
+    LEFT JOIN support_tickets AS c ON o.friendly_order_id = c.order_id
 ),
 
-
-orders_ext4 AS (
+orders_ext2 AS (
     -- добавляем информацию, новый пользователь или нет из таблицы active_devices
     SELECT
         a.day,
@@ -345,11 +323,10 @@ orders_ext4 AS (
         a.product_order_number,
         a.support_ticket_id,
 
-        IF(l.tracking_delivered_time_utc IS NOT NULL, TRUE, a.is_finalized) AS is_finalized,
+        a.is_finalized,
         COALESCE(b.is_new_user, FALSE) AS is_new_user
-    FROM orders_ext3 AS a
+    FROM orders_ext1 AS a
     LEFT JOIN {{ ref('active_devices') }} AS b ON a.device_id = b.device_id AND a.day = b.day
-    LEFT JOIN logistics_orders AS l USING (order_id)
 )
 
-SELECT * FROM orders_ext4
+SELECT * FROM orders_ext2
