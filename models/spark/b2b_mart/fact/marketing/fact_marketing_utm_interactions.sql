@@ -42,8 +42,8 @@ select interaction_id,
        campaign,
        first_interaction_type,
        last_interaction_type
- from {{ ref('fact_attribution_interaction') 
-    where coalesce(utm_source,source) != 'hubspot' }}
+ from {{ ref('fact_attribution_interaction') }}
+    where coalesce(utm_source,source) != 'hubspot' 
 ),
 users_with_visit as (
     select user_id, min(visit_ts_msk) as visit_ts_msk
