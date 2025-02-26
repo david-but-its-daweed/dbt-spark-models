@@ -69,7 +69,7 @@ null as gclid,
 from  {{ ref('dim_user') }} d
 left join users_with_visit using(user_id)
 left join interactions i using(user_id)
-where  (visit_ts_msk is null or i.first_interaction_type is True) 
+where  (visit_ts_msk is null or i.first_interaction_type is True or i.source = 'SDR') 
 and next_effective_ts_msk is null 
 and country = 'BR'),
 
@@ -94,7 +94,7 @@ when traffic_type = 'advertising' and (utm_campaign is null or  utm_campaign = '
 else utm_campaign
 end utm_campaign,
 case when 
-LOWER(utm_source) like '%acebook%' or LOWER(utm_source) like '%instagram%' or LOWER(utm_source) = 'fb'
+LOWER(utm_source) like '%acebook%'  or LOWER(utm_source) = 'fb'
     or LOWER(utm_medium) like '%acebook%' or LOWER(utm_medium) like '%instagram%' or LOWER(utm_medium)  = 'fb'
      then 'Facebook'
     when LOWER(utm_source) like '%instagram%' or  LOWER(utm_medium) like '%instagram%' then 'Instagram'
