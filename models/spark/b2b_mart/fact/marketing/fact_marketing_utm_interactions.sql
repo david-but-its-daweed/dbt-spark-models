@@ -42,7 +42,8 @@ select interaction_id,
        campaign,
        first_interaction_type,
        last_interaction_type
- from {{ ref('fact_attribution_interaction') }}
+ from {{ ref('fact_attribution_interaction') 
+    where coalesce(utm_source,source) != 'hubspot' }}
 ),
 users_with_visit as (
     select user_id, min(visit_ts_msk) as visit_ts_msk
@@ -106,7 +107,8 @@ LOWER(utm_source) like '%acebook%'  or LOWER(utm_source) = 'fb'
     when LOWER(utm_source) like '%social%' or  LOWER(utm_medium) like '%social%' then 'Social'
     when LOWER(utm_source) like '%partners%' or  LOWER(utm_medium) like '%partners%' then 'Partners'
     when utm_source like '%SDR%' or utm_campaign  like '%SDR%' or utm_medium like '%SDR%' then 'SDR'
-    when LOWER(utm_medium) like '%sponsored%' or LOWER(utm_medium) like '%event_folder%' or  LOWER(utm_medium) like '%content%' 
+    when LOWER(utm_source) like '%sponsored%' or LOWER(utm_medium) like '%sponsored%' then 'Sponsor'
+    when LOWER(utm_medium) like '%event_folder%' or  LOWER(utm_medium) like '%content%' 
     or (utm_medium is Null and utm_source is not null)  then 'Unrecognised_source' 
     else utm_medium 
     end as friendly_source, 
