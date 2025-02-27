@@ -9,6 +9,7 @@
       'priority_weight': '150',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
+      'bigquery_overwrite': 'true'
     }
 ) }}
 

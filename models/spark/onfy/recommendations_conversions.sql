@@ -5,10 +5,10 @@
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
-      'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
+      'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'session_start_date',
-      'bigquery_upload_horizon_days': '60',
+      'bigquery_overwrite': 'true'
     }
 ) }}
 
