@@ -6,7 +6,8 @@
       'model_owner': '@analytics.duty',
       'bigquery_load': 'true',
       'bigquery_table_name': 'experiments.decisions',
-      'bigquery_overwrite': 'true'
+      'bigquery_overwrite': 'true',
+      'bigquery_check_counts_max_diff_fraction': '0.001',
     }
 ) }}
 
