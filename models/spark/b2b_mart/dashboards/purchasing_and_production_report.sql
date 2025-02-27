@@ -226,7 +226,7 @@ WITH procurement_orders AS (
          psi_inspection AS (
         SELECT psi_status_id_long,
                col.datePayload.value,
-               TIMESTAMP(col.datePayload.value) AS inspection_ts
+               TIMESTAMP(col.datePayload.value) + INTERVAL 3 HOURS AS inspection_ts
         FROM (
             SELECT _id AS psi_status_id_long,
                    EXPLODE(payloadNew)
@@ -431,28 +431,28 @@ SELECT po.procurement_order_id,
        ph.current_psi_status,
        ph.current_psi_status_ts,
        ph.psi_waiting_ts,
-       ph.psi_running_ts,
-       ph.psi_ready_ts,
-       ph.psi_fail_ts,
-       ph.psi_success_ts,
+       ph.psi_running_ts AS psi_being_conducted_ts,
        ph.inspection_ts,
+       ph.psi_ready_ts AS psi_waiting_for_confirmation_ts,
        ph.solution,
        ph.problem_quality,
-       ph.problem_client_quality,
        ph.problem_customs_and_logistics,
-       ph.problem_client_customs_and_logistics,
        ph.problem_customs,
-       ph.problem_client_customs,
        ph.problem_logistics,
-       ph.problem_client_logistics,
        ph.problem_discrepancy,
-       ph.problem_client_discrepancy,
        ph.problem_requirements,
-       ph.problem_client_requirements,
        ph.problem_other,
-       ph.problem_client_other,
        ph.problem_comment,
-       ph.problem_client_comment
+       ph.psi_fail_ts AS psi_problems_are_to_be_fixed_ts,
+       ph.problem_client_quality,
+       ph.problem_client_customs_and_logistics,
+       ph.problem_client_customs,
+       ph.problem_client_logistics,
+       ph.problem_client_discrepancy,
+       ph.problem_client_requirements,
+       ph.problem_client_other,
+       ph.problem_client_comment,
+       ph.psi_success_ts AS psi_results_accepted_ts
 FROM core_product AS po
 LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
 LEFT JOIN payments_history AS pah ON po.procurement_order_id = pah.procurement_order_id
