@@ -42,5 +42,4 @@ require_final_semicolon = False
 group_by_and_order_by_style = consistent
 
 [sqlfluff:rules:references.quoting]
-force_enable = True
 prefer_quoted_identifiers = False
