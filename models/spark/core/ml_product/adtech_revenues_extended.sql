@@ -17,6 +17,7 @@ SELECT
     adtech.user_id,
     link.real_user_id,
     COALESCE(active_devices.country_code, UPPER(dim_device.pref_country), UPPER(adtech.country)) AS country_code,
+    COALESCE(countries.country_priority_type, 'Other') AS country_priority_type,
     COALESCE(active_devices.platform, dim_device.os_type, adtech.os_type) AS platform,
     COALESCE(
         active_devices.app_entity,
@@ -44,5 +45,8 @@ LEFT JOIN {{ ref('gold_active_devices') }} AS active_devices -- использу
         active_devices.device_id = adtech.device_id
         AND active_devices.date_msk = adtech.partition_date
 LEFT JOIN {{ source('mart', 'link_device_real_user') }} AS link USING (device_id) -- берем real_user_id, из gold не берем также из-за проблемы стыка дат
+LEFT JOIN {{ ref('gold_countries') }} AS countries
+    ON
+        COALESCE(active_devices.country_code, UPPER(dim_device.pref_country), UPPER(adtech.country)) = countries.country_code
 WHERE adtech.partition_date >= '2022-01-01'
-GROUP BY 1, 2, 3, 4, 5, 6, 7
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
