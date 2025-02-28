@@ -1,11 +1,13 @@
 {{
     config(
         materialized='table',
+        partition_by=['date_msk'],
         meta = {
             'model_owner' : '@general_analytics',
             'bigquery_load': 'true',
             'bigquery_partitioning_date_column': 'date_msk',
-            'bigquery_check_counts_max_diff_fraction': '0.01'
+            'bigquery_check_counts_max_diff_fraction': '0.01',
+            'full_reload_on': '6',
         }
     )
 }}
@@ -50,3 +52,4 @@ LEFT JOIN {{ ref('gold_countries') }} AS countries
         COALESCE(active_devices.country_code, UPPER(dim_device.pref_country), UPPER(adtech.country)) = countries.country_code
 WHERE adtech.partition_date >= '2022-01-01'
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
+DISTRIBUTE BY date_msk
