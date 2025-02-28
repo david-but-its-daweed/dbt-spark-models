@@ -19,7 +19,6 @@ WITH procurement_orders AS (
            coreEmpty AS core_empty,
            id AS product_id,
            name AS product_name,
-           type,
            procurementStatuses AS procurement_statuses,
            psiStatusID AS current_psi_status_id_long,
            manufacturerId AS manufacturer_id,
@@ -28,12 +27,13 @@ WITH procurement_orders AS (
            warehouse,
            TO_DATE(SUBSTR(minPickupDate, 1, 8), 'yyyyMMdd') AS min_pickup_date,
            merchOrdId AS merchant_order_id,
+           jpcPayment AS jpc_payment,
            payment,
            nullIf(size(payment.paymentScheme), 0) AS payment_count_plan,
            prices,
            productRoles AS product_roles,
            TRANSFORM(
-           MAP_VALUES(variants), 
+           MAP_VALUES(variants),
                v -> STRUCT(
                    v._id AS _id,
                    v.article AS article,
@@ -312,13 +312,15 @@ WITH procurement_orders AS (
 ),
 
      merchant_orders AS (
-    SELECT _id AS merchant_order_id,
-           friendlyId AS merchant_order_friendly_id,
-           orderId AS client_order_id,
-           merchantId AS merchant_id,
-           manDays AS manufacturing_days
-    FROM {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }}
-    WHERE deleted IS NOT TRUE
+    SELECT mo._id AS merchant_order_id,
+           mo.friendlyId AS merchant_order_friendly_id,
+           mo.orderId AS client_order_id,
+           mo.merchantId AS merchant_id,
+           m.Name AS merchant_name,
+           mo.manDays AS manufacturing_days
+    FROM {{ source('mongo', 'b2b_core_merchant_orders_v2_daily_snapshot') }} AS mo
+    LEFT JOIN {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }} AS m ON mo.merchantId = m._id
+    WHERE mo.deleted IS NOT TRUE
 ),
 
      offer_products AS (
@@ -362,15 +364,17 @@ WITH procurement_orders AS (
 ),
 
      customer_offers AS (
-    SELECT _id AS customer_offer_id,
-           moderatorId AS customer_offer_owner_id,
+    SELECT co._id AS customer_offer_id,
+           co.moderatorId AS customer_offer_owner_id,
+           au.email AS customer_offer_owner_email,
            type.name AS customer_offer_type,
            status.name AS customer_offer_status,
-           millis_to_ts_msk(ctms) AS customer_offer_created_ts,
-           millis_to_ts_msk(utms) AS customer_offer_updated_ts
+           millis_to_ts_msk(co.ctms) AS customer_offer_created_ts,
+           millis_to_ts_msk(co.utms) AS customer_offer_updated_ts
     FROM {{ source('mongo', 'b2b_core_customer_offers_daily_snapshot') }} AS co
     LEFT JOIN {{ ref('key_status') }} AS type ON type.key = 'offer.type' AND co.offerType = type.id
     LEFT JOIN {{ ref('key_status') }} AS status ON status.key = 'offer.status' AND co.status = status.id
+    LEFT JOIN {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }} AS au ON co.moderatorId = au._id
     WHERE isDeleted IS NOT TRUE
 ),
 
@@ -386,7 +390,6 @@ WITH procurement_orders AS (
            t1.core_empty,
            CASE WHEN t1.core_empty = TRUE THEN t2.product_id ELSE t1.product_id END AS product_id,
            CASE WHEN t1.core_empty = TRUE THEN t2.product_name ELSE t1.product_name END AS product_name,
-           t1.type,
            t1.procurement_statuses,
            t1.current_psi_status_id_long,
            CASE WHEN t1.core_empty = TRUE THEN t2.manufacturer_id ELSE t1.manufacturer_id END AS manufacturer_id,
@@ -395,6 +398,7 @@ WITH procurement_orders AS (
            t1.warehouse,
            t1.min_pickup_date,
            t1.merchant_order_id,
+           t1.jpc_payment,
            t1.payment,
            t1.payment_count_plan,
            t1.prices,
@@ -423,8 +427,8 @@ SELECT po.procurement_order_id,
        po.core_empty,
        po.product_id,
        po.product_name,
-       po.type,
        po.prices,
+       po.jpc_payment,
        po.payment,
        po.payment_count_plan,
        pah.payment_count_fact,
@@ -435,17 +439,31 @@ SELECT po.procurement_order_id,
        pah.payment_sum_other,
        po.variants,
        po.production_deadline,
-       po.production_range,
-       po.warehouse,
-       po.min_pickup_date,
+       po.production_range.deadline AS production_deadline_new,
+       po.production_range.from AS production_deadline_from,
+       po.production_range.to AS production_deadline_to,
+       warehouse.customsInfo.confirmationTime AS confirmation_time,
+       warehouse.inspection.inspectionComment AS inspection_comment,
+       warehouse.inspection.inspectionDate AS inspection_date,
+       warehouse.inspection.inspectionEta AS inspection_eta,
+       warehouse.merchantShipping.date AS merchant_shipping_date,
+       warehouse.merchantShipping.deliveryDays AS merchant_shipping_delivery_days,
+       warehouse.packingDate AS packing_date,
+       warehouse.receiving.receivingDate AS receiving_date,
+       warehouse.receiving.receivingEta AS receiving_eta,
+       warehouse.warehouseComment AS warehouse_comment,
+       po.min_pickup_date AS pickup_date,
        mo.client_order_id,
        po.merchant_order_id,
        mo.merchant_order_friendly_id,
        mo.merchant_id,
+       mo.merchant_name,
        po.manufacturer_id,
+       --mani.manufacturer_name
        mo.manufacturing_days,
        op.customer_offer_id,
        co.customer_offer_owner_id,
+       co.customer_offer_owner_email,
        co.customer_offer_type,
        co.customer_offer_status,
        coalesce(po.created_ts, pch.first_status_ts) AS created_ts,
