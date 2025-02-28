@@ -73,7 +73,7 @@ device_info AS (
         date_msk,
         top_country_code,
         is_new_device
-    FROM {{ ref('active_devices') }}
+    FROM {{ ref('gold_active_devices') }}
     WHERE date_msk >= DATE'{{ var("start_date_ymd") }}'
 ),
 
