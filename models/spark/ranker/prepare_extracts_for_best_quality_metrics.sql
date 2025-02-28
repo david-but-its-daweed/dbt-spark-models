@@ -1,12 +1,12 @@
 {{ config(
-    schema='search',
+    schema='recom',
     incremental_strategy='insert_overwrite',
     materialized='incremental',
     partition_by=['partition_date'],
     file_format='parquet',
     meta = {
       'model_owner' : '@itangaev',
-      'team': 'search',
+      'team': 'recom',
       'bigquery_load': 'false',
       'bigquery_partitioning_date_column': 'partition_date',
       'bigquery_fail_on_missing_partitions': 'false'
