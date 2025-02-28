@@ -14,33 +14,32 @@
   )
 }}
 -- TODO: заложить логику approved > cancelled > pending
-WITH products_list_w_edlp AS (
+WITH manual_prices_1688 AS (
     SELECT
         product_id,
-        COUNT_IF(label = 'focused') > 0 AS is_focused,
-        COUNT_IF(label = 'EDLP') > 0 AS is_edlp,
-        COUNT_IF(label = 'joom_select') > 0 AS is_js
-    FROM {{ source('goods', 'product_labels') }}
-    WHERE
-        {% if is_incremental() %}
-            partition_date = DATE('{{ var("start_date_ymd") }}')
-        {% else %}
-            partition_date = DATE("2025-02-17")
-        {% endif %}
-    GROUP BY 1
-    HAVING is_focused AND NOT is_js
+        variant_id,
+        MIN(target_price) AS target_price_1688
+    FROM {{ source('category_management', 'js_focus_1688_products') }}
+    GROUP BY 1, 2
 ),
 
 focused_products_list AS (
     SELECT
-        f.product_id,
-        f.is_edlp
-    FROM products_list_w_edlp AS f
-    INNER JOIN {{ ref('gold_products') }} USING (product_id)
-    INNER JOIN {{ ref('gold_merchants') }} AS m USING (merchant_id)
+        product_id,
+        COUNT_IF(pl.label = 'focused') > 0 AS is_focused,
+        COUNT_IF(pl.label = 'EDLP') > 0 AS is_edlp,
+        COUNT_IF(pl.label = 'joom_select') > 0 AS is_js,
+        COUNT_IF(mp.product_id IS NOT NULL) > 0 AS is_1688
+    FROM {{ source('goods', 'product_labels') }} AS pl
+    FULL JOIN manual_prices_1688 AS mp USING (product_id)
     WHERE
-        NOT f.is_edlp
-        OR (f.is_edlp AND m.origin_name IN ('Chinese', 'Korean', 'Singaporean', 'Turkish', 'Japanese'))
+        {% if is_incremental() %}
+            pl.partition_date = DATE('{{ var("start_date_ymd") }}')
+        {% else %}
+            pl.partition_date = DATE("2025-02-17")
+        {% endif %}
+    GROUP BY 1
+    HAVING NOT is_js AND (is_focused OR is_1688)
 ),
 
 orders AS (
@@ -174,6 +173,7 @@ SELECT
     ph.variant_id,
     CASE
         WHEN fpl.is_edlp THEN 'edlp'
+        WHEN fpl.is_1688 THEN '1688'
         ELSE 'focused'
     END AS product_type, -- could be focused, edlp, 1688
     ph.original_currency,
@@ -188,8 +188,9 @@ SELECT
     ROUND(o.min_merchant_list_price, 2) AS min_merchant_list_price,
     m.rate AS merchant_discount_rate,
     d.discount AS product_discount_rate,
-    mvt.target_variant_price AS variant_target_price,
+    COALESCE(DOUBLE(mp.target_price_1688), mvt.target_variant_price) AS variant_target_price,
     ROUND(COALESCE(
+        mp.target_price_1688, -- 1688 price
         mvt.target_variant_price,
         current_price * product_discount_rate,
         current_price * merchant_discount_rate,
@@ -198,6 +199,7 @@ SELECT
 FROM focused_products_list AS fpl
 LEFT JOIN price_history AS ph USING (product_id)
 LEFT JOIN manual_variant_targets AS mvt USING (product_id, variant_id)
+LEFT JOIN manual_prices_1688 AS mp USING (product_id, variant_id)
 LEFT JOIN manual_discount AS d USING (product_id)
 LEFT JOIN category_management.js_merchant_discount_rate AS m USING (merchant_id)
 LEFT JOIN orders AS o USING (product_id, variant_id)

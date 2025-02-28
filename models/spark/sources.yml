@@ -211,6 +211,7 @@ sources:
       - name: joom_select_product_white_list
       - name: joom_select_product_black_list
       - name: categories_with_ce_requirements
+      - name: js_focus_1688_products
 
   - name: merchant
     tables:
