@@ -41,6 +41,10 @@ WITH device_info AS (
                     THEN 'CoolBeCom'
                 WHEN app_entity = 'cool_be_trending'
                     THEN 'CoolBe Trending'
+                WHEN app_entity = 'shopy'
+                    THEN 'Shopy'
+                WHEN app_entity = 'fluff'
+                    THEN 'Fluff'
             END
         ) AS app_entity,
         FIRST_VALUE(UPPER(language)) AS app_language
