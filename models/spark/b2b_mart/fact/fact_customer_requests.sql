@@ -45,6 +45,9 @@ select
     sampleType as sample_type,
     request.totalPrice.amount as total_price,
     request.totalPrice.ccy as total_price_ccy,
+    merchantPrices.currency AS merchant_price_currency,
+    merchantPrices.priceAmountPerItem AS merchant_price_per_item,
+    merchantPrices.totalAmountPrice AS merchant_price_total_amount,
     millis_to_ts_msk(utms) as updated_time,
     TIMESTAMP(dbt_valid_from) as effective_ts_msk,
     TIMESTAMP(dbt_valid_to) as next_effective_ts_msk
