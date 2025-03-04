@@ -93,13 +93,37 @@ ranking_pre_pre_cust AS (
 
 --all entries    
 ranking_pre AS (
-    SELECT *
+    SELECT
+        ticket_id,
+        author_id,
+        email,
+        author_type,
+        entry_type,
+        text,
+        partition_date,
+        event_ts_msk
     FROM ranking_pre_pre
     UNION ALL
-    SELECT *
+    SELECT
+        ticket_id,
+        author_id,
+        email,
+        author_type,
+        entry_type,
+        text,
+        partition_date,
+        event_ts_msk
     FROM ranking_pre_pre_cust
     UNION ALL
-    SELECT *
+    SELECT
+        ticket_id,
+        author_id,
+        email,
+        author_type,
+        entry_type,
+        text,
+        partition_date,
+        event_ts_msk
     FROM ranking_pre_pre_reminders
 ),
 
@@ -243,7 +267,6 @@ agent_support_actions AS (
                 t.author_type = 'agent'
                 AND t.previous_author_id != t.author_id
                 AND t.previous_author_id = '000000000000050001000001'
-                AND t.previous_text LIKE '%escalate to agen%'
                 AND t.entry_type = 'message'
             ) THEN 'message after bot'
             WHEN (
@@ -358,6 +381,12 @@ agent_support_actions AS (
             AND t.previous_entry_type IN ('message', 'privateNote')
             AND t.entry_type IN ('message', 'privateNote')
         )
+        OR (
+            t.author_type = 'agent'
+            AND t.previous_author_id != t.author_id
+            AND t.previous_author_id = '000000000000050001000001'
+            AND t.entry_type = 'message'
+        )
         OR t.author_type = 'Button_Resolved'
 ),
 
@@ -424,8 +453,36 @@ escalations_to_queue AS (
         AND t.state_queue_id != t.previous_state_queue_id
 )
 
-SELECT *
+SELECT
+    partition_date,
+    ticket_id,
+    previous_author_id,
+    author_id,
+    previous_author_type,
+    author_type,
+    previous_entry_type,
+    entry_type,
+    previous_event_ts_msk,
+    event_ts_msk,
+    previous_text,
+    text,
+    email,
+    action_type
 FROM agent_support_actions
 UNION ALL
-SELECT *
+SELECT
+    partition_date,
+    ticket_id,
+    previous_author_id,
+    author_id,
+    previous_author_type,
+    author_type,
+    previous_entry_type,
+    entry_type,
+    previous_event_ts_msk,
+    event_ts_msk,
+    previous_text,
+    text,
+    email,
+    action_type
 FROM escalations_to_queue
