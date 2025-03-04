@@ -79,9 +79,7 @@ WITH base_deal AS (
         CAST(expectedQuantity AS INT) * exwPerItem / 1000000 AS exw,
         CAST(expectedQuantity AS INT) * taxBasePerItem / 1000000 AS taxBase,
         CAST(expectedQuantity AS INT) * totalPerItem / 1000000 AS total,
-        CAST(expectedQuantity AS INT) * sampleDDPPrice / 1000000 AS sample_ddp,
-        merchant_price_per_item / 1000000 AS merchant_price_per_item,
-        merchant_price_total_amount / 1000000 AS merchant_price_total_amount
+        CAST(expectedQuantity AS INT) * sampleDDPPrice / 1000000 AS sample_ddp
     FROM {{ ref('fact_customer_requests_variants') }}
 ),
 
