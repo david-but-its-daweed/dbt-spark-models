@@ -14,3 +14,4 @@
 SELECT *
 FROM {{ ref('data_readiness_summary') }}
 LIMIT 100
+
