@@ -36,7 +36,7 @@ jobs:
         with:
           repository: joomcode/dbt-models
           ref: master
-          #token: ${{ secrets.ACCESS_TOKEN }}
+          token: ${{ secrets.ACCESS_TOKEN }}
           path: dbt-models-repo
       # Not using setup-python because of https://github.com/actions/setup-python/issues/162
       - name: Add python installed packages to path
