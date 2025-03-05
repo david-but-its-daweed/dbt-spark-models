@@ -30,13 +30,13 @@ jobs:
       - name: Login to EKS
         run: aws eks --region eu-central-1 update-kubeconfig --name streaming-kube
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout reusable workflow dir
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: joomcode/dbt-models
           ref: master
-          token: ${{ secrets.ACCESS_TOKEN }}
+          #token: ${{ secrets.ACCESS_TOKEN }}
           path: dbt-models-repo
       # Not using setup-python because of https://github.com/actions/setup-python/issues/162
       - name: Add python installed packages to path
