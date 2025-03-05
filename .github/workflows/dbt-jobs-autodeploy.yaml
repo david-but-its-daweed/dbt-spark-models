@@ -30,9 +30,9 @@ jobs:
       - name: Login to EKS
         run: aws eks --region eu-central-1 update-kubeconfig --name streaming-kube
       - name: Check out repository code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
       - name: Checkout reusable workflow dir
-        uses: actions/checkout@v4
+        uses: actions/checkout@v3
         with:
           repository: joomcode/dbt-models
           ref: master
