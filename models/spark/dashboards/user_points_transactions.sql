@@ -24,7 +24,8 @@ WITH active_users AS (
 finalized AS (
     SELECT
         refid,
-        effective_usd
+        effective_usd,
+        amount
     FROM
         {{ ref('fact_user_points_transactions') }}
     WHERE
@@ -44,7 +45,10 @@ points AS (
         t1.type AS point_transaction_type,
         t1.date_msk,
         COUNT(*) AS num_transactions,
-        SUM(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.effective_usd, t1.effective_usd)) AS effective_usd
+        SUM(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.effective_usd, t1.effective_usd)) AS effective_usd,
+        SUM(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.amount.value, t1.amount.value)) AS value,
+        FIRST(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.amount.ccy, t1.amount.ccy)) AS ccy,
+        FIRST(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.amount.mult, t1.amount.mult)) AS mult
     FROM {{ ref('fact_user_points_transactions') }} AS t1
     LEFT JOIN finalized AS t2
         ON t1.id = t2.refid
@@ -62,7 +66,10 @@ base AS (
         points.user_id,
         points.point_transaction_type,
         points.effective_usd AS point_usd,
-        points.num_transactions
+        points.num_transactions,
+        points.ccy,
+        points.mult,
+        points.value
     FROM
         points
     LEFT JOIN active_users ON

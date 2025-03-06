@@ -22,3 +22,9 @@ models:
         description: Points amount in $
       - name: num_transactions
         description: Number of transactions
+      - name: ccy
+        description: Currency Code
+      - name: mult
+        description: Points coef (deprecated)
+      - name: value
+        description: Points value (in local currency)
