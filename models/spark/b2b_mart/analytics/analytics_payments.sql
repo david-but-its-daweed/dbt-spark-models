@@ -11,6 +11,7 @@
     }
 ) }}
 
+
 select
         _id as payment_id,
         usedId as user_id,
@@ -27,6 +28,8 @@ select
         price.ccy as currency,
         promocodeSnapshot._id as promocode_id,
         promocodeSnapshot.code as promocode,
+        coalesce(promocodeSnapshot.discount.fixed.amount, 0) as discount_fixed,
+        coalesce(promocodeSnapshot.discount.percentage.percentage, 0) as discount_percentage,
         rate,
         status
 from {{ source('mongo', 'b2b_core_analytics_payments_daily_snapshot') }}
