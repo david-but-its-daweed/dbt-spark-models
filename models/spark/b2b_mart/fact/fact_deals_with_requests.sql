@@ -43,7 +43,7 @@ WITH base_deal AS (
     WHERE CAST(created_ts_msk AS DATE) >= '2024-04-01'
       AND next_effective_ts_msk IS NULL
       AND country = 'BR'
-      AND status NOT IN ('Test', 'Duplicated')
+     --- AND status NOT IN ('Test', 'Duplicated')
 ),
 
     base_requests AS (
