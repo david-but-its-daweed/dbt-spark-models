@@ -51,7 +51,6 @@ slo_gold_migration,gold_migration.order_groups,bq
 slo_gold_migration,gold_migration.orders,bq
 slo_gold_migration,gold_migration.products,bq
 slo_gold_migration,gold_migration.referral_orders,bq
-slo_jm_plan_fact_priority,models.jm_plan_vs_fact_by_weeks,bq
 slo_jm_plan_fact_priority,mart.adtech_revenues,bq
 slo_jm_plan_fact_priority,models.merchant_prices,bq
 slo_jm_plan_fact_priority,models.china_stages_speed,bq
