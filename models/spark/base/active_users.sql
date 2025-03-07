@@ -27,11 +27,11 @@ WITH user_info AS (
         FIRST_VALUE(app_version) AS app_version,
         MIN(ephemeral) AS is_ephemeral,
         FIRST_VALUE(real_user_id) AS real_user_id,
-        FIRST_VALUE(IF(legal_entity = 'jmt', 'JMT', 'Joom')) AS legal_entity,
+        FIRST_VALUE(IF(legal_entity = 'jmt', 'JMT', 'SIA')) AS legal_entity,
         FIRST_VALUE(UPPER(language)) AS app_language
     FROM {{ source('mart', 'star_active_device') }}
     {% if is_incremental() %}
-       WHERE date_msk >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
+        WHERE date_msk >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
     {% endif %}
     GROUP BY 1, 2
 ),
@@ -60,4 +60,4 @@ SELECT
     TRUNC(u.day, 'MM') AS month_msk
 FROM user_info AS u
 INNER JOIN join_dates AS jd USING (user_id)
-DISTRIBUTE BY month_msk, abs(hash(u.user_id)) % 10
+DISTRIBUTE BY month_msk, ABS(HASH(u.user_id)) % 10
