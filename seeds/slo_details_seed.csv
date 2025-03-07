@@ -14,7 +14,6 @@ slo_jl_base_tables,JL Main Tables,@e.kotsegubov,#slo-monitoring,8,Joom Logistics
 slo_jpro_base_tables,JPro Main Tables,@amitiushkina,#slo-monitoring,8,JoomPro main tables,mart,80,2,,
 slo_losses_in_profit_report,Losses in Profit,@yatsushko,#slo-monitoring,8,Data for Losses in Profit report https://secure.holistics.io/dashboards/v3/64762-losses-in-profit,report,80,2,,
 slo_gmv_structure_report,GMV Structure,@yatsushko,#slo-monitoring,8,Data for GMV Structure report https://secure.holistics.io/dashboards/v3/63886-gmv-structure,report,80,2,,
-slo_contribution_profit_report,Contribution Profit,@yatsushko,#slo-monitoring,8,Data for Contribution Profit report https://secure.holistics.io/dashboards/v3/63984-contribution-profit,report,80,2,,
 slo_country_info_report,Country Info,@yatsushko,#slo-monitoring,8,Data for Country Info report https://secure.holistics.io/dashboards/v3/17297-country-info,report,80,2,,
 slo_gmv_structure_report,GMV Structure,@yatsushko,#slo-monitoring,8,Data for GMV Structure report https://secure.holistics.io/dashboards/v3/63886-gmv-structure,report,80,2,,
 slo_jm_plan_fact_business_lines,JM Plan-Fact | Business lines,@yatsushko,#slo-monitoring,8,Data for JM Plan-Fact | Business lines report https://secure.holistics.io/dashboards/v3/71745-jm-plan-fact-business-lines,report,90,2,,
