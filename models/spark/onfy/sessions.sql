@@ -8,8 +8,7 @@
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
       'bigquery_partitioning_date_column': 'session_start_date',
-      'bigquery_partition_date': '{{ next_ds }}',
-      'bigquery_upload_horizon_days': '30',
+      'bigquery_overwrite': 'true'
     }
 ) }}
 
