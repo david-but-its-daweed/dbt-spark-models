@@ -9,8 +9,7 @@
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
       'bigquery_partitioning_date_column': 'search_event_date',
-      'bigquery_partition_date': '{{ next_ds }}',
-      'bigquery_overwrite': 'true',
+      'bigquery_overwrite': 'true'
     }
 ) }}
 
