@@ -289,7 +289,35 @@ order_v2_mongo AS (
                     '67c213f4123d7dbb33dc1351',
                     '67c1f4c2123d7dbb33dc12dd',
                     '67c211ac9465c86bf826d266',
-                    '67bfda7723ab3402f6fdc3e8'
+                    '67bfda7723ab3402f6fdc3e8',
+                    '67c818161660a7dee86e9139',
+                    '67cb21e948facf1263a9213f',
+                    '67c8cf0568bdecf7afd57e86',
+                    '67cb1f1e48facf1263a9210b',
+                    '67c20cce123d7dbb33dc1332',
+                    '67c23a81123d7dbb33dc137c',
+                    '67c8b77c40583cbaa1f809c9',
+                    '67c8aac968bdecf7afd57cf7',
+                    '67c23be5123d7dbb33dc138e',
+                    '67c89dea40583cbaa1f7f598',
+                    '67c888d140583cbaa1f7f4c0',
+                    '67c89a3f68bdecf7afd57cad',
+                    '67c8cf3740583cbaa1f80b06',
+                    '67c8d43840583cbaa1f80b51',
+                    '67ca02ccf4c9c165a2d78402',
+                    '67c9cbed5e266a1c79c68c26',
+                    '67c795d11660a7dee86e5225',
+                    '67c8c4bb40583cbaa1f80a76',
+                    '67ca0a25f4c9c165a2d7846f',
+                    '67ca0c79f4c9c165a2d78492',
+                    '67ca46f914bb630910140562',
+                    '67cb5dd448facf1263a9222d',
+                    '67cb4c8a72fa2c85e67f0289',
+                    '67cb55f848facf1263a9221b',
+                    '67cb1a8248facf1263a920f9',
+                    '67caee5270be4b8717a737fe',
+                    '67cb534a48facf1263a92210',
+                    '67cb506972fa2c85e67f029b'
         
     ) AND fo.next_effective_ts_msk IS NULL) or 
         (fo.last_order_status < 60
@@ -533,4 +561,9 @@ and a.order_id not in (
             '67bc9a866625fbade5ded8dd',
             '67bd07ec4c87410d3c891f0f',
             '67be4ef2d4c7ca98e6aff1d8',
-            '67bf322ad4c7ca98e6aff695')
+            '67bf322ad4c7ca98e6aff695',
+            '67af4f32ab7537262edf2d66',
+            '67ab5923e7e15b58283132db',
+            '67ab5f4551715bab47e6a843',
+            '67adf2b871e3ebc3ad12ae49'
+    )
