@@ -73,6 +73,7 @@ payments AS (
 SELECT
     subscription.payment_id,
     subscription.user_id,
+    subscription.package_date,
     subscription.payment_created_time,
     subscription.payment_created_date,
     subscription.package_id,
