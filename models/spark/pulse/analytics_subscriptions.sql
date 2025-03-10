@@ -27,8 +27,8 @@ WITH currency AS (
 SELECT
     subscription.payment_id,
     subscription.user_id,
-    ADD_MONTH(subscription.created_time, (subscription.time_payed * subscription.package_duration)) AS payment_created_time,
-    ADD_MONTH(subscription.created_date, (subscription.time_payed * subscription.package_duration)) AS payment_created_date,
+    ADD_MONTHS(subscription.created_time, (subscription.time_payed * subscription.package_duration)) AS payment_created_time,
+    ADD_MONTHS(subscription.created_date, (subscription.time_payed * subscription.package_duration)) AS payment_created_date,
     subscription.package_id,
     subscription.package_duration_unit,
     subscription.package_duration,
