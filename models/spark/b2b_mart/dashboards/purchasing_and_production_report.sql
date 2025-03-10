@@ -531,3 +531,9 @@ LEFT JOIN offer_products AS op ON po.procurement_order_id = op.procurement_order
 LEFT JOIN customer_offers AS co ON op.customer_offer_id = co.customer_offer_id
 LEFT JOIN procurement_statuses_history AS pch ON po.procurement_order_id = pch.procurement_order_id
 LEFT JOIN psi_history AS ph ON po.current_psi_status_id_long = ph.current_psi_status_id_long
+/* Убираем заказы, отмененные до оплаты клиента */
+WHERE CASE
+          WHEN current_sub_status = 'cancelled' AND sub_status_client_payment_received_ts IS NULL THEN 0
+          WHEN current_sub_status = 'cancelled' AND sub_status_cancelled_ts < sub_status_client_payment_received_ts THEN 0
+          ELSE 1
+      END = 1
