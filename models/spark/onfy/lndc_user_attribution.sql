@@ -165,6 +165,6 @@ users_corrected as (
 
 SELECT
     t.*,
-    CAST(source_ts_cet AS DATE) AS partition_date
+    CAST(coalesce(source_ts_cet, first_purchase_ts_cet) AS DATE) AS partition_date
 FROM users_corrected AS t
 DISTRIBUTE BY partition_date

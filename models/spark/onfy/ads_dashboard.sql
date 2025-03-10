@@ -548,4 +548,5 @@ select
     gclid,
     landing_pzn
 from spend_distributed
+WHERE report_date IS NOT NULL
 DISTRIBUTE BY partition_date
