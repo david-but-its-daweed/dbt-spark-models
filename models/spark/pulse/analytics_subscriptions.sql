@@ -99,7 +99,7 @@ FROM (
             CEIL(
                 CASE
                     WHEN subscription.status = "active"
-                        THEN MONTH_BETWEEN(
+                        THEN MONTHS_BETWEEN(
                             GREATEST(
                                 TO_TIMESTAMP(CURRENT_DATE()),
                                 COALESCE(
@@ -110,7 +110,7 @@ FROM (
                             MILLIS_TO_TS(subscription.createdTimeMs)
                         )
                     ELSE
-                        MONTH_BETWEEN(
+                        MONTHS_BETWEEN(
                             COALESCE(
                                 MILLIS_TO_TS(subscription.cancellationTime),
                                 MILLIS_TO_TS(subscription.nextChargeAttemptTime)
