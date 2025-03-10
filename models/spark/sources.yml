@@ -21,7 +21,7 @@ sources:
       - name: core_review_quiz_answers_scd2
       - name: babylone_events
       - name: fact_order_2020
-      - name: published_products_current
+      - name: dim_published_product_with_merchant
       - name: dim_currency_rate
       - name: onfy_babylone_events
       - name: product_events
@@ -36,6 +36,8 @@ sources:
       - name: dim_device
       - name: adtech_revenues
       - name: link_device_real_user
+      - name: published_products_current
+      - name: dim_region
       
   - name: cube
     tables:
@@ -180,6 +182,7 @@ sources:
     tables:
       - name: aliexpress_logistics_prices
       - name: aliexpress_joom_price_index_v2
+      - name: aliexpress_joom_automatching_price_index
 
   - name: goods
     tables:
@@ -217,3 +220,8 @@ sources:
     tables:
       - name: merchant_performance
       - name: order_data
+      - name: kam
+
+  - name: price
+    tables:
+      - name: preview_prices
