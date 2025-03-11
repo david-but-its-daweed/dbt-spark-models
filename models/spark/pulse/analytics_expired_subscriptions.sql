@@ -37,7 +37,7 @@ payments AS (
         POSEXPLODE(
             SEQUENCE(
                 payment_created_time,
-                LAST_DAY(CURRENT_DATE()),
+                (CURRENT_DATE()),
                 MAKE_INTERVAL(0, package_duration, 0, 0, 0, 0, 0)
             )
         ) AS (payment_number, package_date)
