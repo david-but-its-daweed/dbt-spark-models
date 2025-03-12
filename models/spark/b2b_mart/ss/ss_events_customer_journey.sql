@@ -39,6 +39,7 @@ LEFT JOIN bots ON de.device.id = bots.device_id
 WHERE partition_date >= '2024-04-01'
   AND bot_flag IS NULL
   AND type IN (
+        'click',
         'rfqOpen',
         'cartOpen',
         'addToCart',
@@ -47,14 +48,19 @@ WHERE partition_date >= '2024-04-01'
         'ordersOpen',
         'productClick',
         'categoryOpen',
+        'rfqSubmitForm',
         'categoryClick',
+        'translateImage',
         'contactUsClick',
         'userProfileClick',
         'removeOneFromCart',
         'sampleCheckoutOpen',
         'checkoutStartClick',
         'checkoutFinishClick',
+        'paymentMethodChange',
+        'deliveryChannelChange',
         'contactUsRequestSubmit',
+        'productVariantsPricesOpen',
         'checkoutCustomizationButtonClick',
         'requestQuoteNowCreateSuccess'
   )
