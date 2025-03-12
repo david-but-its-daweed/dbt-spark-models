@@ -942,6 +942,10 @@ models:
       description: Date of order fulfilling.
     - name: check_in_datetime_utc
       description: Date and time of order check in at 4PX.
+    - name: consolidation_in_checkpoint_time_utc
+      description: Date and time of puting away order for consolidation.
+    - name: consolidation_out_checkpoint_time_utc
+      description: Date and time of picking from shelf order for consolidation.
     - name: jl_costs_realization_datetime_utc
       description: Date and time of realization of costs for JL. From this date we know how much the shipping costs. Also date and time after which the parcel will not physically change unless there is a return from the logistician.
     - name: outbound_datetime_utc

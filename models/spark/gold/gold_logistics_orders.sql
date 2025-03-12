@@ -81,6 +81,8 @@ SELECT
     a.order_created_time_utc AS order_created_datetime_utc,
     CAST(DATEADD(HOUR, 3, a.order_fulfilled_online_time_utc) AS DATE) AS order_fulfilled_online_date_msk,
     a.check_in_time_utc AS check_in_datetime_utc,
+    a.consolidation_in_checkpoint_time_utc,
+    a.consolidation_out_checkpoint_time_utc,
     a.check_out_time_utc AS jl_costs_realization_datetime_utc,
     a.outbound_time_utc AS outbound_datetime_utc,
     a.tracking_origin_country_time_utc AS tracking_origin_country_datetime_utc,
