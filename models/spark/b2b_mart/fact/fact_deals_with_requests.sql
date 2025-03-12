@@ -20,6 +20,7 @@ WITH base_deal AS (
         CASE WHEN ss_customer THEN 1 ELSE 0 END AS ss_customer,
         status,
         CAST(status_int AS INT) AS status_int,
+        reject_reason,
         CASE
             WHEN reject_reason IS NOT NULL OR status IN (
                 'Other', 'MarketResearch', 'PriceTooHigh', 'Duplicated',
@@ -107,6 +108,7 @@ WITH base_deal AS (
             deal_status_group,
             status AS deal_status,
             status_int AS deal_status_int,
+            reject_reason as deal_reject_reason,
             deal_created_ts,
             deal_created_date,
             order_id,
@@ -207,6 +209,7 @@ SELECT d.deal_id,
        d.deal_status_group,
        d.deal_status,
        d.deal_status_int,
+       d.deal_reject_reason,
        d.deal_created_ts,
        d.deal_created_date,
        d.order_id,
