@@ -48,6 +48,7 @@ WHERE partition_date >= '2024-04-01'
         'ordersOpen',
         'productClick',
         'categoryOpen',
+        'sessionStart',
         'rfqSubmitForm',
         'categoryClick',
         'translateImage',
