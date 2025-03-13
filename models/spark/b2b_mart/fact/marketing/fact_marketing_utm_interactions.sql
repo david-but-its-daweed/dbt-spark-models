@@ -94,7 +94,9 @@ when  (utm_campaign is null or  utm_campaign = '') and  utm_medium like '%Exhibi
 when traffic_type = 'advertising' and (utm_campaign is null or  utm_campaign = '')  then 'unrecognized_campaign'
 else utm_campaign
 end utm_campaign,
-case when 
+case 
+    when traffic_type = 'organic' then 'Organic'
+    when 
 LOWER(utm_source) like '%acebook%'  or LOWER(utm_source) = 'fb'
     or LOWER(utm_medium) like '%acebook%' or LOWER(utm_medium) like '%instagram%' or LOWER(utm_medium)  = 'fb'
      then 'Facebook'
