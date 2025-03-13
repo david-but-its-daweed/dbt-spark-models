@@ -21,7 +21,7 @@ WITH previews AS (
         lastContext.requestId AS requestId,
         FIRST(lastContext.name) AS context_name,
         FIRST(lastContext.position) AS position,
-        FIRST(lastContext.adtechPromoted) AS is_adtech,
+        COALESCE(FIRST(lastContext.adtechPromoted), FALSE) AS is_adtech,
         FIRST(experiments) AS experiments
     FROM {{ source('mart', 'device_events') }}
     WHERE partition_date >= DATE'{{ var("start_date_ymd") }}' AND partition_date <= DATE'{{ var("end_date_ymd") }}'
