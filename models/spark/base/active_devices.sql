@@ -30,6 +30,7 @@ WITH device_info AS (
         FIRST_VALUE(dvc.real_user_id) AS real_user_id,
         FIRST_VALUE(IF(dvc.legal_entity = 'jmt', 'JMT', 'SIA')) AS legal_entity,
         FIRST_VALUE(CASE WHEN dvc.date_msk < '2023-07-01' THEN 'Joom' ELSE ent.app_entity_gold END) AS app_entity,
+        FIRST_VALUE(dvc.custom_domain) as custom_domain,
         FIRST_VALUE(UPPER(dvc.language)) AS app_language
     FROM {{ source('mart', 'star_active_device') }} AS dvc
     LEFT JOIN {{ ref('app_entities_mapping') }} AS ent USING (app_entity)
@@ -60,6 +61,10 @@ SELECT
     d.os_version,
     d.app_version,
     d.app_entity,
+    CASE
+        WHEN UPPER(d.app_entity) = "SHOPY" THEN d.custom_domain
+        ELSE Null
+    END AS shopy_blogger_domain,
     d.is_ephemeral,
     d.day = join_day AS is_new_user,
     d.real_user_id,

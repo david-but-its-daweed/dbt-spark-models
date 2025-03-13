@@ -63,6 +63,7 @@ orders_ext0 AS (
 
         IF(ord.legal_entity = 'jmt', 'JMT', 'SIA') AS legal_entity,
         CASE WHEN ord.partition_date < '2023-07-01' THEN 'Joom' ELSE ent.app_entity_gold END AS app_entity,
+        ord.custom_domain,
         ord.merchant_id,
         ord.store_id,
         ord.product_id,
@@ -284,6 +285,7 @@ orders_ext2 AS (
         order_datetime_utc,
         legal_entity,
         app_entity,
+        custom_domain,
         merchant_id,
         store_id,
         product_id,
@@ -410,6 +412,7 @@ orders_ext5 AS (
         a.order_datetime_utc,
         a.legal_entity,
         a.app_entity,
+        a.custom_domain,
         a.merchant_id,
         a.store_id,
         a.product_id,
@@ -539,6 +542,10 @@ SELECT
 
     legal_entity,
     app_entity,
+    CASE
+        WHEN UPPER(app_entity) = "SHOPY" THEN custom_domain
+        ELSE Null
+    END AS shopy_blogger_domain,
     merchant_id,
     store_id,
     product_id,
