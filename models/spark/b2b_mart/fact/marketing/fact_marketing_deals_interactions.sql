@@ -64,7 +64,7 @@ first_utm_medium,
 first_source,
 first_type,
 number_visit as number_of_interactions,
-row_number() over (partition by user_id,deal_id order by visit_ts_msk desc ) qualify_rn 
+row_number() over (partition by user_id,deal_id order by cast(visit_ts_msk as date) desc, traffic_type ) qualify_rn 
 from deals 
 left join interactions using(user_id ) 
 left join dop_info using(user_id ) 
