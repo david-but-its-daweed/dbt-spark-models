@@ -93,6 +93,8 @@ SELECT
     period_start_date,
     period_end_date,
 
+    origin_name,
+
     business_line,
 
     l1_merchant_category_name,
@@ -111,6 +113,6 @@ SELECT
     MAX_BY(order_id, cancelled_by_merchant_time_utc) AS last_cancelled_order_id,
     MAX(cancelled_by_merchant_time_utc) AS last_cancelled_time_utc
 FROM filtered_orders
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 
 
