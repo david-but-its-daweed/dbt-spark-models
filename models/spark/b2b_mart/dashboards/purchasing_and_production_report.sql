@@ -221,8 +221,6 @@ WITH procurement_orders AS (
         SELECT psi_status_id_long,
                MAX(CASE WHEN name = 'problems' AND problem.value = 'goodQuality' THEN 1 ELSE 0 END) AS quality,
                MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'goodQuality' THEN 1 ELSE 0 END) AS client_quality,
-               MAX(CASE WHEN name = 'problems' AND problem.value = 'customsAndLogisticsRequirements' THEN 1 ELSE 0 END) AS customs_and_logistics,
-               MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'customsAndLogisticsRequirements' THEN 1 ELSE 0 END) AS client_customs_and_logistics,
                MAX(CASE WHEN name = 'problems' AND problem.value = 'customsRequirements' THEN 1 ELSE 0 END) AS customs,
                MAX(CASE WHEN name = 'failureProblems' AND problem.value = 'customsRequirements' THEN 1 ELSE 0 END) AS client_customs,
                MAX(CASE WHEN name = 'problems' AND problem.value = 'logisticsRequirements' THEN 1 ELSE 0 END) AS logistics,
@@ -290,8 +288,6 @@ WITH procurement_orders AS (
            MAX(solution) AS solution,
            MAX(quality) AS problem_quality,
            MAX(client_quality) AS problem_client_quality,
-           MAX(customs_and_logistics) AS problem_customs_and_logistics,
-           MAX(client_customs_and_logistics) AS problem_client_customs_and_logistics,
            MAX(customs) AS problem_customs,
            MAX(client_customs) AS problem_client_customs,
            MAX(logistics) AS problem_logistics,
@@ -410,6 +406,67 @@ WITH procurement_orders AS (
     LEFT JOIN offer_products AS t2 ON t1.procurement_order_id = t2.procurement_order_id
     WHERE t1.core_empty IS NOT TRUE
        OR (t1.core_empty = TRUE AND t2.procurement_order_id IS NOT NULL)
+),
+
+     pickup_orders AS (
+    SELECT m._id AS pickup_order_id,
+           friendlyId AS pickup_order_friendly_id,
+           operationalProductId AS procurement_order_id,
+           merchOrdId AS merchant_order_id,
+           firstMileId AS first_mile_id,
+           boxes,
+           millis_to_ts_msk(ctms) AS creates_ts,
+           millis_to_ts_msk(utms) AS updated_ts,
+           to_date(cast(plannedDateV2 AS string), "yyyyMMdd") AS planned_date,
+           to_date(cast(pickUpDateV2 AS string), "yyyyMMdd") AS pickup_date,
+           to_date(cast(arrivedDateV2 AS string), "yyyyMMdd") AS arrived_date,
+           to_date(cast(shippedDateV2 AS string), "yyyyMMdd") AS shipped_date,
+           state AS statuses,
+           current_status,
+           current_status_ts,
+           status_waiting_for_confirmation_ts,
+           status_requested_ts,
+           status_approved_ts,
+           status_picked_up_ts,
+           status_arrived_ts,
+           status_shipped_ts,
+           status_suspended_ts
+    FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }} AS m
+    LEFT JOIN (
+        SELECT _id,
+               MAX(b.operationalProductId) AS operationalProductId
+        FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }}
+        LATERAL VIEW explode(boxes) AS b
+        GROUP BY 1
+    ) AS p ON m._id = p._id
+    LEFT JOIN (
+        SELECT _id,
+               MAX_BY(status, status_time) AS current_status,
+               MAX(status_time) AS current_status_ts,
+               MIN(CASE WHEN status = 'WaitingForConfirmation' THEN status_time END) AS status_waiting_for_confirmation_ts,
+               MIN(CASE WHEN status = 'Requested' THEN status_time END) AS status_requested_ts,
+               MIN(CASE WHEN status = 'Approved' THEN status_time END) AS status_approved_ts,
+               MIN(CASE WHEN status = 'PickedUp' THEN status_time END) AS status_picked_up_ts,
+               MIN(CASE WHEN status = 'Arrived' THEN status_time END) AS status_arrived_ts,
+               MIN(CASE WHEN status = 'Shipped' THEN status_time END) AS status_shipped_ts,
+               MIN(CASE WHEN status = 'Suspended' THEN status_time END) AS status_suspended_ts
+        FROM (
+            SELECT _id,
+                   CASE s.status
+                       WHEN 2 THEN 'WaitingForConfirmation'
+                       WHEN 5 THEN 'Requested'
+                       WHEN 10 THEN 'Approved'
+                       WHEN 13 THEN 'PickedUp'
+                       WHEN 16 THEN 'Arrived'
+                       WHEN 20 THEN 'Shipped'
+                       WHEN 30 THEN 'Suspended'
+                   END AS status,
+                   millis_to_ts_msk(s.updatedTimeMs) AS status_time
+            FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }}
+            LATERAL VIEW explode(state.statusHistory) AS s
+        ) AS m
+        GROUP BY 1
+    ) AS s ON m._id = s._id
 )
 
 
@@ -444,14 +501,13 @@ SELECT po.procurement_order_id,
        millis_to_ts_msk(po.production_range.deadline) AS production_deadline,
        millis_to_ts_msk(po.production_range.to) AS production_deadline_to,
        millis_to_ts_msk(warehouse.customsInfo.confirmationTime) AS confirmation_time,
-       TIMESTAMP(warehouse.inspection.inspectionDate) AS inspection_date,
-       TIMESTAMP(warehouse.inspection.inspectionEta) AS inspection_eta,
-       TIMESTAMP(warehouse.merchantShipping.date) AS merchant_shipping_date,
-       warehouse.merchantShipping.deliveryDays AS merchant_shipping_delivery_days,
-       TIMESTAMP(warehouse.packingDate) AS packing_date,
-       TIMESTAMP(warehouse.receiving.receivingDate) AS receiving_date,
-       TIMESTAMP(warehouse.receiving.receivingEta) AS receiving_eta,
-       po.min_pickup_date AS pickup_date,
+       TIMESTAMP(warehouse.inspection.inspectionDate) AS warehouse_inspection_date,
+       TIMESTAMP(warehouse.inspection.inspectionEta) AS warehouse_inspection_eta,
+       TIMESTAMP(warehouse.merchantShipping.date) AS warehouse_merchant_shipping_date,
+       warehouse.merchantShipping.deliveryDays AS warehouse_merchant_shipping_delivery_days,
+       TIMESTAMP(warehouse.packingDate) AS warehouse_packing_date,
+       TIMESTAMP(warehouse.receiving.receivingDate) AS warehouse_receiving_date,
+       TIMESTAMP(warehouse.receiving.receivingEta) AS warehouse_receiving_eta,
        mo.client_order_id,
        po.merchant_order_id,
        mo.merchant_order_friendly_id,
@@ -506,7 +562,6 @@ SELECT po.procurement_order_id,
        ph.psi_ready_ts AS psi_waiting_for_confirmation_ts,
        ph.solution,
        ph.problem_quality,
-       ph.problem_customs_and_logistics,
        ph.problem_customs,
        ph.problem_logistics,
        ph.problem_discrepancy,
@@ -515,14 +570,33 @@ SELECT po.procurement_order_id,
        ph.problem_comment,
        ph.psi_fail_ts AS psi_problems_are_to_be_fixed_ts,
        ph.problem_client_quality,
-       ph.problem_client_customs_and_logistics,
        ph.problem_client_customs,
        ph.problem_client_logistics,
        ph.problem_client_discrepancy,
        ph.problem_client_requirements,
        ph.problem_client_other,
        ph.problem_client_comment,
-       ph.psi_success_ts AS psi_results_accepted_ts
+       ph.psi_success_ts AS psi_results_accepted_ts,
+       pio.pickup_order_id,
+       pio.pickup_order_friendly_id,
+       pio.boxes AS pickup_order_boxes,
+       pio.creates_ts AS pickup_order_created_ts,
+       pio.updated_ts AS pickup_order_updated_ts,
+       po.min_pickup_date AS procurement_order_planned_pickup_date,
+       pio.planned_date AS pickup_order_planned_date,
+       pio.pickup_date AS pickup_order_pickup_date,
+       pio.arrived_date AS pickup_order_arrived_date,
+       pio.shipped_date AS pickup_order_shipped_date,
+       pio.statuses AS pickup_order_statuses,
+       pio.current_status AS pickup_order_current_status,
+       pio.current_status_ts AS pickup_order_current_status_ts,
+       pio.status_waiting_for_confirmation_ts AS pickup_order_status_waiting_for_confirmation_ts,
+       pio.status_requested_ts AS pickup_order_status_requested_ts,
+       pio.status_approved_ts AS pickup_order_status_approved_ts,
+       pio.status_picked_up_ts AS pickup_order_status_picked_up_ts,
+       pio.status_arrived_ts AS pickup_order_status_arrived_ts,
+       pio.status_shipped_ts AS pickup_order_status_shipped_ts,
+       pio.status_suspended_ts AS pickup_order_status_suspended_ts
 FROM core_product AS po
 LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
 LEFT JOIN payments_history AS pah ON po.procurement_order_id = pah.procurement_order_id
@@ -531,6 +605,7 @@ LEFT JOIN offer_products AS op ON po.procurement_order_id = op.procurement_order
 LEFT JOIN customer_offers AS co ON op.customer_offer_id = co.customer_offer_id
 LEFT JOIN procurement_statuses_history AS pch ON po.procurement_order_id = pch.procurement_order_id
 LEFT JOIN psi_history AS ph ON po.current_psi_status_id_long = ph.current_psi_status_id_long
+LEFT JOIN pickup_orders AS pio ON po.procurement_order_id = pio.procurement_order_id
 /* Убираем заказы, отмененные до оплаты клиента */
 WHERE CASE
           WHEN current_sub_status = 'cancelled' AND sub_status_client_payment_received_ts IS NULL THEN 0
