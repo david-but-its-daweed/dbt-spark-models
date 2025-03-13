@@ -1,6 +1,7 @@
 outputTable,outputTableType,inputTable,inputTableType,comment
 mart.fact_order_2020,spark,platform.time_metrics_forecast_country,spark,"fact_order_2020 depends on prev day forecast"
 mart.fact_order_2020,spark,platform.time_metrics_forecast_country_os_2,spark,"fact_order_2020 depends on prev day forecast"
+mart.fact_order_2020,spark,platform.time_metrics_forecast_country_category,spark,"fact_order_2020 depends on prev day forecast"
 quality.fact_order_2020,spark,platform.time_metrics_forecast_country,spark,"fact_order_2020 depends on prev day forecast"
 quality.fact_order_2020_deleted,spark,platform.time_metrics_forecast_country,spark,"fact_order_2020 depends on prev day forecast"
 mart.fact_order_2020_deleted,spark,platform.time_metrics_forecast_country,spark,"fact_order_2020 depends on prev day forecast"
@@ -12,3 +13,4 @@ webscraping.idealo_scheduled_gtins,spark,mi_analytics.idealo_priority_scheduling
 cube.profit,spark,platform.time_metrics_forecast_country,spark,"cube.profit depends on yesterday's data"
 ads.web_analytics_costs,spark,ads.vk_ds_daily_insights,spark,"web_analytics_costs doesn;t wait for VK data anymore: https://joom-team.slack.com/archives/C2QM63CG0/p1686384161779129?thread_ts=1686376945.230719&cid=C2QM63CG0 https://github.com/joomcode/datasci/commit/64082f4d57d0dabbb7030d40986e1dd45cdd94b6"
 payments.card_bins_snapshot,spark,payments.card_bins_version,spark,"we read latest version of payments.card_bins_version in payments.card_bins_snapshot @acherezova"
+default.sat_device_utm,spark,ads.fbads_default_adsets,spark,"we don'thave sensor on this table and take last parition date"
