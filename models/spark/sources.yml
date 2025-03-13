@@ -93,6 +93,7 @@ sources:
       - name: logistics_channels_daily_snapshot
       - name: payment_intents_daily_snapshot
       - name: payment_payment_orders_daily_snapshot
+      - name: merchant_order_order_metric_notes_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
