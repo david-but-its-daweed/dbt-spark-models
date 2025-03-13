@@ -7,9 +7,7 @@
     meta = {
       'model_owner' : '@itangaev',
       'team': 'recom',
-      'bigquery_load': 'false',
-      'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_fail_on_missing_partitions': 'false'
+      'bigquery_load': 'false'
     }
 ) }}
 WITH previews AS (
@@ -24,8 +22,13 @@ WITH previews AS (
         COALESCE(FIRST(lastContext.adtechPromoted), FALSE) AS is_adtech,
         FIRST(experiments) AS experiments
     FROM {{ source('mart', 'device_events') }}
-    WHERE partition_date >= DATE'{{ var("start_date_ymd") }}' AND partition_date <= DATE'{{ var("end_date_ymd") }}'
-      AND type = "productPreview"
+    WHERE type = "productPreview"
+    {% if is_incremental() %}
+      and partition_date >= date'{{ var("start_date_ymd") }}'
+      and partition_date < date'{{ var("end_date_ymd") }}'
+    {% else %}
+      and partition_date >= date'2024-06-01'
+    {% endif %}
     GROUP BY device_id, product_id, partition_date, requestId
 ),
 
@@ -43,8 +46,13 @@ clicks AS (
         MAX(IF(type = "productActionClick" AND payload.customizationType = "dislike", 1, 0)) AS has_dislike,
         MAX(IF(type = "productActionClick" AND payload.customizationType = "like", 1, 0)) AS has_like
     FROM {{ source('mart', 'device_events') }}
-    WHERE partition_date >= DATE'{{ var("start_date_ymd") }}' AND partition_date <= DATE'{{ var("end_date_ymd") }}'
-      AND type IN ("productOpen", "productToFavorites", "productToCollection", "productActionClick", "productToCart", "productPurchase")
+    WHERE type IN ("productOpen", "productToFavorites", "productToCollection", "productActionClick", "productToCart", "productPurchase")
+    {% if is_incremental() %}
+      and partition_date >= date'{{ var("start_date_ymd") }}'
+      and partition_date < date'{{ var("end_date_ymd") }}'
+    {% else %}
+      and partition_date >= date'2024-06-01'
+    {% endif %}
     GROUP BY device_id, product_id, partition_date, requestId
 ),
 
