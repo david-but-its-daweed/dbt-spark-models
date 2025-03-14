@@ -51,7 +51,7 @@ clicks AS (
       and partition_date >= date'{{ var("start_date_ymd") }}'
       and partition_date < date'{{ var("end_date_ymd") }}'
     {% else %}
-      and partition_date >= date'2024-06-01'
+      and partition_date >= date'2025-01-01'
     {% endif %}
     GROUP BY device_id, product_id, partition_date, requestId
 ),
