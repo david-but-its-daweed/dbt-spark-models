@@ -27,6 +27,7 @@ SELECT
     platform,
     legal_entity,
     app_entity,
+    shopy_blogger_domain,
     join_date_msk,
     real_user_segment,
     is_new_device,

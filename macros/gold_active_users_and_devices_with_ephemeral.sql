@@ -142,6 +142,9 @@ active_devices_ext1 AS (
         {% if device_or_user_id == 'device_id' %}
             main.app_entity,
         {% endif %}
+        {% if device_or_user_id == 'device_id' %}
+            main.shopy_blogger_domain,
+        {% endif %}
         COALESCE(adjusted_slices.country_code_based_on_gmv_initial, main.country) AS country_code,
         main.app_language,
         COALESCE(adjusted_slices.platform_based_on_gmv_initial, main.platform) AS platform,
@@ -204,6 +207,9 @@ active_devices_ext3 AS (
         a.legal_entity,
         {% if device_or_user_id == 'device_id' %}
             a.app_entity,
+        {% endif %}
+        {% if device_or_user_id == 'device_id' %}
+            a.shopy_blogger_domain,
         {% endif %}
         a.app_language,
         a.is_new_{{ naming_field }},
@@ -326,6 +332,9 @@ SELECT
     legal_entity,
     {% if device_or_user_id == 'device_id' %}
         app_entity,
+    {% endif %}
+    {% if device_or_user_id == 'device_id' %}
+        shopy_blogger_domain,
     {% endif %}
     join_date_msk,
     real_user_segment,
