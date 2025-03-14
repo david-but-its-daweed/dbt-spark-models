@@ -361,6 +361,7 @@ WITH procurement_orders AS (
 
      customer_offers AS (
     SELECT co._id AS customer_offer_id,
+           co.csmrreqid AS customer_request_id,
            co.moderatorId AS customer_offer_owner_id,
            au.email AS customer_offer_owner_email,
            type.name AS customer_offer_type,
@@ -473,6 +474,7 @@ WITH procurement_orders AS (
 SELECT po.procurement_order_id,
        po.procurement_order_friendly_id,
        po.deal_id,
+       co.customer_request_id,
        po.deal_type,
        po.country,
        po.is_small_batch,
@@ -596,7 +598,31 @@ SELECT po.procurement_order_id,
        pio.status_picked_up_ts AS pickup_order_status_picked_up_ts,
        pio.status_arrived_ts AS pickup_order_status_arrived_ts,
        pio.status_shipped_ts AS pickup_order_status_shipped_ts,
-       pio.status_suspended_ts AS pickup_order_status_suspended_ts
+       pio.status_suspended_ts AS pickup_order_status_suspended_ts,
+       CASE WHEN po.country = 'BR' AND po.is_small_batch = 0 THEN
+           CASE
+               /* Учитываем отмененные заказы только в том случае, если отмена произошла после оплаты клиентом */
+               WHEN current_sub_status = 'cancelled' AND sub_status_cancelled_ts >= sub_status_client_payment_received_ts THEN 1
+               /* Оставляем реальные заказы и все заказы в админке с 1 января 2025 */
+               WHEN po.procurement_order_friendly_id IN (
+                   'ZVM3D', 'KLG6J', 'EWR3D', 'YGQYK', 'PZG7Z', '525YP', 'VL6VG', 'MWGXM', 'Q3ZX2', '525V5',
+                   '3PMQQ', 'PZGNE', 'YGQN2', 'N3GP6', '525NG', 'KLGQ5', 'ZVME7', 'RVGLY', 'XJ5WE', 'JDGEK',
+                   'WL2QX', '5273K', 'XJDVE', 'VLMGL', 'PZEJV', 'L2XD6', 'YGQP8', '3PM8V', 'G8GXY', '86DNK',
+                   '2G8KD', 'XJ5YX', '86DP6', 'N3L8P', 'XJ52P', 'JD5YM', 'VLMPK', '732KQ', 'L2YKW', 'YGZZR',
+                   'PZE2Q', '86DXY', 'N3L7J', 'RV6QQ', '5277Q', 'MW33Z', 'DJ66R', 'EW228', '732XQ', '2GRYR',
+                   'RV6DK', 'MWZ2R', '2G8V3', 'Q3YLD', '73KW2', '638R8', '2G8WD', 'DJLE2', 'Q3DLJ', 'VLP8G',
+                   'MWEJQ', 'MWEPM', 'Q3DJ2', 'G8EGM', 'VLE6Y', '638PN', 'XJ6D3', '2G8Q3', 'VLEPG', 'EWVRY',
+                   '528LP', 'PZP2Z', 'MWZLM', 'Q3YK2', 'JDNDJ', 'G8PRY', 'KLJZJ', 'XJNXE', 'N3NMG', 'WLN3X',
+                   'ZVN8D', '86YJ7', 'RVN86', 'XJ3XY', 'N378Q', '86XP8', 'WLY3Q', '86YR6', 'Q3K2M', 'JDNRJ',
+                   'Q3KG2', '73VDP', '2G6XP', '738J5', '63WNN', 'EWZMG', '2GL23', 'Q3DVL', 'DJYXV', 'Q32WM',
+                   'YG3XQ', '52JLE', 'YGRR5', '3P33P', 'MWRER', 'Q3RDD', 'L288L', 'VLRP5', 'PZRRJ', 'DJZN2',
+                   'XJYQQ', 'JDWKJ', 'G8J5V', 'JDEDM'
+               ) THEN 1
+               WHEN DATE(coalesce(po.created_ts, pch.first_status_ts)) >= '2025-01-01' THEN 1
+               ELSE 0
+           END
+           ELSE 1
+       END AS is_for_purchasing_and_production_report
 FROM core_product AS po
 LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
 LEFT JOIN payments_history AS pah ON po.procurement_order_id = pah.procurement_order_id
@@ -606,9 +632,3 @@ LEFT JOIN customer_offers AS co ON op.customer_offer_id = co.customer_offer_id
 LEFT JOIN procurement_statuses_history AS pch ON po.procurement_order_id = pch.procurement_order_id
 LEFT JOIN psi_history AS ph ON po.current_psi_status_id_long = ph.current_psi_status_id_long
 LEFT JOIN pickup_orders AS pio ON po.procurement_order_id = pio.procurement_order_id
-/* Убираем заказы, отмененные до оплаты клиента */
-WHERE CASE
-          WHEN current_sub_status = 'cancelled' AND sub_status_client_payment_received_ts IS NULL THEN 0
-          WHEN current_sub_status = 'cancelled' AND sub_status_cancelled_ts < sub_status_client_payment_received_ts THEN 0
-          ELSE 1
-      END = 1
