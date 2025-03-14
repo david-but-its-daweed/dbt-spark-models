@@ -16,19 +16,20 @@ WITH previews AS (
         device_id,
         payload.productId AS product_id,
         FIRST(DATE(FROM_UNIXTIME(event_ts / 1000))) AS event_date,
-        lastContext.requestId AS requestId,
+        lastContext.requestId,
         FIRST(lastContext.name) AS context_name,
         FIRST(lastContext.position) AS position,
         COALESCE(FIRST(lastContext.adtechPromoted), FALSE) AS is_adtech,
         FIRST(experiments) AS experiments
     FROM {{ source('mart', 'device_events') }}
-    WHERE type = "productPreview"
-    {% if is_incremental() %}
+    WHERE
+        type = "productPreview"
+        {% if is_incremental() %}
       and partition_date >= date'{{ var("start_date_ymd") }}'
       and partition_date < date'{{ var("end_date_ymd") }}'
     {% else %}
-      and partition_date >= date'2024-06-01'
-    {% endif %}
+            AND partition_date >= CURRENT_DATE() - INTERVAL 30 DAYS
+        {% endif %}
     GROUP BY device_id, product_id, partition_date, requestId
 ),
 
@@ -38,7 +39,7 @@ clicks AS (
         device_id,
         payload.productId AS product_id,
         FIRST(DATE(FROM_UNIXTIME(event_ts / 1000))) AS event_date,
-        lastContext.requestId AS requestId,
+        lastContext.requestId,
         MAX(IF(type = "productOpen", 1, 0)) AS has_open,
         MAX(IF(type IN ("productToFavorites", "productToCollection", "productToCart"), 1, 0)) AS has_to_cart_or_favorite,
         MAX(IF(type = "productToCart", 1, 0)) AS has_to_cart,
@@ -46,13 +47,14 @@ clicks AS (
         MAX(IF(type = "productActionClick" AND payload.customizationType = "dislike", 1, 0)) AS has_dislike,
         MAX(IF(type = "productActionClick" AND payload.customizationType = "like", 1, 0)) AS has_like
     FROM {{ source('mart', 'device_events') }}
-    WHERE type IN ("productOpen", "productToFavorites", "productToCollection", "productActionClick", "productToCart", "productPurchase")
-    {% if is_incremental() %}
+    WHERE
+        type IN ("productOpen", "productToFavorites", "productToCollection", "productActionClick", "productToCart", "productPurchase")
+        {% if is_incremental() %}
       and partition_date >= date'{{ var("start_date_ymd") }}'
       and partition_date < date'{{ var("end_date_ymd") }}'
     {% else %}
-      and partition_date >= date'2025-01-01'
-    {% endif %}
+            AND partition_date >= CURRENT_DATE() - INTERVAL 30 DAYS
+        {% endif %}
     GROUP BY device_id, product_id, partition_date, requestId
 ),
 
@@ -68,7 +70,7 @@ product_info AS (
     SELECT
         prod.product_id,
         prod.category_id,
-        COALESCE(cat.category_name, '') AS category_name,
+        COALESCE(cat.category_name, "") AS category_name,
         prod.created_date
     FROM {{ source('mart', 'published_products_current') }} AS prod
     LEFT JOIN categories AS cat
@@ -82,7 +84,14 @@ device_info AS (
         top_country_code,
         is_new_device
     FROM {{ ref('gold_active_devices') }}
-    WHERE date_msk >= DATE'{{ var("start_date_ymd") }}'
+    WHERE
+        TRUE
+        {% if is_incremental() %}
+      and date_msk >= date'{{ var("start_date_ymd") }}'
+      and date_msk < date'{{ var("end_date_ymd") }}'
+    {% else %}
+            AND date_msk >= CURRENT_DATE() - INTERVAL 30 DAYS
+        {% endif %}
 ),
 
 joined_data AS (
@@ -98,20 +107,22 @@ joined_data AS (
         pi.category_name,
         pi.created_date,
         COALESCE(d.is_new_device, FALSE) AS is_new_device,
-        COALESCE(d.top_country_code, 'Other') AS top_country_code,
+        COALESCE(d.top_country_code, "Other") AS top_country_code,
         IF(DATEDIFF(p.event_date, pi.created_date) < 90, 1, 0) AS is_product_created_less_than_90_days_ago,
         IF(DATEDIFF(p.event_date, pi.created_date) < 365, 1, 0) AS is_product_created_less_than_365_days_ago
     FROM previews AS p
     LEFT JOIN clicks AS c
-        ON p.device_id = c.device_id
-        AND p.product_id = c.product_id
-        AND p.partition_date = c.partition_date
-        AND p.requestId = c.requestId
+        ON
+            p.device_id = c.device_id
+            AND p.product_id = c.product_id
+            AND p.partition_date = c.partition_date
+            AND p.requestId = c.requestId
     LEFT JOIN product_info AS pi
         ON p.product_id = pi.product_id
     LEFT JOIN device_info AS d
-        ON p.device_id = d.device_id
-        AND p.event_date = d.date_msk
+        ON
+            p.device_id = d.device_id
+            AND p.event_date = d.date_msk
 )
 
 SELECT * FROM joined_data;
