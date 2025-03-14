@@ -36,7 +36,6 @@ slo_jm_base_tables,models.active_users,bq
 slo_jm_base_tables,models.categories,bq
 slo_jm_base_tables,models.orders,bq
 slo_jm_base_tables,models.device_interactions,bq
-slo_jl_base_tables,jl_models.jl_external_clients_orders,bq
 slo_jpro_base_tables,b2b_mart.gmv_by_sources,bq
 slo_jpro_base_tables,b2b_mart.jp_sla_logistics,bq
 slo_jpro_base_tables,b2b_mart.fact_attribution_interaction,bq
