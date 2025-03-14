@@ -1,5 +1,7 @@
 {{ config(
-    meta = {},
+    meta = {
+        'model_owner' : '@msafonov'
+    },
     schema='junk2',
     materialized='table',
     file_format='parquet',
