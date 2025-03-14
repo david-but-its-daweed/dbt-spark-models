@@ -1,6 +1,6 @@
 {% macro tblproperties_clause() %}
   {%- set tblproperties = config.get('tblproperties', {}) -%}
-  {%- set tblproperties2 = var("tblproperties") or {} -%}
+  {%- set tblproperties2 = var("tblproperties", {}) -%}
 
   {%- if tblproperties or tblproperties2 %}
     TBLPROPERTIES (
