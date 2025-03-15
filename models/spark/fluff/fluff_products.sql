@@ -248,12 +248,12 @@ SELECT
     c.cart_to_purchase_perc,
     c.purchase_count
 FROM products AS p
-LEFT JOIN description_and_merchant_name AS dm ON p.product_id = dm.product_id
 LEFT JOIN kams AS k ON p.merchant_id = k.merchant_id
+LEFT JOIN dublicate_group_info AS dgi ON dgi.product_double_group_id = dg.product_double_group_id
+LEFT JOIN description_and_merchant_name AS dm ON p.product_id = dm.product_id
 LEFT JOIN orders AS o ON p.product_id = o.product_id
 LEFT JOIN fbj_stock AS fs ON p.product_id = fs.product_id
 LEFT JOIN dublicate_group_id_by_product AS dg ON p.product_id = dg.product_id
-LEFT JOIN dublicate_group_info AS dgi ON dg.product_double_group_id = dgi.product_double_group_id
 LEFT JOIN pi ON p.product_id = pi.product_id
 LEFT JOIN logistics_order AS lo ON p.product_id = lo.product_id
 LEFT JOIN eu_available AS eu ON p.product_id = eu.product_id
