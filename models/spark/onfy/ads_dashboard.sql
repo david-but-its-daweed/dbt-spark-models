@@ -13,7 +13,7 @@
 ) }}
 
 -----------------------------------------
--- забираю id пользователей для дальнейшей фильтрации по ботам и добавления user_email_hash
+-- забираю id пользователей для добавления user_email_hash
 -----------------------------------------
 with uid as
 (
@@ -24,7 +24,6 @@ with uid as
         min_by(user_email_hash, min_purchase_date) as user_email_hash
     from {{source('onfy_mart', 'devices_mart')}}
     where 1=1
-        and is_bot = False
     group by 
         device_id,
         app_device_type
@@ -114,6 +113,8 @@ session_precalc as
         if(lower(source_corrected) in ('unknown', 'unmarked_facebook_or_instagram', 'social', 'e-rezept', 'marketing_newsletter', 'newsletter', 'email', '') or lower(source_corrected) is null
             or (lower(source_corrected) = 'organic' and os_type in ('android', 'ios')), 0, 1) as significant_source,
         if(lower(source_corrected) not in ('unknown', 'e-rezept'), 0, 1) as second_significant_source,
+        if(lower(source_corrected) in ('unknown', 'unmarked_facebook_or_instagram', 'social', 'e-rezept', 'marketing_newsletter', 'newsletter', 'email', '', 'awin') or lower(source_corrected) is null
+            or (lower(source_corrected) = 'organic' and os_type in ('android', 'ios')), 0, 1) as significant_source_awin,
         case
             when lower(source_corrected) like '%google%' then 'google'
             else source_corrected
@@ -156,6 +157,7 @@ sessions_window as
         sum(new_session_group_7) over (partition by device_id order by source_dt) as timeout_source_window,
         sum(array_max(array(new_session_group_7, significant_source))) over (partition by device_id order by source_dt) as ultimate_window,
         sum(array_max(array(new_session_group_1, significant_source))) over (partition by device_id order by source_dt) as ultimate_window_1,
+        sum(array_max(array(new_session_group_7, significant_source_awin))) over (partition by device_id order by source_dt) as ultimate_window_awin,
         sum(array_max(array(new_session_group_7, second_significant_source))) over (partition by device_id order by source_dt) as second_ultimate_window
     from session_precalc
 ),
@@ -188,24 +190,29 @@ sessions as
         significant_source_window,
         timeout_source_window,
         ultimate_window,
-        first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window order by source_dt) as attributed_session_dt,
-        date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window order by source_dt)) as attributed_session_date,
-        first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window order by source_dt) as source,
-        first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window order by source_dt) as campaign,
-        first_value(sessions_window.utm_medium) over (partition by device_id, ultimate_window order by source_dt) as medium,
-        first_value(sessions_window.gclid) over (partition by device_id, ultimate_window order by source_dt) as attributed_gclid,
+    
+        first_value(sessions_window.source_dt) over (partition by device_id, if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as attributed_session_dt,
+        date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt)) as attributed_session_date,
+        first_value(sessions_window.source_corrected) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as source,
+        first_value(sessions_window.campaign_corrected) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as campaign,
+        first_value(sessions_window.utm_medium) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as medium,
+        first_value(sessions_window.gclid) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as attributed_gclid,
+    
         first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt) as attributed_session_dt_1,
         date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt)) as attributed_session_date_1,
         first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window_1 order by source_dt) as source_1,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window_1 order by source_dt) as campaign_1,
         first_value(sessions_window.utm_medium) over (partition by device_id, ultimate_window_1 order by source_dt) as medium_1, 
+    
         first_value(sessions_window.source_dt) over (partition by device_id, second_ultimate_window order by source_dt) as second_attributed_session_dt,
         first_value(sessions_window.source_corrected) over (partition by device_id, second_ultimate_window order by source_dt) as second_source,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, second_ultimate_window order by source_dt) as second_campaign,
         first_value(sessions_window.utm_medium) over (partition by device_id, second_ultimate_window order by source_dt) as second_medium,
+    
         first_value(sessions_window.source_corrected) over (partition by device_id, significant_source_window order by source_dt) as source_significant,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, significant_source_window order by source_dt) as campaign_significant,
         first_value(sessions_window.utm_medium) over (partition by device_id, significant_source_window order by source_dt) as medium_significant,
+    
         landing_page,
         gclid,
         landing_pzn
@@ -274,7 +281,7 @@ ads_spends as
 ),
 
 -----------------------------------------
--- фильтруем ботов и забираем только дистинкты, а также определяем источник иерархически
+-- забираем только дистинкты, а также определяем источник иерархически
 -----------------------------------------
 filtered_data as
 (
