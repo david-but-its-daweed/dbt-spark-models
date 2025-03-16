@@ -20,8 +20,8 @@ select
     date(effective_ts) as effective_date,
     min_by(pharmacy_name, product_price) as cheapest_competitor,
     min(product_price) as price
-from { source('pharmacy', 'marketing_channel_price_fast_scd2') }}
-join { source('pharmacy_landing', 'medicine') }}
+from {{ source('pharmacy', 'marketing_channel_price_fast_scd2') }}
+join {{ source('pharmacy_landing', 'medicine') }}
     on marketing_channel_price_fast_scd2.product_id = medicine.id
 where 1=1
     and product_price is not null
