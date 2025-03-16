@@ -106,7 +106,7 @@ fbj_stock AS (
 dublicate_group_id_by_product AS (
     SELECT
         productId AS product_id,
-        groupId AS product_double_group_id,
+        groupId AS product_double_group_id
         -- COLLECT_LIST(productId) OVER (PARTITION BY groupId) AS duplicate_product_ids_list
     FROM {{ source('default', 'productsGroups_louvain') }}
 ),
