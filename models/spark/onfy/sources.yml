@@ -31,3 +31,4 @@ sources:
       - name: awin_insights
       - name: adjust_report_deliverables_insights
       - name: adjust_report_cohort_insights
+      - name: marketing_channel_price_fast_scd2
