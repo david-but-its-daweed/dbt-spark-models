@@ -107,7 +107,7 @@ dublicate_group_id_by_product AS (
     SELECT
         productId AS product_id,
         groupId AS product_double_group_id,
-        COLLECT_LIST(productId) OVER (PARTITION BY groupId) AS duplicate_product_ids_list
+        -- COLLECT_LIST(productId) OVER (PARTITION BY groupId) AS duplicate_product_ids_list
     FROM {{ source('default', 'productsGroups_louvain') }}
 ),
 
@@ -227,7 +227,7 @@ SELECT
     fs.fbj_number_of_products_in_stock,
     fs.fbj_number_of_products_in_stock_by_variant_id,
     dg.product_double_group_id,
-    dg.duplicate_product_ids_list,
+    -- dg.duplicate_product_ids_list,
     pi.price_index,
     pi.sp_price_index,
     lo.fluff_fulfilling_days_last_3_month_80th_perc,
