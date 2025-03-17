@@ -171,7 +171,18 @@ WITH procurement_orders AS (
 ),
 
      payments_history AS (
-    /* Нужно вытащить статусы платежей из Биллинга */
+    WITH billing_info AS (
+        SELECT t1._id AS payment_id,
+               t1.isCancelled AS is_payment_cancelled
+        FROM mongo.billing_pro_invoice_requests_daily_snapshot AS t1
+        /*
+        LEFT JOIN mongo.billing_pro_invoice_request_operations_daily_snapshot AS t2 ON t1._id = t2.requestId
+        LEFT JOIN mongo.billing_pro_invoices_v3_daily_snapshot AS t3 ON t2.invoiceId = t3._id
+        LEFT JOIN mongo.billing_pro_payouts_daily_snapshot AS t4 ON t3.pId = t4._id
+        */
+    )
+
+    
     SELECT procurement_order_id,
            COUNT(payment_id) AS payment_count_fact,
            COUNT(CASE WHEN payment_received_ts_msk IS NOT NULL THEN payment_id END) AS received_payment_count,
@@ -191,6 +202,8 @@ WITH procurement_orders AS (
         FROM procurement_orders AS po
         LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
     ) AS p
+    LEFT JOIN billing_info AS bi ON p.payment_id = bi.payment_id
+    WHERE bi.is_payment_cancelled IS NOT TRUE
     GROUP BY 1
 ),
 
