@@ -59,9 +59,6 @@ SELECT
     d.platform,
     d.os_version,
     d.app_version,
-    CASE
-        WHEN UPPER(d.app_entity) = 'SHOPY' THEN d.custom_domain
-    END AS shopy_blogger_domain,
     d.app_entity,
     CASE
         WHEN UPPER(d.app_entity) = "SHOPY" THEN d.custom_domain
