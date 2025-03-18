@@ -1,5 +1,5 @@
 import os
-from typing import Iterable
+from typing import *
 from datetime import date, timedelta
 from pyhive import hive
 import subprocess
@@ -47,7 +47,7 @@ def load_spark_profile():
     return data['spark']['outputs']['build']
 
 
-def select_model_ids(selector: str) -> Iterable[dict]:
+def select_model_ids(selector: str) -> Iterable[Dict]:
     for line in run(f"dbt ls --output=json {selector}").splitlines():
         try:
             yield json.loads(line)
@@ -56,7 +56,7 @@ def select_model_ids(selector: str) -> Iterable[dict]:
             continue
 
 
-def load_table_names(model_ids: list[str]) -> list[str]:
+def load_table_names(model_ids: List[str]) -> List[str]:
     with open('target/manifest.json') as f:
         manifest = json.load(f)
 
@@ -80,7 +80,7 @@ def query_location(hive_cursor, query):
     return db_location
 
 
-def get_table_location(hive_cursor, db_name, table_name) -> str | None:
+def get_table_location(hive_cursor, db_name, table_name) -> Optional[str]:
     table_location = query_location(hive_cursor, f"describe formatted {db_name}.{table_name}")
     if table_location is not None:
         return table_location
@@ -168,4 +168,4 @@ def main(selector: str, dryrun: bool = True):
         conn.close()
 
 if __name__ == '__main__':
-    main("--select +gold_countries")
+    main("--select +gold_orders")
