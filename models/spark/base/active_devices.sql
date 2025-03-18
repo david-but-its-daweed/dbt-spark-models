@@ -19,23 +19,22 @@
 
 WITH device_info AS (
     SELECT
-        dvc.device_id,
-        dvc.date_msk AS day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
-        FIRST_VALUE(TO_DATE(dvc.join_ts_msk)) AS join_dt,
-        FIRST_VALUE(UPPER(dvc.country)) AS country,
-        FIRST_VALUE(LOWER(dvc.os_type)) AS platform,
-        FIRST_VALUE(dvc.os_version) AS os_version,
-        FIRST_VALUE(dvc.app_version) AS app_version,
-        MIN(dvc.ephemeral) AS is_ephemeral,
-        FIRST_VALUE(dvc.real_user_id) AS real_user_id,
-        FIRST_VALUE(IF(dvc.legal_entity = 'jmt', 'JMT', 'SIA')) AS legal_entity,
-        FIRST_VALUE(CASE WHEN dvc.date_msk < '2023-07-01' THEN 'Joom' ELSE ent.app_entity_gold END) AS app_entity,
-        FIRST_VALUE(dvc.custom_domain) as custom_domain,
-        FIRST_VALUE(UPPER(dvc.language)) AS app_language
-    FROM {{ source('mart', 'star_active_device') }} AS dvc
-    LEFT JOIN {{ ref('app_entities_mapping') }} AS ent USING (app_entity)
+        device_id,
+        date_msk AS day,  -- please, do not add any other columns to group by (e.g. user_id), it will influence DAU dashboards
+        FIRST_VALUE(TO_DATE(join_ts_msk)) AS join_dt,
+        FIRST_VALUE(UPPER(country)) AS country,
+        FIRST_VALUE(LOWER(os_type)) AS platform,
+        FIRST_VALUE(os_version) AS os_version,
+        FIRST_VALUE(app_version) AS app_version,
+        MIN(ephemeral) AS is_ephemeral,
+        FIRST_VALUE(real_user_id) AS real_user_id,
+        FIRST_VALUE(IF(legal_entity = 'jmt', 'JMT', 'SIA')) AS legal_entity,
+        FIRST_VALUE(CASE WHEN date_msk < '2023-07-01' THEN 'joom' ELSE app_entity END) AS app_entity,
+        FIRST_VALUE(custom_domain) AS custom_domain,
+        FIRST_VALUE(UPPER(language)) AS app_language
+    FROM {{ source('mart', 'star_active_device') }}
     {% if is_incremental() %}
-        WHERE dvc.date_msk >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
+        WHERE date_msk >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
     {% endif %}
     GROUP BY 1, 2
 ),
@@ -60,6 +59,9 @@ SELECT
     d.platform,
     d.os_version,
     d.app_version,
+    CASE
+        WHEN UPPER(d.app_entity) = 'SHOPY' THEN d.custom_domain
+    END AS shopy_blogger_domain,
     d.app_entity,
     CASE
         WHEN UPPER(d.app_entity) = "SHOPY" THEN d.custom_domain

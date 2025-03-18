@@ -48,6 +48,23 @@ pickup_fault_cancelled_orders AS (
         AND source.kind = 'joom'
 ),
 
+merchant_order_notes AS (
+    SELECT _id AS merchant_order_id
+    FROM {{ source('mongo', 'merchant_order_order_metric_notes_daily_snapshot') }}
+    WHERE metrics['cancelRate']['ignored']['value'] = TRUE
+),
+
+pickup_fault_cancelled_orders AS (
+    -- отобрали заказы, у которых отмена произошла из-за потери посылки пикап провайдером 
+    SELECT source.id AS order_id
+    FROM {{ source('mongo', 'merchant_order') }} AS mo
+    INNER JOIN merchant_order_notes AS mon ON mo.order_id = mon.merchant_order_id
+    WHERE
+        mo.status = 'cancelledByMerchant'
+        AND refund.merchant_reason = 'notShippedOnTime'
+        AND source.kind = 'joom'
+),
+
 orders_ext0 AS (
     SELECT
         ord.order_id,
@@ -62,7 +79,7 @@ orders_ext0 AS (
         ord.created_time_utc AS order_datetime_utc,
 
         IF(ord.legal_entity = 'jmt', 'JMT', 'SIA') AS legal_entity,
-        CASE WHEN ord.partition_date < '2023-07-01' THEN 'Joom' ELSE ent.app_entity_gold END AS app_entity,
+        CASE WHEN partition_date < '2023-07-01' THEN 'joom' ELSE app_entity END AS app_entity,
         ord.custom_domain,
         ord.merchant_id,
         ord.store_id,
@@ -73,7 +90,7 @@ orders_ext0 AS (
         UPPER(ord.shipping_country) AS country_code,
         ord.currency AS currency_code,
         LOWER(ord.os_type) AS platform,
-        COALESCE(last_context.name, 'unknown') AS last_context,
+        COALESCE(ord.last_context.name, 'unknown') AS last_context,
         ord.normalized_contexts AS contexts,
         COALESCE(
             (
@@ -114,7 +131,7 @@ orders_ext0 AS (
         ord.points_initial > 0 AS is_with_points,
         ord.points_initial,
         ord.points_final,
-        COALESCE(ARRAY_CONTAINS(discounts.type, 'specialPriceFinal'), FALSE) AS is_with_special_price,
+        COALESCE(ARRAY_CONTAINS(ord.discounts.type, 'specialPriceFinal'), FALSE) AS is_with_special_price,
         ROUND(COALESCE(FILTER(ord.discounts, x -> x.type = 'specialPriceFinal')[0].amount * 1e6, 0), 3) AS special_price_discount,
         ROUND(COALESCE(FILTER(ord.discounts, x -> x.type = 'specialPrice')[0].amount * 1e6, 0), 3) AS special_price_potential_discount,
         ord.discounts,
@@ -171,6 +188,8 @@ orders_ext0 AS (
             WHEN ord.merchant_refund_reason = 3 THEN 'wrongAddress'
             WHEN ord.merchant_refund_reason = 4 AND c.order_id IS NULL THEN 'notShippedOnTime'
             WHEN ord.merchant_refund_reason = 4 AND c.order_id IS NOT NULL THEN 'pickupProviderFault' -- заказы, потерянные пикап провайдером
+            WHEN ord.merchant_refund_reason = 4 AND c.order_id IS NULL THEN 'notShippedOnTime'
+            WHEN ord.merchant_refund_reason = 4 AND c.order_id IS NOT NULL THEN 'pickupProviderFault' -- заказы, потерянные пикап провайдером
         END AS detailed_refund_reason,
         TO_DATE(ord.refund_time_utc + INTERVAL 3 HOUR) AS refund_date_msk,
         ord.customer_refund_reason IS NOT NULL AND ord.customer_refund_reason IN (2, 5, 16, 24, 25, 26, 28) AS is_not_delivered_refund,
@@ -218,7 +237,6 @@ orders_ext0 AS (
         ) AS is_negative_feedback
 
     FROM {{ source('mart', 'star_order_2020') }} AS ord
-    LEFT JOIN {{ ref('app_entities_mapping') }} AS ent USING (app_entity)
     LEFT JOIN pickup_fault_cancelled_orders AS c USING (order_id)
     WHERE
         NOT (ord.refund_reason = 'fraud' AND ord.refund_reason IS NOT NULL)
@@ -285,6 +303,7 @@ orders_ext2 AS (
         order_datetime_utc,
         legal_entity,
         app_entity,
+        custom_domain,
         custom_domain,
         merchant_id,
         store_id,
@@ -412,6 +431,7 @@ orders_ext5 AS (
         a.order_datetime_utc,
         a.legal_entity,
         a.app_entity,
+        a.custom_domain,
         a.custom_domain,
         a.merchant_id,
         a.store_id,
@@ -543,8 +563,7 @@ SELECT
     legal_entity,
     app_entity,
     CASE
-        WHEN UPPER(app_entity) = "SHOPY" THEN custom_domain
-        ELSE Null
+        WHEN UPPER(app_entity) = 'SHOPY' THEN custom_domain
     END AS shopy_blogger_domain,
     merchant_id,
     store_id,
