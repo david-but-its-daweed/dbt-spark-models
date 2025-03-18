@@ -110,8 +110,8 @@ LOWER(utm_source) like '%acebook%'  or LOWER(utm_source) = 'fb'
     when LOWER(utm_source) like '%partners%' or  LOWER(utm_medium) like '%partners%' then 'Partners'
     when utm_source like '%SDR%' or utm_campaign  like '%SDR%' or utm_medium like '%SDR%' then 'SDR'
     when LOWER(utm_source) like '%sponsored%' or LOWER(utm_medium) like '%sponsored%' then 'Sponsor'
-    when LOWER(utm_source) like '%event_folder%' or  LOWER(utm_medium) like '%content%' 
     when LOWER(utm_source) like '%exhibition%' or  LOWER(utm_medium) like '%exhibition%' then 'Exhibition'
+    when LOWER(utm_source) like '%event_folder%' or  LOWER(utm_medium) like '%content%' 
     or (utm_medium is Null and utm_source is not null)  then 'Unrecognised_source' 
     else utm_medium 
     end as friendly_source, 
