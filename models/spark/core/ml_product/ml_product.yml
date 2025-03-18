@@ -13,7 +13,7 @@ models:
       - name: real_user_id
         description: Unique user ID, not account ID [`user_id`] (solves the problem that the same user can have multiple `user_id` and have multiple devices). All devices within each connected graph are merged into one user. More details can be found here https://www.notion.so/joomteam/mart-link_device_real_user-36ac2b64b78441c4a09e9b92dee0cc9c
       - name: country_code
-        description: Country code (A2 code).
+        description: Country code (A2 code). If the device is bot then country_code is null.
       - name: platform
         description: User device platform
       - name: app_entity
