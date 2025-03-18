@@ -180,7 +180,6 @@ WITH base_deal AS (
     marketing_deals_interactions AS (
     SELECT user_id,
            deal_id,
-           country,
            visit_ts_msk,
            visit_date,
            utm_campaign,
