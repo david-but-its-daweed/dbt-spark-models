@@ -184,9 +184,9 @@ WITH procurement_orders AS (
 
     
     SELECT procurement_order_id,
-           COUNT(payment_id) AS payment_count_fact,
-           COUNT(CASE WHEN payment_received_ts_msk IS NOT NULL THEN payment_id END) AS received_payment_count,
-           COUNT(CASE WHEN sla_fact > sla_plan THEN payment_id END) AS overdue_payment_count,
+           COUNT(p.payment_id) AS payment_count_fact,
+           COUNT(CASE WHEN payment_received_ts_msk IS NOT NULL THEN p.payment_id END) AS received_payment_count,
+           COUNT(CASE WHEN sla_fact > sla_plan THEN p.payment_id END) AS overdue_payment_count,
            SUM(CASE WHEN payment_price_ccy = 'USD' THEN payment_price_amount ELSE 0 END) AS payment_sum_usd,
            SUM(CASE WHEN payment_price_ccy = 'CNH' THEN payment_price_amount ELSE 0 END) AS payment_sum_cnh,
            SUM(CASE WHEN payment_price_ccy NOT IN('USD', 'CNH') THEN payment_price_amount ELSE 0 END) AS payment_sum_other
