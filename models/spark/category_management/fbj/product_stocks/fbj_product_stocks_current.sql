@@ -8,6 +8,24 @@
   )
 }}
 
+WITH freezed_stock AS (
+    SELECT DISTINCT
+        wws_ds.pvId AS variant_id,
+        wws_ds.pendingStock
+    FROM {{ source('mongo', 'warehouse_warehouse_stocks_daily_snapshot') }} AS wws_ds --mongo.warehouse_warehouse_stocks_daily_snapshot as wws_ds
+    INNER JOIN {{ source('mongo', 'core_warehouses_daily_snapshot') }} AS cw_ds -- mongo.core_warehouses_daily_snapshot as cw_ds
+        ON
+            1 = 1
+            AND wws_ds.whid = cw_ds._id
+            AND cw_ds.enabled
+            AND cw_ds.state = 1
+            AND cw_ds.type = 3
+    WHERE
+        1 = 1
+        AND wws_ds.pendingStock IS NOT NULL
+        AND wws_ds.stock > 0
+)
+
 SELECT
     CURRENT_DATE() AS partition_date,
     published_variant.product_id,
@@ -16,6 +34,7 @@ SELECT
     info._id AS logistics_product_id,
     stocks.reserved AS number_of_reserved,
     stocks.stock AS number_of_products_in_stock,
+    freezed_stock.pendingStock AS number_of_products_in_pending_stock,
     stocks.uTm AS stock_update_ts,
     info.brand AS brand_name,
     info.nameEn AS product_name,
@@ -36,7 +55,11 @@ LEFT JOIN {{ ref('dim_pair_currency_rate') }} AS currency_rate
         info.uPrice.ccy = currency_rate.currency_code
         AND currency_rate.effective_date = CURRENT_DATE()
         AND currency_rate.currency_code_to = 'USD'
-LEFT JOIN {{ ref('gold_products') }} AS gp ON gp.product_id = published_variant.product_id
+LEFT JOIN {{ ref('gold_products') }} AS gp ON published_variant.product_id = gp.product_id
+LEFT JOIN freezed_stock
+    ON
+        1 = 1
+        AND info.externalId = freezed_stock.variant_id
 WHERE
     stocks._id.wid = '66719d184d731a97c6a58b28'
     AND NOT (stocks.reserved = 0 AND stocks.stock = 0)

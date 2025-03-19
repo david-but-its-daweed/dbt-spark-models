@@ -7,7 +7,8 @@
     meta = {
         'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'true'
-    }
+    },
+    on_schema_change='append_new_columns'
   )
 }}
 
@@ -19,6 +20,7 @@ SELECT
     logistics_product_id,
     number_of_reserved,
     number_of_products_in_stock,
+    number_of_products_in_pending_stock,
     stock_update_ts,
     brand_name,
     product_name,

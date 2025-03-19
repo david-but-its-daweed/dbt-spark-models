@@ -38,6 +38,7 @@ sources:
       - name: link_device_real_user
       - name: published_products_current
       - name: dim_region
+      - name: dim_published_variant_min
       
   - name: cube
     tables:
@@ -94,6 +95,9 @@ sources:
       - name: payment_intents_daily_snapshot
       - name: payment_payment_orders_daily_snapshot
       - name: merchant_order_order_metric_notes_daily_snapshot
+      - name: logistics_replenishments_stock_daily_snapshot
+      - name: warehouse_warehouse_stocks_daily_snapshot
+      - name: core_warehouses_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
@@ -189,6 +193,7 @@ sources:
     tables:
       - name: coolbe_product_labels
       - name: product_labels
+      - name: product_tiers
 
   - name: joompro_mart
     tables:

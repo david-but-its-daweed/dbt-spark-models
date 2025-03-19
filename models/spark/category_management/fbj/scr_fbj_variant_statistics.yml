@@ -1,0 +1,329 @@
+version: 1
+
+models:
+  - name: fbj_variant_statistics
+    description: "Table containing statistics about variants in FBJ stock"
+    columns:
+      - name: partition_date
+        description: "Date of data in this row"
+        data_type: "DATE"
+
+      - name: variant_id
+        description: "Id of variant of product"
+        data_type: "STRING"
+
+      - name: product_id
+        description: "Id of product"
+        data_type: "STRING"
+
+      - name: logistics_product_id
+        description: "Id of logistic product"
+        data_type: "STRING"
+
+      - name: merchant_id
+        description: "Id of merchant"
+        data_type: "STRING"
+
+      - name: product_dimensions_h
+        description: "height of this variant"
+        data_type: "DOUBLE"
+
+      - name: product_dimensions_l
+        description: "length of this variant"
+        data_type: "DOUBLE"
+
+      - name: product_dimensions_w
+        description: "width of this variant"
+        data_type: "DOUBLE"
+
+      - name: number_in_stock
+        description: "Number of items of this variant in FBJ stock"
+        data_type: "LONG"
+
+      - name: number_in_pending_stock
+        description: "Number of items of this variant in FBJ stock that are pending=reserved=freezed" 
+        data_type: "LONG"
+
+      - name: enabled_flg
+        description: "This variant is enabled in the demand system. 1 = enabled, 0 = disabled" 
+        data_type: "INTEGER"
+
+      - name: last_demand_status
+        description: "The variant is enabled in the demand system" 
+        data_type: "STRING"
+
+      - name: orders_cnt
+        description: "Number of orders of variants in partition date" 
+        data_type: "INTEGER"
+
+      - name: fbj_orders_cnt
+        description: "Number of orders from FBJ in partition date" 
+        data_type: "INTEGER"
+
+      - name: quantity_cnt
+        description: "Number of items in orders in partition date" 
+        data_type: "INTEGER"
+
+      - name: fbj_quantity_cnt
+        description: "Number of items in orders from FBJ in partition date" 
+        data_type: "INTEGER"
+
+      - name: orders_7_cnt
+        description: "Number of orders in previous 7 days" 
+        data_type: "INTEGER"
+
+      - name: fbj_orders_7_cnt
+        description: "Number of orders from FBJ in previous 7 days" 
+        data_type: "INTEGER"
+
+      - name: quantity_7_cnt
+        description: "Number of items in orders in previous 7 days" 
+        data_type: "INTEGER"
+
+      - name: fbj_quantity_7_cnt
+        description: "Number of items in orders from FBJ in previous 7 days" 
+        data_type: "INTEGER"
+
+      - name: to_7
+        description: "Turnover calculated by previous 7 days orders. Turnover means number of days to sell all current stock based" 
+        data_type: "DOUBLE"
+
+      - name: orders_14_cnt
+        description: "Number of orders in previous 14 days" 
+        data_type: "INTEGER"
+
+      - name: fbj_orders_14_cnt
+        description: "Number of orders from FBJ in previous 14 days" 
+        data_type: "INTEGER"
+
+      - name: quantity_14_cnt
+        description: "Number of items in orders in previous 14 days" 
+        data_type: "INTEGER"
+
+      - name: fbj_quantity_14_cnt
+        description: "Number of items in orders from FBJ in previous 14 days" 
+        data_type: "INTEGER"
+
+      - name: to_14
+        description: "Turnover calculated by previous 14 days orders. Turnover means number of days to sell all current stock based" 
+        data_type: "DOUBLE"
+
+      - name: orders_30_cnt
+        description: "Number of orders in previous 30 days" 
+        data_type: "INTEGER"
+
+      - name: fbj_orders_30_cnt
+        description: "Number of orders from FBJ in previous 30 days" 
+        data_type: "INTEGER"
+
+      - name: quantity_30_cnt
+        description: "Number of items in orders in previous 30 days" 
+        data_type: "INTEGER"
+
+      - name: fbj_quantity_30_cnt
+        description: "Number of items in orders from FBJ in previous 30 days" 
+        data_type: "INTEGER"
+
+      - name: to_30
+        description: "Turnover calculated by previous 30 days orders. Turnover means number of days to sell all current stock based" 
+        data_type: "DOUBLE"
+
+      - name: qty_created
+        description: "Number of items in replenishments that are created in partition date" 
+        data_type: "LONG"
+      
+      - name: 2_qty_in_pending_inbound
+        description: "Number of items in replenishments that are created any previous date and that are in status pending_inbound" 
+        data_type: "LONG"
+
+      - name: 3_qty_in_pending_shipping
+        description: "Number of items in replenishments that are created any previous date and that are in status pending_shipping" 
+        data_type: "LONG"
+
+      - name: 4_qty_in_shipped_by_merchant
+        description: "Number of items in replenishments that are created any previous date and that are in status shipped_by_merchant" 
+        data_type: "LONG"
+
+      - name: 5_qty_in_action_required
+        description: "Number of items in replenishments that are created any previous date and that are in status action_required" 
+        data_type: "LONG"
+
+      - name: 6_qty_on_review
+        description: "Number of items in replenishments that are created any previous date and that are in status on_review" 
+        data_type: "LONG"
+
+      - name: 6_qty_on_review
+        description: "Number of items in replenishments that are created any previous date and that are in status on_review" 
+        data_type: "LONG"
+
+      - name: qty_completed
+        description: "Number of items in replenishments that are created any previous date and that are completed in partition date" 
+        data_type: "LONG"
+
+      - name: qty_canceled_by_joom
+        description: "Number of items in replenishments that are created any previous date and that are canceled_by_joom in partition date" 
+        data_type: "LONG"
+
+      - name: qty_canceled_by_merchant
+        description: "Number of items in replenishments that are created any previous date and that are canceled_by_merchant in partition date" 
+        data_type: "LONG"
+
+      - name: last_canceled_by_joom_at
+        description: "Timestamp of previous canceled_by_joom status" 
+        data_type: "TIMESTAMP"
+
+      - name: last_canceled_by_merch_at
+        description: "Timestamp of previous canceled_by_merch status" 
+        data_type: "TIMESTAMP"
+
+      - name: last_completed_at
+        description: "Timestamp of previous completed status" 
+        data_type: "TIMESTAMP"
+
+      - name: last_replenishment_created_at
+        description: "Timestamp of previous replanishment created" 
+        data_type: "TIMESTAMP"
+
+      - name: last_replenishment_status
+        description: "Last replenishment status" 
+        data_type: "STRING"
+
+      - name: variant_cancel_rate
+        description: "Share of replenishments that were canceled" 
+        data_type: "DOUBLE"
+
+      - name: avg_complete_days_var
+        description: "Average number of days to between creation and completion of replenishment" 
+        data_type: "DOUBLE"
+
+      - name: relp_amount_30d
+        description: "Number of items that were ordered in replenishemnts for previous 30 days" 
+        data_type: "LONG"
+
+      - name: relp_amount_60d
+        description: "Number of items that were ordered in replenishemnts for previous 60 days" 
+        data_type: "LONG"
+
+      - name: relp_amount_90d
+        description: "Number of items that were ordered in replenishemnts for previous 90 days" 
+        data_type: "LONG"
+
+      - name: relp_amount_120d
+        description: "Number of items that were ordered in replenishemnts for previous 120 days" 
+        data_type: "LONG"
+
+      - name: relp_amount_180d
+        description: "Number of items that were ordered in replenishemnts for previous 180 days" 
+        data_type: "LONG"
+
+      - name: relp_amount_360d
+        description: "Number of items that were ordered in replenishemnts for previous 360 days" 
+        data_type: "LONG"
+
+      - name: relp_amount_all_d
+        description: "Number of items that were ordered in replenishemnts for all previous days" 
+        data_type: "LONG"
+
+      - name: ps_lt30
+        description: "Number of items that are stored less than 30 days" 
+        data_type: "LONG"
+
+      - name: ps_lt60
+        description: "Number of items that are stored between 31 and 60 days" 
+        data_type: "LONG"
+
+      - name: ps_lt90
+        description: "Number of items that are stored between 61 and 90 days" 
+        data_type: "LONG"
+
+      - name: ps_lt120
+        description: "Number of items that are stored between 91 and 120 days" 
+        data_type: "LONG"
+
+      - name: ps_lt180
+        description: "Number of items that are stored between 121 and 180 days" 
+        data_type: "LONG"
+
+      - name: ps_lt360
+        description: "Number of items that are stored between 181 and 360 days" 
+        data_type: "LONG"
+
+      - name: ps_gt360
+        description: "Number of items that are stored great than 360 days" 
+        data_type: "LONG"
+
+      - name: discount
+        description: "Discount from promo" 
+        data_type: "DOUBLE"
+
+      - name: is_product_in_promo
+        description: "1 - product is in promo, 0 - product is not in promo" 
+        data_type: "INTEREG"
+
+      - name: is_product_joom_select
+        description: "1 - product is in joom_select, 0 - product is not in joom_select" 
+        data_type: "INTEREG"
+
+      - name: first_time_in_stock
+        description: "Timestamp of the first moment when item was in stock"
+        data_type: "TIMESTAMP"
+
+      - name: stock_status
+        description: "The status of stock"
+        data_type: "STRING"
+
+      - name: is_variant_public
+        description: "Is variant public"
+        data_type: "BOOLEAN"
+
+      - name: is_product_public
+        description: "Is product public"
+        data_type: "BOOLEAN"
+
+      - name: opens
+        description: "Number of opens from best context"
+        data_type: "LONG"
+
+      - name: previews
+        description: "Number of previews from best context"
+        data_type: "LONG"
+
+      - name: tier
+        description: "Tier of product"
+        data_type: "INTEREG"
+
+      - name: product_name
+        description: "product name"
+        data_type: "STRING"
+
+      - name: business_line
+        description: "business line"
+        data_type: "STRING"
+
+      - name: l1_merchant_category_id
+        description: "ID of the 1st-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: l1_merchant_category_name
+        description: "Name of the 1st-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: l2_merchant_category_id
+        description: "ID of the 2nd-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: l2_merchant_category_name
+        description: "Name of the 2nd-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: merchant_name
+        description: "Alias or pseudonym of the merchant"
+        data_type: "STRING"
+
+      - name: main_merchant_name
+        description: "Main merchant name"
+        data_type: "STRING"
+
+      - name: kam
+        description: "Key account manager of the merchant"
+        data_type: "STRING"
