@@ -2,6 +2,6 @@
 /infra/ @msafonov @boltonidze
 /macros/ @msafonov @g00sek @boltonidze
 /analytics/ @msafonov @boltonidze
-/models/spark/gold/ @g00sek @msafonov
+/models/spark/gold/ @g00sek @joomcode/analytics-developers
 /models/spark/base @g00sek
 /models/spark/core @g00sek
