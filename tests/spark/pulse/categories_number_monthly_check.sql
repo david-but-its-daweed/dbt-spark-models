@@ -16,4 +16,4 @@ FROM {{ source('joompro_mart', 'mercadolibre_categories_view') }} AS cat
 LEFT JOIN cub ON cat.category_id = cub.category_id
 CROSS JOIN dates
 WHERE cub.category_id IS NULL
-AND DATE(cat.date_created) < dates.date
+AND DATE(cat.date_created) < dates.date AND dayofmonth(current_date()) <= 4
