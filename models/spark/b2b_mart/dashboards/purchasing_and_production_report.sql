@@ -73,6 +73,89 @@ WITH procurement_orders AS (
     WHERE isDeleted IS NOT TRUE
 ),
 
+     filtered_payments AS (
+    WITH billing_info AS (
+        SELECT t1._id AS payment_id,
+               t1.isCancelled AS is_payment_cancelled
+        FROM mongo.billing_pro_invoice_requests_daily_snapshot AS t1
+        /*
+        LEFT JOIN mongo.billing_pro_invoice_request_operations_daily_snapshot AS t2 ON t1._id = t2.requestId
+        LEFT JOIN mongo.billing_pro_invoices_v3_daily_snapshot AS t3 ON t2.invoiceId = t3._id
+        LEFT JOIN mongo.billing_pro_payouts_daily_snapshot AS t4 ON t3.pId = t4._id
+        */
+    )
+
+
+    SELECT
+        procurement_order_id,
+        NAMED_STRUCT(
+            'advancePercent', advancePercent,
+            'daysAfterQC', daysAfterQC,
+            'paymentHistory', 
+                COLLECT_LIST(
+                    NAMED_STRUCT(
+                        'id', id,
+                        'ctms', ctms,
+                        'utms', utms,
+                        'price', price
+                    )
+                ),
+            'paymentScheme', paymentScheme,
+            'paymentType', paymentType,
+            'pmId', pmId,
+            'workScheme', workScheme
+        ) AS payment
+    FROM (
+        SELECT
+            po.procurement_order_id,
+            po.payment.advancePercent,
+            po.payment.daysAfterQC,
+            po.payment.paymentScheme,
+            po.payment.paymentType,
+            po.payment.pmId,
+            po.payment.workScheme,
+            ph.id,
+            ph.ctms,
+            ph.utms,
+            ph.price
+        FROM procurement_orders AS po
+        LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
+    ) AS p
+    LEFT JOIN billing_info AS bi ON p.id = bi.payment_id
+    WHERE COALESCE(bi.is_payment_cancelled, False) IS NOT TRUE
+    GROUP BY
+        procurement_order_id,
+        advancePercent,
+        daysAfterQC,
+        paymentScheme,
+        paymentType,
+        pmId,
+        workScheme
+),
+
+     payments_history AS (
+    SELECT procurement_order_id,
+           COUNT(p.payment_id) AS payment_count_fact,
+           COUNT(CASE WHEN payment_received_ts_msk IS NOT NULL THEN p.payment_id END) AS received_payment_count,
+           COUNT(CASE WHEN sla_fact > sla_plan THEN p.payment_id END) AS overdue_payment_count,
+           SUM(CASE WHEN payment_price_ccy = 'USD' THEN payment_price_amount ELSE 0 END) AS payment_sum_usd,
+           SUM(CASE WHEN payment_price_ccy = 'CNH' THEN payment_price_amount ELSE 0 END) AS payment_sum_cnh,
+           SUM(CASE WHEN payment_price_ccy NOT IN('USD', 'CNH') THEN payment_price_amount ELSE 0 END) AS payment_sum_other
+    FROM (
+        SELECT po.procurement_order_id,
+               ph.id AS payment_id,
+               ph.price.amount / 1000000 AS payment_price_amount,
+               ph.price.ccy AS payment_price_ccy,
+               millis_to_ts_msk(ph.ctms) AS payment_requested_ts_msk,
+               millis_to_ts_msk(ph.utms) AS payment_received_ts_msk,
+               DATEDIFF(millis_to_ts_msk(ph.utms), millis_to_ts_msk(ph.ctms)) AS sla_fact,
+               4 AS sla_plan
+        FROM filtered_payments AS po
+        LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
+    ) AS p
+    GROUP BY 1
+),
+
      procurement_orders_last_assignee AS (
     WITH assignee_history AS (
         SELECT _id AS procurement_order_id,
@@ -167,43 +250,6 @@ WITH procurement_orders AS (
         LEFT JOIN {{ ref('key_status') }} AS ks1 ON ks1.key = 'orderproduct.procurementStatus' AND ps.status = ks1.id
         LEFT JOIN {{ ref('key_status') }} AS ks2 ON ks2.key = 'orderproduct.procurementSubStatus' AND ps.subStatus = ks2.id
     ) AS ps
-    GROUP BY 1
-),
-
-     payments_history AS (
-    WITH billing_info AS (
-        SELECT t1._id AS payment_id,
-               t1.isCancelled AS is_payment_cancelled
-        FROM mongo.billing_pro_invoice_requests_daily_snapshot AS t1
-        /*
-        LEFT JOIN mongo.billing_pro_invoice_request_operations_daily_snapshot AS t2 ON t1._id = t2.requestId
-        LEFT JOIN mongo.billing_pro_invoices_v3_daily_snapshot AS t3 ON t2.invoiceId = t3._id
-        LEFT JOIN mongo.billing_pro_payouts_daily_snapshot AS t4 ON t3.pId = t4._id
-        */
-    )
-
-    
-    SELECT procurement_order_id,
-           COUNT(p.payment_id) AS payment_count_fact,
-           COUNT(CASE WHEN payment_received_ts_msk IS NOT NULL THEN p.payment_id END) AS received_payment_count,
-           COUNT(CASE WHEN sla_fact > sla_plan THEN p.payment_id END) AS overdue_payment_count,
-           SUM(CASE WHEN payment_price_ccy = 'USD' THEN payment_price_amount ELSE 0 END) AS payment_sum_usd,
-           SUM(CASE WHEN payment_price_ccy = 'CNH' THEN payment_price_amount ELSE 0 END) AS payment_sum_cnh,
-           SUM(CASE WHEN payment_price_ccy NOT IN('USD', 'CNH') THEN payment_price_amount ELSE 0 END) AS payment_sum_other
-    FROM (
-        SELECT po.procurement_order_id,
-               ph.id AS payment_id,
-               ph.price.amount / 1000000 AS payment_price_amount,
-               ph.price.ccy AS payment_price_ccy,
-               millis_to_ts_msk(ph.ctms) AS payment_requested_ts_msk,
-               millis_to_ts_msk(ph.utms) AS payment_received_ts_msk,
-               DATEDIFF(millis_to_ts_msk(ph.utms), millis_to_ts_msk(ph.ctms)) AS sla_fact,
-               4 AS sla_plan
-        FROM procurement_orders AS po
-        LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
-    ) AS p
-    LEFT JOIN billing_info AS bi ON p.payment_id = bi.payment_id
-    WHERE bi.is_payment_cancelled IS NOT TRUE
     GROUP BY 1
 ),
 
@@ -501,7 +547,7 @@ SELECT po.procurement_order_id,
        po.product_name,
        po.prices,
        po.jpc_payment,
-       po.payment,
+       fa.payment,
        po.payment_count_plan,
        pah.payment_count_fact,
        pah.received_payment_count,
@@ -637,8 +683,9 @@ SELECT po.procurement_order_id,
            ELSE 1
        END AS is_for_purchasing_and_production_report
 FROM core_product AS po
-LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
+LEFT JOIN filtered_payments AS fa ON po.procurement_order_id = fa.procurement_order_id
 LEFT JOIN payments_history AS pah ON po.procurement_order_id = pah.procurement_order_id
+LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
 LEFT JOIN merchant_orders AS mo ON po.merchant_order_id = mo.merchant_order_id
 LEFT JOIN offer_products AS op ON po.procurement_order_id = op.procurement_order_id
 LEFT JOIN customer_offers AS co ON op.customer_offer_id = co.customer_offer_id
