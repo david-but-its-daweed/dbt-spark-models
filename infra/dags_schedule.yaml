@@ -42,6 +42,7 @@ pulse:
   tags: ["pulse"]
 gold:
   dag-name: gold
+  profile-name: gold
   alerts-channel: "#dbt-spark-monitoring"
   tags: ["gold"]
   slo-hour: 8

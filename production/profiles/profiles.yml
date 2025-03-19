@@ -1,4 +1,5 @@
 spark:
+  target: prod
   outputs:
     prod:
       host: thrift-service-prod.joom.ai
@@ -7,4 +8,13 @@ spark:
       schema: models
       threads: 1
       type: spark
+gold:
   target: prod
+  outputs:
+    prod:
+      host: thrift-service-gold.thrift-service.svc
+      method: thrift
+      port: 10000
+      schema: models
+      threads: 1
+      type: spark
