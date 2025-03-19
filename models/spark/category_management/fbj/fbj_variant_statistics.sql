@@ -167,7 +167,7 @@ variant_repl_status AS (
             ELSE 'Other'
         END AS last_replenishment_status
     FROM base AS b
-    LEFT JOIN category_management.fbj_merchant_replenishments AS fmr
+    LEFT JOIN {{ ref('fbj_merchant_replenishments') }} AS fmr --category_management.fbj_merchant_replenishments AS fmr
         ON
             1 = 1
             AND fmr.partition_date <= b.partition_date -- все репленишменты созданные до текущей даты 
