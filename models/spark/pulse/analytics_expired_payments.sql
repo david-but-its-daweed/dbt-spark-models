@@ -59,6 +59,7 @@ payments AS (
         FROM {{ source('mongo', 'b2b_core_analytics_payments_daily_snapshot') }} AS payment
         WHERE payment.packageSnapshot.duration.unit IN ("year", "month")
     )
+    WHERE payment_created_time <= CURRENT_DATE()
 )
 
 SELECT
