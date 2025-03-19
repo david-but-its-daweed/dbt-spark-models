@@ -14,4 +14,4 @@ SELECT
     cat.cat_count
 FROM cub
 CROSS JOIN cat
-WHERE cub.cube_count != cat.cat_count
+WHERE cub.cube_count != cat.cat_count AND dayofmonth(current_date()) <= 4
