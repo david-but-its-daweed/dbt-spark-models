@@ -76,6 +76,7 @@ SELECT
     a.delivery_estimate_max_days AS delivery_estimate_upper_bound_days,
     a.delivery_duration_user AS delivery_duration_by_user,
     a.delivery_duration_tracking AS delivery_duration_by_tracking,
+    ROUND((UNIX_SECONDS(a.check_in_time_utc) - UNIX_SECONDS(a.order_created_time_utc)) / 60 / 60 / 24, 1) AS fulfilling_duration,
 
     a.order_created_date_msk AS order_date_msk,
     a.order_created_time_utc AS order_created_datetime_utc,

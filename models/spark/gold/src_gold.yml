@@ -938,6 +938,8 @@ models:
       description: Number of days from order placement to user confirmation of receiving the product.
     - name: delivery_duration_by_tracking
       description: Number of days from order placement to delivery at Step 5 (tracking_issuing_point_datetime_utc) based on tracking.
+    - name: fulfilling_duration
+      description: Fulfilling duration (time from order creation to warehouse check-in) measured in days.
     - name: order_date_msk
       description: Order payment date in UTC+3. We don't use the order creation date because it gives us less information. The platform creates an order only after payment, the order is accepted into work only after payment. The order is accepted into work only after payment. Usually the difference between order creation and order payment does not exceed 3 minutes.
     - name: order_created_datetime_utc
