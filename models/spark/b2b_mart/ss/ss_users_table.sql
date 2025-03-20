@@ -259,7 +259,33 @@ main AS (
     LEFT JOIN deals        USING(user_id)
     WHERE phone_number IS NOT NULL
     GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
-)
+),
+ cart_activation as (
+ select user_id,  
+     max(1) user_MQL
+  from {{ ref('ss_events_cart') }} 
+ where actionType  = 'add_to_cart'
+ group by 1 
+ ),
+ deal_activation as (
+  select 
+user_id,
+        max(case when deal_type != 'Sample' then 1 else 0 end) as user_SQL,
+        max(case when deal_type = 'Sample' then 1 else 0 end) as user_MQL
+  from  {{ ref('fact_deals_with_requests') }}
+  where deal_status not in ('Test')
+  group by 1
+ )
 
-SELECT * FROM main
+SELECT main.*,
+    coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) user_MQL, 
+    coalesce(user_SQL,0) user_SQL,
+    case when user_SQL = 1 then 'SQL'
+         when  coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) = 1 then 'MQL'
+         when  cnpj is not null then 'Lead' 
+    end as Marketing_Lead_Type
+    
+    FROM main
+    left join cart_activation using(user_id)
+    left join deal_activation using(user_id)
 where phone_number not like '79%'
