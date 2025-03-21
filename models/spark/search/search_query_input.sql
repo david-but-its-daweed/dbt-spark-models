@@ -5,7 +5,7 @@
     partition_by=['partition_date'],
     file_format='parquet',
     meta = {
-      'model_owner' : '@troyanovskaya',
+      'model_owner' : '@itangaev',
       'team': 'search',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date',
@@ -16,8 +16,8 @@ SELECT
     partition_date,
     device_id,
     user_id,
-    timestamp(millis_to_ts(event_ts)) as event_ts_utc,
-    timestamp(millis_to_ts_msk(event_ts)) as event_ts_msk,
+    TIMESTAMP(MILLIS_TO_TS(event_ts)) AS event_ts_utc,
+    TIMESTAMP(MILLIS_TO_TS_MSK(event_ts)) AS event_ts_msk,
     LOWER(device_from_event.version.osType) AS os_type,
     payload.durationMs AS duration_ms,
     payload.enteredQuery AS entered_query,
@@ -39,7 +39,7 @@ SELECT
                 LOWER(ELEMENT_AT(payload.searchInputActions.source, -1)) = 'popular',
                 'popular',
                 IF(
-                    LOWER(ELEMENT_AT(payload.searchInputActions.source, -1)) in ('deeplink', 'deeplinksuggestion', 'deeplink_suggestion'),
+                    LOWER(ELEMENT_AT(payload.searchInputActions.source, -1)) IN ('deeplink', 'deeplinksuggestion', 'deeplink_suggestion'),
                     'deeplink',
                     'manual'
                 )
@@ -49,10 +49,10 @@ SELECT
     payload.searchInputActions AS search_input_actions
 FROM {{ source('mart', 'device_events') }}
 WHERE
-    `type` in ('searchQueryInput')
-{% if is_incremental() %}
+    `type` IN ('searchQueryInput')
+    {% if is_incremental() %}
     AND partition_date >= DATE'{{ var("start_date_ymd") }}'
     AND partition_date < DATE'{{ var("end_date_ymd") }}'
 {% else %}
-    AND partition_date >= DATE'2021-01-01'
-{% endif %}
+        AND partition_date >= DATE '2021-01-01'
+    {% endif %}
