@@ -117,7 +117,6 @@ variant_repl_status AS (
         fmr.merchant_id,
         fmr.merchant_name,
         fmr.main_merchant_name,
-        fmr.kam,
         -- статусы по репленишментам
         --
         -- для каждого варианта считаем метрики: 
@@ -177,8 +176,18 @@ variant_repl_status AS (
         b.variant_id,
         fmr.merchant_id,
         fmr.merchant_name,
-        fmr.main_merchant_name,
-        fmr.kam
+        fmr.main_merchant_name
+),
+
+var_kam AS (
+    SELECT
+        fmr.partition_date,
+        fmr.variant_id,
+        MAX(fmr.kam) AS kam
+    FROM {{ ref('fbj_merchant_replenishments') }} AS fmr --category_management.fbj_merchant_replenishments AS fmr
+    GROUP BY
+        fmr.partition_date,
+        fmr.variant_id
 ),
 
 --платность хранения
@@ -201,7 +210,7 @@ paid_storage_pre AS (
         ON
             1 = 1
             AND b.logistics_product_id = lr_s_ds.pid
-            AND CAST(lr_s_ds.ct AS DATE) <= (b.partition_date - INTERVAL 1 DAY) -- ввозы репленишментов на склад созданные до вчера включительно
+            AND CAST(lr_s_ds.ct AS DATE) <= b.partition_date  -- ввозы репленишментов на склад созданные до вчера включительно
     LEFT JOIN {{ source('mongo', 'logistics_replenishments_v3_daily_snapshot') }} AS lr_v3_ds --mongo.logistics_replenishments_v3_daily_snapshot as lr_v3_ds
         ON
             1 = 1
@@ -249,7 +258,7 @@ product_promo AS (
         ON
             1 = 1
             AND b.product_id = p.product_id
-            AND CAST((b.partition_date - INTERVAL 1 DAY) AS TIMESTAMP) BETWEEN p.promo_start_time_utc AND p.promo_end_time_utc
+            AND CAST(b.partition_date AS TIMESTAMP) BETWEEN p.promo_start_time_utc AND p.promo_end_time_utc
     GROUP BY
         b.partition_date,
         b.product_id
@@ -314,7 +323,7 @@ variant_public AS (
         ON
             1 = 1
             AND b.variant_id = pv.variant_id
-            AND CAST((b.partition_date - INTERVAL 1 DAY) AS TIMESTAMP) BETWEEN pv.effective_ts AND pv.next_effective_ts
+            AND CAST(b.partition_date AS TIMESTAMP) BETWEEN pv.effective_ts AND pv.next_effective_ts
 ),
 
 product_public AS (
@@ -327,7 +336,7 @@ product_public AS (
         ON
             1 = 1
             AND b.product_id = pv.product_id
-            AND CAST((b.partition_date - INTERVAL 1 DAY) AS TIMESTAMP) BETWEEN pv.effective_ts AND pv.next_effective_ts
+            AND CAST(b.partition_date AS TIMESTAMP) BETWEEN pv.effective_ts AND pv.next_effective_ts
 ),
 
 product_best AS (
@@ -341,7 +350,7 @@ product_best AS (
         ON
             1 = 1
             AND b.product_id = c.product_id
-            AND c.partition_date = b.partition_date - INTERVAL 1 DAY
+            AND c.partition_date = b.partition_date
             AND c.context_name = 'best'
     GROUP BY
         b.partition_date, -- 2025-03-11 -дата расчета, но не бизнес дата
@@ -359,7 +368,7 @@ product_tier AS (
         ON
             1 = 1
             AND b.product_id = pt.product_id
-            AND pt.partition_date = b.partition_date - INTERVAL 1 DAY
+            AND pt.partition_date = b.partition_date
 )
 
 SELECT
@@ -462,7 +471,7 @@ SELECT
     --
     vrs.merchant_name,
     vrs.main_merchant_name,
-    vrs.kam
+    vk.kam
 FROM base AS b
 LEFT JOIN {{ ref('gold_products') }} AS gp --gold.products as gp -- данные только на текущий момент
     ON
@@ -478,6 +487,11 @@ LEFT JOIN variant_repl_status AS vrs
         1 = 1
         AND b.partition_date = vrs.partition_date
         AND b.variant_id = vrs.variant_id
+LEFT JOIN var_kam AS vk
+    ON
+        1 = 1
+        AND b.variant_id = vk.variant_id
+        AND b.partition_date = vk.partition_date
 LEFT JOIN paid_storage AS ps
     ON
         1 = 1
