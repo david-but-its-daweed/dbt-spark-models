@@ -10,6 +10,17 @@
 ) }}
 
 
+WITH customers AS (
+    SELECT _id,
+           initialGrade,
+           ARRAY_UNION(
+               COALESCE(gradeInfoHistory, ARRAY()),
+               ARRAY(STRUCT(gradeInfo.grade, gradeInfo.moderatorId, gradeInfo.prob, gradeInfo.reason, gradeInfo.utms))
+           ) AS gradeInfoHistory
+    FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
+)
+
+
 SELECT _id AS user_id,
        CASE
            WHEN grade = 0 THEN 'unknown'
@@ -30,7 +41,7 @@ FROM (
         _id,
         initialGrade AS grade,
         CURRENT_TIMESTAMP() + INTERVAL '3 hour' AS updated_ts
-    FROM mongo.b2b_core_customers_daily_snapshot
+    FROM customers
     WHERE SIZE(gradeInfoHistory) = -1
     UNION ALL
     SELECT 
@@ -42,7 +53,7 @@ FROM (
             _id,
             initialGrade,
             EXPLODE(gradeInfoHistory) AS grade_info
-        FROM mongo.b2b_core_customers_daily_snapshot
+        FROM customers
     ) AS history
     UNION ALL
     SELECT 
@@ -54,7 +65,7 @@ FROM (
             _id,
             initialGrade,
             EXPLODE(gradeInfoHistory) AS grade_info
-        FROM mongo.b2b_core_customers_daily_snapshot
+        FROM customers
     ) AS history
     GROUP BY 1,2
 ) AS m
