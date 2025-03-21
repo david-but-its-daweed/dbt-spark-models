@@ -54,5 +54,5 @@ WHERE
     AND partition_date >= DATE'{{ var("start_date_ymd") }}'
     AND partition_date < DATE'{{ var("end_date_ymd") }}'
 {% else %}
-        AND partition_date >= DATE '2021-01-01'
+        AND partition_date >= DATE '2024-01-01'
     {% endif %}
