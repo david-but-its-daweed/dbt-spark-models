@@ -38,8 +38,17 @@ WITH base AS (
     FULL JOIN {{ ref('fbj_merchant_replenishments') }} AS fmr --category_management.fbj_merchant_replenishments as fmr  -- чтобы учесть ручные репленишменты
         ON
             1 = 1
-            AND fmr.partition_date = (st.partition_date - INTERVAL 1 DAY) -- -1 день потому что в таблице с событиями partition date это данных
             AND st.product_variant_id = fmr.variant_id
+            AND (st.partition_date - INTERVAL 1 DAY) BETWEEN fmr.partition_date AND (
+                CASE
+                    WHEN fmr.current_status IN ('1. Pending Approve', '2. Pending Inbound', '3. Pending Shipping', '4. Shipped by Merchant')
+                        THEN DATE '{{ var("start_date_ymd") }}'
+                    WHEN fmr.current_status IN ('5. Action Required', '6. On Review', '7. Completed')
+                        THEN DATE(fmr.completed_dt)
+                    WHEN fmr.current_status IN ('8. Canceled by Joom', '8. Canceled by Merchant')
+                        THEN DATE(fmr.last_updated_at)
+                END
+            )
 
     {% if is_incremental() %}
         WHERE
@@ -193,7 +202,7 @@ var_kam AS (
 --платность хранения
 paid_storage_pre AS (
     SELECT
-        b.partition_date, --дата расчета, но не бизнес дата
+        b.partition_date,
         b.variant_id,
         b.logistics_product_id,
         b.number_in_stock,
@@ -217,7 +226,7 @@ paid_storage_pre AS (
             AND lr_v3_ds._id = lr_s_ds.rid -- ReplenishmentID
             AND lr_v3_ds.source IN (1, 2) -- только мерчантские поставки (не складские накладные)
     GROUP BY
-        b.partition_date, --дата расчета, но не бизнес дата
+        b.partition_date,
         b.variant_id,
         b.logistics_product_id,
         b.number_in_stock
@@ -315,33 +324,39 @@ first_time_in_stock AS (
 --paid stock factors
 variant_public AS (
     SELECT
-        b.partition_date, -- 2025-03-11 -дата расчета, но не бизнес дата
+        b.partition_date,
         b.variant_id,
-        pv.public AS is_variant_public
+        MAX(pv.public) AS is_variant_public
     FROM base AS b
     LEFT JOIN {{ source('mart', 'dim_published_variant_min') }} AS pv --mart.dim_published_variant_min as pv
         ON
             1 = 1
             AND b.variant_id = pv.variant_id
             AND CAST(b.partition_date AS TIMESTAMP) BETWEEN pv.effective_ts AND pv.next_effective_ts
+    GROUP BY
+        b.partition_date,
+        b.variant_id
 ),
 
 product_public AS (
     SELECT
-        b.partition_date, -- 2025-03-11 -дата расчета, но не бизнес дата
+        b.partition_date,
         b.product_id,
-        pv.public AS is_product_public
+        MAX(pv.public) AS is_product_public
     FROM base AS b
     LEFT JOIN {{ source('mart', 'dim_published_product_min') }} AS pv --mart.dim_published_product_min as pv
         ON
             1 = 1
             AND b.product_id = pv.product_id
             AND CAST(b.partition_date AS TIMESTAMP) BETWEEN pv.effective_ts AND pv.next_effective_ts
+    GROUP BY
+        b.partition_date,
+        b.product_id
 ),
 
 product_best AS (
     SELECT
-        b.partition_date, -- 2025-03-11 -дата расчета, но не бизнес дата
+        b.partition_date,
         b.product_id,
         SUM(c.open_count) AS opens,
         SUM(c.preview_count) AS previews
@@ -350,29 +365,32 @@ product_best AS (
         ON
             1 = 1
             AND b.product_id = c.product_id
-            AND c.partition_date = b.partition_date
+            AND b.partition_date = c.partition_date
             AND c.context_name = 'best'
     GROUP BY
-        b.partition_date, -- 2025-03-11 -дата расчета, но не бизнес дата
+        b.partition_date,
         b.product_id
 
 ),
 
 product_tier AS (
     SELECT
-        b.partition_date, -- 2025-03-11 -дата расчета, но не бизнес дата
+        b.partition_date,
         b.product_id,
-        pt.tier
+        MAX(pt.tier) AS tier
     FROM base AS b
     LEFT JOIN {{ source('goods', 'product_tiers') }} AS pt --goods.product_tiers as pt
         ON
             1 = 1
             AND b.product_id = pt.product_id
-            AND pt.partition_date = b.partition_date
+            AND b.partition_date = pt.partition_date
+    GROUP BY
+        b.partition_date,
+        b.product_id
 )
 
 SELECT
-    b.partition_date, -- 2025-03-11 -дата расчета, но не бизнес дата
+    b.partition_date,
     b.variant_id,
     b.product_id,
     b.logistics_product_id,
