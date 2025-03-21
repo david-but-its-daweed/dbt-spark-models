@@ -42,7 +42,7 @@ FROM (
         initialGrade AS grade,
         CURRENT_TIMESTAMP() + INTERVAL '3 hour' AS updated_ts
     FROM customers
-    WHERE SIZE(gradeInfoHistory) = -1
+    WHERE SIZE(gradeInfoHistory) = 0
     UNION ALL
     SELECT 
         _id,
