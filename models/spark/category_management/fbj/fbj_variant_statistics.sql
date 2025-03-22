@@ -124,8 +124,6 @@ variant_repl_status AS (
         b.partition_date,
         b.variant_id,
         fmr.merchant_id,
-        fmr.merchant_name,
-        fmr.main_merchant_name,
         -- статусы по репленишментам
         --
         -- для каждого варианта считаем метрики: 
@@ -183,15 +181,15 @@ variant_repl_status AS (
     GROUP BY
         b.partition_date,
         b.variant_id,
-        fmr.merchant_id,
-        fmr.merchant_name,
-        fmr.main_merchant_name
+        fmr.merchant_id
 ),
 
 var_kam AS (
     SELECT
         fmr.partition_date,
         fmr.variant_id,
+        MAX(fmr.merchant_name) AS merchant_name,
+        MAX(fmr.main_merchant_name) AS main_merchant_name,
         MAX(fmr.kam) AS kam
     FROM {{ ref('fbj_merchant_replenishments') }} AS fmr --category_management.fbj_merchant_replenishments AS fmr
     GROUP BY
@@ -487,8 +485,8 @@ SELECT
     gp.l2_merchant_category_id,
     gp.l2_merchant_category_name,
     --
-    vrs.merchant_name,
-    vrs.main_merchant_name,
+    vk.merchant_name,
+    vk.main_merchant_name,
     vk.kam
 FROM base AS b
 LEFT JOIN {{ ref('gold_products') }} AS gp --gold.products as gp -- данные только на текущий момент
