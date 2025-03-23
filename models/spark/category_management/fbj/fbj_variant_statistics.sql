@@ -14,61 +14,98 @@
   )
 }}
 
+WITH calendar AS ( -- делаем календарь, который по сути нужен только для ручных репленишментов
+    {% if is_incremental() %}
+        SELECT DATE '{{ var("start_date_ymd") }}' AS dt -- +1 день потому что в таблице st хранится current_date а в start_date_ymd предыдущий день
+    --select current_date as dt -- +1 день потому что в таблице st хранится current_date а в start_date_ymd предыдущий день
+    {% else %}
+    select EXPLODE(SEQUENCE(to_date('2024-07-01'),  DATE '{{ var("start_date_ymd") }}', INTERVAL 1 DAY)) AS dt
+    --select EXPLODE(SEQUENCE(to_date('2025-03-20'), to_date(CURRENT_DATE()), INTERVAL 1 DAY)) AS dt
+{% endif %}
+),
 
-WITH base AS (
+cal_x_stock AS ( -- отбираем варианты которые находятся на складе
+    -- 1
     SELECT
-        st.partition_date - INTERVAL 1 DAY AS partition_date, -- дата данных для запуска расчета 2025-03-14 дата данных будет 2025-03-13
-        COALESCE(st.product_variant_id, pe.payload.skuId, fmr.variant_id) AS variant_id,
-        COALESCE(st.product_id, pe.product_id, pe.payload.productId, fmr.product_id) AS product_id,
+        c.dt AS partition_date,
+        st.product_variant_id AS variant_id,
+        st.product_id,
         st.logistics_product_id,
         st.product_dimensions.h AS product_dimensions_h,
         st.product_dimensions.l AS product_dimensions_l,
         st.product_dimensions.w AS product_dimensions_w,
-        COALESCE(st.number_of_products_in_stock, 0) AS number_in_stock, -- на конец дня
-        COALESCE(st.number_of_products_in_pending_stock, 0) AS number_in_pending_stock,
-        IF(pe.payload.skuId IS NULL, 0, 1) AS enabled_flg,
+        st.number_of_products_in_stock,
+        st.number_of_products_in_pending_stock
+    FROM calendar AS c
+    INNER JOIN models.fbj_product_stocks AS st
+        ON
+            1 = 1
+            AND st.partition_date - INTERVAL 1 DAY = c.dt
+),
+
+cal_x_demand AS ( -- отбираем варианты которые включены в деманд системе
+    -- 2
+    SELECT
+        c.dt AS partition_date,
+        pe.payload.skuId AS variant_id,
+        COALESCE(pe.product_id, pe.payload.productId) AS product_id,
         FIRST_VALUE(pe.payload.result) AS last_demand_status
-    FROM {{ ref('fbj_product_stocks') }} AS st -- models.fbj_product_stocks as st
-    FULL JOIN {{ source('mart', 'product_events') }} AS pe --mart.product_events as pe 
+    FROM calendar AS c
+    INNER JOIN mart.product_events AS pe
         ON
             1 = 1
-            AND st.product_variant_id = pe.payload.skuId
-            AND pe.partition_date = (st.partition_date - INTERVAL 1 DAY) -- -1 день потому что в таблице с событиями partition date это данных
+            AND c.dt = pe.partition_date
             AND pe.type = 'fbjProcessingResult'
-    FULL JOIN {{ ref('fbj_merchant_replenishments') }} AS fmr --category_management.fbj_merchant_replenishments as fmr  -- чтобы учесть ручные репленишменты
+    GROUP BY
+        c.dt,
+        pe.payload.skuId,
+        COALESCE(pe.product_id, pe.payload.productId)
+),
+
+cal_x_repl AS ( -- отбираем варианты которые созданы или едут в репленишментах
+    -- 3
+    SELECT DISTINCT
+        c.dt AS partition_date,
+        fmr.variant_id,
+        fmr.product_id
+    FROM calendar AS c
+    INNER JOIN category_management.fbj_merchant_replenishments AS fmr  -- чтобы учесть ручные репленишменты
         ON
             1 = 1
-            AND st.product_variant_id = fmr.variant_id
-            AND (st.partition_date - INTERVAL 1 DAY) BETWEEN fmr.partition_date AND (
-                CASE
-                    WHEN fmr.current_status IN ('1. Pending Approve', '2. Pending Inbound', '3. Pending Shipping', '4. Shipped by Merchant')
-                        THEN DATE '{{ var("start_date_ymd") }}'
-                    WHEN fmr.current_status IN ('5. Action Required', '6. On Review', '7. Completed')
-                        THEN DATE(fmr.completed_dt)
-                    WHEN fmr.current_status IN ('8. Canceled by Joom', '8. Canceled by Merchant')
-                        THEN DATE(fmr.last_updated_at)
-                END
-            )
+            AND c.dt BETWEEN fmr.partition_date AND CASE
+                WHEN fmr.current_status IN ('1. Pending Approve', '2. Pending Inbound', '3. Pending Shipping', '4. Shipped by Merchant')
+                    THEN CAST('5999-12-31' AS DATE) -- то есть просто берем все строчки у которых такие статусы
+                WHEN fmr.current_status IN ('5. Action Required', '6. On Review', '7. Completed')
+                    THEN DATE(fmr.completed_dt)
+                WHEN fmr.current_status IN ('8. Canceled by Joom', '8. Canceled by Merchant')
+                    THEN DATE(fmr.last_updated_at)
+            END
+),
 
-    {% if is_incremental() %}
-        WHERE
-            st.partition_date = DATE '{{ var("start_date_ymd") }}' + INTERVAL 1 DAY -- +1 день потому что в таблице st хранится current_date а в start_date_ymd предыдущий день
-    {% else %}
-        WHERE
-            st.partition_date >= DATE('2024-07-01')
-    {% endif %}
-
-    GROUP BY
-        st.partition_date - INTERVAL 1 DAY,
-        COALESCE(st.product_variant_id, pe.payload.skuId, fmr.variant_id),
-        COALESCE(st.product_id, pe.product_id, pe.payload.productId, fmr.product_id),
-        st.logistics_product_id,
-        st.product_dimensions.h,
-        st.product_dimensions.l,
-        st.product_dimensions.w,
-        COALESCE(st.number_of_products_in_stock, 0),
-        COALESCE(st.number_of_products_in_pending_stock, 0),
-        IF(pe.payload.skuId IS NULL, 0, 1)
+base AS (
+    SELECT
+        COALESCE(cal_x_stock.partition_date, cal_x_demand.partition_date, cal_x_repl.partition_date) AS partition_date,
+        COALESCE(cal_x_stock.variant_id, cal_x_demand.variant_id, cal_x_repl.variant_id) AS variant_id,
+        COALESCE(cal_x_stock.product_id, cal_x_demand.product_id, cal_x_repl.product_id) AS product_id,
+        cal_x_stock.logistics_product_id,
+        cal_x_stock.product_dimensions_h,
+        cal_x_stock.product_dimensions_l,
+        cal_x_stock.product_dimensions_w,
+        COALESCE(cal_x_stock.number_of_products_in_stock, 0) AS number_in_stock, -- на конец дня
+        COALESCE(cal_x_stock.number_of_products_in_pending_stock, 0) AS number_in_pending_stock,
+        IF(cal_x_demand.variant_id IS NULL, 0, 1) AS enabled_flg,
+        cal_x_demand.last_demand_status
+    FROM cal_x_stock
+    FULL JOIN cal_x_demand
+        ON
+            1 = 1
+            AND cal_x_stock.partition_date = cal_x_demand.partition_date
+            AND cal_x_stock.variant_id = cal_x_demand.variant_id
+    FULL JOIN cal_x_repl
+        ON
+            1 = 1
+            AND cal_x_repl.partition_date = COALESCE(cal_x_stock.partition_date, cal_x_demand.partition_date) -- джоин на коалеск чтобы не дублить строки тут
+            AND cal_x_repl.variant_id = COALESCE(cal_x_stock.variant_id, cal_x_demand.variant_id)
 ),
 
 -- заказы
@@ -204,13 +241,13 @@ paid_storage_pre AS (
         b.variant_id,
         b.logistics_product_id,
         b.number_in_stock,
-        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) = (b.partition_date - INTERVAL 1 DAY), lr_s_ds.s, 0)) AS repl_amount, -- accepted_day
-        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 29 DAY) AND (b.partition_date - INTERVAL 1 DAY), lr_s_ds.s, 0)) AS relp_amount_30d,
-        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 59 DAY) AND (b.partition_date - INTERVAL 1 DAY), lr_s_ds.s, 0)) AS relp_amount_60d,
-        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 89 DAY) AND (b.partition_date - INTERVAL 1 DAY), lr_s_ds.s, 0)) AS relp_amount_90d,
-        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 119 DAY) AND (b.partition_date - INTERVAL 1 DAY), lr_s_ds.s, 0)) AS relp_amount_120d,
-        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 179 DAY) AND (b.partition_date - INTERVAL 1 DAY), lr_s_ds.s, 0)) AS relp_amount_180d,
-        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 359 DAY) AND (b.partition_date - INTERVAL 1 DAY), lr_s_ds.s, 0)) AS relp_amount_360d,
+        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) = b.partition_date, lr_s_ds.s, 0)) AS repl_amount, -- accepted_day
+        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 29 DAY) AND b.partition_date, lr_s_ds.s, 0)) AS relp_amount_30d,
+        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 59 DAY) AND b.partition_date, lr_s_ds.s, 0)) AS relp_amount_60d,
+        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 89 DAY) AND b.partition_date, lr_s_ds.s, 0)) AS relp_amount_90d,
+        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 119 DAY) AND b.partition_date, lr_s_ds.s, 0)) AS relp_amount_120d,
+        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 179 DAY) AND b.partition_date, lr_s_ds.s, 0)) AS relp_amount_180d,
+        SUM(IF(lr_v3_ds.source IN (1, 2) AND CAST(lr_s_ds.ct AS DATE) BETWEEN (b.partition_date - INTERVAL 359 DAY) AND b.partition_date, lr_s_ds.s, 0)) AS relp_amount_360d,
         SUM(IF(lr_v3_ds.source IN (1, 2), lr_s_ds.s, 0)) AS relp_amount_all_d
     FROM base AS b
     LEFT JOIN {{ source('mongo', 'logistics_replenishments_stock_daily_snapshot') }} AS lr_s_ds --mongo.logistics_replenishments_stock_daily_snapshot as lr_s_ds
