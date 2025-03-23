@@ -1,0 +1,144 @@
+{{ config(
+    schema='onfy',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'model_owner' : '@helbuk',
+      'team': 'onfy',
+      'bigquery_load': 'true',
+      'alerts_channel': '#onfy-etl-monitoring'
+    }
+) }}
+
+---------------------------------------------------------------------
+
+-- RU: Собираем показы, клики, заказы, gmv и кол-во купленных упаковок по баннерам (разные SourceScreen'ы)
+-- ENG: Collect shows, clicks, orders, gmv and number of purchased packages produced by banners (different SourceScreens)
+
+---------------------------------------------------------------------
+
+WITH views AS (
+    SELECT
+        IF(LOWER(device.osType) LIKE '%web%' OR LOWER(device.osType) = 'desktop', 'web', 'app') AS app_device_type,
+        payload.sourceScreen,
+        partition_date_cet,
+        type,
+        device_id,
+        event_ts_cet,
+        event_id,
+        IF(payload.pzn IS NOT NULL, payload.pzn, 'banner') AS promo_type, -- если был pzn, то это либо показ в поиске, либо на продакт пейдже. если нет, то это баннер
+        payload.blockName -- Campain
+    FROM onfy_mart.device_events
+    WHERE
+        partition_date_cet >= '2024-11-30'
+        AND (
+            type = 'producerBannerShown' -- показ баннера на главной
+            OR type = 'producerBannerClicked' -- клик по баннеру на главной
+        )
+),
+
+clicks AS (
+    SELECT
+        device_id,
+        event_ts_cet,
+        event_id,
+        payload.pzn
+    FROM onfy_mart.device_events
+    WHERE
+        partition_date_cet >= '2024-11-30'
+        AND type = 'productOpen'
+),
+
+joined_clicks AS (
+    SELECT
+        views.device_id,
+        views.partition_date_cet,
+        views.sourceScreen,
+        views.promo_type,
+        views.blockName,
+        views.type,
+        views.event_id AS views_event_id,
+        clicks.event_ts_cet AS clicks_event_ts_cet,
+        clicks.event_id AS clicks_event_id,
+        clicks.pzn AS clicks_pzn
+    FROM views
+    LEFT JOIN clicks
+        ON
+            views.device_id = clicks.device_id
+            AND views.event_ts_cet <= clicks.event_ts_cet
+            AND views.event_ts_cet + INTERVAL 30 MINUTE >= clicks.event_ts_cet
+),
+
+joined_orders AS (
+    SELECT
+        partition_date_cet,
+        sourceScreen,
+        promo_type,
+        blockName,
+        COUNT(DISTINCT order_id) AS orders,
+        SUM(products_price) AS gmv,
+        SUM(quantity) AS packs_sold
+    FROM (
+        SELECT
+            joined_clicks.device_id,
+            joined_clicks.partition_date_cet,
+            joined_clicks.sourceScreen,
+            joined_clicks.promo_type,
+            joined_clicks.blockName,
+            joined_clicks.clicks_pzn,
+            orders.order_id,
+            orders.products_price,
+            orders.quantity
+        FROM joined_clicks
+        INNER JOIN onfy.orders_info AS orders
+            ON
+                joined_clicks.device_id = orders.device_id
+                AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet
+                AND joined_clicks.clicks_event_ts_cet + INTERVAL 5 HOUR >= orders.order_created_time_cet
+                AND joined_clicks.clicks_pzn = orders.pzn
+        WHERE
+            joined_clicks.type = 'producerBannerClicked'
+            AND joined_clicks.clicks_event_id IS NOT NULL
+        GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
+    )
+    GROUP BY
+        partition_date_cet,
+        sourceScreen,
+        promo_type,
+        blockName
+),
+
+groupped_clicks AS (
+    SELECT
+        partition_date_cet,
+        sourceScreen,
+        promo_type,
+        blockName,
+        COUNT(DISTINCT IF(type <> 'producerBannerClicked', views_event_id, NULL)) AS impressions,
+        COUNT(DISTINCT IF(type = 'producerBannerClicked' OR clicks_pzn IS NOT NULL, COALESCE(views_event_id, clicks_event_id), NULL)) AS clicks
+    FROM joined_clicks
+    GROUP BY
+        partition_date_cet,
+        sourceScreen,
+        promo_type,
+        blockName
+)
+
+SELECT
+    groupped_clicks.partition_date_cet,
+    groupped_clicks.sourceScreen,
+    groupped_clicks.promo_type,
+    groupped_clicks.blockName,
+    groupped_clicks.impressions,
+    groupped_clicks.clicks,
+    joined_orders.orders,
+    joined_orders.gmv,
+    joined_orders.packs_sold
+FROM groupped_clicks
+LEFT JOIN joined_orders
+    ON
+        groupped_clicks.partition_date_cet = joined_orders.partition_date_cet
+        AND groupped_clicks.sourceScreen = joined_orders.sourceScreen
+        AND groupped_clicks.promo_type = joined_orders.promo_type
+        AND groupped_clicks.blockName = joined_orders.blockName
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
