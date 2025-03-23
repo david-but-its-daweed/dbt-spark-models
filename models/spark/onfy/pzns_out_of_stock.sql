@@ -59,6 +59,15 @@ totalGmv AS (
     GROUP BY pzn, store_name
 ),
 
+totalGmvPerDay AS (
+    SELECT 
+        order_created_time_cet,  -- Grouping by 'date'
+        pzn,  -- Grouping by 'pzn'
+        SUM(quantity * COALESCE(before_price, item_price)) AS gmv -- Total GMV at that day
+    FROM filtered_orders
+    GROUP BY order_created_time_cet, pzn
+),
+
 stocks AS (
     SELECT
         store.store_name,
@@ -78,13 +87,13 @@ stocks AS (
         FROM pharmacy_landing.medicine
     ) AS medicine
     ON
-      ps.product_id = medicine.product_id
+        ps.product_id = medicine.product_id
     INNER JOIN totalGmv
     ON 
-      medicine.pzn = totalGmv.pzn
-      AND store.store_name == totalGmv.store_name
+        medicine.pzn = totalGmv.pzn
+        AND store.store_name == totalGmv.store_name
 ),
-    
+
 AdjustedStocks AS (
     SELECT
         pzn,
@@ -129,8 +138,8 @@ ActiveDailyGmv AS (
     FROM FilteredStocks f
     INNER JOIN totalGmv t 
     ON
-      f.pzn = t.pzn
-      AND f.store_name = t.store_name
+        f.pzn = t.pzn
+        AND f.store_name = t.store_name
 ),
 
 EndTime AS (
@@ -148,7 +157,7 @@ pznTitle AS (
     FROM pharmacy_landing.medicine AS medicine
     JOIN pharmacy_landing.product AS product
     ON 
-      medicine.id = product.id
+        medicine.id = product.id
 ),
 
 AdjustedStocks2 AS (
@@ -159,13 +168,35 @@ AdjustedStocks2 AS (
         LEAST(next_effective_ts, (SELECT value FROM EndTime)) AS adjusted_next_effective_ts,
         in_stock,
         MAX(CAST(in_stock AS INT)) OVER (
-            PARTITION BY pzn, store_name 
+            PARTITION BY pzn, store_name
             ORDER BY effective_ts DESC
         ) AS rnk
     FROM stocks
     WHERE 
         effective_ts <= (SELECT value FROM EndTime)
         AND next_effective_ts >= (SELECT start_time FROM StartTime)
+),
+
+LostGMVPerDay AS (
+    SELECT 
+        pzn,
+        store_name,
+        SUM(lost_gmv) AS lost_gmv_total
+    FROM (
+        SELECT
+            AdjustedStocks2.pzn,
+            AdjustedStocks2.store_name,
+            DATE(AdjustedStocks2.adjusted_effective_ts) AS date,
+            FIRST(totalGmvPerDay.gmv) AS lost_gmv
+        FROM AdjustedStocks2
+        LEFT JOIN totalGmvPerDay
+        ON 
+            CAST(totalGmvPerDay.order_created_time_cet AS DATE) = CAST(AdjustedStocks2.adjusted_effective_ts AS DATE) 
+            AND totalGmvPerDay.pzn = AdjustedStocks2.pzn
+        WHERE AdjustedStocks2.in_stock = FALSE 
+        GROUP BY 1, 2, 3
+    )
+    GROUP BY 1, 2
 ),
 
 AggregatedData2 AS (
@@ -193,12 +224,18 @@ FilteredData AS (
         a.days_not_active_total,
         a.days_not_active_now,
         g.gmv_per_active_day,
-        g.avg_item_price
+        g.avg_item_price,
+        l.lost_gmv_total
     FROM AggregatedData2 AS a
     INNER JOIN ActiveDailyGmv AS g
         ON (
             a.pzn = g.pzn
             AND a.store_name = g.store_name
+        )
+    LEFT JOIN LostGMVPerDay AS l
+        ON (
+            a.pzn = l.pzn
+            AND a.store_name = l.store_name
         )
     WHERE a.days_not_active_now >= 0.01
 )
@@ -207,10 +244,14 @@ SELECT
     f.store_name,
     f.pzn,
     p.title,
-    ROUND(f.days_not_active_total, 0) AS days_not_active_total, -- Total days when unavailable in last 30
-    ROUND(f.days_not_active_now, 0) AS days_not_active_now, -- Num days since last availability 
-    ROUND(f.gmv_per_active_day, 2) AS gmv_per_active_day, 
-    ROUND(f.avg_item_price, 2) AS avg_item_price
+    ROUND(f.days_not_active_total, 0) AS days_not_active_total, 
+    ROUND(f.days_not_active_now, 0) AS days_not_active_now,
+    ROUND(f.gmv_per_active_day, 2) AS gmv_per_active_day,
+    ROUND(f.avg_item_price, 2) AS avg_item_price,
+    ROUND(f.lost_gmv_total, 2) AS lost_gmv_total,
+    ROUND(f.lost_gmv_total / f.days_not_active_total, 2) AS lost_gmv_avg_per_day,
+    7.0 * ROUND(f.gmv_per_active_day, 2) AS gmv_per_active_week,
+    30.0 * ROUND(f.gmv_per_active_day, 2) AS gmv_per_active_month
 FROM FilteredData AS f
 INNER JOIN pznTitle AS p
     ON f.pzn = p.pzn
