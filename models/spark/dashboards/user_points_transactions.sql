@@ -1,7 +1,7 @@
 {{
   config(
     meta = {
-      'model_owner' : '@general_analytics',
+      'model_owner' : '@itangaev',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'day',
       'priority_weight': '1000',
