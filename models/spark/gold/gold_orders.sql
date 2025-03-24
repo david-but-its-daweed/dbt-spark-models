@@ -114,7 +114,7 @@ orders_ext0 AS (
         ord.points_initial > 0 AS is_with_points,
         ord.points_initial,
         ord.points_final,
-        COALESCE(ARRAY_CONTAINS(discounts.type, 'specialPriceFinal'), FALSE) AS is_with_special_price,
+        COALESCE(ARRAY_CONTAINS(ord.discounts.type, 'specialPriceFinal'), FALSE) AS is_with_special_price,
         ROUND(COALESCE (FILTER(ord.discounts, x -> x.type = 'specialPriceFinal')[0].amount * 1e6, 0), 3) AS special_price_discount,
         ROUND(COALESCE (FILTER(ord.discounts, x -> x.type = 'specialPrice')[0].amount * 1e6, 0), 3) AS special_price_potential_discount,
         ord.discounts,
@@ -249,14 +249,14 @@ support_tickets AS (
 merchant_fulfill AS (
     SELECT
         friendly_id AS friendly_order_id,
-        MAX(cft) AS order_commited_merchant_fulfillment_days,
-        ROUND(MAX(aft / 1000 / 60 / 60 / 24), 3) AS order_merchant_fulfillment_days_estimated
-    FROM {{ source('mongo', 'merchant_order') }}
-    LEFT JOIN {{ source('merchant', 'order_data') }} USING (friendly_id)
+        MAX(mo.cft) AS order_commited_merchant_fulfillment_days,
+        ROUND(MAX(mod.aft / 1000 / 60 / 60 / 24), 3) AS order_merchant_fulfillment_days_estimated
+    FROM {{ source('mongo', 'merchant_order') }} AS mo
+    LEFT JOIN {{ source('merchant', 'order_data') }} AS mod USING (friendly_id)
     WHERE
-        (aft IS NOT NULL OR cft IS NOT NULL)
+        (mod.aft IS NOT NULL OR mo.cft IS NOT NULL)
     {% if is_incremental() %}
-            AND DATE(created_time_utc) >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
+            AND DATE(mo.created_time_utc) >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
         {% endif %}
     GROUP BY 1
 ),

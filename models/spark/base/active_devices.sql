@@ -61,8 +61,7 @@ SELECT
     d.app_version,
     d.app_entity,
     CASE
-        WHEN UPPER(d.app_entity) = "SHOPY" THEN d.custom_domain
-        ELSE Null
+        WHEN UPPER(d.app_entity) = 'SHOPY' THEN d.custom_domain
     END AS shopy_blogger_domain,
     d.is_ephemeral,
     d.day = join_day AS is_new_user,
