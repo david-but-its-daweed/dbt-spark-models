@@ -23,7 +23,7 @@ WITH sessions AS (
         source,
         campaign,
         channel_type
-    FROM {{ source('onfy', 'onfy_sessions')}}
+    FROM {{ source('onfy', 'onfy_sessions')}} as sessions
 ),
 
 devices_mart AS (
