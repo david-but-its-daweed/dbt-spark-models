@@ -60,7 +60,7 @@ totalGmv AS (
 ),
 
 totalGmvPerDay AS (
-    SELECT 
+    SELECT
         order_created_time_cet,  -- Grouping by 'date'
         pzn,  -- Grouping by 'pzn'
         SUM(quantity * COALESCE(before_price, item_price)) AS gmv -- Total GMV at that day
@@ -124,7 +124,7 @@ AggregatedStocks AS (
 FilteredStocks AS (
     SELECT *
     FROM AggregatedStocks
-    WHERE 
+    WHERE
         (active + not_active) >= ((SELECT statWindow FROM Parameters) - 1) 
         AND active >= (SELECT min_active_days FROM Parameters)
 ),
@@ -155,7 +155,7 @@ pznTitle AS (
         medicine.country_local_id AS pzn,
         product.name AS title
     FROM pharmacy_landing.medicine AS medicine
-    JOIN pharmacy_landing.product AS product
+    INNER JOIN pharmacy_landing.product AS product
     ON 
         medicine.id = product.id
 ),
@@ -225,7 +225,7 @@ FilteredData AS (
         a.days_not_active_now,
         g.gmv_per_active_day,
         g.avg_item_price,
-        l.lost_gmv_total
+        COALESCE(l.lost_gmv_total, 0) AS lost_gmv_total
     FROM AggregatedData2 AS a
     INNER JOIN ActiveDailyGmv AS g
         ON (
@@ -250,8 +250,8 @@ SELECT
     ROUND(f.avg_item_price, 2) AS avg_item_price,
     ROUND(f.lost_gmv_total, 2) AS lost_gmv_total,
     ROUND(f.lost_gmv_total / f.days_not_active_total, 2) AS lost_gmv_avg_per_day,
-    7.0 * ROUND(f.gmv_per_active_day, 2) AS gmv_per_active_week,
-    30.0 * ROUND(f.gmv_per_active_day, 2) AS gmv_per_active_month
+    ROUND(7.0 * f.gmv_per_active_day, 2) AS gmv_per_active_week,
+    ROUND(30.0 * f.gmv_per_active_day, 2) AS gmv_per_active_month
 FROM FilteredData AS f
 INNER JOIN pznTitle AS p
     ON f.pzn = p.pzn
