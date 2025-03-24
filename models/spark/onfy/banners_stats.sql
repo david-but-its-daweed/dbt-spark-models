@@ -131,9 +131,9 @@ SELECT
     groupped_clicks.blockName,
     groupped_clicks.impressions,
     groupped_clicks.clicks,
-    joined_orders.orders,
-    joined_orders.gmv,
-    joined_orders.packs_sold
+    COALESCE(joined_orders.orders, 0) AS orders,
+    COALESCE(joined_orders.gmv, 0) AS gmv,
+    COALESCE(joined_orders.packs_sold, 0) AS packs_sold
 FROM groupped_clicks
 LEFT JOIN joined_orders
     ON
