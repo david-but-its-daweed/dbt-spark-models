@@ -74,7 +74,7 @@ sessions_orders AS (
         sessions.gmv_initial,
         sessions.gross_profit_initial,
         sessions.promocode_discount
-    FROM {{ source('onfy', 'sessions') }} AS sessions
+    FROM {{ source('onfy', 'onfy_sessions') }} AS sessions
         JOIN {{ source('pharmacy_landing', 'device') }} AS device
         ON sessions.device_id = device.id
 )

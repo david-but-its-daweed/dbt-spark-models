@@ -2,7 +2,7 @@ sources:
   - name: onfy
     tables:
       - name: orders_info
-      - name: sessions
+      - name: onfy_sessions
       - name: onfy_medicine_analogs
       - name: conversion_funnel_new
       - name: ads_dashboard
