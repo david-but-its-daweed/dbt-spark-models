@@ -30,7 +30,7 @@ WITH views AS (
         payload.blockName -- Campain
     FROM onfy_mart.device_events
     WHERE
-        partition_date_cet >= '2024-11-30'
+        partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND (
             type = 'producerBannerShown' -- показ баннера на главной
             OR type = 'producerBannerClicked' -- клик по баннеру на главной
@@ -45,7 +45,7 @@ clicks AS (
         payload.pzn
     FROM onfy_mart.device_events
     WHERE
-        partition_date_cet >= '2024-11-30'
+        partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productOpen'
 ),
 

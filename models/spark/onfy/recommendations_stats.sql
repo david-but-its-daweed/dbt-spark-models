@@ -39,7 +39,7 @@ WITH views AS (
         payload.promoKey
     FROM onfy_mart.device_events
     WHERE
-        partition_date_cet >= '2024-11-30'
+        partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productPreview' -- пред показ карточки
         AND payload.widgetType = 'recommendations'
         AND payload.isSponsored
@@ -58,7 +58,7 @@ clicks AS (
         payload.widgetType
     FROM onfy_mart.device_events
     WHERE
-        partition_date_cet >= '2024-11-30'
+        partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productOpen'
         AND payload.widgetType = 'recommendations'
     UNION ALL
@@ -73,7 +73,7 @@ clicks AS (
         payload.widgetType
     FROM onfy_mart.device_events
     WHERE
-        partition_date_cet >= '2024-11-30'
+        partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'addToCart'
         AND payload.widgetType = 'recommendations'
 ),
