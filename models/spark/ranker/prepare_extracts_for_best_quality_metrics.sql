@@ -19,8 +19,7 @@ WITH previews AS (
         lastContext.requestId,
         FIRST(lastContext.name) AS context_name,
         FIRST(lastContext.position) AS position,
-        COALESCE(FIRST(lastContext.adtechPromoted), FALSE) AS is_adtech,
-        FIRST(experiments) AS experiments
+        COALESCE(FIRST(lastContext.adtechPromoted), FALSE) AS is_adtech
     FROM {{ source('mart', 'device_events') }}
     WHERE
         type = "productPreview"
@@ -31,6 +30,7 @@ WITH previews AS (
             AND partition_date >= CURRENT_DATE() - INTERVAL 30 DAYS
         {% endif %}
     GROUP BY device_id, product_id, partition_date, requestId
+    HAVING event_date >= partition_date
 ),
 
 clicks AS (
