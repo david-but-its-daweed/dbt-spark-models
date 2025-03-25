@@ -167,5 +167,47 @@ def main(selector: str, dryrun: bool = True):
     finally:
         conn.close()
 
+
+def parse_args():
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("-s", "--select", nargs="*", help="Specify models to select")
+    parser.add_argument("-m", "--models", "--model", nargs="*", dest="models", help="Specify models")
+    parser.add_argument("--exclude", nargs="*", help="Specify models to exclude")
+    parser.add_argument("--selector", help="Specify a named selector")
+    parser.add_argument("--resource-type", help="Specify the resource type")
+    parser.add_argument("--dryrun", action="store_true", help="Enable dry run mode (default: False)")
+
+    args, _ = parser.parse_known_args()
+
+    return args
+
+
+def build_dbt_selector_cli(args):
+    res = []
+
+    def add_to_res_if_set(arg_name, arg_cli=None):
+        arg_cli = arg_cli or arg_name
+
+        arg_val = getattr(args, arg_name)
+        if not isinstance(arg_val, list):
+            arg_val = [arg_val]
+
+        if getattr(args, arg_name) is not None:
+            res.extend([f'--{arg_cli}'] + arg_val)
+
+    add_to_res_if_set("select")
+    add_to_res_if_set("exclude")
+    add_to_res_if_set("models")
+    add_to_res_if_set("selector")
+    add_to_res_if_set("resource_type", "resource-type")
+
+    return ' '.join(res)
+
+
+
 if __name__ == '__main__':
-    main("--select +gold_orders")
+    args = parse_args()
+    main(
+        selector=build_dbt_selector_cli(args),
+        dryrun=args.dryrun,
+    )
