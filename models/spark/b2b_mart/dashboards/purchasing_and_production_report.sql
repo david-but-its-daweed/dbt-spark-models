@@ -342,24 +342,29 @@ WITH procurement_orders AS (
            MIN(CASE WHEN psi_status = 'PSIStatusRunning' THEN status_ts END) AS psi_running_ts,
            MIN(CASE WHEN psi_status = 'PSIStatusReady' THEN status_ts END) AS psi_ready_ts,
            MIN(CASE WHEN psi_status = 'PSIStatusFail' THEN status_ts END) AS psi_fail_ts,
-           MAX(CASE WHEN psi_status = 'PSIStatusSuccess' THEN status_ts END) AS psi_success_ts,
-           MIN(inspection_ts) AS inspection_ts,
-           MAX(solution) AS solution,
-           MAX(quality) AS problem_quality,
-           MAX(client_quality) AS problem_client_quality,
-           MAX(customs) AS problem_customs,
-           MAX(client_customs) AS problem_client_customs,
-           MAX(logistics) AS problem_logistics,
-           MAX(client_logistics) AS problem_client_logistics,
-           MAX(discrepancy) AS problem_discrepancy,
-           MAX(client_discrepancy) AS problem_client_discrepancy,
-           MAX(requirements) AS problem_requirements,
-           MAX(client_requirements) AS problem_client_requirements,
-           MAX(other) AS problem_other,
-           MAX(client_other) AS problem_client_other,
-           MAX(comment) AS problem_comment,
-           MAX(client_comment) AS problem_client_comment
-    FROM psi AS p
+           MAX(CASE WHEN row_n = 1 AND psi_status = 'PSIStatusSuccess' THEN status_ts END) AS psi_success_ts,
+           MIN(CASE WHEN row_n = 1 THEN inspection_ts END) AS inspection_ts,
+           MAX(CASE WHEN row_n = 1 THEN solution END) AS solution,
+           MAX(CASE WHEN row_n = 1 THEN quality END) AS problem_quality,
+           MAX(CASE WHEN row_n = 1 THEN client_quality END) AS problem_client_quality,
+           MAX(CASE WHEN row_n = 1 THEN customs END) AS problem_customs,
+           MAX(CASE WHEN row_n = 1 THEN client_customs END) AS problem_client_customs,
+           MAX(CASE WHEN row_n = 1 THEN logistics END) AS problem_logistics,
+           MAX(CASE WHEN row_n = 1 THEN client_logistics END) AS problem_client_logistics,
+           MAX(CASE WHEN row_n = 1 THEN discrepancy END) AS problem_discrepancy,
+           MAX(CASE WHEN row_n = 1 THEN client_discrepancy END) AS problem_client_discrepancy,
+           MAX(CASE WHEN row_n = 1 THEN requirements END) AS problem_requirements,
+           MAX(CASE WHEN row_n = 1 THEN client_requirements END) AS problem_client_requirements,
+           MAX(CASE WHEN row_n = 1 THEN other END) AS problem_other,
+           MAX(CASE WHEN row_n = 1 THEN client_other END) AS problem_client_other,
+           MAX(CASE WHEN row_n = 1 THEN comment END) AS problem_comment,
+           MAX(CASE WHEN row_n = 1 THEN client_comment END) AS problem_client_comment
+    FROM (
+        SELECT *,
+               /* В PSI может быть несколько итераций проверок, поэтому оставляем данные только первой итерации */
+               ROW_NUMBER() OVER (PARTITION BY current_psi_status_id_long, psi_status ORDER BY status_ts) AS row_n
+        FROM psi
+    ) AS p
     LEFT JOIN psi_inspection AS pp USING (psi_status_id_long)
     LEFT JOIN psi_solution AS pp USING (psi_status_id_long)
     LEFT JOIN psi_problems AS pp USING (psi_status_id_long)
