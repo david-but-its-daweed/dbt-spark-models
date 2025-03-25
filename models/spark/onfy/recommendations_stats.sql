@@ -175,6 +175,7 @@ orders_info AS (
 
 
 SELECT
+    impressions_info.partition_date_cet,
     impressions_info.promoKey,
     impressions_info.sourceScreen,
     impressions_info.pzn,
@@ -200,7 +201,7 @@ LEFT JOIN orders_info
         AND impressions_info.pzn = orders_info.pzn
         AND impressions_info.recommendationType = orders_info.recommendationType
         AND impressions_info.recommendationSlotName = orders_info.recommendationSlotName
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 
 
 
