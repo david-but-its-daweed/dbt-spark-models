@@ -188,6 +188,7 @@ sources:
       - name: aliexpress_logistics_prices
       - name: aliexpress_joom_price_index_v2
       - name: aliexpress_joom_automatching_price_index
+      - name: ali1688_joom_target_prices
 
   - name: goods
     tables:
