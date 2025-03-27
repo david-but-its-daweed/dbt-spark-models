@@ -115,7 +115,7 @@ groupped_clicks AS (
         promo_type,
         blockName,
         COUNT(DISTINCT IF(type <> 'producerBannerClicked', views_event_id, NULL)) AS impressions,
-        COUNT(DISTINCT IF(type = 'producerBannerClicked' OR clicks_pzn IS NOT NULL, COALESCE(views_event_id, clicks_event_id), NULL)) AS clicks
+        COUNT(DISTINCT IF(type = 'producerBannerClicked', views_event_id, NULL)) AS clicks
     FROM joined_clicks
     GROUP BY
         partition_date_cet,
