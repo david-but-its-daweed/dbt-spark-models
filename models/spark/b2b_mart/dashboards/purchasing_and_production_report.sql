@@ -665,8 +665,12 @@ SELECT po.procurement_order_id,
        pio.status_suspended_ts AS pickup_order_status_suspended_ts,
        CASE WHEN po.country = 'BR' AND po.is_small_batch = 0 THEN
            CASE
-               /* Учитываем отмененные заказы только в том случае, если отмена произошла после оплаты клиентом */
-               WHEN current_sub_status = 'cancelled' AND sub_status_cancelled_ts >= sub_status_client_payment_received_ts THEN 1
+               /* Убираем отмененные заказы, если отмена произошла до оплаты клиентом */
+               WHEN current_sub_status = 'cancelled'
+                AND (
+                     sub_status_client_payment_received_ts IS NULL OR
+                     sub_status_cancelled_ts < sub_status_client_payment_received_ts
+                ) THEN 0
                /* Оставляем реальные заказы и все заказы в админке с 1 января 2025 */
                WHEN po.procurement_order_friendly_id IN (
                    'ZVM3D', 'KLG6J', 'EWR3D', 'YGQYK', 'PZG7Z', '525YP', 'VL6VG', 'MWGXM', 'Q3ZX2', '525V5',
