@@ -1,0 +1,2 @@
+product_id,store_id,channel,weight,earn_discount_percent,limit,source,comment
+,,,10,100,4,manual,spent all commission on discount -> limit 4

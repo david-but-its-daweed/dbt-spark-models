@@ -42,6 +42,10 @@ seeds:
   - name: onfy_discount_rules_manual
     config:
       schema: onfy
+
+  - name: onfy_limit_rules
+    config:
+      schema: onfy
       
   - name: spends_campaign_corrected
     config:
