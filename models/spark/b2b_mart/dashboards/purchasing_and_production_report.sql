@@ -686,7 +686,7 @@ SELECT po.procurement_order_id,
                    'YG3XQ', '52JLE', 'YGRR5', '3P33P', 'MWRER', 'Q3RDD', 'L288L', 'VLRP5', 'PZRRJ', 'DJZN2',
                    'XJYQQ', 'JDWKJ', 'G8J5V', 'JDEDM'
                ) THEN 1
-               WHEN DATE(coalesce(po.created_ts, pch.first_status_ts)) >= '2025-01-01' THEN 1
+               WHEN DATE(coalesce(po.created_ts, pch.first_status_ts)) >= '2025-03-01' THEN 1
                ELSE 0
            END
            ELSE 1
