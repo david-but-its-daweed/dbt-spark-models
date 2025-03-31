@@ -261,7 +261,8 @@ main AS (
     GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
 ),
  cart_activation as (
- select user_id,  
+ select user_id,
+     min(event_msk_date) as mql_msk_date,
      max(1) user_MQL
   from {{ ref('ss_events_cart') }} 
  where actionType  = 'add_to_cart'
@@ -270,6 +271,8 @@ main AS (
  deal_activation as (
   select 
 user_id,
+        min(case when deal_type = 'Sample' then  deal_created_date end) as mql_msk_date, 
+        min(case when deal_type != 'Sample' then  deal_created_date end) as sql_msk_date, 
         max(case when deal_type != 'Sample' then 1 else 0 end) as user_SQL,
         max(case when deal_type = 'Sample' then 1 else 0 end) as user_MQL
   from  {{ ref('fact_deals_with_requests') }}
@@ -278,12 +281,16 @@ user_id,
  )
 
 SELECT main.*,
-    coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) user_MQL, 
+    coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) as user_MQL, 
+    coalesce(cart_activation.mql_msk_date,deal_activation.mql_msk_date ) as mql_msk_date,
+    sql_msk_date,
     coalesce(user_SQL,0) user_SQL,
     case when user_SQL = 1 then 'SQL'
          when  coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) = 1 then 'MQL'
-         when  cnpj is not null then 'Lead' 
+         when  cnpj is not null or company_annual_turnover_range is not null then 'Lead'
+         else 'PreLead'
     end as Marketing_Lead_Type
+    
     
     FROM main
     left join cart_activation using(user_id)
