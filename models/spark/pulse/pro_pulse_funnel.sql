@@ -45,7 +45,8 @@ utm_labels AS (
         utm_source,
         utm_medium,
         utm_campaign,
-        user_id
+        user_id,
+        visit_date
     FROM {{ ref("fact_marketing_utm_interactions") }}
     WHERE last_visit_flag
 ),
@@ -64,13 +65,10 @@ gmv_by_sources AS (
 SELECT
     users.user_id,
     users.phone_number,
-    users.registration_start,
-    users.utm_source AS first_utm_source,
-    users.utm_medium AS first_utm_medium,
-    users.utm_campaign AS first_utm_campaign,
-    COALESCE(utm.utm_source, utm_labels.utm_source) AS last_utm_source,
-    COALESCE(utm.utm_medium, utm_labels.utm_medium) AS last_utm_medium,
-    COALESCE(utm.utm_campaign, utm_labels.utm_campaign) AS last_utm_campaign,
+    DATE(users.registration_start) AS segment,
+    users.utm_source AS utm_source,
+    users.utm_medium AS utm_medium,
+    users.utm_campaign AS utm_campaign,
     users.deals,
     users.gmv,
     users.user_MQL AS mql,
@@ -80,8 +78,37 @@ SELECT
     gmv_by_sources.gmv_total,
     gmv_by_sources.gmv_first_order,
     gmv_by_sources.orders,
-    gmv_by_sources.orders > 0 AND gmv_by_sources.orders IS NOT NULL AS paid
+    gmv_by_sources.orders > 0 AND gmv_by_sources.orders IS NOT NULL AS paid,
+    "first click" as attribution
 FROM {{ ref("ss_users_table") }} AS users
 LEFT JOIN utm_labels_before_order AS utm ON users.user_id = utm.user_id
 LEFT JOIN utm_labels ON users.user_id = utm_labels.user_id
 LEFT JOIN gmv_by_sources ON gmv_by_sources.user_id = users.user_id
+WHERE users.utm_source = "pulse"
+
+UNION ALL
+
+SELECT
+    users.user_id,
+    users.phone_number,
+    DATE(utm_labels.visit_date) AS segment,
+    COALESCE(utm.utm_source, utm_labels.utm_source) AS utm_source,
+    COALESCE(utm.utm_medium, utm_labels.utm_medium) AS utm_medium,
+    COALESCE(utm.utm_campaign, utm_labels.utm_campaign) AS utm_campaign,
+    users.deals,
+    users.gmv,
+    users.user_MQL AS mql,
+    users.user_SQL AS sql,
+    users.Marketing_Lead_Type AS lead_type,
+    gmv_by_sources.first_date_paid,
+    gmv_by_sources.gmv_total,
+    gmv_by_sources.gmv_first_order,
+    gmv_by_sources.orders,
+    gmv_by_sources.orders > 0 AND gmv_by_sources.orders IS NOT NULL AS paid,
+    "last click" as attribution
+    
+FROM {{ ref("ss_users_table") }} AS users
+LEFT JOIN utm_labels_before_order AS utm ON users.user_id = utm.user_id
+LEFT JOIN utm_labels ON users.user_id = utm_labels.user_id
+LEFT JOIN gmv_by_sources ON gmv_by_sources.user_id = users.user_id
+WHERE COALESCE(utm.utm_source, utm_labels.utm_source) = "pulse"
