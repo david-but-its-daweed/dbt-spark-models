@@ -23,13 +23,15 @@ DBT_VARS="{'start_date_ymd':'$DEFAULT_START_DATE','end_date_ymd':'$DEFAULT_END_D
 
 # Parse arguments
 DROP=false
-DRY_RUN=false
+DRY_RUN_FLAG=""
+RETRY_FLAG=""
 ARGS=()
 
 for arg in "$@"; do
     case "$arg" in
         --drop) DROP=true ;;
-        --drop-dry-run) DRY_RUN=true ;;
+        --drop-dry-run) DRY_RUN_FLAG="--dry-run" ;;
+        --retry) RETRY_FLAG="--retry" ;;
         *) ARGS+=("$arg") ;;  # args for DBT
     esac
 done
@@ -37,14 +39,15 @@ done
 
 # drop junk tables if requested
 if [ "$DROP" = true ]; then
-    if [ "$DRY_RUN" = true ]; then
-        python3 drop_junk_tables.py "${ARGS[@]}" --dry-run
-    else
-        python3 drop_junk_tables.py "${ARGS[@]}"
-    fi
+    python3 drop_junk_tables.py "${ARGS[@]}" $DRY_RUN_FLAG $RETRY_FLAG
 fi
 
 
-# run dbt
-dbt run --vars $DBT_VARS "${ARGS[@]}"
-
+# Run dbt
+if [ "$RETRY_FLAG" = "--retry" ]; then
+    echo "Running dbt retry..."
+    dbt retry --vars "$DBT_VARS" "${ARGS[@]}"
+else
+    echo "Running dbt run..."
+    dbt run --vars "$DBT_VARS" "${ARGS[@]}"
+fi

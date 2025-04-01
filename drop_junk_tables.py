@@ -117,13 +117,40 @@ def drop_table(table_name: str, conn: hive.Connection, dryrun: bool=True):
     run(cmd)
 
 
-def main(selector: str, dryrun: bool = True):
-    logger.info(f"Loading non-incremental table models for `{selector}`")
+def load_last_run_succeed_model() -> List[str]:
+    try:
+        with open('target/run_results.json') as f:
+            run_results = json.load(f)
+
+        for res in run_results['results']:
+            if res['status'] == 'success':
+                yield res['unique_id']
+    except:
+        return
+
+
+def main(
+        selector: str,
+        dryrun: bool = True,
+        full_refresh: bool = False,
+        retry: bool = False,
+):
+    if full_refresh:
+        logger.info(f"Loading table models for `{selector}`")
+    else:
+        logger.info(f"Loading non-incremental table models for `{selector}`")
+
+    to_skip = set()
+    if retry:
+        to_skip = set(load_last_run_succeed_model())
 
     model_ids = list(
         m['unique_id']
         for m in select_model_ids(selector)
-        if m['resource_type'] == 'model' and m['config']['materialized'] == 'table'
+        if m['unique_id'] not in to_skip and m['resource_type'] == 'model' and (
+            m['config']['materialized'] == 'table'
+            or full_refresh and m['config']['materialized'] == 'incremental'
+        )
     )
 
     if not model_ids:
@@ -175,6 +202,8 @@ def parse_args():
     parser.add_argument("--exclude", nargs="*", help="Specify models to exclude")
     parser.add_argument("--selector", help="Specify a named selector")
     parser.add_argument("--resource-type", help="Specify the resource type")
+    parser.add_argument("--full-refresh", action="store_true", help="Full refresh, drop incremental models too")
+    parser.add_argument("--retry", action="store_true", help="If set - skip models that has succeed in the previous run")
     parser.add_argument("--dryrun", action="store_true", help="Enable dry run mode (default: False)")
 
     args, _ = parser.parse_known_args()
@@ -207,7 +236,10 @@ def build_dbt_selector_cli(args):
 
 if __name__ == '__main__':
     args = parse_args()
+    logger.info(f"Args: {args}")
     main(
         selector=build_dbt_selector_cli(args),
         dryrun=args.dryrun,
+        full_refresh=args.full_refresh,
+        retry=args.retry,
     )
