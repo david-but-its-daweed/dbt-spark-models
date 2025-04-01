@@ -66,25 +66,26 @@ SELECT
     users.user_id,
     users.phone_number,
     DATE(users.registration_start) AS segment,
-    users.utm_source AS utm_source,
-    users.utm_medium AS utm_medium,
-    users.utm_campaign AS utm_campaign,
+    users.utm_source,
+    users.utm_medium,
+    users.utm_campaign,
     users.deals,
     users.gmv,
     users.user_MQL AS mql,
     users.user_SQL AS sql,
     users.Marketing_Lead_Type AS lead_type,
+    users.mql_msk_date AS mql_date,
+    users.sql_msk_date AS sql_date,
     gmv_by_sources.first_date_paid,
     gmv_by_sources.gmv_total,
     gmv_by_sources.gmv_first_order,
     gmv_by_sources.orders,
     gmv_by_sources.orders > 0 AND gmv_by_sources.orders IS NOT NULL AS paid,
-    "first click" as attribution
+    "first click" AS attribution
 FROM {{ ref("ss_users_table") }} AS users
 LEFT JOIN utm_labels_before_order AS utm ON users.user_id = utm.user_id
 LEFT JOIN utm_labels ON users.user_id = utm_labels.user_id
-LEFT JOIN gmv_by_sources ON gmv_by_sources.user_id = users.user_id
-WHERE users.utm_source = "pulse"
+LEFT JOIN gmv_by_sources ON users.user_id = gmv_by_sources.user_id
 
 UNION ALL
 
@@ -100,15 +101,16 @@ SELECT
     users.user_MQL AS mql,
     users.user_SQL AS sql,
     users.Marketing_Lead_Type AS lead_type,
+    users.mql_msk_date AS mql_date,
+    users.sql_msk_date AS sql_date,
     gmv_by_sources.first_date_paid,
     gmv_by_sources.gmv_total,
     gmv_by_sources.gmv_first_order,
     gmv_by_sources.orders,
     gmv_by_sources.orders > 0 AND gmv_by_sources.orders IS NOT NULL AS paid,
-    "last click" as attribution
-    
+    "last click" AS attribution
+
 FROM {{ ref("ss_users_table") }} AS users
 LEFT JOIN utm_labels_before_order AS utm ON users.user_id = utm.user_id
 LEFT JOIN utm_labels ON users.user_id = utm_labels.user_id
-LEFT JOIN gmv_by_sources ON gmv_by_sources.user_id = users.user_id
-WHERE COALESCE(utm.utm_source, utm_labels.utm_source) = "pulse"
+LEFT JOIN gmv_by_sources ON users.user_id = gmv_by_sources.user_id
