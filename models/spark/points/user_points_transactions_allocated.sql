@@ -3,7 +3,7 @@
     meta = {
       'model_owner' : '@itangaev',
       'bigquery_load': 'true',
-      'bigquery_partitioning_date_column': 'day',
+      'bigquery_partitioning_date_column': 'event_day',
       'priority_weight': '1000',
       'bigquery_upload_horizon_days': '230',
       'bigquery_check_counts': 'false'
