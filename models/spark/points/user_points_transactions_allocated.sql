@@ -182,9 +182,9 @@ transactions_with_real_costs AS (
     SELECT
         a.*,
 
-        coalesce(GREATEST(0, LEAST(1, (ABS(total_outcome_following) + ABS(total_outcome_preceding) - base_balance_local - total_income_preceding ) / points_local_input)) * purchase_outcome_following / total_outcome_following, 0) as purchased_rate,  -- если списаний в будущем было больше, чем был баланс до начисления текущей транзакции X, то значит какую-то часть баллов X юзер потратит. Какую именно часть - зависит от того, насколько списаний в будущем больше, чем баланс. А текущий баланс = баланс год назад + все предыдущие начисления - все предыдущие списания
-        coalesce(GREATEST(0, LEAST(1, (ABS(total_outcome_following) + ABS(total_outcome_preceding) - base_balance_local - total_income_preceding ) / points_local_input)) * expiration_outcome_following / total_outcome_following, 0) as burned_rate,
-        coalesce(GREATEST(0, LEAST(1, (ABS(total_outcome_following) + ABS(total_outcome_preceding) - base_balance_local - total_income_preceding ) / points_local_input)) * other_outcome_following / total_outcome_following, 0) as other_outcome_rate,
+        coalesce(GREATEST(0, LEAST(1, (ABS(total_outcome_following) + ABS(total_outcome_preceding) - base_balance_local - total_income_preceding ) / (points_local_input+1e-7))) * purchase_outcome_following / (total_outcome_following+1e-7), 0) as purchased_rate,  -- если списаний в будущем было больше, чем был баланс до начисления текущей транзакции X, то значит какую-то часть баллов X юзер потратит. Какую именно часть - зависит от того, насколько списаний в будущем больше, чем баланс. А текущий баланс = баланс год назад + все предыдущие начисления - все предыдущие списания
+        coalesce(GREATEST(0, LEAST(1, (ABS(total_outcome_following) + ABS(total_outcome_preceding) - base_balance_local - total_income_preceding ) / (points_local_input+1e-7))) * expiration_outcome_following / (total_outcome_following+1e-7), 0) as burned_rate,
+        coalesce(GREATEST(0, LEAST(1, (ABS(total_outcome_following) + ABS(total_outcome_preceding) - base_balance_local - total_income_preceding ) / (points_local_input+1e-7))) * other_outcome_following / (total_outcome_following+1e-7), 0) as other_outcome_rate,
         1 - burned_rate - purchased_rate - other_outcome_rate as remained_rate,
 
         points_local_input * burned_rate as total_burned,
