@@ -112,7 +112,7 @@ points_type_rename_mapping AS (
     SELECT *
     FROM INLINE(ARRAY(
         STRUCT("customUserRefund" AS point_transaction_type, "top-up refunds" AS business_point_transaction_type),
-        STRUCT("refund" AS point_transaction_type, "refundrefund after using points" AS business_point_transaction_type),
+        STRUCT("refund" AS point_transaction_type, "refund after using points" AS business_point_transaction_type),
         STRUCT("revenueShareExternalLink" AS point_transaction_type, "bloggers referral" AS business_point_transaction_type)
     ))
 ),

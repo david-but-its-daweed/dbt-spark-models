@@ -25,6 +25,6 @@ models:
       - name: ccy
         description: Currency Code
       - name: mult
-        description: Points coef (deprecated)
+        description: Currency coef
       - name: value
         description: Points value (in local currency)

@@ -1,0 +1,75 @@
+version: 1
+
+models:
+  - name: user_points_transactions_allocated
+    description: >
+      Final model for analyzing user points transactions including currency normalization and real cost allocation.
+    columns:
+      - name: user_id
+        description: User ID
+      - name: point_transaction_type
+        description: Type of points accrual
+      - name: transaction_group
+        description: Grouped transaction type for analysis
+      - name: event_day
+        description: Date (MSK)
+      - name: points_usd
+        description: Points amount in $ (ex-rigger converter)
+      - name: points_usd_input
+        description: Points input in $ (ex-rigger converter)
+      - name: points_usd_output
+        description: Points output in $ (ex-rigger converter)
+      - name: value
+        description: Points value (in local currency)
+      - name: ccy
+        description: Currency Code
+      - name: mult
+        description: Currency coef
+      - name: points_local
+        description: Normalized points value in local currency
+      - name: most_frequent_ccy
+        description: Most used currency by user
+      - name: points_local_input
+        description: Normalized input points
+      - name: points_local_output
+        description: Normalized output points
+      - name: value_one_year_ago_local
+        description: Local points balance one year ago
+      - name: value_current_local
+        description: Local points balance currently
+      - name: base_balance_local
+        description: Base balance in local currency before accrual
+      - name: balance_current_local
+        description: Current balance in local currency
+      - name: total_income_preceding
+        description: Cumulative input before this transaction
+      - name: total_outcome_preceding
+        description: Cumulative output before this transaction
+      - name: total_outcome_following
+        description: Cumulative output after this transaction
+      - name: purchase_outcome_following
+        description: Cumulative purchases after this transaction
+      - name: expiration_outcome_following
+        description: Cumulative expirations after this transaction
+      - name: other_outcome_following
+        description: Other cumulative output after this transaction
+      - name: purchased_rate
+        description: Fraction of this transaction expected to be used for purchases
+      - name: burned_rate
+        description: Fraction expected to be expired
+      - name: other_outcome_rate
+        description: Fraction expected for other use
+      - name: remained_rate
+        description: Fraction of points expected to remain unspent
+      - name: total_burned
+        description: Estimated burned points from this transaction
+      - name: total_purchased
+        description: Estimated purchased points from this transaction
+      - name: total_remained
+        description: Estimated remaining points from this transaction
+      - name: total_other
+        description: Estimated points allocated to other usage
+      - name: local_ccy_to_usd_rate_history
+        description: Currency rate to $ at transaction time
+      - name: local_ccy_to_usd_rate_current
+        description: Current currency rate to $
