@@ -824,5 +824,5 @@ and a.order_id not in (
 '67dc71f9f8e513f1706dc216',
 '67dc76adf8e513f1706dc23f',
 '67dc7c4f3b6185b8cd53e511',
-'67ddc00535cd58dea8f8f265
+'67ddc00535cd58dea8f8f265'
     )
