@@ -23,6 +23,7 @@ WITH airflow_data AS (
     WHERE
         partition_date < TO_DATE(NOW()) - INTERVAL 1 DAY
         AND partition_date >= TO_DATE(NOW()) - INTERVAL 3 MONTH
+        AND state <> 'skipped'
 
     UNION ALL
 
@@ -45,6 +46,7 @@ WITH airflow_data AS (
     FROM platform.airflow_task_instance
     WHERE
         start_date >= DATE_SUB(TO_DATE(NOW()), 1) - INTERVAL 2 HOUR
+        AND state <> 'skipped'
 )
 
 SELECT
