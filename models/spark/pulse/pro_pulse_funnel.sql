@@ -54,7 +54,7 @@ utm_labels AS (
         interaction.visit_date,
         ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_date DESC) AS rn
     FROM {{ ref("fact_marketing_utm_interactions") }} AS interaction
-    LEFT JOIN order_deals USING (deal_id)
+    LEFT JOIN order_deals USING (user_id)
     WHERE order_deals.created_date >= interaction.visit_date OR order_deals.created_date IS NULL
     )
     WHERE rn = 1 OR last_visit_flag
