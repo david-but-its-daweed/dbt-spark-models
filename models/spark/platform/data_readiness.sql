@@ -40,8 +40,10 @@ dependencies AS (
 ),
 
 airflow_data AS (
-    SELECT *
-    FROM {{ ref("airflow_task_instance_daily") }}
+    SELECT
+        atid.*,
+        CASE WHEN atid.state != 'success' THEN NULL ELSE atid.end_date END AS end_date_success
+    FROM {{ ref("airflow_task_instance_daily") }} AS atid
     WHERE run_number = 1
 ),
 
@@ -136,7 +138,7 @@ final_data AS (
         dependencies.output_dag_id,
         dependencies.output_task_id,
         dependencies.input_name || '_' || dependencies.input_type AS input_full_name,
-        (UNIX_TIMESTAMP(COALESCE(ftu.end_date, airflow_data.end_date)) - UNIX_TIMESTAMP(DATE(COALESCE(ftu.end_date, airflow_data.end_date)))) / 60 / 60 AS ready_time_hours,
+        (UNIX_TIMESTAMP(COALESCE(ftu.end_date, airflow_data.end_date_success)) - UNIX_TIMESTAMP(DATE(COALESCE(ftu.end_date, airflow_data.end_date_success)))) / 60 / 60 AS ready_time_hours,
         (UNIX_TIMESTAMP(COALESCE(ftu.start_date, airflow_data.start_date)) - UNIX_TIMESTAMP(DATE(COALESCE(ftu.start_date, airflow_data.start_date)))) / 60 / 60 AS start_time_hours,
         dependencies.input_rank || '_' || dependencies.input_name || '_' || dependencies.input_type AS input_table,
         CASE WHEN ftu.end_date IS NOT NULL THEN 'success' ELSE airflow_data.state END AS state,
@@ -145,9 +147,9 @@ final_data AS (
         ftu.start_date AS ftu_start_date,
         ftu.end_date AS ftu_end_date,
         airflow_data.start_date AS airflow_start_date,
-        airflow_data.end_date AS airflow_end_date,
+        airflow_data.end_date_success AS airflow_end_date,
         COALESCE(ftu.start_date, airflow_data.start_date) AS start_date,
-        COALESCE(ftu.end_date, airflow_data.end_date) AS end_date,
+        COALESCE(ftu.end_date, airflow_data.end_date_success) AS end_date,
         ROUND(airflow_data.duration / 60) AS airflow_duration,
         ROUND(ftu.duration / 60) AS ftu_duration,
         ROUND(COALESCE(ftu.duration, airflow_data.duration) / 60) AS duration,
