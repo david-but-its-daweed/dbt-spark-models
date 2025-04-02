@@ -14,8 +14,10 @@
 WITH order_deals AS (
     SELECT DISTINCT
         deal_id,
-        order_id
+        order_id,
+        created_date
     FROM {{ ref("fact_order_product_deal") }}
+    WHERE current_order_status != "cancelled" AND current_order_status IS NOT NULL
 ),
 
 utm_labels_before_order AS (
@@ -33,10 +35,11 @@ utm_labels_before_order AS (
             interaction.user_id,
             interaction.visit_date,
             interaction.visit_ts_msk,
-            ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_ts_msk) AS rn
+            ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_ts_msk DESC) AS rn
         FROM {{ ref("fact_marketing_deals_interactions") }} AS interaction
         LEFT JOIN order_deals USING (deal_id)
         INNER JOIN {{ ref("gmv_by_sources") }} USING (order_id)
+        WHERE order_deals.created_date >= interaction.visit_ts_msk
     )
 ),
 
