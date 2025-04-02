@@ -13,6 +13,7 @@
 
 WITH order_deals AS (
     SELECT DISTINCT
+        user_id,
         deal_id,
         order_id,
         created_date
@@ -38,20 +39,25 @@ utm_labels_before_order AS (
             ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_ts_msk DESC) AS rn
         FROM {{ ref("fact_marketing_deals_interactions") }} AS interaction
         LEFT JOIN order_deals USING (deal_id)
-        INNER JOIN {{ ref("gmv_by_sources") }} USING (order_id)
-        WHERE order_deals.created_date >= interaction.visit_ts_msk
+        WHERE order_deals.created_date >= interaction.visit_ts_msk OR order_deals.created_date IS NULL
     )
 ),
 
 utm_labels AS (
+    SELECT * FROM
+    (
     SELECT
-        utm_source,
-        utm_medium,
-        utm_campaign,
-        user_id,
-        visit_date
-    FROM {{ ref("fact_marketing_utm_interactions") }}
-    WHERE last_visit_flag
+        interaction.utm_source,
+        interaction.utm_medium,
+        interaction.utm_campaign,
+        interaction.user_id,
+        interaction.visit_date,
+        ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_date DESC) AS rn
+    FROM {{ ref("fact_marketing_utm_interactions") }} AS interaction
+    LEFT JOIN order_deals USING (deal_id)
+    WHERE order_deals.created_date >= interaction.visit_date OR order_deals.created_date IS NULL
+    )
+    WHERE rn = 1 OR last_visit_flag
 ),
 
 gmv_by_sources AS (
