@@ -57,7 +57,7 @@ utm_labels AS (
     LEFT JOIN order_deals USING (user_id)
     WHERE order_deals.created_date >= interaction.visit_date OR order_deals.created_date IS NULL
     )
-    WHERE rn = 1 OR last_visit_flag
+    WHERE rn = 1
 ),
 
 gmv_by_sources AS (
