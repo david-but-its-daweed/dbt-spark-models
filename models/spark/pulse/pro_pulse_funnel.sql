@@ -58,6 +58,7 @@ gmv_by_sources AS (
         SUM(gmv_initial) AS gmv_total,
         SUM(CASE WHEN first_order THEN gmv_initial END) AS gmv_first_order,
         COUNT(order_id) AS orders
+    FROM
     (
     SELECT
         user_id,
