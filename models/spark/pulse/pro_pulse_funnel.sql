@@ -56,9 +56,17 @@ gmv_by_sources AS (
         user_id,
         MIN(t) AS first_date_paid,
         SUM(gmv_initial) AS gmv_total,
-        SUM(CASE WHEN first_order = "first order" THEN gmv_initial END) AS gmv_first_order,
+        SUM(CASE WHEN first_order THEN gmv_initial END) AS gmv_first_order,
         COUNT(order_id) AS orders
+    (
+    SELECT
+        user_id,
+        t,
+        gmv_initial,
+        order_id,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY t) = 1 AS first_order
     FROM {{ ref("gmv_by_sources") }}
+    )
     GROUP BY user_id
 )
 
