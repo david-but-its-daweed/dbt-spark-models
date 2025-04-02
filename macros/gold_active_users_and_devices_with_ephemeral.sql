@@ -141,9 +141,15 @@ active_devices_ext1 AS (
         main.legal_entity,
         {% if device_or_user_id == 'device_id' %}
             main.app_entity,
-        {% endif %}
-        {% if device_or_user_id == 'device_id' %}
             main.shopy_blogger_domain,
+            main.is_product_opened,
+            main.is_product_added_to_cart,
+            main.is_product_purchased,
+            main.is_product_to_favourites,
+            main.is_cart_opened,
+            main.is_checkout_started,
+            main.is_checkout_payment_method_selected,
+            main.is_checkout_delivery_selected,
         {% endif %}
         COALESCE(adjusted_slices.country_code_based_on_gmv_initial, main.country) AS country_code,
         main.app_language,
@@ -207,9 +213,15 @@ active_devices_ext3 AS (
         a.legal_entity,
         {% if device_or_user_id == 'device_id' %}
             a.app_entity,
-        {% endif %}
-        {% if device_or_user_id == 'device_id' %}
             a.shopy_blogger_domain,
+            a.is_product_opened,
+            a.is_product_added_to_cart,
+            a.is_product_purchased,
+            a.is_product_to_favourites,
+            a.is_cart_opened,
+            a.is_checkout_started,
+            a.is_checkout_payment_method_selected,
+            a.is_checkout_delivery_selected,
         {% endif %}
         a.app_language,
         a.is_new_{{ naming_field }},
@@ -332,9 +344,15 @@ SELECT
     legal_entity,
     {% if device_or_user_id == 'device_id' %}
         app_entity,
-    {% endif %}
-    {% if device_or_user_id == 'device_id' %}
         shopy_blogger_domain,
+        is_product_opened,
+        is_product_added_to_cart,
+        is_product_purchased,
+        is_product_to_favourites,
+        is_cart_opened,
+        is_checkout_started,
+        is_checkout_payment_method_selected,
+        is_checkout_delivery_selected,
     {% endif %}
     join_date_msk,
     real_user_segment,
