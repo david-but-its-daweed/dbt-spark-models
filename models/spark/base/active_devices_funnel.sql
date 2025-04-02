@@ -18,7 +18,7 @@
 WITH product_funnel AS (
     SELECT
         device_id,
-        partition_date AS date_msk,
+        DATE(partition_date) AS date_msk,
         SUM(IF(type = "productOpen", count, 0)) AS productOpens,
         SUM(IF(type = "productToCart", count, 0)) AS productAddToCarts,
         SUM(IF(type = "productPurchase", count, 0)) AS productPurchases,
