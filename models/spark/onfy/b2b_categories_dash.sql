@@ -121,6 +121,7 @@ sold_products AS (
     SELECT
         CAST(DATE_TRUNC('day', order_created_time_cet) AS DATE) AS order_day,
         store_name,
+        store_id,
         pzn,
         product_id,
         product_name,
@@ -132,6 +133,7 @@ sold_products AS (
     GROUP BY
         DATE_TRUNC('day', order_created_time_cet),
         store_name,
+        store_id,
         pzn,
         product_id,
         product_name
@@ -190,7 +192,7 @@ SELECT
     CONCAT('https://onfy.de/katalog/', product_category, '/', product_category_slug) AS catalog_url,
     CONCAT('https://onfy.de/artikel/', pzn, '/', product_slug) AS product_url,
 
-    COUNT(product_category) OVER (PARTITION BY order_day, pzn, manufacturer_id) AS categories_number,
+    COUNT(product_category) OVER (PARTITION BY order_day, pzn, manufacturer_id, store_id) AS categories_number,
 
     actives_list,
     analog_pzns,
