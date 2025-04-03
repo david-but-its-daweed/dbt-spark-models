@@ -1,6 +1,7 @@
-{{ config(
+{{ 
+config(
     schema='platform_slo',
-    materialized='table',
+    materialized='view',
     meta = {
       'model_owner' : '@general_analytics',
       'bigquery_load': 'true',
@@ -8,7 +9,7 @@
     },
     tags=['data_readiness']
 ) }}
-
+--  When materialized param was 'table' we had a lot of costs for non-current versions 
 SELECT DISTINCT
     dr.source_id,
     dr.input_name,
