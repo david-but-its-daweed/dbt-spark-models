@@ -10,7 +10,8 @@
       'alerts_channel': '#onfy-etl-monitoring',
       'priority_weight': '150',
       'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_overwrite': 'true'
+      'bigquery_overwrite': 'true',
+      'bigquery_fail_on_missing_partitions': 'false'
     }
 ) }}
 
