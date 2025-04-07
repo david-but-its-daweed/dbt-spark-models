@@ -14,12 +14,8 @@ product_id,store_id,channel,weight,pessimization_type,discount_percent,source,co
 ,b03df824cbe343648077f75fb0b42a12,,11,,15,manual,schiller apotheke
 2836f66a8e484eb7bd0efc161331f1d7,,,45,,25,manual,07424884 boost
 9a88f18aacb747d3af54fa28393b04a9,,,45,,25,manual,12444127 boost
-229c3507b3e54ef59a6404c88fc61c6d,,,45,,25,manual,04796852 boost
-03500ec58a3340d1bcdb3ae35122dfde,,,45,,25,manual,07114824 boost
-dd22e836cf9f4fb4b379c6a7bf9dfdf8,,,45,,25,manual,07567371 boost
-638f8718c3c24a21b25fd2e255f7b925,,,45,,25,manual,10192710 boost
-ad51fbe682904e2ea173567fe7ef33ff,,,45,,25,manual,14447325 boost
-e72ad660847e4aaba7116248dbfb9561,,,45,,25,manual,14447331 boost
+229c3507b3e54ef59a6404c88fc61c6d,,,45,,25,manual,04796852 boost (medice)
+dd22e836cf9f4fb4b379c6a7bf9dfdf8,,,45,,25,manual,07567371 boost (medice)
 f95d1438064f4d2491c891865aeb3c1d,,,45,,25,manual,05852222 boost
 64744c376d814663aad2f7c2ada01bcf,,,45,,25,manual,18661506 boost
 4e7b831734f2400c8f9adaf9cb21140d,,,45,,25,manual,06465237 boost
@@ -40,6 +36,12 @@ f39797a9c8da4a6a9eea03adcea338c6,,,45,,25,manual,01712470 boost
 1b2f415d6fdf41b39c13d2da21cdd5a4,,,45,,25,manual,00571748 boost
 3a6c72c6f45c4f438d5de35aa0bb9b65,,,45,,25,manual,19432989 boost
 df346f517df14df4ba3f9f4c075c7682,,,45,,25,manual,19433032 boost
+6b180e480a5d4808b35696de5d3f9b26,,,45,,25,manual,04796869 boost (medice)
+257f2be5ed024483be005d920a3a0bdd,,,45,,25,manual,04508959 boost (medice)
+b6d3ac1f7916411fab5fdd19d20213c7,,,45,,25,manual,10993278 boost (medice)
+d5dbd9b2618b44baa5f7218b1f984e5b,,,45,,25,manual,10993232 boost (medice)
+58113ef3741b4cdd9a72485f0347fdac,,,45,,25,manual,04796875 boost (medice)
+e12419c0e46346b0834aa5fffa7c43e4,,,45,,25,manual,10993261 boost (medice)
 42b847d90dc54c63aecc61e234c1feb6,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 8aca7948ea8c4bd0998cfaf825327b09,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
 1926ba92ad3b4e64a6bf6eaade04dd74,7631548fbb5649f28a9523f661a8dac3,idealo,35,,0,manual,FP requirement
