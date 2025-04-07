@@ -82,6 +82,7 @@ product_names AS (
         product_id,
         pzn,
         product_name,
+        CONCAT(quantity, ' ', unit) AS package_size,
         manufacturer_short_name AS manufacturer,
         MIN(price) AS min_price
     FROM {{ source('onfy_mart', 'dim_product') }}
@@ -89,19 +90,22 @@ product_names AS (
         TRUE
         AND is_current
         AND NOT is_deleted
-    GROUP BY 1, 2, 3, 4
+    GROUP BY 1, 2, 3, 4, 5
 )
 
 
 SELECT
     pn.product_id,
     pn.pzn AS product_pzn,
+    pn.product_name AS product_name,
+    pn.package_size AS product_package_size,
     pn.product_name,
     pn.manufacturer AS product_manufacturer,
     pn.min_price AS product_min_price,
     p.analogue_product_id AS analogue_id,
     pna.pzn AS analogue_pzn,
     pna.product_name AS analogue_name,
+    pna.package_size AS analogue_package_size,
     pna.manufacturer AS analogue_manufacturer,
     pna.min_price AS analogue_min_price
 FROM product_names AS pn
