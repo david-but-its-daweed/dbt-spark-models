@@ -58,16 +58,28 @@ ranking AS (
         avg_weight,
         MAX(IF(winner_type = request_type, avg_weight, NULL)) OVER (PARTITION BY partition_date, winner_type) AS avg_weight_winner
     FROM ranking_2
-)
+),
 
+stg AS (
+    SELECT
+        partition_date,
+        model_version,
+        request_type,
+        winner_type,
+        ROUND(MAX(avg_weight), 3) AS avg_push_type_weight,
+        ROUND(MAX(avg_weight_winner), 3) AS avg_winner_push_type_weight,
+        COUNT(DISTINCT ranking_id) AS rankings
+    FROM ranking
+    GROUP BY 1, 2, 3, 4
+)
 
 SELECT
     partition_date,
     model_version,
     request_type,
     winner_type,
-    ROUND(MAX(avg_weight), 3) AS avg_push_type_weight,
-    ROUND(MAX(avg_weight_winner), 3) AS avg_winner_push_type_weight,
-    COUNT(DISTINCT ranking_id) AS rankings
-FROM ranking
-GROUP BY 1, 2, 3, 4
+    avg_push_type_weight,
+    avg_winner_push_type_weight,
+    rankings,
+    SUM(rankings) OVER (PARTITION BY partition_date, model_version, request_type) AS rankings_total
+FROM stg
