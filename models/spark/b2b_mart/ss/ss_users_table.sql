@@ -289,7 +289,14 @@ SELECT main.*,
          when  coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) = 1 then 'MQL'
          when  cnpj is not null or company_annual_turnover_range is not null then 'Lead'
          else 'PreLead'
-    end as Marketing_Lead_Type
+    end as Marketing_Lead_Type,
+    case
+     when company_annual_turnover_range  in ('XL','XXL' ) then 'A'
+     when company_annual_turnover_range  in ('M','L' ) then 'B'
+     when company_annual_turnover_range  in ('S' ) then 'C'
+     when company_annual_turnover_range  in ('XS','XXS' ) then 'D'
+     when  cnpj is not null then 'D'
+     end as questionnaire_grade
     
     
     FROM main
