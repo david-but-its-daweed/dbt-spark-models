@@ -64,20 +64,15 @@ WITH procurement_orders AS (
            millis_to_ts_msk(ctms) AS created_ts,
            millis_to_ts_msk(utms) AS updated_ts
     FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} AS op
-    JOIN (
-        SELECT _id AS deal_id,
-               country
-        FROM {{ source('mongo', 'b2b_core_deals_daily_snapshot') }}
-        WHERE country IN ('BR', 'KZ')
-    ) AS d ON op.dealId = d.deal_id
     WHERE isDeleted IS NOT TRUE
+      AND country IN ('BR', 'KZ')
 ),
 
      filtered_payments AS (
     WITH billing_info AS (
         SELECT t1._id AS payment_id,
                t1.isCancelled AS is_payment_cancelled
-        FROM mongo.billing_pro_invoice_requests_daily_snapshot AS t1
+        FROM {{ source('mongo', 'billing_pro_invoice_requests_daily_snapshot') }} AS t1
         /*
         LEFT JOIN mongo.billing_pro_invoice_request_operations_daily_snapshot AS t2 ON t1._id = t2.requestId
         LEFT JOIN mongo.billing_pro_invoices_v3_daily_snapshot AS t3 ON t2.invoiceId = t3._id
