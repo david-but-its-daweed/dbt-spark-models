@@ -72,7 +72,7 @@ WITH procurement_orders AS (
     WITH billing_info AS (
         SELECT t1._id AS payment_id,
                t1.isCancelled AS is_payment_cancelled
-        FROM {{ source('mongo', 'billing_pro_invoice_requests_daily_snapshot') }} AS t1
+        FROM mongo.billing_pro_invoice_requests_daily_snapshot AS t1
         /*
         LEFT JOIN mongo.billing_pro_invoice_request_operations_daily_snapshot AS t2 ON t1._id = t2.requestId
         LEFT JOIN mongo.billing_pro_invoices_v3_daily_snapshot AS t3 ON t2.invoiceId = t3._id
