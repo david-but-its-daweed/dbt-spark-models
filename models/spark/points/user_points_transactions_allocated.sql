@@ -22,6 +22,7 @@ WITH userPointsTransactions AS (
         CASE
             WHEN point_transaction_type IN ("purchase", "expiration") THEN point_transaction_type
             WHEN point_transaction_type LIKE 'admin%' AND point_usd < 0 THEN "expiration"
+            WHEN point_transaction_type = 'cashOut' THEN "purchase"
             WHEN (point_transaction_type LIKE 'admin%' or point_transaction_type in ("revenueShareExternalLink", "revenueShareSocial")) AND point_usd > 0 THEN "Marketing_bloggers"
             WHEN point_usd < 0 THEN "other_spends"
             ELSE point_transaction_group
