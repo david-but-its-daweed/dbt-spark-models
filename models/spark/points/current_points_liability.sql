@@ -64,7 +64,7 @@ user_country AS (
     SELECT
         user_id,
         FIRST(top_country_code) as top_country_code
-    FROM {{ ref('active_users') }}
+    FROM {{ ref('gold_active_users') }}
     WHERE date_msk >= ADD_MONTHS(CURRENT_DATE(), -24)
     GROUP BY 1
 ),
