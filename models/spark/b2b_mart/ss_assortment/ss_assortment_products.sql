@@ -8,43 +8,76 @@
     }
 ) }}
 
+WITH categories AS (
+    SELECT
+        category_id,
+        name AS category_name,
+        level_1_category.name AS level_1_category_name,
+        level_2_category.name AS level_2_category_name,
+        level_3_category.name AS level_3_category_name,
+        level_1_category.id AS level_1_category_id,
+        level_2_category.id AS level_2_category_id,
+        level_3_category.id AS level_3_category_id
+    FROM {{ source('mart', 'category_levels') }}
+),
 
-SELECT     _id as product_id,
-           categoryId as category_id,
-           category_name,
-           level_1_category_name,
-           level_2_category_name,
-           level_3_category_name, 
-           level_1_category_id ,
-           level_2_category_id,
-           level_3_category_id,
-           millis_to_ts_msk(createdTimeMs) as created_ts_msk,
-           date(millis_to_ts_msk(createdTimeMs)) as created_date,
-           dangerousKind as dangerous_kind,
-           merchantId as merchant_id,
-           origDescription as orig_description,
-           origExtraImageUrls as orig_extra_image_urls,
-           origMainImageUrl as orig_main_image_url,
-           origName as orig_name,
-           origUrl as orig_url,
-           sku,
-           storeId as store_id,
-           millis_to_ts_msk(updatedTimeMs) as update_ts_msk,
-           date(millis_to_ts_msk(updatedTimeMs)) as update_date,
-           millis_to_ts_msk(publishedTimeMs) as published_ts_msk,
-           date(millis_to_ts_msk(publishedTimeMs)) as published_date
-from {{ ref('scd2_published_products_snapshot')}} pp
-left join 
-(
-select category_id, 
-    name as category_name,
-    level_1_category.name as level_1_category_name,
-    level_2_category.name as level_2_category_name,
-    level_3_category.name as level_3_category_name, 
-    level_1_category.id as level_1_category_id ,
-    level_2_category.id as level_2_category_id,
-    level_3_category.id as level_3_category_id
-    from {{ source('mart', 'category_levels') }}
-) cat on pp.categoryId = cat.category_id
-where dbt_valid_to is null
-and merchantId = '66054380c33acc34a54a56d0'
+ali1688_ids AS (
+    SELECT
+        _id AS product_id,
+        IF(extId IS NOT NULL, SPLIT(extId, 'ali1688/')[1], NULL) AS ali_1688_product_id
+    FROM {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+),
+
+matching AS (
+    SELECT DISTINCT
+        ali1688_ids.product_id,
+
+        joom_ids.joom_product_id,
+        ali1688_ids.ali_1688_product_id
+    FROM
+        ali1688_ids
+    LEFT JOIN
+        {{ source('productsmatching', 'joom_1688_product_variant_matches') }} AS joom_ids USING (ali_1688_product_id)
+)
+
+SELECT
+    pp._id AS product_id,
+
+    m.ali1688_product_id,
+    m.joom_product_id,
+
+    pp.categoryId AS category_id,
+    cat.category_name,
+    cat.level_1_category_name,
+    cat.level_2_category_name,
+    cat.level_3_category_name,
+    cat.level_1_category_id,
+    cat.level_2_category_id,
+    cat.level_3_category_id,
+
+    MILLIS_TO_TS_MSK(pp.createdTimeMs) AS created_ts_msk,
+    DATE(MILLIS_TO_TS_MSK(pp.createdTimeMs)) AS created_date,
+
+    pp.dangerousKind AS dangerous_kind,
+
+    pp.merchantId AS merchant_id,
+
+    pp.origDescription AS orig_description,
+    pp.origExtraImageUrls AS orig_extra_image_urls,
+    pp.origMainImageUrl AS orig_main_image_url,
+    pp.origName AS orig_name,
+    pp.origUrl AS orig_url,
+
+    pp.sku,
+    pp.storeId AS store_id,
+
+    MILLIS_TO_TS_MSK(pp.updatedTimeMs) AS update_ts_msk,
+    DATE(MILLIS_TO_TS_MSK(pp.updatedTimeMs)) AS update_date,
+    MILLIS_TO_TS_MSK(pp.publishedTimeMs) AS published_ts_msk,
+    DATE(MILLIS_TO_TS_MSK(pp.publishedTimeMs)) AS published_date
+FROM {{ ref('scd2_published_products_snapshot') }} AS pp
+LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
+LEFT JOIN matching AS m ON pp._id = m.product_id
+WHERE
+    pp.dbt_valid_to IS NULL
+    AND pp.merchantId = '66054380c33acc34a54a56d0'

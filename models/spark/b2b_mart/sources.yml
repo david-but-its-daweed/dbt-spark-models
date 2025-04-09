@@ -1,6 +1,9 @@
 version: 2
 
 sources:
+  - name: productsmatching
+    tables:
+      - name: joom_1688_product_variant_matches
   - name: mongo
     tables:
       - name: b2b_core_users_daily_snapshot
