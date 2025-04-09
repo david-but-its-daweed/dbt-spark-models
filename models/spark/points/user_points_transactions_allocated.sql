@@ -18,6 +18,7 @@ WITH userPointsTransactions AS (
     -- Интересны только транзакции юзера за последний год - более ранняя детализация не важна
     SELECT
         user_id,
+        country,
         point_transaction_type,
         CASE
             WHEN point_transaction_type IN ("purchase", "expiration") THEN point_transaction_type
