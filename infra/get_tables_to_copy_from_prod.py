@@ -85,7 +85,6 @@ def tables_to_copy_from_prod():
         model_ids_to_rebuild.add(changed_model.unique_id)
         model_ids_to_rebuild.update(find_children_models(changed_model, models_to_execute))
 
-
     tables_to_copy_from_prod = filter(lambda m:
                                       m.unique_id not in model_ids_to_rebuild and m.materialized in ['table', 'incremental'],
                                       models_to_execute)

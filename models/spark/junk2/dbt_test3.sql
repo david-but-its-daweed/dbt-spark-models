@@ -7,4 +7,4 @@
     file_format='parquet',
 ) }}
 
-select 1 as x
+SELECT * FROM {{ ref("gold_orders") }} LIMIT 1000
