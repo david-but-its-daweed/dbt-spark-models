@@ -1,0 +1,13 @@
+version: 1
+
+models:
+  - name: current_points_liability
+    description: >
+      Model calculates total points balance of users at the start of every month (converted in USD by history currency).
+    columns:
+      - name: month_start
+        description: start of month
+      - name: country_code
+        description: country code
+      - name: total_balance_usd
+        description: total points balance in USD
