@@ -99,7 +99,6 @@ SELECT
     pn.pzn AS product_pzn,
     pn.product_name AS product_name,
     pn.package_size AS product_package_size,
-    pn.product_name,
     pn.manufacturer AS product_manufacturer,
     pn.min_price AS product_min_price,
     p.analogue_product_id AS analogue_id,
