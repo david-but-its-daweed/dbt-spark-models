@@ -29,7 +29,55 @@ WITH customers AS (
             END
         ) AS gradeInfoHistory
     FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
+),
+
+without_grade_history AS (
+    /* Вставляем initialGrade для тех, у кого нет gradeInfoHistory */
+    SELECT
+        _id,
+        initialGrade AS grade,
+        NULL AS reason,
+        NULL AS moderator_id,
+        CURRENT_TIMESTAMP() + INTERVAL '3 hour' AS updated_ts
+    FROM customers
+    WHERE SIZE(gradeInfoHistory) = 0
+),
+
+grade_history AS (
+    /* Разворачиваем gradeInfoHistory */
+    SELECT
+        _id,
+        grade_info.grade,
+        grade_info.reason,
+        grade_info.moderatorId AS moderator_id,
+        MILLIS_TO_TS_MSK(grade_info.utms) AS updated_ts
+    FROM (
+        SELECT
+            _id,
+            initialGrade,
+            EXPLODE(gradeInfoHistory) AS grade_info
+        FROM customers
+    ) AS history
+),
+
+before_grade_history AS (
+    /* Вставляем initialGrade перед первой записью в gradeInfoHistory*/
+    SELECT
+        _id,
+        initialGrade AS grade,
+        NULL AS reason,
+        NULL AS moderator_id,
+        MIN(MILLIS_TO_TS_MSK(grade_info.utms)) - INTERVAL '1 minute' AS updated_ts
+    FROM (
+        SELECT
+            _id,
+            initialGrade,
+            EXPLODE(gradeInfoHistory) AS grade_info
+        FROM customers
+    ) AS history
+    GROUP BY 1, 2
 )
+
 
 
 SELECT
@@ -47,38 +95,17 @@ SELECT
             THEN TIMESTAMP('2020-01-01 00:00:00')
         ELSE updated_ts
     END AS grade_from_ts,
-    LEAD(updated_ts) OVER (PARTITION BY _id ORDER BY updated_ts) AS grade_to_ts
+    LEAD(updated_ts) OVER (PARTITION BY _id ORDER BY updated_ts) AS grade_to_ts,
+    reason,
+    moderator_id
 FROM (
-    SELECT
-        _id,
-        initialGrade AS grade,
-        CURRENT_TIMESTAMP() + INTERVAL '3 hour' AS updated_ts
-    FROM customers
-    WHERE SIZE(gradeInfoHistory) = 0
+    SELECT *
+    FROM without_grade_history
     UNION ALL
-    SELECT
-        _id,
-        grade_info.grade,
-        MILLIS_TO_TS_MSK(grade_info.utms) AS updated_ts
-    FROM (
-        SELECT
-            _id,
-            initialGrade,
-            EXPLODE(gradeInfoHistory) AS grade_info
-        FROM customers
-    ) AS history
+    SELECT *
+    FROM grade_history
     UNION ALL
-    SELECT
-        _id,
-        initialGrade AS grade,
-        MIN(MILLIS_TO_TS_MSK(grade_info.utms)) - INTERVAL '1 minute' AS updated_ts
-    FROM (
-        SELECT
-            _id,
-            initialGrade,
-            EXPLODE(gradeInfoHistory) AS grade_info
-        FROM customers
-    ) AS history
-    GROUP BY 1, 2
+    SELECT *
+    FROM before_grade_history
 ) AS m
 ORDER BY 1, 3
