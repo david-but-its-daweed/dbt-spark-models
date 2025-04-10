@@ -7,7 +7,7 @@ models:
     columns:
       - name: month_start
         description: start of month
-      - name: country_code
-        description: country code
+      - name: top_country_code
+        description: top country code
       - name: total_balance_usd
         description: total points balance in USD
