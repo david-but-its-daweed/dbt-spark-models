@@ -21,23 +21,24 @@ WITH categories AS (
     FROM {{ source('mart', 'category_levels') }}
 ),
 
-ali1688_ids AS (
+ali1688 AS (
     SELECT
-        _id AS product_id,
-        IF(extId IS NOT NULL, SPLIT(extId, 'ali1688/')[1], NULL) AS ali_1688_product_id
+        _id AS b2b_product_id,
+        IF(extId IS NOT NULL, SPLIT(extId, 'ali1688/')[1], NULL) AS ali1688_product_id
     FROM {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
 ),
 
 matching AS (
     SELECT DISTINCT
-        ali1688_ids.product_id,
+        ali1688.b2b_product_id AS product_id,
+        ali1688.ali1688_product_id,
 
-        joom_ids.joom_product_id,
-        ali1688_ids.ali_1688_product_id
+        joom_ids.joom_product_id
     FROM
-        ali1688_ids
+        ali1688
     LEFT JOIN
-        {{ source('productsmatching', 'joom_1688_product_variant_matches') }} AS joom_ids USING (ali_1688_product_id)
+        {{ source('productsmatching', 'joom_1688_product_variant_matches') }} AS joom_ids
+        ON ali1688.ali1688_product_id = joom_ids.ali_1688_product_id
 )
 
 SELECT
