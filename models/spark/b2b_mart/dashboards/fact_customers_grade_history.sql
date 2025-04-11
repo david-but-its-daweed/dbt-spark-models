@@ -138,7 +138,6 @@ WITH main AS (
         END AS is_new_group
     FROM ordered
 ),
-
      grouped AS (
     SELECT
         *,
@@ -148,6 +147,23 @@ WITH main AS (
             ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
         ) AS group_id
     FROM marked
+),
+     final AS (
+    SELECT
+        user_id,
+        grade,
+        reason,
+        moderator_id,
+        MIN(grade_from_ts) AS grade_from_ts,
+        CASE
+            WHEN COUNT(*) != COUNT(grade_to_ts) THEN NULL
+            ELSE MAX(grade_to_ts)
+        END AS grade_to_ts
+    FROM grouped
+    GROUP BY 1,2,3,4
+    ORDER BY
+        user_id,
+        grade_from_ts   
 )
 
 
@@ -156,13 +172,13 @@ SELECT
     grade,
     reason,
     moderator_id,
-    MIN(grade_from_ts) AS grade_from_ts,
+    au.email AS moderator_email,
     CASE
-        WHEN COUNT(*) != COUNT(grade_to_ts) THEN NULL
-        ELSE MAX(grade_to_ts)
-    END AS grade_to_ts
-FROM grouped
-GROUP BY 1,2,3,4
-ORDER BY
-    user_id,
-    grade_from_ts
+        WHEN u._id IS NOT NULL AND f.grade_from_ts = '2020-01-01 00:00:00'
+            THEN millis_to_ts_msk(u.ctms)
+        ELSE f.grade_from_ts
+    END AS grade_from_ts,
+    grade_to_ts
+FROM final AS f
+LEFT JOIN {{ source('mongo', 'b2b_core_users_daily_snapshot') }} AS u ON f.user_id = u._id
+LEFT JOIN {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }} AS au ON f.moderator_id = au._id
