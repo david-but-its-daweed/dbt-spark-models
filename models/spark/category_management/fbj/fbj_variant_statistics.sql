@@ -26,7 +26,7 @@ WITH calendar AS ( -- делаем календарь, который по су�
 
 cal_x_stock AS ( -- отбираем варианты которые находятся на складе
     -- 1
-    SELECT
+    SELECT DISTINCT -- только потому что в источнике были один раз дубли
         c.dt AS partition_date,
         st.product_variant_id AS variant_id,
         st.product_id,
@@ -37,7 +37,7 @@ cal_x_stock AS ( -- отбираем варианты которые наход�
         st.number_of_products_in_stock,
         st.number_of_products_in_pending_stock
     FROM calendar AS c
-    INNER JOIN models.fbj_product_stocks AS st
+    INNER JOIN {{ ref('fbj_product_stocks') }} AS st --models.fbj_product_stocks AS st
         ON
             1 = 1
             AND st.partition_date - INTERVAL 1 DAY = c.dt
@@ -51,7 +51,7 @@ cal_x_demand AS ( -- отбираем варианты которые включ
         COALESCE(pe.product_id, pe.payload.productId) AS product_id,
         FIRST_VALUE(pe.payload.result) AS last_demand_status
     FROM calendar AS c
-    INNER JOIN mart.product_events AS pe
+    INNER JOIN {{ source('mart','product_events') }} AS pe --mart.product_events AS pe
         ON
             1 = 1
             AND c.dt = pe.partition_date
@@ -69,7 +69,7 @@ cal_x_repl AS ( -- отбираем варианты которые создан
         fmr.variant_id,
         fmr.product_id
     FROM calendar AS c
-    INNER JOIN category_management.fbj_merchant_replenishments AS fmr  -- чтобы учесть ручные репленишменты
+    INNER JOIN {{ ref('fbj_merchant_replenishments') }} AS fmr -- category_management.fbj_merchant_replenishments AS fmr  -- чтобы учесть ручные репленишменты
         ON
             1 = 1
             AND c.dt BETWEEN fmr.partition_date AND CASE
