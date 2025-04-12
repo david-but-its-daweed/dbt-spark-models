@@ -185,7 +185,7 @@ variant_repl_status AS (
         SUM(IF(fmr.last_updated_at = fmr.6_on_review_dt, fmr.requested_count, 0)) AS 6_qty_on_review,
         -- сколько завершено в этот день или отменено джумом или мерчантом
         -- если дата последнего обновления = дата расчета и текущий статус Completed
-        SUM(IF((DATE(fmr.last_updated_at) = b.partition_date) AND (fmr.current_status = '7. Completed'), fmr.requested_count, 0)) AS qty_completed,
+        SUM(IF((DATE(fmr.last_updated_at) = b.partition_date) AND (fmr.current_status = '7. Completed'), fmr.accepted_count, 0)) AS qty_completed,
         -- если дата последнего обновления = дата расчета и текущий статус Canceled by joom 
         SUM(IF((DATE(fmr.last_updated_at) = b.partition_date) AND (fmr.current_status = '8. Canceled by Joom'), fmr.requested_count, 0)) AS qty_canceled_by_joom,
         -- если дата последнего обновления = дата расчета и текущий статус Canceled by merchant
