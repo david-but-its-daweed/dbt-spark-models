@@ -15,7 +15,21 @@
       'anomalies_significance_score': 'cumulative_deviation',
       'anomalies_significance_threshold': '0.2',
       'anomalies_max_count': '10',
-      'anomalies_main_owners': ['@aleksandrov', '@aleksandrov'],
+      'anomalies_main_owners': ['@aleksandrov'],
+      'anomalies_custom_owners': [
+          {
+            'owners': ['@aleksandrov', '@aleksandrov'],
+            'dimensions': {
+              'service': ['AmazonVPC', 'AWSELB'],
+            },
+          },
+          {
+            'owners': ['@aleksandrov', '@aleksandrov'],
+            'dimensions': {
+              'service': ['AmazonRDS'],
+            },
+          },
+        ]
     },
     tags=['platform']
 ) }}
