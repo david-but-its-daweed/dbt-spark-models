@@ -16,7 +16,7 @@
       'anomalies_significance_threshold': '0.2',
       'anomalies_max_count': '10',
       'anomalies_main_owners': ['@aleksandrov'],
-      'anomalies_custom_owners': [
+      'anomalies_dimensions_owners': [
           {
             'owners': ['@aleksandrov', '@aleksandrov'],
             'dimensions': {
