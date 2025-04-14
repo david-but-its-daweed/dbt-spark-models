@@ -26,8 +26,8 @@ with order_data as
         sum(if(purchase_num = 1 and type = 'DISCOUNT', price, 0)) as first_promocode_discount,
         sum(gmv_initial) / count(distinct order_id) as average_check,
         sum(if(purchase_num = 1, gmv_initial, 0)) / count(distinct if(purchase_num = 1, order_id, null)) as first_average_check,
-        sum(if(type = 'MEDIA_REVENUE', price, 0) as media_revenue,
-        sum(if(type = 'SERVICE_FEE', price, 0) as service_fee
+        sum(if(type = 'MEDIA_REVENUE', price, 0)) as media_revenue,
+        sum(if(type = 'SERVICE_FEE', price, 0)) as service_fee
     from {{source('onfy', 'transactions')}}
     where 1=1
         and currency = 'EUR'
