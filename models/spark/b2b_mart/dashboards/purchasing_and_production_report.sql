@@ -469,12 +469,13 @@ WITH procurement_orders AS (
 ),
 
      pickup_orders AS (
-    SELECT m._id AS pickup_order_id,
+    SELECT operationalProductId AS procurement_order_id,
+           m._id AS pickup_order_id,
            friendlyId AS pickup_order_friendly_id,
-           operationalProductId AS procurement_order_id,
            merchOrdId AS merchant_order_id,
            firstMileId AS first_mile_id,
            boxes,
+           FILTER(boxes, x -> x.operationalProductId = p.operationalProductId) AS box,
            millis_to_ts_msk(ctms) AS creates_ts,
            millis_to_ts_msk(utms) AS updated_ts,
            to_date(cast(plannedDateV2 AS string), "yyyyMMdd") AS planned_date,
@@ -494,10 +495,9 @@ WITH procurement_orders AS (
     FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }} AS m
     LEFT JOIN (
         SELECT _id,
-               MAX(b.operationalProductId) AS operationalProductId
+               b.operationalProductId AS operationalProductId
         FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }}
         LATERAL VIEW explode(boxes) AS b
-        GROUP BY 1
     ) AS p ON m._id = p._id
     LEFT JOIN (
         SELECT _id,
@@ -641,6 +641,7 @@ SELECT
     ph.psi_success_ts AS psi_results_accepted_ts,
     pio.pickup_order_id,
     pio.pickup_order_friendly_id,
+    pio.box AS pickup_order_box,
     pio.boxes AS pickup_order_boxes,
     pio.creates_ts AS pickup_order_created_ts,
     pio.updated_ts AS pickup_order_updated_ts,
