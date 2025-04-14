@@ -27,7 +27,8 @@ with order_data as
         sum(gmv_initial) / count(distinct order_id) as average_check,
         sum(if(purchase_num = 1, gmv_initial, 0)) / count(distinct if(purchase_num = 1, order_id, null)) as first_average_check,
         sum(if(type = 'MEDIA_REVENUE', price, 0)) as media_revenue,
-        sum(if(type = 'SERVICE_FEE', price, 0)) as service_fee
+        sum(if(type = 'SERVICE_FEE', price, 0)) as service_fee,
+        sum(if(type = 'COMMISSION', price, 0)) as commission_revenue
     from {{source('onfy', 'transactions')}}
     where 1=1
         and currency = 'EUR'
@@ -92,6 +93,7 @@ base as
         order_data.first_average_check,
         order_data.media_revenue,
         order_data.service_fee,
+        order_data.commission_revenue,
     
         ads_spends_data.spend,
         ads_spends_data.clicks,
