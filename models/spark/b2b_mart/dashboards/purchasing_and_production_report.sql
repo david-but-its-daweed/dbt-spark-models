@@ -469,8 +469,8 @@ WITH procurement_orders AS (
 ),
 
      pickup_orders AS (
-    SELECT operationalProductId AS procurement_order_id,
-           m._id AS pickup_order_id,
+    SELECT p.operationalProductId AS procurement_order_id,
+           p._id AS pickup_order_id,
            friendlyId AS pickup_order_friendly_id,
            merchOrdId AS merchant_order_id,
            firstMileId AS first_mile_id,
@@ -492,13 +492,13 @@ WITH procurement_orders AS (
            status_arrived_ts,
            status_shipped_ts,
            status_suspended_ts
-    FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }} AS m
-    LEFT JOIN (
-        SELECT _id,
+    FROM (
+        SELECT DISTINCT _id,
                b.operationalProductId AS operationalProductId
         FROM {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }}
         LATERAL VIEW explode(boxes) AS b
-    ) AS p ON m._id = p._id
+    ) AS p
+    LEFT JOIN {{ source('mongo', 'b2b_core_pick_up_orders_v2_daily_snapshot') }} AS m ON p._id = m._id
     LEFT JOIN (
         SELECT _id,
                MAX_BY(status, status_time) AS current_status,
