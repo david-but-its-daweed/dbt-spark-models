@@ -19,7 +19,7 @@ WITH order_deals AS (
         MIN(CASE WHEN g.order_id IS NOT NULL THEN DATE(f.created_ts_msk) END) AS paid_created_date
     FROM {{ ref("fact_deals") }} AS f
     LEFT JOIN {{ ref("gmv_by_sources") }} AS g ON f.order_id = g.order_id
-    WHERE f.current_order_status != "cancelled" AND f.current_order_status IS NOT NULL
+    WHERE f.reject_id IS NULL
     GROUP BY f.user_id
 ),
 
