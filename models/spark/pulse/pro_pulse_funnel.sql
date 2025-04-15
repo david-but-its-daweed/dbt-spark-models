@@ -37,7 +37,7 @@ utm_labels_before_order AS (
             interaction.visit_ts_msk,
             ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_ts_msk DESC) AS rn
         FROM {{ ref("fact_marketing_deals_interactions") }} AS interaction
-        LEFT JOIN order_deals USING (deal_id)
+        LEFT JOIN order_deals USING (user_id)
         WHERE order_deals.created_date >= interaction.visit_ts_msk OR order_deals.created_date IS NULL
     )
     WHERE rn = 1
