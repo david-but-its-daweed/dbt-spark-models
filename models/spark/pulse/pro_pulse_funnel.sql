@@ -14,6 +14,7 @@
 WITH order_deals AS (
     SELECT DISTINCT
         f.user_id,
+        MIN(g.t) AS paid_date,
         MIN(f.created_date) AS created_date,
         MIN(CASE WHEN g.order_id IS NOT NULL THEN f.created_date END) AS paid_created_date
     FROM {{ ref("fact_order_product_deal") }} AS f
@@ -40,7 +41,7 @@ utm_labels_before_order AS (
             ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_ts_msk DESC) AS rn
         FROM {{ ref("fact_marketing_deals_interactions") }} AS interaction
         LEFT JOIN order_deals USING (user_id)
-        WHERE order_deals.paid_created_date >= interaction.visit_ts_msk OR order_deals.paid_created_date IS NULL
+        WHERE order_deals.paid_date >= interaction.visit_ts_msk OR order_deals.paid_date IS NULL
     )
     WHERE rn = 1
 ),
@@ -57,7 +58,7 @@ utm_labels AS (
         ROW_NUMBER() OVER (PARTITION BY interaction.user_id ORDER BY interaction.visit_date DESC) AS rn
     FROM {{ ref("fact_marketing_utm_interactions") }} AS interaction
     LEFT JOIN order_deals USING (user_id)
-    WHERE order_deals.paid_created_date >= interaction.visit_date OR order_deals.paid_created_date IS NULL
+    WHERE order_deals.paid_date >= interaction.visit_date OR order_deals.paid_date IS NULL
     )
     WHERE rn = 1
 ),
