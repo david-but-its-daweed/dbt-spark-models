@@ -14,11 +14,10 @@
 WITH order_deals AS (
     SELECT DISTINCT
         user_id,
-        deal_id,
-        order_id,
-        created_date
+        MIN(created_date) AS created_date
     FROM {{ ref("fact_order_product_deal") }}
     WHERE current_order_status != "cancelled" AND current_order_status IS NOT NULL
+    GROUP BY user_id
 ),
 
 utm_labels_before_order AS (
@@ -41,6 +40,7 @@ utm_labels_before_order AS (
         LEFT JOIN order_deals USING (deal_id)
         WHERE order_deals.created_date >= interaction.visit_ts_msk OR order_deals.created_date IS NULL
     )
+    WHERE rn = 1
 ),
 
 utm_labels AS (
