@@ -82,20 +82,45 @@ sessions_with_rownum AS (
             ORDER BY event_ts_msk DESC
         ) AS rn_desc
     FROM sessions_with_id
+),
+
+final AS (
+    SELECT
+        user_id,
+        session_num,
+        MAX(session_num) OVER (PARTITION BY user_id) AS sessions_count_by_user,
+        MIN(event_ts_msk) AS session_start,
+        MAX(event_ts_msk) AS session_end,
+        UNIX_TIMESTAMP(MAX(event_ts_msk)) - UNIX_TIMESTAMP(MIN(event_ts_msk)) AS session_duration_seconds,
+        MAX(CASE WHEN rn_asc = 1 THEN type END) AS first_event_name,
+        MAX(CASE WHEN rn_desc = 1 THEN type END) AS last_event_name,
+        COLLECT_LIST(NAMED_STRUCT('event_type', type, 'event_time', event_ts_msk)) AS events_in_session,
+        COUNT(type) AS events_in_session_count,
+        COUNT(DISTINCT type) AS events_in_session_unique_count,
+        COLLECT_SET(device_id) AS session_device_ids
+    FROM sessions_with_rownum
+    GROUP BY 1,2
 )
 
-
-SELECT
+SELECT 
     user_id,
+    /* Если у юзера за все время жизни было только одно событие deviceCreate, тогда считаем его inactive */
+    CASE
+        WHEN first_event_name = 'deviceCreate'
+         AND events_in_session_count = 1
+         AND session_duration_seconds = 0
+         AND sessions_count_by_user = 1
+        THEN 'inactive'
+        ELSE 'active'
+    END AS user_type,
     session_num,
-    MIN(event_ts_msk) AS session_start,
-    MAX(event_ts_msk) AS session_end,
-    UNIX_TIMESTAMP(MAX(event_ts_msk)) - UNIX_TIMESTAMP(MIN(event_ts_msk)) AS session_duration_seconds,
-    MAX(CASE WHEN rn_asc = 1 THEN type END) AS first_event_name,
-    MAX(CASE WHEN rn_desc = 1 THEN type END) AS last_event_name,
-    COLLECT_LIST(NAMED_STRUCT('event_type', type, 'event_time', event_ts_msk)) AS events_in_session,
-    COUNT(type) AS events_in_session_count,
-    COUNT(DISTINCT type) AS events_in_session_unique_count,
-    COLLECT_SET(device_id) AS session_device_ids
-FROM sessions_with_rownum
-GROUP BY 1,2
+    session_start,
+    session_end,
+    session_duration_seconds,
+    first_event_name,
+    last_event_name,
+    events_in_session,
+    events_in_session_count,
+    events_in_session_unique_count,
+    session_device_ids
+FROM final
