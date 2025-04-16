@@ -32,6 +32,7 @@ events AS (
     WHERE partition_date >= '2024-04-01'
       AND bot_flag IS NULL
       AND user['userId'] IS NOT NULL
+      AND type NOT IN ('deviceCreate')
 ),
 
 events_with_gap AS (
@@ -115,6 +116,7 @@ final AS (
 
 SELECT 
     user_id,
+    /*
     /* Если у юзера за все время жизни было только одно событие deviceCreate, тогда считаем его inactive */
     CASE
         WHEN first_event_name = 'deviceCreate'
@@ -124,6 +126,7 @@ SELECT
         THEN 'inactive'
         ELSE 'active'
     END AS user_type,
+    */
     session_num,
     session_start,
     session_end,
