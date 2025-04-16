@@ -24,6 +24,7 @@ events AS (
     SELECT
         DISTINCT user['userId'] AS user_id,
         de.device.id AS device_id,
+        de.device.osType AS device_os_type,
         type,
         event_ts_msk
     FROM {{ source('b2b_mart', 'device_events') }} AS de
@@ -37,6 +38,7 @@ events_with_gap AS (
     SELECT
         user_id,
         device_id,
+        device_os_type,
         type,
         event_ts_msk,
         LAG(event_ts_msk) OVER (
@@ -68,11 +70,7 @@ sessions_with_id AS (
 
 sessions_with_rownum AS (
     SELECT
-        user_id,
-        session_num,
-        type,
-        event_ts_msk,
-        device_id,
+        *,
         ROW_NUMBER() OVER (
             PARTITION BY user_id, session_num
             ORDER BY event_ts_msk ASC
@@ -94,13 +92,26 @@ final AS (
         UNIX_TIMESTAMP(MAX(event_ts_msk)) - UNIX_TIMESTAMP(MIN(event_ts_msk)) AS session_duration_seconds,
         MAX(CASE WHEN rn_asc = 1 THEN type END) AS first_event_name,
         MAX(CASE WHEN rn_desc = 1 THEN type END) AS last_event_name,
-        COLLECT_LIST(NAMED_STRUCT('event_type', type, 'event_time', event_ts_msk)) AS events_in_session,
         COUNT(type) AS events_in_session_count,
         COUNT(DISTINCT type) AS events_in_session_unique_count,
-        COLLECT_SET(device_id) AS session_device_ids
+        COLLECT_LIST(
+            NAMED_STRUCT(
+                'event_type', type,
+                'event_time', event_ts_msk,
+                'device_id', device_id,
+                'device_oc_type', device_os_type
+            )
+        ) AS events_in_session,
+        COLLECT_SET(
+            NAMED_STRUCT(
+                'device_id', device_id,
+                'device_oc_type', device_os_type
+            )
+        ) AS unique_devices_in_session
     FROM sessions_with_rownum
     GROUP BY 1,2
 )
+
 
 SELECT 
     user_id,
@@ -119,8 +130,8 @@ SELECT
     session_duration_seconds,
     first_event_name,
     last_event_name,
-    events_in_session,
     events_in_session_count,
     events_in_session_unique_count,
-    session_device_ids
+    events_in_session,
+    unique_devices_in_session
 FROM final
