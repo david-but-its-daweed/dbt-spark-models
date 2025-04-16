@@ -32,35 +32,7 @@ WITH procurement_orders AS (
            nullIf(size(payment.paymentScheme), 0) AS payment_count_plan,
            prices,
            productRoles AS product_roles,
-           TRANSFORM(
-           MAP_VALUES(variants),
-               v -> STRUCT(
-                   v._id AS _id,
-                   v.article AS article,
-                   v.box AS box, 
-                   v.colors AS colors,
-                   v.ctms AS ctms,
-                   v.disabled AS disabled,
-                   v.displayIndex AS displayIndex,
-                   v.hsCode AS hsCode,
-                   v.id AS id,
-                   v.invName AS invName,
-                   v.mainImage AS mainImage,
-                   v.materialEn AS materialEn,
-                   v.materialRu AS materialRu,
-                   v.model AS model,
-                   v.nameEn AS nameEn,
-                   v.nameRu AS nameRu,
-                   v.priceAmountPerItem AS priceAmountPerItem,
-                   v.pricePerItem AS pricePerItem,
-                   v.qty AS qty,
-                   v.quantityBasedPrices AS quantityBasedPrices,
-                   v.sWeight AS sWeight,
-                   v.sampleType AS sampleType,
-                   v.size AS size,
-                   v.sku AS sku
-               )
-           ) AS procurement_order_variants,
+           variants AS procurement_order_variants,
            millis_to_ts_msk(ctms) AS created_ts,
            millis_to_ts_msk(utms) AS updated_ts
     FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} AS op
@@ -384,35 +356,7 @@ WITH procurement_orders AS (
            id AS product_id,
            name AS product_name,
            manufacturerId AS manufacturer_id,
-           TRANSFORM(
-           MAP_VALUES(variants), 
-               v -> STRUCT(
-                   v._id AS _id,
-                   v.article AS article,
-                   v.box AS box, 
-                   v.colors AS colors,
-                   v.ctms AS ctms,
-                   v.disabled AS disabled,
-                   v.displayIndex AS displayIndex,
-                   v.hsCode AS hsCode,
-                   v.id AS id,
-                   v.invName AS invName,
-                   v.mainImage AS mainImage,
-                   v.materialEn AS materialEn,
-                   v.materialRu AS materialRu,
-                   v.model AS model,
-                   v.nameEn AS nameEn,
-                   v.nameRu AS nameRu,
-                   v.priceAmountPerItem AS priceAmountPerItem,
-                   v.pricePerItem AS pricePerItem,
-                   v.qty AS qty,
-                   v.quantityBasedPrices AS quantityBasedPrices,
-                   v.sWeight AS sWeight,
-                   v.sampleType AS sampleType,
-                   v.size AS size,
-                   v.sku AS sku
-               )
-           ) AS offer_products_variants,
+           variants AS offer_products_variants,
            millis_to_ts_msk(ctms) AS offer_product_created_ts
     FROM {{ source('mongo', 'b2b_core_offer_products_daily_snapshot') }}
     WHERE isDeleted IS NOT TRUE
