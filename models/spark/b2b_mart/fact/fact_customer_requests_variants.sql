@@ -33,5 +33,10 @@ SELECT customer_request_id,
        col.sampleDDPPrice.amount as sampleDDPPrice,
        col.sampleDDPPrice.ccy sampleDDPPrice_ccy,
        col.sampleType  as sample_type,
+       col.box.l AS box_length,
+       col.box.w AS box_width,
+       col.box.h AS box_height,
+       col.box.wt AS box_weight,
+       col.box.q AS box_quantity_per,
        date
 FROM wide_data
