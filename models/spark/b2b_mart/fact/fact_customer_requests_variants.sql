@@ -37,6 +37,6 @@ SELECT customer_request_id,
        col.box.w AS box_width,
        col.box.h AS box_height,
        col.box.wt AS box_weight,
-       col.box.q AS box_quantity_per,
+       col.box.q AS box_quantity,
        date
 FROM wide_data
