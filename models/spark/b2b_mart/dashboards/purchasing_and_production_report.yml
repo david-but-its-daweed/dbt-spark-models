@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: procurement_orders_report
+  - name: purchasing_and_production_report
     description: "Финальный отчет по закупкам и производству"
     columns:
       - name: procurement_order_id
