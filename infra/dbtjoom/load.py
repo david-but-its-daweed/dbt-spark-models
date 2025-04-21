@@ -13,7 +13,17 @@ def load_dbt_run_results(file_path: str = 'target/run_results.json') -> DbtRunRe
     return DbtRunResults(
         metadata=DbtRunMetadata(**data["metadata"]),
         results=[DbtRunResult(
-            **{k: v if k != "timing" else [Timing(**t) for t in v] for k, v in res.items()}
+            status=res.get('status'),
+            timing=[Timing(**t) for t in res.get('timing', [])],
+            thread_id=res.get('thread_id'),
+            execution_time=res.get('execution_time'),
+            adapter_response=res.get('adapter_response'),
+            message=res.get('message'),
+            failures=res.get('failures'),
+            unique_id=res.get('unique_id'),
+            compiled=res.get('compiled'),
+            compiled_code=res.get('compiled_code'),
+            relation_name=res.get('relation_name'),
         ) for res in data["results"]],
         elapsed_time=data["elapsed_time"],
         args=data["args"]
@@ -48,11 +58,11 @@ def load_manifest(file_path: str = 'target/manifest.json') -> DbtManifest:
     return DbtManifest(nodes=nodes)
 
 
-def load_spark_profile(file_path: str = '~/.dbt/profiles.yml'):
+def load_spark_profile(file_path: str = '~/.dbt/profiles.yml', name: str = 'spark'):
     file_path = os.path.expanduser(file_path)
     with open(file_path, 'r') as file:
         data = yaml.safe_load(file)
-    data = next(iter(data['spark']['outputs'].values()))
+    data = next(iter(data[name]['outputs'].values()))
     assert data['type'] == 'spark'
     assert data['method'] == 'thrift'
     return SparkThriftProfile(
