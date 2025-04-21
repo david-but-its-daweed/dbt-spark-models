@@ -634,7 +634,26 @@ order_v2_mongo AS (
                 '67f6b12b988373ed4a6bd11b',
                 '67f97212ff99b460ab8f3cc3',
                 '672bd1eae546571cec885466',
-                '67bf322ad4c7ca98e6aff695'
+                '67bf322ad4c7ca98e6aff695',
+                '67bf322ad4c7ca98e6aff695',
+                '67fe40afd1defb34e11a0a90',
+                '67fe49a66de178b432f8eab6',
+                '6800f0bd52fec10d12011cc6',
+                '67fe440601e59d2135d04c95',
+                '67f9e26d17ff257b1adf332f',
+                '67fe437b01e59d2135d04c88',
+                '67fe443101e59d2135d04ca2',
+                '67fe4a0a748ef3d51699c280',
+                '67fe4a57413ef3a583640516',
+                '67fe4a8c3d7379769acc6427',
+                '67fe4ac1413ef3a583640526',
+                '67fe4afb3d7379769acc6436',
+                '6800f0551ca51c659c4558d1',
+                '680110f3dc14a48ea53a2a60',
+                '67f9dbd321355654845e9438',
+                '67ff5cbeb2445f6529370786',
+                '67f956af55cf71b093ef857e',
+                '67f81abd5c8a6eb018c032b3'
     ) AND fo.next_effective_ts_msk IS NULL) or 
         (fo.last_order_status < 60
         AND fo.last_order_status >= 10
@@ -962,5 +981,18 @@ and a.order_id not in (
 '67ec2aa8b55352d20f5960fb',
 '67ec342b7f496482d1c8c4fc',
 '67ed9e56786f5bca82dd0909',
-'67efad4a6d54924bca937606'
+'67efad4a6d54924bca937606',
+'67eeeb425687cab15b2c0354',
+'67f0588a4cd4c9c1e3af166b',
+'67f41bbde052e333eb76836d',
+'67f05005d45c1cdd24d7fe94',
+'67ef04b409cb566dcc135376',
+'67f512a0f1d64fc18ad6640e',
+'67f6da6a40cb1bbde55ce3ad',
+'67f5fa3436fc1e135b9c3e06',
+'67f4333923b8adf3e6545dc1',
+'67f72a96136841bb988b4d6f',
+'67f6dad140cb1bbde55ce3bb',
+'67f6dcc0136841bb988b4c69',
+'67f7292cd84e430001ef8d27'
     )
