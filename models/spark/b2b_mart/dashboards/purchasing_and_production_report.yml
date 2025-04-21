@@ -1,0 +1,11 @@
+version: 2
+
+models:
+  - name: procurement_orders_report
+    description: "Финальный отчет по закупкам и производству"
+    columns:
+      - name: procurement_order_id
+        description: "Уникальный идентификатор Procurement Order"
+        tests:
+          - unique
+          - not_null
