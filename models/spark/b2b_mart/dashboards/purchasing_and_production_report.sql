@@ -652,3 +652,8 @@ LEFT JOIN customer_offers AS co ON op.customer_offer_id = co.customer_offer_id
 LEFT JOIN procurement_statuses_history AS pch ON po.procurement_order_id = pch.procurement_order_id
 LEFT JOIN psi_history AS ph ON po.current_psi_status_id_long = ph.current_psi_status_id_long
 LEFT JOIN pickup_orders AS pio ON po.procurement_order_id = pio.procurement_order_id
+LEFT JOIN (
+    SELECT '670fbb9915432be923fd693b' AS procurement_order_id
+    UNION ALL
+    SELECT '670fbb9915432be923fd693b' AS procurement_order_id
+) AS test ON po.procurement_order_id = test.procurement_order_id
