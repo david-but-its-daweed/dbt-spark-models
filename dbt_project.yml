@@ -57,3 +57,5 @@ tests:
     spark:
       pulse:
         +tags: "pulse"
+      b2b_mart:
+        +tags: "b2b_mart"
