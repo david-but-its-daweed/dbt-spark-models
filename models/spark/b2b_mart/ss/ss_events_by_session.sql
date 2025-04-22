@@ -40,6 +40,11 @@ events_with_gap AS (
         user_id,
         device_id,
         device_os_type,
+        CASE
+            WHEN device_os_type IN ('android','ios','tizen','harmonyos' ) THEN 'mobile'
+            WHEN device_os_type IN ('ubuntu','linux','mac os','windows','chromium os') THEN 'desktop'
+            ELSE 'other'
+        END AS device_platform,
         type,
         event_ts_msk,
         LAG(event_ts_msk) OVER (
@@ -99,13 +104,15 @@ final AS (
                 'event_type', type,
                 'event_time', event_ts_msk,
                 'device_id', device_id,
-                'device_oc_type', device_os_type
+                'device_oc_type', device_os_type,
+                'device_platform', device_platform
             )
         ) AS events_in_session,
         COLLECT_SET(
             NAMED_STRUCT(
                 'device_id', device_id,
-                'device_oc_type', device_os_type
+                'device_oc_type', device_os_type,
+                'device_platform', device_platform
             )
         ) AS unique_devices_in_session
     FROM sessions_with_rownum

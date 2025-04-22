@@ -19,5 +19,5 @@
         P.brMin.amount AS min_price,
         P.brMin.ccy AS min_price_ccy,
         MILLIS_TO_TS_MSK(utms) AS update_ts_msk
-    FROM {{ source('mongo', 'b2b_core_product_prices_daily_snapshot') }}
+    FROM {{ source('mongo', 'b2b_product_product_prices_daily_snapshot') }}
 {% endsnapshot %}
