@@ -4,16 +4,62 @@ models:
   - name: jms_merchant_orders
     description: Model with JMS orders
     columns:
+      - name: order_date_utc
+        description: Order date (partition field)
+      - name: merchant_id
+        description: ID of the merchant
+      - name: merchant_name
+        description: Name of the merchant
+      - name: store_id
+        description: ID of merchant's store
       - name: merchant_order_id
         description: Merchant Order ID
+      - name: marketplace_name
+        description: Name of a marketplace, where JMS order was placed (i.e. ZoodMall, Fruugo, etc.)
+      - name: friendly_order_id
+        description: User friendly ID of the order
+      - name: tracking_number
+        description: Logistics tracking number
+      - name: product_quantity
+        description: Number of variant_id items sold
+      - name: gmv_initial_w_vat
+        description: GMV of the order with VAT included
+      - name: gmv_initial_wo_vat
+        description: GMV of the order without VAT
+      - name: merchant_revenue
+        description: Revenue that merchant obtained from the order
+      - name: merchant_unit_price
+        description: Merchant's price for one unit of variant_id
+      - name: tracking_status
+        description: Logistics tracking status of the parcel with the specific order
+      - name: logistics_total_revenue
+        description: JL revenue from specific order
+      - name: logistics_total_cost
+        description: Whole logistics cost for the order
+      - name: is_refunded
+        description: Flag if specific order_id was refunded
+      - name: refund_date
+        description: Refund date
+      - name: refund_merchant_reason
+        description: Reason of the refund iniciated by merchant
+      - name: refund_customer_reason
+        description: Reason of the refund iniciated by user
+      - name: is_fraud
+        description: Flag if the order was fraud
+      - name: cft
+        description: Commited order fulfill time from the merchant
+      - name: origin_name
+        description: Merchant's origin country
       - name: country_code
         description: Country
       - name: created_date
         description: Date of the order (when the order was created on the marketplace)
-      - name: marketplace_name
-        description: Marketplace where the order was placed (i.e. ZoodMall, Fruugo, etc.)
       - name: product_id
         description: Product ID
+      - name: product_name
+        description: Name of the product
+      - name: product_variant_id
+        description: ID of product's variant
       - name: business_line
         description: Name of the business line. Full list of values -> "Home & Kitchen", "Electronics & HA", "Fashion", "Health & Beauty", "Other"
       - name: gmv_initial_without_vat
