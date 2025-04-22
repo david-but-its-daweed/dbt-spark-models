@@ -26,7 +26,31 @@ events AS (
         de.device.id AS device_id,
         de.device.osType AS device_os_type,
         type,
-        event_ts_msk
+        event_ts_msk,
+        TO_JSON(
+            MAP_FILTER(
+                MAP(
+                    'pageUrl',                CAST(payload.pageUrl AS STRING),
+                    'source',                 CAST(payload.source AS STRING),
+                    'product_id',             CAST(payload.productId AS STRING),
+                    'timeBeforeClick',        CAST(payload.timeBeforeClick AS STRING),
+                    'productsNumber',         CAST(payload.productsNumber AS STRING),
+                    'page',                   CAST(payload.page AS STRING),
+                    'query',                  CAST(payload.query AS STRING),
+                    'hotPriceProductsNumber', CAST(payload.hotPriceProductsNumber AS STRING),
+                    'topProductsNumber',      CAST(payload.topProductsNumber AS STRING),
+                    'hasNextPage',            CAST(payload.hasNextPage AS STRING),
+                    'searchResultsUniqId',    CAST(payload.searchResultsUniqId AS STRING),
+                    'isSearchByImage',        CAST(payload.isSearchByImage AS STRING),
+                    'index',                  CAST(payload.index AS STRING),
+                    'minQuantity',            CAST(payload.minQuantity AS STRING),
+                    'position',               CAST(payload.position AS STRING),
+                    'promotionId',            CAST(payload.promotionId AS STRING),
+                    'withPreview',            CAST(payload.withPreview AS STRING)
+                ),
+                (k, v) -> v IS NOT NULL
+            )
+        ) AS event_params
     FROM {{ source('b2b_mart', 'device_events') }} AS de
     LEFT JOIN bots ON de.device.id = bots.device_id
     WHERE partition_date >= '2024-04-01'
@@ -47,6 +71,7 @@ events_with_gap AS (
         END AS device_platform,
         type,
         event_ts_msk,
+        event_params,
         LAG(event_ts_msk) OVER (
             PARTITION BY user_id ORDER BY event_ts_msk
         ) AS prev_event_ts_msk
@@ -102,6 +127,7 @@ final AS (
         COLLECT_LIST(
             NAMED_STRUCT(
                 'event_type', type,
+                'event_params', event_params,
                 'event_time', event_ts_msk,
                 'device_id', device_id,
                 'device_oc_type', device_os_type,
