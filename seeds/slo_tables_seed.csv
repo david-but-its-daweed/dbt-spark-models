@@ -16,7 +16,7 @@ slo_pivots,odbc.orders_sheet,bq
 slo_pivots,odbc.products_current_sheet,bq
 slo_gold,gold.active_devices,bq
 slo_gold,gold.active_devices_with_ephemeral,bq
-slo_gold,gold_active_real_users,bq
+slo_gold,gold.active_real_users,bq
 slo_gold,gold.active_users,bq
 slo_gold,gold.active_users_with_ephemeral,bq
 slo_gold,gold.countries,bq
