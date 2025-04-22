@@ -18,17 +18,50 @@
   )
 }}
 
--- todo: calculate what period we should take for incremental update to get the correct result
-
-WITH numbers AS (
+WITH device_orders_number AS (
     SELECT
         order_id,
-        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_orders_number, -- номер покупки товара
-        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY created_time_utc) AS device_orders_number, -- номер покупки девайса
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_time_utc) AS user_orders_number, -- номер покупки пользователя
-        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY created_time_utc) AS real_user_orders_number -- номер покупки пользователя (real_id)
+        ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY created_time_utc) AS device_orders_number -- номер покупки девайса
     FROM {{ source('mart', 'star_order_2020') }}
-    WHERE NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+    WHERE NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL) AND device_id IS NOT NULL
+),
+
+product_orders_number AS (
+    SELECT
+        order_id,
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_orders_number -- номер покупки товара
+    FROM {{ source('mart', 'star_order_2020') }}
+    WHERE NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL) AND product_id IS NOT NULL
+),
+
+user_orders_number AS (
+    SELECT
+        order_id,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY created_time_utc) AS user_orders_number -- номер покупки пользователя
+    FROM {{ source('mart', 'star_order_2020') }}
+    WHERE NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL) AND user_id IS NOT NULL
+),
+
+real_user_orders_number AS (
+    SELECT
+        order_id,
+        ROW_NUMBER() OVER (PARTITION BY real_user_id ORDER BY created_time_utc) AS real_user_orders_number -- номер покупки пользователя
+    FROM {{ source('mart', 'star_order_2020') }}
+    WHERE NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL) AND real_user_id IS NOT NULL
+),
+
+numbers AS (
+    SELECT
+        order_id,
+        product_orders_number.product_orders_number, -- номер покупки товара
+        device_orders_number.device_orders_number, -- номер покупки девайса
+        user_orders_number.user_orders_number, -- номер покупки пользователя
+        real_user_orders_number.real_user_orders_number -- номер покупки пользователя (real_id)
+    FROM
+        device_orders_number
+    LEFT JOIN product_orders_number USING (order_id)
+    LEFT JOIN user_orders_number USING (order_id)
+    LEFT JOIN real_user_orders_number USING (order_id)
 ),
 
 merchant_order_notes AS (
@@ -221,7 +254,7 @@ orders_ext0 AS (
     LEFT JOIN pickup_fault_cancelled_orders AS c USING (order_id)
     WHERE
         NOT (ord.refund_reason = 'fraud' AND ord.refund_reason IS NOT NULL)
-    {% if is_incremental() %}
+        {% if is_incremental() %}
             AND ord.partition_date >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
         {% endif %}
 ),
@@ -255,7 +288,7 @@ merchant_fulfill AS (
     LEFT JOIN {{ source('merchant', 'order_data') }} AS mod USING (friendly_id)
     WHERE
         (mod.aft IS NOT NULL OR mo.cft IS NOT NULL)
-    {% if is_incremental() %}
+        {% if is_incremental() %}
             AND DATE(mo.created_time_utc) >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 200 DAYS, 'MM')
         {% endif %}
     GROUP BY 1

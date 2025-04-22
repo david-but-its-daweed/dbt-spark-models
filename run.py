@@ -42,8 +42,8 @@ def dbt_vars_to_str(dbt_vars):
 
 def run_dbt(args, other_args):
     dbt_vars = {
-        'start_date_ymd': str(date.today()),
-        'end_date_ymd': str(date.today() - timedelta(1)),
+        'start_date_ymd': str(date.today() - timedelta(1)),
+        'end_date_ymd': str(date.today()),
         'table_name': 'table_name',
     }
     compile('--vars', dbt_vars_to_str(dbt_vars))

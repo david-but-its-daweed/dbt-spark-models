@@ -6,6 +6,7 @@ exclude_rules = ST06, LT12, RF01, RF03, RF04, AL07, ST07, AM06, AL06, CP02
 templater = jinja
 large_file_skip_byte_limit = 0
 
+
 [sqlfluff:indentation]
 indent_unit = space
 tab_space_size = 4
@@ -18,9 +19,6 @@ capitalisation_policy = upper
 
 [sqlfluff:rules:capitalisation.functions]
 extended_capitalisation_policy = upper
-capitalisation_policy = upper
-
-[sqlfluff:rules:capitalisation.literals]
 capitalisation_policy = upper
 
 [sqlfluff:rules:capitalisation.types]
@@ -58,6 +56,7 @@ apply_dbt_builtins = true
 load_macros_from_path = ./macros/
 ignore_templated_areas = True
 
-# Mock variables that are used in dbt
-; [sqlfluff:templater:jinja:context]
-; target = prod
+[sqlfluff:templater:dbt:context]
+start_date_ymd = 2025-04-01
+end_date_ymd = 2025-04-02
+table_name = table_name

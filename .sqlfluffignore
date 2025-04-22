@@ -3,3 +3,6 @@ target/
 dbt_modules/
 dbt_packages/
 macros/
+
+# looks like sqlfluff does not support filter lambdas and can't properly handle this file
+models/spark/gold/gold_orders.sql
