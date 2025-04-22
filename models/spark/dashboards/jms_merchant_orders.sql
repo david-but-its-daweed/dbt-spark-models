@@ -75,8 +75,6 @@ merchant_orders AS (
 jl_orders AS (
     SELECT
         order_number,
-        tracking_number,
-        tracking_status,
         final_revenue_usd AS logistics_total_revenue,
         final_total_cost_usd AS logistics_total_cost
     FROM
@@ -127,7 +125,6 @@ SELECT
     mo.merchant_revenue * cr.rate AS merchant_revenue,
     mo.merchant_unit_price * cr.rate AS merchant_unit_price,
 
-    jlo.tracking_status,
     jlo.logistics_total_revenue,
     jlo.logistics_total_cost,
 
