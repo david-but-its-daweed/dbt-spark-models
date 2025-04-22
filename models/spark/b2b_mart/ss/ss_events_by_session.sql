@@ -31,22 +31,20 @@ events AS (
             MAP_FILTER(
                 MAP(
                     'pageUrl',                CAST(payload.pageUrl AS STRING),
+                    'page',                   CAST(payload.page AS STRING),
+                    'pageName',               CAST(payload.pageName AS STRING),
                     'source',                 CAST(payload.source AS STRING),
                     'product_id',             CAST(payload.productId AS STRING),
                     'timeBeforeClick',        CAST(payload.timeBeforeClick AS STRING),
                     'productsNumber',         CAST(payload.productsNumber AS STRING),
-                    'page',                   CAST(payload.page AS STRING),
                     'query',                  CAST(payload.query AS STRING),
-                    'hotPriceProductsNumber', CAST(payload.hotPriceProductsNumber AS STRING),
                     'topProductsNumber',      CAST(payload.topProductsNumber AS STRING),
                     'hasNextPage',            CAST(payload.hasNextPage AS STRING),
                     'searchResultsUniqId',    CAST(payload.searchResultsUniqId AS STRING),
                     'isSearchByImage',        CAST(payload.isSearchByImage AS STRING),
                     'index',                  CAST(payload.index AS STRING),
-                    'minQuantity',            CAST(payload.minQuantity AS STRING),
                     'position',               CAST(payload.position AS STRING),
-                    'promotionId',            CAST(payload.promotionId AS STRING),
-                    'withPreview',            CAST(payload.withPreview AS STRING)
+                    'promotionId',            CAST(payload.promotionId AS STRING)
                 ),
                 (k, v) -> v IS NOT NULL
             )
