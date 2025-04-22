@@ -14,9 +14,10 @@
     )
 }}
 
-SELECT  _id as product_id,
-        r as reject_reason,
-        s as status,
-        millis_to_ts_msk(utms) as update_ts_msk
-FROM {{ source('mongo', 'b2b_core_product_states_daily_snapshot') }}
+    SELECT
+        _id AS product_id,
+        r AS reject_reason,
+        s AS status,
+        MILLIS_TO_TS_MSK(utms) AS update_ts_msk
+    FROM {{ source('mongo', 'b2b_product_product_states_daily_snapshot') }}
 {% endsnapshot %}
