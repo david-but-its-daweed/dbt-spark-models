@@ -30,8 +30,6 @@ models:
         description: Revenue that merchant obtained from the order
       - name: merchant_unit_price
         description: Merchant's price for one unit of variant_id
-      - name: tracking_status
-        description: Logistics tracking status of the parcel with the specific order
       - name: logistics_total_revenue
         description: JL revenue from specific order
       - name: logistics_total_cost
