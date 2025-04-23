@@ -13,32 +13,36 @@
 ) }}
 
 WITH bots AS (
-    SELECT DISTINCT device_id
+    SELECT
+        device_id,
+        MAX(1) AS bot_flag
     FROM threat.bot_devices_joompro
     WHERE is_device_marked_as_bot OR is_retrospectively_detected_bot
+    GROUP BY 1
 ),
 
 preview AS (
     SELECT
-        type,
-        event_id,
-        event_ts_msk,
-        `user`.userId AS user_id,
-        payload.promotionId AS promotion_id,
-        payload.position,
-        payload.productId AS product_id,
-        payload.index,
+        de.type,
+        de.event_id,
+        de.event_ts_msk,
+        de.`user`.userId AS user_id,
+        de.payload.promotionId AS promotion_id,
+        de.payload.position,
+        de.payload.productId AS product_id,
+        de.payload.index,
         COALESCE(
-            LEAD(event_ts_msk) OVER (PARTITION BY `user`.userId, payload.promotionId, payload.position, payload.productId ORDER BY event_ts_msk),
+            LEAD(de.event_ts_msk) OVER (PARTITION BY de.`user`.userId, de.payload.promotionId, de.payload.position, de.payload.productId ORDER BY de.event_ts_msk),
             CURRENT_TIMESTAMP() + INTERVAL 3 HOURS
         ) AS next_same_product_preview
-    FROM {{ source('b2b_mart', 'device_events') }}
+    FROM {{ source('b2b_mart', 'device_events') }} AS de
+    LEFT JOIN bots AS b ON de.device.id = b.device_id
     WHERE
-        partition_date >= '2024-11-07'
-        AND type = 'productPreview'
-        AND payload.promotionId IS NOT NULL
-        AND payload.position IS NOT NULL
-        AND device_id NOT IN (SELECT b.device_id FROM bots AS b)
+        de.partition_date >= '2024-11-07'
+        AND de.type = 'productPreview'
+        AND de.payload.promotionId IS NOT NULL
+        AND de.payload.position IS NOT NULL
+        AND b.bot_flag IS NULL
 ),
 
 click AS (
@@ -120,7 +124,7 @@ main AS (
             cl.event_ts_msk <= ca.event_ts_msk
             AND cl.next_same_product_click > ca.event_ts_msk
             /* Окно для конвертации клика в добавление в корзину - 1 час */
-            AND cl.event_ts_msk + INTERVAL 1 HOURS >= ca.event_ts_msk
+            AND cl.event_ts_msk <= ca.event_ts_msk + INTERVAL 1 HOURS
             AND cl.user_id = ca.user_id
             AND cl.product_id = ca.product_id
     /* Присоединиям информацию о создании сделки после добавления товара в корзину после просмотра товара из подборки */
