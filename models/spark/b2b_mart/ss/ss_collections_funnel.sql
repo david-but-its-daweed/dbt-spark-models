@@ -120,7 +120,7 @@ main AS (
             cl.event_ts_msk <= ca.event_ts_msk
             AND cl.next_same_product_click > ca.event_ts_msk
             /* Окно для конвертации клика в добавление в корзину - 1 час */
-            AND cl.event_ts_msk <= ca.event_ts_msk - INTERVAL 1 HOURS
+            AND cl.event_ts_msk + INTERVAL 1 HOURS >= ca.event_ts_msk
             AND cl.user_id = ca.user_id
             AND cl.product_id = ca.product_id
     /* Присоединиям информацию о создании сделки после добавления товара в корзину после просмотра товара из подборки */
