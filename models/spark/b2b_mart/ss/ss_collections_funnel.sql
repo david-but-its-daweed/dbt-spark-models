@@ -107,8 +107,8 @@ main AS (
     FROM preview AS p     /* Присоединиям информацию о кликах в подборке */
     LEFT JOIN click AS cl
         ON
-            p.event_ts_msk >= cl.event_ts_msk
-            AND p.next_same_product_preview < cl.event_ts_msk
+            p.event_ts_msk <= cl.event_ts_msk
+            AND p.next_same_product_preview > cl.event_ts_msk
             AND p.user_id = cl.user_id
             AND p.promotion_id = cl.promotion_id
             AND p.position = cl.position
