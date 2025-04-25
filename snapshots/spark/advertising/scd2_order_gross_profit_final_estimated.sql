@@ -9,7 +9,7 @@
       file_format='delta',
       invalidate_hard_deletes=True,
       meta = {
-      'model_owner' : '@yushkov',
+      'model_owner' : '@zhabrev',
           'team' : 'advertising',
       }
     )
@@ -21,6 +21,6 @@
         order_gross_profit_final,
         order_gross_profit_final_estimated
     FROM {{ ref('gold_orders') }}
-    DISTRIBUTE BY abs(hash(order_id)) % 10
+    DISTRIBUTE BY ABS(HASH(order_id)) % 10
 
 {% endsnapshot %}

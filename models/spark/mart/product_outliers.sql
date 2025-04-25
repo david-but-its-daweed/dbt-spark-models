@@ -3,7 +3,7 @@
     materialized='view',
     meta = {
       'priority_weight': '150',
-      'model_owner' : '@yushkov',
+      'model_owner' : '@vasiukova_mn',
       'bigquery_load': 'true'
     }
 ) }}
