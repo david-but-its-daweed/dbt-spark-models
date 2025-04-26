@@ -156,7 +156,7 @@ promotions AS (
         FROM
             {{ ref('scd2_mongo_promo_product_groups') }} AS p
         WHERE
-            ppg.dbt_valid_to IS NULL
+            p.dbt_valid_to IS NULL
     ) AS ppg ON p.exploded_key = ppg.product_groups_id
     GROUP BY 1, 2
 )
