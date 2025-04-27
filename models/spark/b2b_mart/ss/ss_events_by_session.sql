@@ -11,9 +11,15 @@
 
 
 WITH bots AS (
-    SELECT DISTINCT device_id
-    FROM threat.bot_devices_joompro
-    WHERE is_device_marked_as_bot OR is_retrospectively_detected_bot
+    SELECT
+        device_id,
+        MAX(1) AS bot_flag
+    FROM
+        threat.bot_devices_joompro
+    WHERE
+        is_device_marked_as_bot OR is_retrospectively_detected_bot
+    GROUP BY
+        1
 ),
 
 events AS (
@@ -21,8 +27,8 @@ events AS (
         `user`.userId AS user_id,
         device.id AS device_id,
         device.osType AS device_os_type,
-        type,
-        event_ts_msk,
+        de.type,
+        de.event_ts_msk,
         TO_JSON(
             MAP_FILTER(
                 MAP(
@@ -45,12 +51,13 @@ events AS (
                 (k, v) -> v IS NOT NULL
             )
         ) AS event_params
-    FROM {{ source('b2b_mart', 'device_events') }}
+    FROM {{ source('b2b_mart', 'device_events') }} AS de
+    LEFT JOIN bots AS b ON de.device.id = b.device_id
     WHERE
-        partition_date >= '2024-04-01'
-        AND device.id NOT IN (SELECT b.device_id FROM bots AS b)
-        AND `user`.userId IS NOT NULL
-        AND type NOT IN ('deviceCreate')
+        de.partition_date >= '2024-04-01'
+        AND de.`user`.userId IS NOT NULL
+        AND de.type NOT IN ('deviceCreate')
+        AND bots.bot_flag IS NULL
 ),
 
 events_with_gap AS (
