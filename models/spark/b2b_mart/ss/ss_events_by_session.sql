@@ -57,7 +57,7 @@ events AS (
         de.partition_date >= '2024-04-01'
         AND de.`user`.userId IS NOT NULL
         AND de.type NOT IN ('deviceCreate')
-        AND bots.bot_flag IS NULL
+        AND b.bot_flag IS NULL
 ),
 
 events_with_gap AS (
