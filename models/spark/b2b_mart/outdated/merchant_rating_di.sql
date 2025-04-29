@@ -7,6 +7,7 @@
       'model_owner' : '@amitiushkina',
       'team': 'general_analytics',
       'bigquery_check_counts': 'false',
+      'fail_on_missing_partitions': 'false',
       'bigquery_load': 'true',
       'bigquery_partitioning_date_column': 'partition_date_msk',
       'bigquery_known_gaps': [
