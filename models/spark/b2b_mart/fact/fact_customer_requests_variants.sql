@@ -38,5 +38,7 @@ SELECT customer_request_id,
        col.box.h AS box_height,
        col.box.wt AS box_weight,
        col.box.q AS box_quantity,
+       col.pricePerItem.amount AS merchant_price_per_item,
+       col.pricePerItem.ccy AS merchant_price_per_item_ccy,
        date
 FROM wide_data
