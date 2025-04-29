@@ -15,6 +15,7 @@
 SELECT
     p.payment_id,
     p.payment_order_id,
+    p.order_group_id,
     p.is_success,
     p.payment_type,
     p.fail_reason_message,

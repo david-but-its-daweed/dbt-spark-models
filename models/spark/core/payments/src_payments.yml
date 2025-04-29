@@ -188,6 +188,8 @@ models:
         description: Payment id - the key of the table
       - name: payment_order_id
         description: Payment order id
+      - name: order_group_id
+        description: Order group id
       - name: is_success
         description: 1 if payment is success, 0 if it is not success
       - name: payment_type

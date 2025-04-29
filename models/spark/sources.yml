@@ -8,7 +8,7 @@ sources:
       - name: web_analytics_pageviews_with_segments
       - name: ads_install
       - name: product_availability_v2
-      - name: retargeting_last_click_roas_by_adjust
+
   - name: mart
     tables:
       - name: dim_device_min
