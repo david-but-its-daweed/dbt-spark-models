@@ -1,0 +1,34 @@
+version: 2
+
+models:
+  - name: bs_ip_overview
+    description: Table with aggregated data for reconciliation with providers. Ticket https://joom-team.atlassian.net/browse/OPAN-1027
+    columns:
+      - name: dt
+        description: day of payment/refund
+      - name: pmt_provider
+        description: Payment provider. Could be one of "paygine_bs", "raifpay_bs", "idbank", "yandexpay_bs"
+      - name: payment_type
+        description: Payment type. Could be one of "card", "sbp", "yandexPay", "yandexSplit"
+      - name: pmt_ccy
+        description: currency
+      - name: psp_initial
+        description: psp_initial
+      - name: psp_initial_usd
+        description: psp_initial_usd
+      - name: psp_final
+        description: psp_final
+      - name: psp_final_usd
+        description: psp_final_usd
+      - name: nonzeropsp_cnt_pmts
+        description: count of payments with non-zero psp final
+      - name: nonzeropsp_pmt_amount
+        description: total amount of payments in currency with non-zero psp final
+      - name: nonzeropsp_pmt_amount_usd
+        description: total amount of payments in USD with non-zero psp final
+      - name: nonzeropsp_cnt_refunds
+        description: count of refunds with non-zero psp final
+      - name: nonzeropsp_ref_amount
+        description: total amount of refunds in currency with non-zero psp final
+      - name: nonzeropsp_ref_amount_usd
+        description: total amount of refunds in USD with non-zero psp final

@@ -250,4 +250,3 @@ models:
         description: Card level
       - name: card_type
         description: Card type
-
