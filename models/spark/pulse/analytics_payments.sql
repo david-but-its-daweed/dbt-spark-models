@@ -27,6 +27,7 @@ WITH currency AS (
 
 SELECT
     payment._id AS payment_id,
+    payment.payhubPaymentIntentId as payhub_payment_intent_id,
     payment.usedId AS user_id,
     MILLIS_TO_TS(payment.createdTimeMs) AS payment_created_time,
     payment.packageSnapshot._id AS package_id,
