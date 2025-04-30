@@ -26,6 +26,7 @@ WITH currency AS (
 
 SELECT
     subscription.payment_id,
+    subscription.payhub_subsciption_id,
     subscription.user_id,
     ADD_MONTHS(subscription.created_time, (subscription.time_payed * subscription.package_duration)) AS payment_created_time,
     ADD_MONTHS(subscription.created_date, (subscription.time_payed * subscription.package_duration)) AS payment_created_date,
@@ -52,6 +53,7 @@ FROM (
     SELECT
         s.payment_id,
         s.user_id,
+        s.payhub_subsciption_id,
         s.payment_created_time,
         s.package_id,
         s.package_duration_unit,
@@ -77,6 +79,7 @@ FROM (
     FROM (
         SELECT
             subscription._id AS payment_id,
+            subscription.payhubSubsciptionId AS payhub_subsciption_id,
             subscription.usedId AS user_id,
             MILLIS_TO_TS(subscription.createdTimeMs) AS payment_created_time,
             subscription.packageSnapshot._id AS package_id,
