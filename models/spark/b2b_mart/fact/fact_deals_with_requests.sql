@@ -40,7 +40,10 @@ WITH base_deal AS (
         CAST(owner_ts AS DATE) AS owner_date_msk,
         country,
         estimated_gmv,
-        small_batch
+        small_batch,
+        promo_code,
+        promo_code_discount,
+        promo_code_type
     FROM {{ ref('fact_deals') }}
     WHERE CAST(created_ts_msk AS DATE) >= '2024-04-01'
       AND next_effective_ts_msk IS NULL
@@ -116,6 +119,9 @@ WITH base_deal AS (
             order_id,
             owner_ts,
             owner_date_msk,
+            promo_code,
+            promo_code_discount,
+            promo_code_type,
             COUNT(DISTINCT customer_request_id) AS count_customer_requests,
             COUNT(customer_request_id) AS count_customer_requests_variants,
             SUM(qty) AS qty,
@@ -222,6 +228,9 @@ SELECT
     END AS deal_type,
     d.deal_created_ts,
     d.deal_created_date,
+    d.promo_code,
+    d.promo_code_discount,
+    d.promo_code_type,
     d.order_id,
     d.owner_ts,
     d.owner_date_msk,

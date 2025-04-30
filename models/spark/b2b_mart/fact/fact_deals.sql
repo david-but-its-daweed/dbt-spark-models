@@ -150,6 +150,9 @@ SELECT DISTINCT
         WHEN d.sourcingDealType = 0 THEN 'standard'
         WHEN d.sourcingDealType = 1 THEN 'vip'
     END AS sourcing_deal_type,
+    d.promo_code,
+    d.promo_code_discount,
+    d.promo_code_type,
     owner.issue_friendly_id,
     owner.owner_id,
     owner.owner_email,
