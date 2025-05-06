@@ -633,8 +633,8 @@ SELECT
                 WHEN DATE(coalesce(po.created_ts, pch.first_status_ts)) >= '2025-03-01' THEN 1
                 ELSE 0
             END
-        /* Для мелкого опта в Казахстане */
-        WHEN po.country = 'KZ' AND po.is_small_batch = 1 THEN
+        /* Для мелкого опта */
+        WHEN po.is_small_batch = 1 THEN
             CASE
                 /* Оставляем все заказы в админке с 1 апреля 2025 */
                 WHEN DATE(coalesce(po.created_ts, pch.first_status_ts)) >= '2025-04-01' THEN 1
