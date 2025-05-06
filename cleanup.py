@@ -1,17 +1,14 @@
-import sys
-import logging
-
-from datetime import date, timedelta
-from infra.dbtjoom.load import load_dbt_run_results, load_spark_profile
-from infra.dbtjoom.drop import drop_model_output
-from infra.dbtjoom.thrift_client import ThriftClient
-from infra.dbtjoom.invocation import  compile
-from infra.dbtjoom.find import find_nodes
 import argparse
+import json
 import logging
 import sys
-import json
+from datetime import date, timedelta
 
+from infra.dbtjoom.drop import drop_model_output
+from infra.dbtjoom.find import find_nodes
+from infra.dbtjoom.invocation import compile
+from infra.dbtjoom.load import load_dbt_run_results, load_spark_profile
+from infra.dbtjoom.thrift_client import ThriftClient
 
 logging.basicConfig(
     format='%(message)s',
@@ -57,8 +54,8 @@ def main(args):
     :return:
     """
     dbt_vars = {
-        'start_date_ymd': str(date.today()),
-        'end_date_ymd': str(date.today() - timedelta(1)),
+        'start_date_ymd': str(date.today() - timedelta(1)),
+        'end_date_ymd': str(date.today()),
         'table_name': 'table_name',
     }
     compile('--vars', dbt_vars_to_str(dbt_vars))
@@ -72,7 +69,7 @@ def main(args):
     nodes = {
         node.unique_id: node
         for node in nodes
-        if node.is_table or node.is_incremental and args.full_refresh
+        if node.is_table or (node.is_incremental and args.full_refresh)
     }
 
     logger.info("Nodes to check:")
@@ -81,6 +78,10 @@ def main(args):
 
     if not nodes:
         logger.info(f"No nodes selected")
+        return
+
+    if len(nodes) > 1:
+        logger.warning("Multiple models selected. This script only supports a single model. Aborting.")
         return
 
     results = load_dbt_run_results()
@@ -97,8 +98,7 @@ def main(args):
             if res.status == 'success':
                 continue
 
-            # todo: test what exactly must be in res.message
-            if 'Location already exists' in res.message:
+            if 'LOCATION_ALREADY_EXISTS' in res.message:
                 continue
 
             if client is None:
