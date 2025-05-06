@@ -62,7 +62,7 @@ from
     from
     (
     select *, explode(statusHistory) as statuses, ctms
-    from {{ ref('scd2_issues_snapshot') }}
+    from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
     where type > 4
     )
 ) i

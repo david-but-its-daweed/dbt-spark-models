@@ -78,23 +78,23 @@ from
 (
 select
     *
-from {{ ref('scd2_issues_snapshot') }}
+from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
 left join (
     select
         _id,
         explode(teamHistory) as teams
-    from {{ ref('scd2_issues_snapshot') }}
-    where type > 4 and dbt_valid_to is null
+    from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
+    where type > 4
     ) using (_id)
-where type > 4 and dbt_valid_to is null
+where type > 4
 )
 )
 left join (
     select
         _id,
         explode(assigneeHistory) as assignee_history
-    from {{ ref('scd2_issues_snapshot') }}
-    where type > 4 and dbt_valid_to is null
+    from {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
+    where type > 4
 ) using (_id)
 )
 left join admin as assignee on assignee_history.assigneeId = assignee.admin_id

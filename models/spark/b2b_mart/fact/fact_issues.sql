@@ -41,8 +41,7 @@ assigned AS (
                 SELECT
                     _id,
                     explode(assigneeHistory) AS assignee_history
-                FROM {{ ref('scd2_issues_snapshot') }}
-                WHERE dbt_valid_to IS NULL
+                FROM {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
             )
         )
     ) AS f
@@ -118,7 +117,7 @@ FROM (
             element_at(statusHistory, cast((array_position(statusHistory.ctms,
                                        array_max(statusHistory.ctms))) as INTEGER)) as history,
             t.type AS key_type
-        FROM {{ ref('scd2_issues_snapshot') }} AS i
+        FROM {{ source('mongo', 'b2b_core_issues_daily_snapshot') }} AS i
         LEFT JOIN {{ ref('key_issue_type') }} AS t ON i.type = t.id
     ) AS i
     LEFT JOIN (
