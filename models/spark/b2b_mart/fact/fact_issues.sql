@@ -108,8 +108,8 @@ FROM (
         element_at(teamHistory, cast((array_position(teamHistory.ctms,
                                        array_max(teamHistory.ctms))) as INTEGER)) as team,
         size(teamHistory) as teams,
-        null as effective_ts_msk,
-        null as next_effective_ts_msk
+        TIMESTAMP(null) as effective_ts_msk,
+        TIMESTAMP(null) as next_effective_ts_msk
     FROM (
         SELECT
             i.*,
