@@ -225,6 +225,7 @@ sources:
       - name: joom_select_product_black_list
       - name: categories_with_ce_requirements
       - name: js_focus_1688_products
+      - name: merchant_kam_materialized
 
   - name: merchant
     tables:
