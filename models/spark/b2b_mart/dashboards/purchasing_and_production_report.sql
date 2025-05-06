@@ -33,6 +33,7 @@ WITH procurement_orders AS (
            prices,
            productRoles AS product_roles,
            variants AS procurement_order_variants,
+           packaging,
            millis_to_ts_msk(ctms) AS created_ts,
            millis_to_ts_msk(utms) AS updated_ts
     FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} AS op
@@ -404,6 +405,7 @@ WITH procurement_orders AS (
            t1.prices,
            t1.product_roles,
            CASE WHEN t1.core_empty = TRUE THEN t2.offer_products_variants ELSE t1.procurement_order_variants END AS variants,
+           t1.packaging,
            CASE WHEN t1.core_empty = TRUE THEN t2.offer_product_created_ts ELSE t1.created_ts END AS created_ts,
            t1.updated_ts
     FROM procurement_orders AS t1
@@ -500,6 +502,7 @@ SELECT
     pah.payment_sum_usd,
     pah.payment_sum_cnh,
     pah.payment_sum_other,
+    po.packaging,
     po.variants,
     millis_to_ts_msk(po.production_range.from) AS production_deadline_from,
     po.manufacturing_days,
