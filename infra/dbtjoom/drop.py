@@ -12,7 +12,7 @@ def drop_model_output(
         include_incremental: bool,
         dryrun: bool = False
 ):
-    if not (node.is_table or include_incremental and node.is_incremental):
+    if not node.is_table or (include_incremental and node.is_incremental):
         logger.info(f"Model {node.unique_id} is a {node.materialized}, not a table or an incremental model "
                     f"with full_refresh specified. Location will not be dropped")
         return
