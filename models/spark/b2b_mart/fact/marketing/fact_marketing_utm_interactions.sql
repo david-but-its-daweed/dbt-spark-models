@@ -67,7 +67,7 @@ null as gclid,
 ---row_number() Over(partition by user_id order by interaction_create_time ) rn_1,
 ---row_number() Over(partition by user_id order by interaction_create_time desc ) rn_2,
 'admin' as data_source,
-None as pageUrl
+Null as pageUrl
 from  {{ ref('dim_user') }} d
 left join users_with_visit using(user_id)
 left join interactions i using(user_id)
