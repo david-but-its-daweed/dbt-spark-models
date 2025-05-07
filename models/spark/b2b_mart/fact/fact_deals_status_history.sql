@@ -179,12 +179,11 @@ SELECT deal_id
 	,row_number() OVER (
 		PARTITION BY entity_id ORDER BY event_ts_msk
 		) status_number
-	,date_diff(lead(event_ts_msk) OVER (
-			PARTITION BY entity_id ORDER BY event_ts_msk
-			), event_ts_msk, hour) AS status_time_hours
-	,date_diff(lead(event_ts_msk) OVER (
-			PARTITION BY entity_id ORDER BY event_ts_msk
-			), event_ts_msk, day) AS status_time_days
+	,(UNIX_TIMESTAMP(LEAD(event_ts_msk) OVER (
+    			PARTITION BY entity_id ORDER BY event_ts_msk)) - UNIX_TIMESTAMP(event_ts_msk)) / 3600.0 AS status_time_hours,
+ 	 DATEDIFF(
+    		LEAD(event_ts_msk) OVER (
+     		 PARTITION BY entity_id ORDER BY event_ts_msk), event_ts_msk) AS status_time_days
 	,lead(event_ts_msk) OVER (
 		PARTITION BY entity_id ORDER BY event_ts_msk
 		) AS next_status_ts
