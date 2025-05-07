@@ -21,8 +21,8 @@ case when utm_source is Null and utm_medium is Null  then 'organic' else 'advert
 gclid,
 ---row_number() Over(partition by user_id order by event_ts_msk ) rn_1,
 ---row_number() Over(partition by user_id order by event_ts_msk desc ) rn_2,
-'events' as data_source
-
+'events' as data_source,
+pageUrl 
 from 
   {{ ref('ss_events_startsession') }}
 where landing = 'pt-br'
@@ -66,7 +66,8 @@ else  'advertising'
 null as gclid, 
 ---row_number() Over(partition by user_id order by interaction_create_time ) rn_1,
 ---row_number() Over(partition by user_id order by interaction_create_time desc ) rn_2,
-'admin' as data_source
+'admin' as data_source,
+None as pageUrl
 from  {{ ref('dim_user') }} d
 left join users_with_visit using(user_id)
 left join interactions i using(user_id)
@@ -119,7 +120,8 @@ LOWER(utm_source) like '%acebook%'  or LOWER(utm_source) = 'fb'
     row_number() Over(partition by user_id order by visit_ts_msk,traffic_type ) number_visit,
     row_number() Over(partition by user_id order by visit_ts_msk  desc,traffic_type)  desc_number_visit,
     row_number() Over(partition by visit_ts_msk,user_id order by traffic_type ) ts_visit_duplicate_rn,
-    data_source
+    data_source,
+    pageUrl
 
 from
  all_visits)
@@ -135,6 +137,7 @@ utm_campaign,
 friendly_source,
 number_visit,
 gclid,
+pageUrl,
 case when number_visit = 1
         then True else False end as first_visit_flag, 
 case when desc_number_visit = 1 
