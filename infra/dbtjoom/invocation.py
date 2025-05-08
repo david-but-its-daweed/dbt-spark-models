@@ -32,6 +32,7 @@ def ls(
         models: Optional[str] = None,
         model: Optional[str] = None,
         resource_type: Optional[str] = None,
+        profiles_dir: Optional[str] = None
 ) -> List[str]:
     args = ['ls', '--output', 'json']
 
@@ -47,6 +48,7 @@ def ls(
     _add('--models', models)
     _add('--model', model)
     _add('--resource_type', resource_type)
+    _add('--profiles-dir', profiles_dir)
 
     dbt = dbtRunner()
     result = dbt.invoke(args)

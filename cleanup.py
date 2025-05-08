@@ -4,6 +4,7 @@ import logging
 import sys
 from datetime import date, timedelta
 
+
 from infra.dbtjoom.drop import drop_model_output
 from infra.dbtjoom.find import find_nodes
 from infra.dbtjoom.invocation import compile
@@ -15,6 +16,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     stream=sys.stdout,
     level=logging.INFO,
+    force=True
 )
 
 logger = logging.getLogger("cleanup_table_locations")
@@ -58,12 +60,13 @@ def main(args):
         'end_date_ymd': str(date.today()),
         'table_name': 'table_name',
     }
-    compile('--vars', dbt_vars_to_str(dbt_vars))
+    compile('--vars', dbt_vars_to_str(dbt_vars), '--profiles-dir', args.profiles_dir)
     nodes = find_nodes(
         select=args.select,
         exclude=args.exclude,
         models=args.models,
         resource_type=args.resource_type,
+        profiles_dir=args.profiles_dir,
     )
 
     nodes = {

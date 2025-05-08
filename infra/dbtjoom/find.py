@@ -31,7 +31,8 @@ def find_nodes(
         exclude_ids: Optional[Set[str]] = None,
         materialized: Optional[Union[str, Set[str]]] = None,
         changed_only: bool = False,
-        failed_only: bool =  False
+        failed_only: bool =  False,
+        profiles_dir: str = None,
 ) -> List[Node]:
     manifest = load_manifest()
     if select or exclude or models or model or resource_type:
@@ -41,6 +42,7 @@ def find_nodes(
             models=models,
             model=model,
             resource_type=resource_type,
+            profiles_dir=profiles_dir
         )
     else:
         return []

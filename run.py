@@ -19,6 +19,7 @@ logging.basicConfig(
     datefmt='%Y-%m-%d %H:%M:%S',
     stream=sys.stdout,
     level=logging.INFO,
+    force=True
 )
 
 def parse_args():
