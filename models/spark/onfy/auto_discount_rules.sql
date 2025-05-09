@@ -226,37 +226,6 @@ google_data as
     having orders = 0
 ),
 
-petersberg_exclusion as 
-(
-    select
-        order_id,
-        oi.pzn,
-        oi.product_id,
-        case
-          when oi.store_name = 'Frauenapotheke.de' then before_products_price*0.1
-          when oi.store_name = 'Fliegende-Pillen' then before_products_price*0.11
-          else before_products_price*0.14 
-          end as commission,
-        oi.quantity,
-        item_price,
-        before_item_price,
-        (before_products_price - products_price) as pa_spend,
-        price as pb_price,
-        price * oi.quantity as pb_before_products_price,
-        dim_product.store_id,
-        price * oi.quantity * 0.085 as pb_commission,
-        if(price <= item_price, 0, price - item_price) as pb_pa_spend
-    from {{source('onfy', 'orders_info')}} as oi
-    join {{source('onfy_mart', 'dim_product')}} as dim_product
-        on oi.pzn = dim_product.pzn
-        and dim_product.is_current
-        and dim_product.store_name = 'Petersberg Apotheke'
-    where 1=1 
-        and date(order_created_time_cet) >= current_date() - interval 31 days
-        and oi.store_name <> 'Petersberg Apotheke'
-        and before_item_price <> item_price
-),
-
 precalculation as 
 (
     select 
@@ -314,42 +283,6 @@ precalculation as
     join {{source('pharmacy_landing', 'medicine')}} m 
         on m.country_local_id = cr.pzn
     where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
-    union all 
-    select 
-        product_id,
-        store_id,
-        'idealo' as channel,
-        31 as weight,
-        null as pessimization_type,
-        0.0 as discount_percent,
-        'low_commission' as source,
-        'Petersberg low commission items' as comment
-    from petersberg_exclusion
-    where 1=1
-        and pb_price <= before_item_price
-    group by 
-        product_id,
-        store_id
-    having 
-        sum(commission - pa_spend) > sum(pb_commission - pb_pa_spend)
-    union all 
-    select 
-        product_id,
-        store_id,
-        'billiger' as channel,
-        31 as weight,
-        null as pessimization_type,
-        0.0 as discount_percent,
-        'low_commission' as source,
-        'Petersberg low commission items' as comment
-    from petersberg_exclusion
-    where 1=1
-        and pb_price <= before_item_price
-    group by 
-        product_id,
-        store_id
-    having 
-        sum(commission - pa_spend) > sum(pb_commission - pb_pa_spend)
 )
 
 select *
