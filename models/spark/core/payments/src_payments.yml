@@ -18,7 +18,7 @@ models:
         description: Canonical card type  
 
   - name: payment_order
-    description: Table with payment_order info data without points, last 365 days
+    description: Table with payment_order info data without points, last 750 days
     columns:
       - name: date
         description: Date (msk)
@@ -156,6 +156,12 @@ models:
         description: psp refund fee for success payment order
       - name: psp_chargeback_fee
         description: psp chargeback fee for success payment order
+      - name: order_gross_profit_final_estimated
+        description: order gross profit final estimated for success payment order
+      - name: gmv_initial
+        description: gmv initial for success payment order
+      - name: is_first_success_po_over_order_group
+        description: true if it is the first success payment_order_id over order_group_id and false is not
       - name: shipping_country
         description: shipping country for payment order
       - name: ads_source

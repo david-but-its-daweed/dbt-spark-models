@@ -88,6 +88,8 @@ orders_info AS (
         SUM(o.psp_initial) AS psp_initial,
         SUM(o.psp_refund_fee) AS psp_refund_fee,
         SUM(o.psp_chargeback_fee) AS psp_chargeback_fee,
+        SUM(o.order_gross_profit_final_estimated) AS order_gross_profit_final_estimated,
+        SUM(o.gmv_initial) AS gmv_initial,
         MAX(o.country) AS shipping_country
     FROM
         {{ ref('orders') }} AS o
@@ -199,8 +201,9 @@ SELECT
         po.is_new_card_int = 1,
         'new_card', 'linked_card'
     ), po.payment_type) AS payment_type_extended,
-    MAX(IF(po.cancel_reason_message = 'blacklist , reason sanctionList', 1, 0)) OVER
-    (PARTITION BY po.user_id ORDER BY po.created_time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
+    MAX(IF(po.cancel_reason_message = 'blacklist , reason sanctionList', 1, 0))
+        OVER
+        (PARTITION BY po.user_id ORDER BY po.created_time ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
     AS has_sanction_block_user,
     cb.card_bank,
     cb.card_brand,
@@ -246,14 +249,24 @@ SELECT
     oi.psp_initial,
     oi.psp_refund_fee,
     oi.psp_chargeback_fee,
+    oi.order_gross_profit_final_estimated,
+    oi.gmv_initial,
+    COALESCE (po.is_success = 1
+    AND ROW_NUMBER() OVER (
+        PARTITION BY po.order_group_id
+        ORDER BY CASE WHEN po.is_success = 1 THEN po.created_time END
+    ) = 1, FALSE) AS is_first_success_po_over_order_group,
+
     COALESCE(oi.shipping_country, 'unknown') AS shipping_country,
     COALESCE(ai.ads_source, '-') AS ads_source,
     COALESCE(ai.ads_partner_id, '-') AS ads_partner_id,
     og.discount_amount_ccy,
     og.discount_amount_ccy * cur.rate AS discount_amount_eur,
     IF(og.discount_amount_ccy > 0, 1, 0) AS is_discount_applied,
-    IF(po.pref_country = 'MD' AND cb.card_brand = 'VISA' AND po.amount_usd >= 17
-    AND po.currency IN ('MDL', 'USD', 'EUR', 'UAH', 'RUB', 'RON', 'GBP'), 1, 0) AS is_discount_proper
+    IF(
+        po.pref_country = 'MD' AND cb.card_brand = 'VISA' AND po.amount_usd >= 17
+        AND po.currency IN ('MDL', 'USD', 'EUR', 'UAH', 'RUB', 'RON', 'GBP'), 1, 0
+    ) AS is_discount_proper
 FROM
     {{ source('payments','payment_order') }} AS po
 LEFT JOIN
@@ -273,10 +286,10 @@ LEFT JOIN
     slo AS s USING (pref_country)
 LEFT JOIN
     categories AS c
-    ON c.order_group_id = po.order_group_id AND po.is_success = 1
+    ON po.order_group_id = c.order_group_id AND po.is_success = 1
 LEFT JOIN
     orders_info AS oi
-    ON oi.order_group_id = po.order_group_id AND po.is_success = 1
+    ON po.order_group_id = oi.order_group_id AND po.is_success = 1
 LEFT JOIN
     ads_info AS ai USING (device_id)
 LEFT JOIN
