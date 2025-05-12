@@ -98,8 +98,8 @@ end utm_campaign,
 case 
     when traffic_type = 'organic' then 'Organic'
     when 
-LOWER(utm_source) like '%acebook%'  or LOWER(utm_source) = 'fb'
-    or LOWER(utm_medium) like '%acebook%' or LOWER(utm_medium) like '%instagram%' or LOWER(utm_medium)  = 'fb'
+    LOWER(utm_source) like '%acebook%'  or LOWER(utm_source) = 'fb'
+    or LOWER(utm_medium) like '%acebook%' or LOWER(utm_medium)  = 'fb'
      then 'Facebook'
     when LOWER(utm_source) like '%instagram%' or  LOWER(utm_medium) like '%instagram%' then 'Instagram'
     when LOWER(utm_source) like '%google%' or  LOWER(utm_medium) like '%google%' then 'Google-ads'
@@ -133,7 +133,7 @@ visit_date,
 traffic_type, 
 utm_source,
 utm_medium,
-utm_campaign,
+regexp_replace(regexp_replace(utm_campaign, '%7C', '|'),'%3A',':')  as utm_campaign, 
 friendly_source,
 number_visit,
 gclid,
