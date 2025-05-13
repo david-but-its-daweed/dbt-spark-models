@@ -10,12 +10,30 @@
 ) }}
 
 
-with interactions as (
-    select user_id, min(interaction_create_time) as registration_start
+with 
+    old_approach as (
+select user_id, min(interaction_create_time) as registration_start
     from {{ ref('fact_attribution_interaction') }}
     where type = 'Web' AND source = 'selfService' AND interaction_type = 10
-    group by user_id
-    ), 
+    group by user_id ),
+    new_approach as (
+  select user_id,min(event_ts_msk) as registration_start
+from {{ ref('ss_events_authentication') }}
+group by 1
+),
+ interactions as (
+select
+user_id, min(registration_start) as registration_start
+from (
+select 
+user_id, registration_start 
+from old_approach 
+union  all 
+select 
+user_id, registration_start_new as registration_start
+from new_approach 
+) 
+group by 1 ),
 phone_numbers as (
         select distinct uid as user_id, _id as phone_number
         from {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
