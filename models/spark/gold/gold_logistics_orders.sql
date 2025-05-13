@@ -1,14 +1,18 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
     alias='logistics_orders',
     schema='gold',
-    file_format='parquet',
+    file_format='delta',
+    incremental_strategy='insert_overwrite',
+    partition_by=['order_date_msk'],
+    on_schema_change='sync_all_columns',
     meta = {
         'model_owner' : '@analytics.duty',
         'bigquery_load': 'true',
         'bigquery_overwrite': 'true',
         'bigquery_partitioning_date_column': 'order_date_msk',
+        'bigquery_upload_horizon_days': '365',
         'priority_weight': '1000',
     }
   )
@@ -97,3 +101,7 @@ SELECT
 FROM {{ source('logistics_mart', 'fact_order') }} AS a
 LEFT JOIN {{ ref('gold_countries') }} AS c ON a.country = c.country_code
 LEFT JOIN {{ ref('gold_merchant_categories') }} AS mc ON a.category_id = mc.merchant_category_id
+{% if is_incremental() %}
+    WHERE a.order_created_date_msk >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 365 DAYS
+{% endif %}
+DISTRIBUTE BY order_created_date_msk
