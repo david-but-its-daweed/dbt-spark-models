@@ -30,7 +30,7 @@ user_id, registration_start
 from old_approach 
 union  all 
 select 
-user_id, registration_start_new as registration_start
+user_id,  registration_start
 from new_approach 
 ) 
 group by 1 ),
