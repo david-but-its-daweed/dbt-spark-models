@@ -276,6 +276,10 @@ models:
         description: "Is variant public"
         data_type: "BOOLEAN"
 
+      - name: variant_merchant_price_usd
+        description: "Variant merchant price in USD"
+        data_type: "LONG"
+
       - name: is_product_public
         description: "Is product public"
         data_type: "BOOLEAN"
@@ -327,3 +331,7 @@ models:
       - name: kam
         description: "Key account manager of the merchant"
         data_type: "STRING"
+
+      - name: fulfilled_amount
+        description: "Amount of items fulfilled in a day"
+        data_type: "LONG"

@@ -223,15 +223,15 @@ variant_repl_status AS (
 
 var_kam AS (
     SELECT
-        fmr.partition_date,
-        fmr.variant_id,
-        MAX(fmr.merchant_name) AS merchant_name,
-        MAX(fmr.main_merchant_name) AS main_merchant_name,
-        MAX(fmr.kam) AS kam
-    FROM {{ ref('fbj_merchant_replenishments') }} AS fmr --category_management.fbj_merchant_replenishments AS fmr
+        mkm.quarter,
+        mkm.merchant_id,
+        MAX(mkm.merchant_name) AS merchant_name,
+        MAX(mkm.main_merchant_name) AS main_merchant_name,
+        MAX(mkm.kam_email) AS kam_email
+    FROM {{ source('category_management', 'merchant_kam_materialized') }} AS mkm
     GROUP BY
-        fmr.partition_date,
-        fmr.variant_id
+        mkm.quarter,
+        mkm.merchant_id
 ),
 
 --платность хранения
@@ -361,13 +361,20 @@ variant_public AS (
     SELECT
         b.partition_date,
         b.variant_id,
-        MAX(pv.public) AS is_variant_public
+        MAX(pv.public) AS is_variant_public,
+        MAX(pv.price) / 1000000.0 * MAX(cr.rate) AS variant_merchant_price_usd
     FROM base AS b
-    LEFT JOIN {{ source('mart', 'dim_published_variant_min') }} AS pv --mart.dim_published_variant_min as pv
+    LEFT JOIN {{ source('mart', 'dim_published_variant_with_merchant') }} AS pv --mart.dim_published_variant_with_merchant as pv
         ON
             1 = 1
             AND b.variant_id = pv.variant_id
             AND CAST(b.partition_date AS TIMESTAMP) BETWEEN pv.effective_ts AND pv.next_effective_ts
+    LEFT JOIN models.dim_pair_currency_rate AS cr
+        ON
+            1 = 1
+            AND pv.currency = cr.currency_code
+            AND b.partition_date = cr.effective_date
+            AND cr.currency_code_to = 'USD'
     GROUP BY
         b.partition_date,
         b.variant_id
@@ -422,6 +429,26 @@ product_tier AS (
     GROUP BY
         b.partition_date,
         b.product_id
+),
+
+log_orders AS (
+    SELECT
+        b.partition_date,
+        b.variant_id,
+        SUM(fo.quantity) AS amount
+    FROM base AS b
+    INNER JOIN {{ source('logistics_mart', 'fact_order') }} AS fo
+        ON
+            1 = 1
+            AND b.variant_id = fo.product_variant_id
+            AND DATE(fo.order_fulfilled_online_time_utc) = b.partition_date
+            AND fo.is_fbj_order
+            AND fo.warehouse_country = 'CN'
+            AND fo.order_number IS NOT NULL
+            AND fo.order_cancellation_time_utc IS NULL
+    GROUP BY
+        b.partition_date,
+        b.variant_id
 )
 
 SELECT
@@ -429,7 +456,7 @@ SELECT
     b.variant_id,
     b.product_id,
     b.logistics_product_id,
-    vrs.merchant_id,
+    gp.merchant_id,
     b.product_dimensions_h,
     b.product_dimensions_l,
     b.product_dimensions_w,
@@ -510,6 +537,7 @@ SELECT
     END AS stock_status,
     --
     vp.is_variant_public,
+    vp.variant_merchant_price_usd,
     p_pub.is_product_public,
     p_best.opens,
     p_best.previews,
@@ -522,9 +550,10 @@ SELECT
     gp.l2_merchant_category_id,
     gp.l2_merchant_category_name,
     --
-    vk.merchant_name,
-    vk.main_merchant_name,
-    vk.kam
+    m_k.merchant_name,
+    m_k.main_merchant_name,
+    m_k.kam_email AS kam,
+    lo.amount AS fulfilled_amount
 FROM base AS b
 LEFT JOIN {{ ref('gold_products') }} AS gp --gold.products as gp -- данные только на текущий момент
     ON
@@ -540,11 +569,11 @@ LEFT JOIN variant_repl_status AS vrs
         1 = 1
         AND b.partition_date = vrs.partition_date
         AND b.variant_id = vrs.variant_id
-LEFT JOIN var_kam AS vk
+LEFT JOIN var_kam AS m_k
     ON
         1 = 1
-        AND b.variant_id = vk.variant_id
-        AND b.partition_date = vk.partition_date
+        AND gp.merchant_id = m_k.merchant_id
+        AND m_k.quarter = DATE_TRUNC('quarter', DATE(b.partition_date))
 LEFT JOIN paid_storage AS ps
     ON
         1 = 1
@@ -584,3 +613,8 @@ LEFT JOIN product_tier AS p_tier
         1 = 1
         AND b.partition_date = p_tier.partition_date
         AND b.product_id = p_tier.product_id
+LEFT JOIN log_orders AS lo
+    ON
+        1 = 1
+        AND b.partition_date = lo.partition_date
+        AND b.variant_id = lo.variant_id

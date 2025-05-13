@@ -39,7 +39,6 @@ sources:
       - name: link_device_real_user
       - name: published_products_current
       - name: dim_region
-      - name: dim_published_variant_min
       
   - name: cube
     tables:
