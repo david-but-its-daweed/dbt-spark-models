@@ -9,148 +9,164 @@
     },
     alias='orders',
     file_format='delta',
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
+    partition_by=['day'],
+    on_schema_change='sync_all_columns',
   )
 }}
 
-WITH orders_ext0 AS (
+WITH product_order_number AS (
     SELECT
-        partition_date AS day,
-        created_time_utc,
-        device_id,
-        real_user_id,
-        user_id,
         order_id,
-        friendly_order_id,
-        order_group_id,
-        merchant_id,
-        store_id,
-        product_quantity,
-        psp,
-        product_id,
-        product_variant_id,
-        category_id,
-        refund_reason,
-        TO_DATE(CAST(CAST(refund_time_utc AS INT) + 3 * 3600 AS TIMESTAMP)) AS refund_date_msk,
-        UPPER(shipping_country) AS country,
-        LOWER(os_type) AS platform,
-        COALESCE(last_context.name, 'unknown') AS last_context,
-        ROUND(gmv_initial, 3) AS gmv_initial,
-        ROUND(gmv_final, 3) AS gmv_final,
-        ROUND(refund, 3) AS gmv_refunded,
-        ROUND(ecgp_initial, 3) AS ecgp_initial,
-        ROUND(ecgp_final, 3) AS ecgp_final,
-        ROUND(order_gross_profit_final, 3) AS order_gross_profit_final,
-        ROUND(merchant_revenue_initial, 3) AS merchant_revenue_initial,
-        ROUND(order_gross_profit_final_estimated, 3) AS order_gross_profit_final_estimated,
-        ROUND(merchant_revenue_final, 3) AS merchant_revenue_final,
-        ROUND(gmv_initial / product_quantity, 3) AS item_gmv,
-        ROUND(gmv_initial / product_quantity, 0) AS item_gmv_rounded,
-        ROUND(merchant_revenue_initial / product_quantity, 0) AS item_merchant_revenue_initial_rounded,
-        ROUND(logistics_price_initial, 3) AS logistics_price_initial,
-        ROUND(merchant_revenue_initial / product_quantity, 3) AS item_merchant_revenue_initial,
-        ROUND(logistics_price_initial / product_quantity, 3) AS item_logistics_price_initial,
-        ROUND(merchant_sale_price, 3) AS merchant_sale_price,
-        ROUND(merchant_list_price, 3) AS merchant_list_price,
-        ROUND(extra_charge, 3) AS extra_charge,
-        IF(gmv_initial = 0, NULL, ROUND(ecgp_initial / gmv_initial, 3)) AS ecgp_in_gmv,
-        ROUND(psp_initial, 3) AS psp_initial,
-        ROUND(psp_refund_fee, 3) AS psp_refund_fee,
-        ROUND(psp_chargeback_fee, 3) AS psp_chargeback_fee,
-        estimated_delivery_min_days,
-        estimated_delivery_max_days,
-        customer_refund_reason IS NOT NULL AND customer_refund_reason IN (2, 5, 16, 24, 25, 26, 28) AS is_not_delivered_refund,
-        customer_refund_reason IS NOT NULL AND customer_refund_reason IN (3, 4, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27) AS is_quality_refund,
+        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
+    FROM {{ source('mart', 'star_order_2020') }}
+    WHERE product_id IS NOT null
+),
+
+orders_ext0 AS (
+    SELECT
+        so.partition_date AS day,
+        so.created_time_utc,
+        so.device_id,
+        so.real_user_id,
+        so.user_id,
+        so.order_id,
+        so.friendly_order_id,
+        so.order_group_id,
+        so.merchant_id,
+        so.store_id,
+        so.product_quantity,
+        so.psp,
+        so.product_id,
+        so.product_variant_id,
+        so.category_id,
+        so.refund_reason,
+        TO_DATE(CAST(CAST(so.refund_time_utc AS INT) + 3 * 3600 AS TIMESTAMP)) AS refund_date_msk,
+        UPPER(so.shipping_country) AS country,
+        LOWER(so.os_type) AS platform,
+        COALESCE(so.last_context.name, 'unknown') AS last_context,
+        ROUND(so.gmv_initial, 3) AS gmv_initial,
+        ROUND(so.gmv_final, 3) AS gmv_final,
+        ROUND(so.refund, 3) AS gmv_refunded,
+        ROUND(so.ecgp_initial, 3) AS ecgp_initial,
+        ROUND(so.ecgp_final, 3) AS ecgp_final,
+        ROUND(so.order_gross_profit_final, 3) AS order_gross_profit_final,
+        ROUND(so.merchant_revenue_initial, 3) AS merchant_revenue_initial,
+        ROUND(so.order_gross_profit_final_estimated, 3) AS order_gross_profit_final_estimated,
+        ROUND(so.merchant_revenue_final, 3) AS merchant_revenue_final,
+        ROUND(so.gmv_initial / so.product_quantity, 3) AS item_gmv,
+        ROUND(so.gmv_initial / so.product_quantity, 0) AS item_gmv_rounded,
+        ROUND(so.merchant_revenue_initial / so.product_quantity, 0) AS item_merchant_revenue_initial_rounded,
+        ROUND(so.logistics_price_initial, 3) AS logistics_price_initial,
+        ROUND(so.merchant_revenue_initial / so.product_quantity, 3) AS item_merchant_revenue_initial,
+        ROUND(so.logistics_price_initial / so.product_quantity, 3) AS item_logistics_price_initial,
+        ROUND(so.merchant_sale_price, 3) AS merchant_sale_price,
+        ROUND(so.merchant_list_price, 3) AS merchant_list_price,
+        ROUND(so.extra_charge, 3) AS extra_charge,
+        IF(so.gmv_initial = 0, null, ROUND(so.ecgp_initial / so.gmv_initial, 3)) AS ecgp_in_gmv,
+        ROUND(so.psp_initial, 3) AS psp_initial,
+        ROUND(so.psp_refund_fee, 3) AS psp_refund_fee,
+        ROUND(so.psp_chargeback_fee, 3) AS psp_chargeback_fee,
+        so.estimated_delivery_min_days,
+        so.estimated_delivery_max_days,
+        so.customer_refund_reason IS NOT null AND so.customer_refund_reason IN (2, 5, 16, 24, 25, 26, 28) AS is_not_delivered_refund,
+        so.customer_refund_reason IS NOT null AND so.customer_refund_reason IN (3, 4, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27) AS is_quality_refund,
+        -- note: this one can break if is_finalized changes after 230 days after order is created
         COALESCE((
-            customer_refund_reason IS NOT NULL
-            OR refund_reason IS NOT NULL
-            OR delivered_time_utc IS NOT NULL
-            OR DATEDIFF(CURRENT_DATE(), CAST(created_time_utc AS DATE)) > warranty_duration_max_days
-        ), FALSE) AS is_finalized,
-        used_coupon_id,
-        used_coupon_id IS NOT NULL AS with_coupon,
-        coupon AS coupon_discount,
-        points_initial > 0 AS with_points,
-        points_initial,
-        points_final,
-        discounts,
-        COALESCE(jl_shipping_type_initial, 'offline') AS shipping_type,
-        TO_DATE(review_time_utc) AS review_day,
-        review_stars,
-        review_has_text,
-        review_media_count,
-        review_image_count,
-        customer_refund_reason,
+            so.customer_refund_reason IS NOT null
+            OR so.refund_reason IS NOT null
+            OR so.delivered_time_utc IS NOT null
+            OR DATEDIFF(CURRENT_DATE(), CAST(so.created_time_utc AS DATE)) > so.warranty_duration_max_days
+        ), false) AS is_finalized,
+        so.used_coupon_id,
+        so.used_coupon_id IS NOT null AS with_coupon,
+        so.coupon AS coupon_discount,
+        so.points_initial > 0 AS with_points,
+        so.points_initial,
+        so.points_final,
+        so.discounts,
+        COALESCE(so.jl_shipping_type_initial, 'offline') AS shipping_type,
+        TO_DATE(so.review_time_utc) AS review_day,
+        so.review_stars,
+        so.review_has_text,
+        so.review_media_count,
+        so.review_image_count,
+        so.customer_refund_reason,
         COALESCE(
-            DATE_FORMAT(TO_DATE(partition_date), 'yyyy-MM') = DATE_FORMAT(TO_DATE(real_user_join_ts_msk), 'yyyy-MM'),
-            FALSE
+            DATE_FORMAT(TO_DATE(so.partition_date), 'yyyy-MM') = DATE_FORMAT(TO_DATE(so.real_user_join_ts_msk), 'yyyy-MM'),
+            false
         ) AS is_join_month_order,
 
         COALESCE(
-            rating_counts.count_1_star
-            + rating_counts.count_2_star
-            + rating_counts.count_3_star
-            + rating_counts.count_4_star
-            + rating_counts.count_5_star, 0
+            so.rating_counts.count_1_star
+            + so.rating_counts.count_2_star
+            + so.rating_counts.count_3_star
+            + so.rating_counts.count_4_star
+            + so.rating_counts.count_5_star, 0
         ) AS number_of_reviews,
         COALESCE(
-            rating_counts.count_1_star * 1
-            + rating_counts.count_2_star * 2
-            + rating_counts.count_3_star * 3
-            + rating_counts.count_4_star * 4
-            + rating_counts.count_5_star * 5, 0
+            so.rating_counts.count_1_star * 1
+            + so.rating_counts.count_2_star * 2
+            + so.rating_counts.count_3_star * 3
+            + so.rating_counts.count_4_star * 4
+            + so.rating_counts.count_5_star * 5, 0
         ) AS total_product_rating,
 
         COALESCE(
-            (review_stars IN (1, 2) AND DATEDIFF(review_time_utc, created_time_utc) <= 80)
+            (so.review_stars IN (1, 2) AND DATEDIFF(so.review_time_utc, so.created_time_utc) <= 80)
             OR (
-                customer_refund_reason IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27)
-                AND DATEDIFF(refund_time_utc, created_time_utc) <= 80
-            ), FALSE
+                so.customer_refund_reason IN (3, 4, 5, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27)
+                AND DATEDIFF(so.refund_time_utc, so.created_time_utc) <= 80
+            ), false
         ) AS is_negative_feedback,
         CASE
-            WHEN customer_refund_reason IS NULL OR customer_refund_reason = 0 THEN 'none'
-            WHEN customer_refund_reason = 1 THEN 'cancelledByCustomer'
-            WHEN customer_refund_reason = 2 THEN 'notDelivered'
-            WHEN customer_refund_reason = 3 THEN 'emptyPackage'
-            WHEN customer_refund_reason = 4 THEN 'badQuality'
-            WHEN customer_refund_reason = 5 THEN 'damaged'
-            WHEN customer_refund_reason = 6 THEN 'wrongProduct'
-            WHEN customer_refund_reason = 7 THEN 'wrongQuantity'
-            WHEN customer_refund_reason = 8 THEN 'wrongSize'
-            WHEN customer_refund_reason = 9 THEN 'wrongColor'
-            WHEN customer_refund_reason = 10 THEN 'minorProblems'
-            WHEN customer_refund_reason = 11 THEN 'differentFromImages'
-            WHEN customer_refund_reason = 12 THEN 'other'
-            WHEN customer_refund_reason = 13 THEN 'customerFraud'
-            WHEN customer_refund_reason = 14 THEN 'counterfeit'
-            WHEN customer_refund_reason = 15 THEN 'sentBackToMerchant'
-            WHEN customer_refund_reason = 16 THEN 'returnedToMerchantByShipper'
-            WHEN customer_refund_reason = 17 THEN 'misleadingInformation'
-            WHEN customer_refund_reason = 18 THEN 'paidByJoom'
-            WHEN customer_refund_reason = 19 THEN 'fulfillByJoomUnavailable'
-            WHEN customer_refund_reason = 20 THEN 'approveRejected'
-            WHEN customer_refund_reason = 21 THEN 'productBanned'
-            WHEN customer_refund_reason = 22 THEN 'packageIncomplete'
-            WHEN customer_refund_reason = 23 THEN 'notAsDescribed'
-            WHEN customer_refund_reason = 24 THEN 'missingProofOfDelivery'
-            WHEN customer_refund_reason = 25 THEN 'deliveredToWrongAddress'
-            WHEN customer_refund_reason = 26 THEN 'turnedBackByPostOffice'
-            WHEN customer_refund_reason = 27 THEN 'bannedByCustoms'
-            WHEN customer_refund_reason = 28 THEN 'incorrectConsolidation'
-            WHEN customer_refund_reason = 29 THEN 'freeItemCancel'
-            WHEN customer_refund_reason = 30 THEN 'groupPurchaseExpired'
-            WHEN customer_refund_reason = 31 THEN 'returnedToMerchantInOrigin'
-            WHEN customer_refund_reason = 32 THEN 'vatOnDelivery'
-            WHEN customer_refund_reason = 33 THEN 'shippingUnavailable'
+            WHEN so.customer_refund_reason IS null OR so.customer_refund_reason = 0 THEN 'none'
+            WHEN so.customer_refund_reason = 1 THEN 'cancelledByCustomer'
+            WHEN so.customer_refund_reason = 2 THEN 'notDelivered'
+            WHEN so.customer_refund_reason = 3 THEN 'emptyPackage'
+            WHEN so.customer_refund_reason = 4 THEN 'badQuality'
+            WHEN so.customer_refund_reason = 5 THEN 'damaged'
+            WHEN so.customer_refund_reason = 6 THEN 'wrongProduct'
+            WHEN so.customer_refund_reason = 7 THEN 'wrongQuantity'
+            WHEN so.customer_refund_reason = 8 THEN 'wrongSize'
+            WHEN so.customer_refund_reason = 9 THEN 'wrongColor'
+            WHEN so.customer_refund_reason = 10 THEN 'minorProblems'
+            WHEN so.customer_refund_reason = 11 THEN 'differentFromImages'
+            WHEN so.customer_refund_reason = 12 THEN 'other'
+            WHEN so.customer_refund_reason = 13 THEN 'customerFraud'
+            WHEN so.customer_refund_reason = 14 THEN 'counterfeit'
+            WHEN so.customer_refund_reason = 15 THEN 'sentBackToMerchant'
+            WHEN so.customer_refund_reason = 16 THEN 'returnedToMerchantByShipper'
+            WHEN so.customer_refund_reason = 17 THEN 'misleadingInformation'
+            WHEN so.customer_refund_reason = 18 THEN 'paidByJoom'
+            WHEN so.customer_refund_reason = 19 THEN 'fulfillByJoomUnavailable'
+            WHEN so.customer_refund_reason = 20 THEN 'approveRejected'
+            WHEN so.customer_refund_reason = 21 THEN 'productBanned'
+            WHEN so.customer_refund_reason = 22 THEN 'packageIncomplete'
+            WHEN so.customer_refund_reason = 23 THEN 'notAsDescribed'
+            WHEN so.customer_refund_reason = 24 THEN 'missingProofOfDelivery'
+            WHEN so.customer_refund_reason = 25 THEN 'deliveredToWrongAddress'
+            WHEN so.customer_refund_reason = 26 THEN 'turnedBackByPostOffice'
+            WHEN so.customer_refund_reason = 27 THEN 'bannedByCustoms'
+            WHEN so.customer_refund_reason = 28 THEN 'incorrectConsolidation'
+            WHEN so.customer_refund_reason = 29 THEN 'freeItemCancel'
+            WHEN so.customer_refund_reason = 30 THEN 'groupPurchaseExpired'
+            WHEN so.customer_refund_reason = 31 THEN 'returnedToMerchantInOrigin'
+            WHEN so.customer_refund_reason = 32 THEN 'vatOnDelivery'
+            WHEN so.customer_refund_reason = 33 THEN 'shippingUnavailable'
             ELSE 'Unknown'
         END AS detailed_refund_reason,
-        gmv_initial <= 0.05 AS is_influencer_order,
-        ROW_NUMBER() OVER (PARTITION BY product_id ORDER BY created_time_utc) AS product_order_number
-    FROM {{ source('mart', 'star_order_2020') }}
+        so.gmv_initial <= 0.05 AS is_influencer_order,
+        pon.product_order_number
+    FROM {{ source('mart', 'star_order_2020') }} AS so
+    LEFT JOIN product_order_number AS pon USING (order_id)
     WHERE
-        TRUE
-        AND NOT (refund_reason = 'fraud' AND refund_reason IS NOT NULL)
+        true
+        AND NOT (so.refund_reason = 'fraud' AND so.refund_reason IS NOT null)
+        {% if is_incremental() %}
+            AND so.partition_date >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 230 DAYS
+        {% endif %}
 ),
 
 logistics_orders AS (
@@ -236,15 +252,16 @@ orders_ext1 AS (
         o.detailed_refund_reason,
         o.is_influencer_order,
 
-        IF(o.number_of_reviews > 0, ROUND(o.total_product_rating / o.number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
-        COALESCE(o.number_of_reviews >= 15, FALSE) AS is_product_with_stable_rating, -- был ли рейтинг стабильным на момент покупки
+        IF(o.number_of_reviews > 0, ROUND(o.total_product_rating / o.number_of_reviews, 1), null) AS product_rating, -- рейтинг товара на момент покупки
+        COALESCE(o.number_of_reviews >= 15, false) AS is_product_with_stable_rating, -- был ли рейтинг стабильным на момент покупки
         o.product_order_number, -- номер покупки товара
         COALESCE(b.ticket_id, c.ticket_id) AS support_ticket_id,
-        IF(l.tracking_delivered_time_utc IS NOT NULL, TRUE, o.is_finalized) AS is_finalized
+        IF(l.tracking_delivered_time_utc IS NOT null, true, o.is_finalized) AS is_finalized
 
     FROM orders_ext0 AS o
     -- Не менять порядок джойнов - джойны по order_id должны идти подряд, чтобы избежать лишних шафлов
     LEFT JOIN logistics_orders AS l USING (order_id)
+    -- note: this one can break if support_tickets arrives after 230 days after order is created
     -- добавляем id тикета сапорта, если есть 
     LEFT JOIN support_tickets AS b USING (order_id)
     LEFT JOIN support_tickets AS c ON o.friendly_order_id = c.order_id
@@ -324,9 +341,11 @@ orders_ext2 AS (
         a.support_ticket_id,
 
         a.is_finalized,
-        COALESCE(b.is_new_user, FALSE) AS is_new_user
+        COALESCE(b.is_new_user, false) AS is_new_user
     FROM orders_ext1 AS a
     LEFT JOIN {{ ref('active_devices') }} AS b ON a.device_id = b.device_id AND a.day = b.day
 )
 
-SELECT * FROM orders_ext2
+SELECT *
+FROM orders_ext2
+DISTRIBUTE BY day
