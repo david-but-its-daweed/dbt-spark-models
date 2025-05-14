@@ -44,6 +44,8 @@ def find_nodes(
             resource_type=resource_type,
             profiles_dir=profiles_dir
         )
+    elif changed_only:
+        ids = ls()
     else:
         return []
 

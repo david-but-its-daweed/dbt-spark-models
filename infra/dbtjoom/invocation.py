@@ -1,6 +1,7 @@
 import json
 from typing import *
-
+import os
+from contextlib import redirect_stdout
 from dbt.cli.main import dbtRunner
 
 
@@ -51,7 +52,8 @@ def ls(
     _add('--profiles-dir', profiles_dir)
 
     dbt = dbtRunner()
-    result = dbt.invoke(args)
+    with open(os.devnull, 'w') as devnull, redirect_stdout(devnull):
+        result = dbt.invoke(args)
     for r in result.result:
         yield json.loads(r)['unique_id']
 
