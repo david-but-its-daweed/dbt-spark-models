@@ -3,7 +3,8 @@
       'model_owner' : '@skotlov'
     },
     schema='skotlov',
-    materialized='table'
+    materialized='table',
+    file_format='parquet',
 ) }}
 
 -- SELECT device_id, count(*) as cn

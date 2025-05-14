@@ -1,6 +1,8 @@
 {{ config(
     schema='anomaly_detection',
-    materialized='table',
+    materialized='incremental',
+    file_format='delta',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@leonid.enov',
       'predictor_enabled': 'true',
