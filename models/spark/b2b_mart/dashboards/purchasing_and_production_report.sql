@@ -187,7 +187,7 @@ WITH procurement_orders AS (
            MIN(CASE WHEN procurement_sub_status_name = 'advancePaymentRequested' THEN status_time END) AS sub_status_advance_payment_requested_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'advancePaymentInProgress' THEN status_time END) AS sub_status_advance_payment_in_progress_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'manufacturing' THEN status_time END) AS sub_status_manufacturing_ts,
-           MIN(CASE WHEN procurement_sub_status_name = 'psiBeingConducted' THEN status_time END) AS sub_status_psi_being_conducted_ts,
+           MIN(CASE WHEN procurement_sub_status_name IN ('psiBeingConducted', 'psiIsPlanned') THEN status_time END) AS sub_status_psi_being_conducted_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'psiIsPlanned' THEN status_time END) AS sub_status_psi_is_planned_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'psiWaitingForConfirmation' THEN status_time END) AS sub_status_psi_waiting_for_confirmation_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'psiProblemsAreToBeFixed' THEN status_time END) AS sub_status_psi_problems_are_to_be_fixed_ts,
