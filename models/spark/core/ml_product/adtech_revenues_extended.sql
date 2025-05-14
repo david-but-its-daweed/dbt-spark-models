@@ -1,12 +1,18 @@
 {{
     config(
-        materialized='table',
+        materialized='incremental',
+        incremental_strategy='insert_overwrite',
         partition_by=['date_msk'],
+        on_schema_change='sync_all_columns',
+        file_format='delta',
         meta = {
             'model_owner' : '@general_analytics',
             'bigquery_load': 'true',
             'bigquery_partitioning_date_column': 'date_msk',
             'bigquery_check_counts_max_diff_fraction': '0.01',
+            'full_reload_on': '6',
+            'bigquery_upload_horizon_days': '230',
+            'priority_weight': '1000',
             'full_reload_on': '6',
         }
     )
@@ -24,18 +30,23 @@ SELECT
     COALESCE(active_devices.app_entity, dim_device.app_entity) AS app_entity,
     SUM(adtech.adtech_revenue) AS adtech_revenue
 FROM {{ source('mart', 'adtech_revenues') }} AS adtech
-LEFT JOIN {{ source('mart', 'dim_device') }} AS dim_device -- используем в случае, если по gold не находится пара (из-за стыка дат)
+LEFT JOIN {{ source('mart', 'dim_device_min') }} AS dim_device -- используем в случае, если по gold не находится пара (из-за стыка дат)
     ON
         adtech.device_id = dim_device.device_id
         AND dim_device.next_effective_ts = TIMESTAMP '9999-12-31 23:59:59 UTC'
 LEFT JOIN {{ ref('gold_active_devices') }} AS active_devices -- используем с первым периоритетом, там самая корректная логика для страны сейчас
     ON
-        active_devices.device_id = adtech.device_id
-        AND active_devices.date_msk = adtech.partition_date
+        adtech.device_id = active_devices.device_id
+        AND adtech.partition_date = active_devices.date_msk
 LEFT JOIN {{ source('mart', 'link_device_real_user') }} AS link USING (device_id) -- берем real_user_id, из gold не берем также из-за проблемы стыка дат
 LEFT JOIN {{ ref('gold_countries') }} AS countries
     ON
         COALESCE(active_devices.country_code, UPPER(dim_device.pref_country), UPPER(adtech.country)) = countries.country_code
-WHERE adtech.partition_date >= '2022-01-01'
+WHERE
+    adtech.partition_date >= '2022-01-01'
+    {% if is_incremental() %}
+        AND adtech.partition_date >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 230 DAYS, 'MM')
+        AND active_devices.date_msk >= TRUNC(DATE '{{ var("start_date_ymd") }}' - INTERVAL 230 DAYS, 'MM')
+    {% endif %}
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 DISTRIBUTE BY date_msk
