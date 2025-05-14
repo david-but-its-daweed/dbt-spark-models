@@ -1,16 +1,16 @@
 {{ config(
     schema='onfy',
-    file_format: 'delta',  
-    materialized: 'incremental',
-    incremental_strategy: 'insert_overwrite',
+    materialized='table',
+    file_format='parquet',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
       'bigquery_load': 'true',
       'alerts_channel': '#onfy-etl-monitoring',
-      'priority_weight': '100'
+      'priority_weight': 100
     }
 ) }}
+
 
 
 with order_data as 
