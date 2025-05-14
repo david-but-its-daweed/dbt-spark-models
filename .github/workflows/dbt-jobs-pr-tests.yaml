@@ -19,6 +19,8 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
+      - name: Fetch master branch
+        run: git fetch origin master
       - name: Checkout reusable workflow dir
         uses: actions/checkout@v4
         with:
@@ -41,6 +43,10 @@ jobs:
         run: python3 .github/scripts/get_no_owner.py
       - name: Check no unused sources
         run: python3 .github/scripts/get_unused_sources.py
+      - name: Check file format is missing
+        run: python3 .github/scripts/get_no_fileformat.py
+        env:
+          PYTHONPATH: ${{ github.workspace }}
       - name: Check manual tables
         uses: joomcode/dbt-models/.github/actions/check-manual-tables@master
         with:
