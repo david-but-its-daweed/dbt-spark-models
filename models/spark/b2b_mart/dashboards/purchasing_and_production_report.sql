@@ -32,6 +32,7 @@ WITH procurement_orders AS (
            nullIf(size(payment.paymentScheme), 0) AS payment_count_plan,
            prices,
            productRoles AS product_roles,
+           currency,
            variants AS procurement_order_variants,
            packaging,
            millis_to_ts_msk(ctms) AS created_ts,
@@ -357,6 +358,7 @@ WITH procurement_orders AS (
            id AS product_id,
            name AS product_name,
            manufacturerId AS manufacturer_id,
+           currency,
            variants AS offer_products_variants,
            millis_to_ts_msk(ctms) AS offer_product_created_ts
     FROM {{ source('mongo', 'b2b_core_offer_products_daily_snapshot') }}
@@ -404,6 +406,7 @@ WITH procurement_orders AS (
            t1.payment_count_plan,
            t1.prices,
            t1.product_roles,
+           CASE WHEN t1.core_empty = TRUE THEN t2.currency ELSE t1.currency END AS currency,
            CASE WHEN t1.core_empty = TRUE THEN t2.offer_products_variants ELSE t1.procurement_order_variants END AS variants,
            t1.packaging,
            CASE WHEN t1.core_empty = TRUE THEN t2.offer_product_created_ts ELSE t1.created_ts END AS created_ts,
@@ -503,6 +506,7 @@ SELECT
     pah.payment_sum_cnh,
     pah.payment_sum_other,
     po.packaging,
+    po.currency,
     po.variants,
     millis_to_ts_msk(po.production_range.from) AS production_deadline_from,
     po.manufacturing_days,
