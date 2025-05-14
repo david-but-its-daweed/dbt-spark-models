@@ -60,6 +60,10 @@ class Node:
     children: str
 
     @property
+    def owner(self):
+        return self.config.get('meta', {}).get('model_owner')
+
+    @property
     def materialized(self):
         return self.config['materialized']
 
@@ -77,7 +81,7 @@ class Node:
 
     @property
     def file_format(self):
-        return self.config['file_format']
+        return self.config.get('file_format')
 
     @property
     def table_name(self):

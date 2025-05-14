@@ -2,8 +2,9 @@
     meta = {
       'model_owner' : '@analytics.duty'
     },
-    schema='platform',
-    materialized='table'
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
+    file_format='delta'
 ) }}
 
 WITH airflow_data AS (
