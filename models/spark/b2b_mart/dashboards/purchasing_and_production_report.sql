@@ -196,7 +196,8 @@ WITH procurement_orders AS (
            MIN(CASE WHEN procurement_sub_status_name = 'psiApprovedManually' THEN status_time END) AS sub_status_psi_approved_manually_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'packingAndLabeling' THEN status_time END) AS sub_status_packing_and_labeling_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'readyForShipment' THEN status_time END) AS sub_status_ready_for_shipment_ts,
-           MIN(CASE WHEN procurement_sub_status_name IN ('shippedBy3PL', 'shipped') THEN status_time END) AS sub_status_shipped_by_3pl_ts,
+           /* Статус Shipped ставит работник склада, что может привести к некорректному времени статуса, к примеру, Shipped будет раньше предыдущего статуса. НО позже время статуса исправят, поэтому берем MAX */
+           MAX(CASE WHEN procurement_sub_status_name IN ('shippedBy3PL', 'shipped') THEN status_time END) AS sub_status_shipped_by_3pl_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'finalPaymentRequested' THEN status_time END) AS sub_status_final_payment_requested_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'finalPaymentInProgress' THEN status_time END) AS sub_status_final_payment_in_progress_ts,
            MIN(CASE WHEN procurement_sub_status_name = 'finalPaymentAcquired' THEN status_time END) AS sub_status_final_payment_acquired_ts,
