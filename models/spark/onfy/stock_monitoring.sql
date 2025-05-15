@@ -10,99 +10,93 @@
     }
 ) }}
 
-WITH dates AS (
-    SELECT DISTINCT
-        1 AS key,
-        DATE(created) AS report_date
-    FROM {{ source('pharmacy_landing', 'order') }}
-    WHERE DATE(created) >= '2022-06-01'
-),
-
-pzns_list AS
+with pzns_list as 
 (
-    SELECT DISTINCT 
-        1 as key,
+    select distinct 
+        explode(sequence(current_date(), date_add(current_date(), -366))) as report_date,
+        product_id,
         pzn,
         product_name
-    FROM {{ source('onfy', 'orders_info') }}
+    from {{ source('onfy', 'orders_info') }}
 ),
 
-pzns_by_date AS 
-(
-    SELECT 
-        report_date,
-        pzn,
-        product_name
-    FROM dates
-    JOIN pzns_list
-        ON dates.key = pzns_list.key
-),
-
-stocks_raw AS (
-    SELECT
+stocks_raw as (
+    select
         dates.report_date,
+        product.product_id,
         product.pzn,
         product.manufacturer_name,
         product.store_name,
-        SUM(COALESCE(product.stock_quantity, 0)) AS stock_quantity,
-        MIN(product.price) AS price
-    FROM {{ source('onfy_mart', 'dim_product') }} AS product
-    INNER JOIN dates
-        ON
-            dates.report_date >= DATE(DATE_FORMAT(product.effective_ts, 'yyyy-MM-dd HH:mm:ss'))
-            AND dates.report_date < DATE(DATE_FORMAT(product.next_effective_ts, 'yyyy-MM-dd HH:mm:ss'))
-    WHERE
-        DATE(product.effective_ts) >= '2022-06-01'
-        AND product.store_state = 'DEFAULT'
-        AND product.product_state = 'DEFAULT'
-    GROUP BY 1, 2, 3, 4
-),
-------------------------------------------------------------------------------------------------------------------------------------
-
-
-orders_daily AS (
-    SELECT
-        pzns_by_date.report_date AS event_date,
-        pzns_by_date.pzn,
-        pzns_by_date.product_name,
-        COALESCE(SUM(orders_info.quantity), 0) AS quantity
-    FROM pzns_by_date
-    LEFT JOIN {{ source('onfy', 'orders_info') }}
-        ON
-            pzns_by_date.pzn = orders_info.pzn
-            and pzns_by_date.report_date = date(orders_info.order_created_time_cet)
-            and orders_info.order_created_time_cet >= '2022-06-01'
-    GROUP BY 1, 2, 3
+        sum(coalesce(product.stock_quantity, 0)) as stock_quantity,
+        min(product.price) as price
+    from {{ source('onfy_mart', 'dim_product') }} as product
+    inner join (select explode(sequence(current_date(), date_add(current_date(), -366))) as report_date) as dates
+        on dates.report_date >= date(date_format(product.effective_ts, 'yyyy-mm-dd hh:mm:ss'))
+        and dates.report_date < date(date_format(product.next_effective_ts, 'yyyy-mm-dd hh:mm:ss'))
+    where
+        date(product.effective_ts) >= current_date() - interval 366 days
+        and product.store_state = 'default'
+        and product.product_state = 'default'
+    group by 
+        dates.report_date,
+        product.product_id,
+        product.pzn,
+        product.manufacturer_name,
+        product.store_name
 ),
 
-rolling_sum AS (
-    SELECT
+orders_daily as (
+    select
+        pzns_list.report_date as event_date,
+        pzns_list.pzn,
+        pzns_list.product_name,
+        pzns_list.product_id,
+        pharmacy_landing_product.ean,
+        coalesce(sum(orders_info.quantity), 0) as quantity
+    from pzns_list
+    join {{ source('pharmacy_landing', 'product') }} as pharmacy_landing_product
+        on pharmacy_landing_product.id = pzns_list.product_id
+    left join {{ source('onfy', 'orders_info') }}
+        on pzns_list.product_id = orders_info.product_id
+        and pzns_list.report_date = date(orders_info.order_created_time_cet)
+        and orders_info.order_created_time_cet >= current_date() - interval 366 days
+    group by 
+        pzns_list.report_date,
+        pzns_list.pzn,
+        pzns_list.product_name,
+        pzns_list.product_id,
+        pharmacy_landing_product.ean
+),
+
+rolling_sum as (
+    select
         orders_daily.*,
-        SUM(quantity) OVER (PARTITION BY pzn ORDER BY event_date ROWS BETWEEN 29 PRECEDING AND CURRENT ROW) AS rolling_sum_quantity
-    FROM orders_daily
+        sum(quantity) over (partition by pzn order by event_date rows between 29 preceding and current row) as rolling_sum_quantity
+    from orders_daily
 ),
 
-popularity_ranks_orders AS (
-    SELECT
+popularity_ranks_orders as (
+    select
         *,
-        RANK() OVER (PARTITION BY event_date ORDER BY rolling_sum_quantity DESC) AS popularity_rank
-    FROM rolling_sum
+        rank() over (partition by event_date order by rolling_sum_quantity desc) as popularity_rank
+    from rolling_sum
 )
-------------------------------------------------------------------------------------------------------------------------------------
 
-SELECT
+select
     orders.event_date,
+    orders.product_id,
     orders.pzn,
     orders.product_name,
-    orders.quantity AS items_quantity,
-    orders.rolling_sum_quantity AS 30d_items_quantity,
+    orders.quantity as items_quantity,
+    orders.rolling_sum_quantity as 30d_items_quantity,
     orders.popularity_rank,
+    orders.ean,
     stocks.manufacturer_name,
     stocks.store_name,
-    COALESCE(stocks.stock_quantity, 0) AS stock_quantity,
-    stocks.price AS item_price
-FROM popularity_ranks_orders AS orders
-LEFT JOIN stocks_raw AS stocks
-    ON
-        orders.event_date = stocks.report_date
-        AND orders.pzn = stocks.pzn
+    coalesce(stocks.stock_quantity, 0) as stock_quantity,
+    stocks.price as item_price,
+    if(orders.pzn is null, '1', '0') as is_non_pzn
+from popularity_ranks_orders as orders
+left join stocks_raw as stocks
+    on orders.event_date = stocks.report_date
+    and orders.product_id = stocks.product_id
