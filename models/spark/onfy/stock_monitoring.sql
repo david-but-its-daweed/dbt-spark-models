@@ -31,12 +31,12 @@ stocks_raw as (
         min(product.price) as price
     from {{ source('onfy_mart', 'dim_product') }} as product
     inner join (select explode(sequence(current_date(), date_add(current_date(), -366))) as report_date) as dates
-        on dates.report_date >= date(date_format(product.effective_ts, 'yyyy-mm-dd hh:mm:ss'))
-        and dates.report_date < date(date_format(product.next_effective_ts, 'yyyy-mm-dd hh:mm:ss'))
+        on dates.report_date >= date(date_format(product.effective_ts, 'yyyy-MM-dd HH:mm:ss'))
+        and dates.report_date < date(date_format(product.next_effective_ts, 'yyyy-MM-dd HH:mm:ss'))
     where
         date(product.effective_ts) >= current_date() - interval 366 days
-        and product.store_state = 'default'
-        and product.product_state = 'default'
+        and product.store_state = 'DEFAULT'
+        and product.product_state = 'DEFAULT'
     group by 
         dates.report_date,
         product.product_id,
