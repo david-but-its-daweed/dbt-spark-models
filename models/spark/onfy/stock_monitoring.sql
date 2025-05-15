@@ -71,7 +71,7 @@ orders_daily as (
 rolling_sum as (
     select
         orders_daily.*,
-        sum(quantity) over (partition by pzn order by event_date rows between 29 preceding and current row) as rolling_sum_quantity
+        sum(quantity) over (partition by product_id order by event_date rows between 29 preceding and current row) as rolling_sum_quantity
     from orders_daily
 ),
 
