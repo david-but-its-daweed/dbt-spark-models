@@ -68,16 +68,18 @@ sourcing_customer_reqeusts AS (
     LEFT JOIN users AS u ON fcr.user_id = u.user_id
 ),
 teams AS (
-    SELECT t1.issue_id,
-           t1.count_unique_teams,
-           t3.assignee_history,
-           ARRAY_AGG(
-                STRUCT(
-                    t2.team_ts,
-                    t2.team
+    SELECT
+        t1.issue_id,
+        t1.count_unique_teams,
+        t3.assignee_history,
+        array_sort(
+            collect_list(
+                named_struct(
+                    'team_ts', t2.team_ts,
+                    'team', t2.team
                 )
-                ORDER BY t2.team_ts
-            ) AS team_history
+            )
+        ) AS team_history
     FROM (
         SELECT issue_id,
                COUNT(DISTINCT team) AS count_unique_teams
@@ -92,16 +94,18 @@ teams AS (
         WHERE team_ts IS NOT NULL
     ) AS t2 ON t1.issue_id = t2.issue_id
     LEFT JOIN (
-        SELECT issue_id,
-               ARRAY_AGG(
-                   STRUCT(
-                       assignee_id,
-                       assignee_email,
-                       assignee_role,
-                       assignee_ts
-                   )
-                   ORDER BY assignee_ts
-               ) AS assignee_history
+        SELECT
+            issue_id,
+            array_sort(
+                collect_list(
+                    named_struct(
+                        'assignee_ts', assignee_ts,
+                        'assignee_id', assignee_id,
+                        'assignee_email', assignee_email,
+                        'assignee_role', assignee_role
+                    )
+                )
+            ) AS assignee_history
         FROM {{ ref('fact_issues_assignee_history') }}
         WHERE assignee_id IS NOT NULL
         GROUP BY 1
@@ -144,11 +148,11 @@ issues_ AS (
            fi.last_time_assigned,
            fi.times_assigned,
            t.assignee_history,
-           t.team_history[SAFE_ORDINAL(1)].team AS first_team,
-           t.team_history[SAFE_ORDINAL(1)].team_ts AS first_team_ts,
-           t.team_history[SAFE_ORDINAL(ARRAY_LENGTH(team_history))].team AS last_team,
-           t.team_history[SAFE_ORDINAL(ARRAY_LENGTH(team_history))].team_ts AS last_team_ts,
-           ARRAY_LENGTH(t.team_history) - 1 AS count_changes_team,
+           team_history[0].team AS first_team,
+           team_history[0].team_ts AS first_team_ts,
+           team_history[size(team_history) - 1].team AS last_team,
+           team_history[size(team_history) - 1].team_ts AS last_team_ts,
+           GREATEST(size(team_history) - 1, 0) AS count_changes_team,
            t.team_history
     FROM sourcing_customer_reqeusts AS fcr
     /* Задачи сорсеров (в админке) */
@@ -157,26 +161,35 @@ issues_ AS (
     LEFT JOIN teams AS t ON fi.issue_id = t.issue_id
 ),
 issues AS (
-    SELECT issues_.*,
-           fd.self_service,
-           fd.deal_type,
-           fd.sourcing_deal_type,
-           CASE WHEN issue_ended_time IS NOT NULL THEN 1 ELSE 0 END AS is_issue_ended,
-           CASE WHEN issue_ended_time IS NOT NULL THEN DATE_DIFF(coalesce(last_time_assigned, issue_ended_time), issue_created_time, second) END AS in_queue_second,
-           CASE WHEN issue_ended_time IS NOT NULL THEN DATE_DIFF(issue_ended_time, last_time_assigned, second) END AS processing_second,
-           CASE WHEN issue_ended_time IS NOT NULL THEN DATE_DIFF(issue_ended_time, issue_created_time, second) END AS from_create_to_end_second,
-           CASE WHEN issue_status = 'Completed' AND issue_type = 'FindOffer' THEN
-               CASE
-                   WHEN sourcing_deal_type = 'vip' THEN 2
-                   ELSE 1
-               END
-               ELSE 0
-           END AS task_score,
-           coalesce(gh.grade, 'unknown') AS grade_by_issue_created_time
+    SELECT
+        issues_.*,
+        fd.self_service,
+        fd.deal_type,
+        fd.sourcing_deal_type,
+        CASE WHEN issue_ended_time IS NOT NULL THEN 1 ELSE 0 END AS is_issue_ended,
+        CASE WHEN issue_ended_time IS NOT NULL THEN
+            timestampdiff(SECOND, issue_created_time, coalesce(last_time_assigned, issue_ended_time))
+        END AS in_queue_second,
+        CASE WHEN issue_ended_time IS NOT NULL THEN
+            timestampdiff(SECOND, last_time_assigned, issue_ended_time)
+        END AS processing_second,
+        CASE WHEN issue_ended_time IS NOT NULL THEN
+            timestampdiff(SECOND, issue_created_time, issue_ended_time)
+        END AS from_create_to_end_second,
+        CASE WHEN issue_status = 'Completed' AND issue_type = 'FindOffer' THEN
+            CASE
+                WHEN sourcing_deal_type = 'vip' THEN 2
+                ELSE 1
+            END
+            ELSE 0
+        END AS task_score,
+        coalesce(gh.grade, 'unknown') AS grade_by_issue_created_time
     FROM issues_
-    LEFT JOIN fact_deals AS fd ON issues_.deal_id = fd.deal_id
-    LEFT JOIN grade_history AS gh ON issues_.user_id = gh.user_id
-                                 AND issues_.issue_created_time BETWEEN gh.grade_from_ts AND coalesce(gh.grade_to_ts, current_timestamp + INTERVAL 3 hour)
+    LEFT JOIN fact_deals AS fd
+        ON issues_.deal_id = fd.deal_id
+    LEFT JOIN grade_history AS gh
+        ON issues_.user_id = gh.user_id
+        AND issues_.issue_created_time BETWEEN gh.grade_from_ts AND coalesce(gh.grade_to_ts, current_timestamp + INTERVAL 3 hour)
 )
 
 SELECT *
