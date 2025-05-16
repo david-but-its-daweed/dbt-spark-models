@@ -11,12 +11,13 @@
 
 WITH fact_deals AS (
     SELECT deal_id,
+           issue_friendly_id AS deal_friendly_id,
            MAX(deal_type) AS deal_type,
            MAX(sourcing_deal_type) AS sourcing_deal_type,
            MAX(CASE WHEN self_service THEN 1 ELSE 0 END) AS self_service
     FROM {{ ref('fact_deals') }}
     WHERE next_effective_ts_msk IS NULL
-    GROUP BY 1
+    GROUP BY 1,2
 ),
 fact_issues AS (
     SELECT *
@@ -63,6 +64,9 @@ grade_history AS (
 ),
 sourcing_customer_reqeusts AS (
     SELECT fcr.*,
+           fd.deal_friendly_id,
+           fd.deal_type,
+           fd.sourcing_deal_type,
            fd.self_service,
            coalesce(u.current_grade, 'unknown') AS current_grade
     FROM fact_customer_requests AS fcr
@@ -117,6 +121,10 @@ teams AS (
 issues_ AS (
     SELECT fcr.customer_request_id,
            fcr.deal_id,
+           fcr.deal_friendly_id,
+           fcr.self_service,
+           fcr.deal_type,
+           fcr.sourcing_deal_type,
            fcr.user_id,
            fcr.country,
            fcr.category_name,
@@ -166,9 +174,6 @@ issues_ AS (
 issues AS (
     SELECT
         issues_.*,
-        fd.self_service,
-        fd.deal_type,
-        fd.sourcing_deal_type,
         CASE WHEN issue_ended_time IS NOT NULL THEN 1 ELSE 0 END AS is_issue_ended,
         CASE WHEN issue_ended_time IS NOT NULL THEN
             timestampdiff(SECOND, issue_created_time, coalesce(last_time_assigned, issue_ended_time))
@@ -188,8 +193,6 @@ issues AS (
         END AS task_score,
         coalesce(gh.grade, 'unknown') AS grade_by_issue_created_time
     FROM issues_
-    LEFT JOIN fact_deals AS fd
-        ON issues_.deal_id = fd.deal_id
     LEFT JOIN grade_history AS gh
         ON issues_.user_id = gh.user_id
         AND issues_.issue_created_time BETWEEN gh.grade_from_ts AND coalesce(gh.grade_to_ts, current_timestamp + INTERVAL 3 hour)
