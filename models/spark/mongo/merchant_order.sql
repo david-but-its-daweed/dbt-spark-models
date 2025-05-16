@@ -75,7 +75,7 @@ SELECT
                 WHEN discount.t = 4 THEN 'specialPromotion'
                 WHEN discount.t = 5 THEN 'smart'
                 WHEN discount.t = 6 THEN 'freebie'
-                WHEN discount.t = 7 THEN 'padPost'
+                WHEN discount.t = 7 THEN 'paidPost'
                 WHEN discount.t = 8 THEN 'merchantPromotion'
                 WHEN discount.t = 9 THEN 'couponForSubscription'
                 WHEN discount.t = 10 THEN 'priceElasticity'
