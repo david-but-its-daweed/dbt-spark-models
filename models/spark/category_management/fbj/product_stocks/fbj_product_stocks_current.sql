@@ -1,10 +1,12 @@
 {{
   config(
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
         'model_owner' : '@catman-analytics.duty',
         'bigquery_load': 'true'
-    },
+    }
   )
 }}
 
