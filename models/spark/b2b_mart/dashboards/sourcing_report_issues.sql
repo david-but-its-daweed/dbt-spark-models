@@ -24,6 +24,31 @@ fact_issues AS (
     WHERE next_effective_ts_msk IS NULL
       AND coalesce(assignee_role, 'null') IN ('null', 'SourcingManager', 'MerchantSupport')
 ),
+fact_customer_requests AS (
+    SELECT customer_request_id,
+           deal_id,
+           user_id,
+           country,
+           category_name,
+           status AS customer_request_status,
+           planned_offer_cost,
+           planned_offer_currency,
+           creation_source,
+           fake_door,
+           manual,
+           standart_deal,
+           rfq_deal,
+           sample,
+           merchant_price_currency,
+           merchant_price_per_item / 1000000 AS merchant_price_per_item,
+           merchant_price_total_amount / 1000000 AS merchant_price_total_amount,
+           created_time AS customer_request_created_time,
+           updated_time AS customer_request_updated_time
+    FROM {{ ref('fact_customer_requests') }}
+    WHERE country != 'RU'
+      AND DATE(created_time) >= '2024-04-01'
+      AND next_effective_ts_msk IS NULL
+),
 users AS (
     SELECT user_id,
            coalesce(nullIf(current_grade, 'unknown'), grade) AS current_grade
@@ -40,30 +65,7 @@ sourcing_customer_reqeusts AS (
     SELECT fcr.*,
            fd.self_service,
            coalesce(u.current_grade, 'unknown') AS current_grade
-    FROM (
-        SELECT customer_request_id,
-               deal_id,
-               user_id,
-               category_name,
-               status AS customer_request_status,
-               planned_offer_cost,
-               planned_offer_currency,
-               creation_source,
-               fake_door,
-               manual,
-               standart_deal,
-               rfq_deal,
-               sample,
-               merchant_price_currency,
-               merchant_price_per_item / 1000000 AS merchant_price_per_item,
-               merchant_price_total_amount / 1000000 AS merchant_price_total_amount,
-               created_time AS customer_request_created_time,
-               updated_time AS customer_request_updated_time
-        FROM {{ ref('fact_customer_requests') }}
-        WHERE country != 'RU'
-          AND DATE(created_time) >= '2024-04-01'
-          AND next_effective_ts_msk IS NULL
-    ) AS fcr
+    FROM fact_customer_requests AS fcr
     LEFT JOIN fact_deals AS fd ON fcr.deal_id = fd.deal_id
     LEFT JOIN users AS u ON fcr.user_id = u.user_id
 ),
@@ -116,6 +118,7 @@ issues_ AS (
     SELECT fcr.customer_request_id,
            fcr.deal_id,
            fcr.user_id,
+           fcr.country,
            fcr.category_name,
            fcr.customer_request_status,
            fcr.planned_offer_cost,
