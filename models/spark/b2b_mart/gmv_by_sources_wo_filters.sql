@@ -1179,5 +1179,5 @@ and a.order_id not in (
 '680b97be15cae29eeab8d363',
 '680b9b40c16758037ab113e8',
 '68022d08368397a2391d408c',
-'681de1c67bdffb86de51079d
+'681de1c67bdffb86de51079d'
     )
