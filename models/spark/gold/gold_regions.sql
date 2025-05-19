@@ -18,5 +18,31 @@ SELECT
     region_name,
     UPPER(country_code) AS country_code,
     region_name IN ('Europe', 'Africa', 'Other', 'CIS', 'LatAm') AS is_uniq,
-    IF(UPPER(country_code) IN ('RU', 'DE', 'FR', 'MD', 'UA', 'GB', 'CH', 'ES', 'IT', 'BY'), UPPER(country_code), 'Other') AS top_country_code
+    IF(UPPER(country_code) IN (
+        'RU',
+        'DE',
+        'UA',
+        'MD',
+        'CH',
+        'SE',
+        'FR',
+        'PL',
+        'GB',
+        'IL',
+        'NL',
+        'NO',
+        'AT',
+        'BE',
+        'RO',
+        'ES',
+        'KZ',
+        'IT',
+        'CZ',
+        'HU',  -- the last country with GMV share > 1%
+        'GR',
+        'LT',
+        'PT',
+        'AU',
+        'EE'
+    ), UPPER(country_code), 'Other') AS top_country_code  -- countries with GMV share > 0.5% of total
 FROM {{ ref('gold_regions_source') }}
