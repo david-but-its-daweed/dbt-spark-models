@@ -13,10 +13,11 @@ SELECT
     search_date AS partition_date,
     query,
     product_id
-FROM {{ ref('text_search_success_prepare_extracts') }}
+FROM {{ ref('search_success_prepare_extracts') }}
 WHERE
     query IS NOT NULL
     AND product_id IS NOT NULL
     AND has_purchase = 1
+    AND search_type = "text_search"
 GROUP BY 1, 2, 3
 ORDER BY 1

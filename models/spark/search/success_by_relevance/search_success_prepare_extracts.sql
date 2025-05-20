@@ -11,21 +11,45 @@
 ) }}
 WITH searches as (
     SELECT
-        device_id,
-        payload.query,
-        DATE(FROM_UNIXTIME(event_ts / 1000)) AS search_date,
-        FIRST(payload.numResults) AS numResults,
-        FIRST(event_ts) AS event_ts,
-        FIRST(payload.origin.source) AS source,
-        FIRST(payload.searchSessionId) AS searchSessionId,
-        FIRST(payload.searchRequestId) AS searchRequestId,
-        FIRST(device.pref_country) AS device_country,
-        FIRST(device.language) AS language,
-        FIRST(device.os_type) AS os_type
-    FROM {{ source('mart', 'device_events') }}
+        t.*,
+
+        element_at(
+            filter(payload.queryFilters['categoryId'].categories, x -> x IS NOT NULL),
+            1
+        ) AS search_category_id,
+        CASE
+            WHEN payload.query IS NOT NULL and payload.query <> "" THEN 'text_search'
+            WHEN search_category_id IS NOT NULL THEN 'category_search'
+            ELSE 'unknown_search'
+        END as search_type,
+        coalesce(search_category_id, payload.query) AS textQueryOrCategory,
+        DATE(FROM_UNIXTIME(event_ts / 1000)) AS search_date
+    FROM {{ source('mart', 'device_events') }} t
     WHERE partition_date >= DATE("2025-03-01")
-    AND type = "search" AND payload.query IS NOT NULL AND payload.query <> ""
-    GROUP BY device_id, payload.query, search_date
+    AND type = "search"
+),
+
+search_agg_with_category_names AS (
+    SELECT
+        s.device_id,
+        s.textQueryOrCategory,
+        s.search_type,
+        s.search_date,
+        FIRST(s.payload.query) as query,
+        FIRST(s.search_category_id) as search_category_id,
+        FIRST(s.payload.numResults) AS numResults,
+        FIRST(s.event_ts) AS event_ts,
+        FIRST(s.payload.origin.source) AS source,
+        FIRST(s.payload.searchSessionId) AS searchSessionId,
+        FIRST(s.payload.searchRequestId) AS searchRequestId,
+        FIRST(s.device.pref_country) AS device_country,
+        FIRST(s.device.language) AS language,
+        FIRST(s.device.os_type) AS os_type,
+
+        FIRST(a.nameRu) as category_name
+    FROM searches s
+    LEFT JOIN {{ source('mongo', 'abu_core_catalog_daily_snapshot') }} a ON (s.search_category_id = a._id)
+    GROUP BY s.device_id, s.search_type, s.textQueryOrCategory, s.search_date
 ),
 
 top_countries as (
@@ -41,7 +65,7 @@ searches_with_top_countries AS (
     SELECT
         s.*,
         t.top_country_code
-    FROM searches s
+    FROM search_agg_with_category_names s
     JOIN top_countries t
     ON (s.device_country == t.country_code)
 ),
@@ -52,6 +76,7 @@ query_stat_by_top_countries as (
         top_country_code,
         count(DISTINCT device_id, search_date) as freq
     FROM searches_with_top_countries
+    WHERE search_type = "text_search"
     GROUP BY 1, 2
 ),
 
@@ -99,6 +124,13 @@ clicks AS (
     GROUP BY device_id, product_id, event_date
 ),
 
+product_categories AS (
+    SELECT
+        id as product_id,
+        transform(publicCategoriesExpAbV2, x -> regexp_replace(x, '^[0-9]+:', '')) as clean_category_ids
+    FROM {{ source('search', 'current_index') }}
+),
+
 device_info AS (
     SELECT
         device_id,
@@ -122,6 +154,8 @@ SELECT
     c.clicks_context_query,
     c.clicks_context_name,
     q.frequency_cluster,
+    pc.clean_category_ids,
+    array_contains(pc.clean_category_ids, s.search_category_id) as category_relevance,
     DATEDIFF(c.event_date, s.search_date) as days_from_search_to_event
 FROM searches_with_top_countries s
 LEFT JOIN clicks c
@@ -130,3 +164,5 @@ JOIN device_info d
 ON (s.device_id = d.device_id AND s.search_date = d.date_msk)
 JOIN classified_queries_by_frequency q
 ON (s.query = q.query and s.top_country_code = q.top_country_code)
+LEFT JOIN product_categories pc
+ON (c.product_id = pc.product_id)
