@@ -21,5 +21,4 @@ WHERE
     AND product_id IS NOT NULL
     AND has_purchase = 1
     AND search_type = "text_search"
-GROUP BY 1, 2, 3
 ORDER BY 1
