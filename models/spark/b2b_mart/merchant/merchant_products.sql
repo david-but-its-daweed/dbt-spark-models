@@ -59,6 +59,7 @@ products AS (
         merchant_id,
         category_id,
         orig_name,
+        orig_main_image_url,
         created_date,
         IF(update_ts_msk = MAX(update_ts_msk) OVER (PARTITION BY product_id ORDER BY update_ts_msk), NULL, update_ts_msk) AS update_ts_msk
     FROM
@@ -137,6 +138,7 @@ result AS (
 
         p.product_id,
         p.orig_name AS product_name,
+        p.orig_main_image_url AS product_image_url,
 
         pc.status AS product_status,
         pc.reject_reason AS product_reject_reason,
