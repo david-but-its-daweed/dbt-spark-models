@@ -10,9 +10,11 @@
     }
 ) }}
 SELECT
-    search_date AS partition_date,
+    event_date AS partition_date,  -- дата покупки
+    search_date,
     query,
-    product_id
+    product_id,
+    searchRequestId
 FROM {{ ref('search_success_prepare_extracts') }}
 WHERE
     query IS NOT NULL

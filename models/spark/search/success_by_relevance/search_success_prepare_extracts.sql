@@ -146,6 +146,7 @@ device_info AS (
 SELECT
     s.*,
     c.product_id,
+    c.event_date,
     c.position,
     c.has_open,
     c.has_to_cart_or_favorite,
