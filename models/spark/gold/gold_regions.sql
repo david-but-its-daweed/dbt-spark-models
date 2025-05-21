@@ -42,7 +42,6 @@ SELECT
         'GR',
         'LT',
         'PT',
-        'AU',
         'EE'
     ), UPPER(country_code), 'Other') AS top_country_code  -- countries with GMV share > 0.5% of total
 FROM {{ ref('gold_regions_source') }}
