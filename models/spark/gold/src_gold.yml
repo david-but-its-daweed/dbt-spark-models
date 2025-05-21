@@ -15,7 +15,7 @@ models:
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -97,7 +97,7 @@ models:
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -177,7 +177,7 @@ models:
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -247,7 +247,7 @@ models:
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other'
     - name: app_language
@@ -313,7 +313,7 @@ models:
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other' (random value across all device_ids)
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of the region unique to the country ('Other' is set in case there is no corresponding region with the `is_uniq` flag for the country). In case the user requests the deletion of their personal data from our storage, the field will have the value 'Other' (random value across all device_ids)
     - name: app_language
@@ -381,9 +381,7 @@ models:
     - name: national_currency_code
       description: Country's national currency code (If the country has more than one national currency, an arbitrary one is displayed)
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
-    - name: macroregion_name
-      description: macroregion name ('CIS', 'WE' - Western Europe, 'EE' - Eastern Europe, 'RU' - RU + BY, 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
 
 - name: gold_merchant_categories
   description: Information about merchant categories. Each row in the table corresponds to a `merchant_category_id`.
@@ -509,7 +507,7 @@ models:
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case a user requests the deletion of their personal data from our storage, this field will take the value 'Other'.
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of the region unique to the country (`Other` is assigned in cases where there is no corresponding region for the country with the `is_uniq` flag). In case a user requests the deletion of their personal data from our storage, this field will take the value 'Other'.
     - name: origin_name
@@ -693,7 +691,7 @@ models:
     - name: top_country_code
       description: Top country code (A2 code or 'Other'). In case a user requests the deletion of their personal data from our storage, the field will be set to 'Other.'
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of a region unique to the country (`Other` is set if there is no corresponding region for the country with the 'is_uniq' flag). In case a user requests the deletion of their personal data from our storage, the field will be set to 'Other.'
     - name: is_new_device
@@ -863,7 +861,7 @@ models:
     - name: top_country_code
       description: Code of the top country (A2-code or 'Other'). In case a user requests the removal of their personal data from our storage, this field will have the value 'Other'.
     - name: country_priority_type
-      description: Focus priority type ('Moldova', 'Russia', 'Eastern Europe', 'Western Europe', 'Other')
+      description: Focus priority type ('Russia', 'Eastern Europe', 'Western Europe', 'Other')
     - name: region_name
       description: Name of a region unique to the country ('Other' is assigned in cases where there is no corresponding region with the 'is_uniq' flag for the country). In case a user requests the removal of their personal data from our storage, this field will have the value 'Other'.
     - name: origin_name
