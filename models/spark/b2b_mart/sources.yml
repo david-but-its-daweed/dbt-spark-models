@@ -57,6 +57,7 @@ sources:
       - name: b2b_core_promo_product_groups_daily_snapshot
       - name: b2b_core_quotes_daily_snapshot
       - name: b2b_core_i18ndata_daily_snapshot
+      - name: b2b_core_merchant_kyc_profiles_daily_snapshot
   - name: b2b_mart
     tables:
       - name: device_events

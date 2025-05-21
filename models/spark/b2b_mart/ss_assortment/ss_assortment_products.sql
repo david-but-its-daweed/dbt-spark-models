@@ -72,6 +72,8 @@ SELECT
     pp.sku,
     pp.storeId AS store_id,
 
+    IF(pp.merchantId = '66054380c33acc34a54a56d0', TRUE, FALSE) AS is_ali1688_product,
+
     MILLIS_TO_TS_MSK(pp.updatedTimeMs) AS update_ts_msk,
     DATE(MILLIS_TO_TS_MSK(pp.updatedTimeMs)) AS update_date,
     MILLIS_TO_TS_MSK(pp.publishedTimeMs) AS published_ts_msk,
@@ -81,4 +83,3 @@ LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
 LEFT JOIN matching AS m ON pp._id = m.product_id
 WHERE
     pp.dbt_valid_to IS NULL
-    AND pp.merchantId = '66054380c33acc34a54a56d0'
