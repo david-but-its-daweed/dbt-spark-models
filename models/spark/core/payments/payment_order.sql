@@ -190,7 +190,7 @@ SELECT
     po.klarna_desctription,
     po.klarna_type,
     po.is_visa_discount_applicable,
-
+    po.app_entity,
     ROW_NUMBER() OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int ORDER BY po.created_time)
     AS number_attempt_provider_payment_type,
     MAX(po.is_success) OVER (PARTITION BY po.device_day, po.provider, po.payment_type, po.is_new_card_int)
@@ -251,11 +251,13 @@ SELECT
     oi.psp_chargeback_fee,
     oi.order_gross_profit_final_estimated,
     oi.gmv_initial,
-    COALESCE (po.is_success = 1
-    AND ROW_NUMBER() OVER (
-        PARTITION BY po.order_group_id
-        ORDER BY CASE WHEN po.is_success = 1 THEN po.created_time END
-    ) = 1, FALSE) AS is_first_success_po_over_order_group,
+    COALESCE(
+        po.is_success = 1
+        AND ROW_NUMBER() OVER (
+            PARTITION BY po.order_group_id
+            ORDER BY CASE WHEN po.is_success = 1 THEN po.created_time END
+        ) = 1, FALSE
+    ) AS is_first_success_po_over_order_group,
 
     COALESCE(oi.shipping_country, 'unknown') AS shipping_country,
     COALESCE(ai.ads_source, '-') AS ads_source,
