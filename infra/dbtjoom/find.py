@@ -1,4 +1,4 @@
-from typing import Optional, Set, Union, List, Literal
+from typing import *
 
 from infra.dbtjoom.invocation import ls
 from infra.dbtjoom.load import load_manifest, load_dbt_run_results
@@ -15,7 +15,7 @@ def find_children_models(model: Node, all_models: List[Node]) -> Set[str]:
     return all_children_models
 
 
-def fill_gaps_between_nodes(all_nodes: dict[str, Node], node_unique_ids: Set[str]) -> Set[str]:
+def fill_gaps_between_nodes(all_nodes: Dict[str, Node], node_unique_ids: Set[str]) -> Set[str]:
     """
     Add all intermediate nodes between nodes listed in node_unique_ids
     Use-case
