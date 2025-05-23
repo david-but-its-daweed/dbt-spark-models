@@ -18,10 +18,11 @@ def run(command, throw_on_fail: bool = True) -> str:
         )
         return result.stdout.decode('utf8')
     except subprocess.CalledProcessError as e:
+        output = e.stdout.decode('utf8') if e.stdout else '<no output>'
+        err = e.stdout.decode('utf8') if e.stderr else ''
+        logger.error(f"Error executing command: {e}\nOutput:\n{output}\n{err}")
         if throw_on_fail:
             raise
-        logger.error(f"Error executing command: {e}")
-
 
 
 def get_changed_files():

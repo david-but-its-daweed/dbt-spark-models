@@ -12,9 +12,12 @@ def drop_model_output(
         include_incremental: bool,
         dryrun: bool = False
 ):
-    if not node.is_table or (include_incremental and node.is_incremental):
-        logger.info(f"Model {node.unique_id} is a {node.materialized}, not a table or an incremental model "
-                    f"with full_refresh specified. Location will not be dropped")
+    if node.is_incremental and not include_incremental:
+        logger.info(f"Model {node.unique_id} is incremental and --full-refresh is not specified. Skip dropping location")
+        return
+
+    if not node.is_table and not(node.is_incremental and include_incremental):
+        logger.info(f"Model {node.unique_id} is not a table. Skip dropping location")
         return
 
     if junk and not node.relation_name.startswith("junk"):
