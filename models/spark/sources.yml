@@ -236,4 +236,5 @@ sources:
 
   - name: search
     tables:
-      - name: current_index
+      - name: actual_index_export
+      - name: text_search_success_filter_marked_up
