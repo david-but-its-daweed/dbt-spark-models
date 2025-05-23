@@ -115,7 +115,7 @@ sessions_with_rownum AS (
     FROM sessions_with_id
 ),
 
-final AS (
+full AS (
     SELECT
         user_id,
         session_id,
@@ -146,19 +146,60 @@ final AS (
         ) AS unique_devices_in_session
     FROM sessions_with_rownum
     GROUP BY 1, 2, 3
+),
+
+stg AS (
+    SELECT 
+        user_id, 
+        CASE 
+            WHEN INSTR(FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl, 'pt-br') > 0 OR INSTR(FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl, 'br_search') > 0 THEN 'brasil'
+            WHEN INSTR(FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl, 'es-mx') > 0 THEN 'mexico'
+            WHEN INSTR(FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl, 'en-us') > 0 THEN 'usa'
+            WHEN INSTR(FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl, 'en-gb') > 0 THEN 'uk'
+            WHEN INSTR(FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl, 'joompro.ru') > 0 THEN 'russia'
+        END AS landing,
+        COUNT(*) AS cnt
+    FROM full
+    LATERAL VIEW EXPLODE(events_in_session) AS events
+    WHERE 1=1
+        AND FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl IS NOT NULL
+        AND FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl != 'https://joom.pro/'
+        AND NOT STARTSWITH(FROM_JSON(events.event_params, 'pageUrl STRING').pageUrl, 'https://analytics.joom.pro/')
+    GROUP BY
+        1, 2
+),
+
+ranked_links AS (
+    SELECT
+        user_id,
+        landing,
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY cnt DESC) AS rn
+    FROM stg
+    WHERE landing IS NOT NULL
+),
+
+country AS (
+    SELECT
+        user_id,
+        landing AS country_code
+    FROM ranked_links
+    WHERE rn = 1
 )
 
 SELECT
-    user_id,
-    session_id,
-    session_num,
-    session_start,
-    session_end,
-    session_duration_seconds,
-    first_event_name,
-    last_event_name,
-    events_in_session_count,
-    events_in_session_unique_count,
-    events_in_session,
-    unique_devices_in_session
-FROM final
+    f.user_id,
+    c.country_code,
+
+    f.session_id,
+    f.session_num,
+    f.session_start,
+    f.session_end,
+    f.session_duration_seconds,
+    f.first_event_name,
+    f.last_event_name,
+    f.events_in_session_count,
+    f.events_in_session_unique_count,
+    f.events_in_session,
+    f.unique_devices_in_session
+FROM full AS f
+LEFT JOIN country AS c ON f.user_id = c.user_id
