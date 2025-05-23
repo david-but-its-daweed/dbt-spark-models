@@ -206,6 +206,7 @@ sources:
     tables:
       - name: mercadolibre_products_snapshot
       - name: cube_mlb_products
+      - name: items_parsed_number
 
   - name: joompro_analytics
     tables:
