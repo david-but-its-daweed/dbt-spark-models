@@ -1,0 +1,93 @@
+version: 1
+
+models:
+  - name: fbj_parcel_speed
+    description: "Table containing statistics about parcel speed with FBJ, FBM and mixed items"
+    columns:
+      - name: dt
+        description: "Date of data in this row"
+        data_type: "DATE"
+
+      - name: country_type
+        description: "Type on country: total, RU, nonRU"
+        data_type: "STRING"
+
+      - name: parcel_cnt
+        description: "Count of parcels"
+        data_type: "LONG"
+
+      - name: avg_dif_days
+        description: "Average time from the min order created time in the parcel till the max order outbounded time in the parcel, days"
+        data_type: "DOUBLE"
+
+      - name: avg_quantity_in_parcel
+        description: "Average count of items in one parcel"
+        data_type: "DOUBLE"
+
+      - name: avg_orders_in_parcel
+        description: "Average count of orders in one parcel"
+        data_type: "DOUBLE"
+
+      - name: fbj_parcel_cnt
+        description: "Count of parcels with only fbj orders"
+        data_type: "LONG"
+
+      - name: avg_fbj_dif_days
+        description: "Average time from the min order created time in the parcel till the max order outbounded time in the parcel for parcels with only fbj orders, days"
+        data_type: "DOUBLE"
+
+      - name: avg_quantity_in_fbj_parcel
+        description: "Average count of items in one parcel with only fbj orders"
+        data_type: "DOUBLE"
+
+      - name: avg_orders_in_fbj_parcel
+        description: "Average count of orders in one parcel with only fbj orders"
+        data_type: "DOUBLE"
+
+      - name: not_only_fbj_parcel_cnt
+        description: "Count of parcels with not only fbj orders"
+        data_type: "LONG"
+  
+      - name: avg_not_only_fbj_dif_days
+        description: "Average time from the min order created time in the parcel till the max order outbounded time in the parcel for parcels with not only fbj orders, days"
+        data_type: "DOUBLE"
+
+      - name: avg_quantity_in_not_only_fbj_parcel
+        description: "Average count of items in one parcel with not only fbj orders"
+        data_type: "DOUBLE"
+      
+      - name: avg_orders_in_not_only_fbj_parcel
+        description: "Average count of orders in one parcel with not only fbj orders"
+        data_type: "DOUBLE"
+
+      - name: avg_fbj_quantity_in_not_only_fbj_parcel
+        description: "Average count of fbj items in one parcel with not only fbj orders"
+        data_type: "DOUBLE"
+      
+      - name: avg_fbj_orders_in_not_only_fbj_parcel
+        description: "Average count of fbj orders in one parcel with not only fbj orders"
+        data_type: "DOUBLE"
+
+      - name: avg_fbj_quantity_share_in_not_only_fbj_parcel
+        description: "Average share of fbj items in one parcel with not only fbj orders"
+        data_type: "DOUBLE"
+      
+      - name: avg_fbj_order_share_in_not_only_fbj_parcel
+        description: "Average share of fbj orders in one parcel with not only fbj orders"
+        data_type: "DOUBLE"
+
+      - name: not_fbj_parcel_cnt
+        description: "Count of parcels with not fbj orders"
+        data_type: "LONG"
+  
+      - name: avg_not_fbj_dif_days
+        description: "Average time from the min order created time in the parcel till the max order outbounded time in the parcel for parcels with not fbj orders, days"
+        data_type: "DOUBLE"
+
+      - name: avg_quantity_in_not_fbj_parcel
+        description: "Average count of items in one parcel with not fbj orders"
+        data_type: "DOUBLE"
+      
+      - name: avg_orders_in_not_fbj_parcel
+        description: "Average count of orders in one parcel with not fbj orders"
+        data_type: "DOUBLE"
