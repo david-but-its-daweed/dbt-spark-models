@@ -22,5 +22,4 @@ WHERE
     AND a.product_id IS NOT NULL
     AND a.has_purchase = 1
     AND a.search_type = 'text_search'
-ORDER BY
-    a.partition_date
+ORDER BY 1
