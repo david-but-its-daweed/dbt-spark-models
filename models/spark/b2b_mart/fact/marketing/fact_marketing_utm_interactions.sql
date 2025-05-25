@@ -25,7 +25,7 @@ gclid,
 pageUrl 
 from 
   {{ ref('ss_events_startsession') }}
-where landing = 'pt-br'
+where landing IN ('pt-br', 'es-mx')
     and bot_flag = 0 
 ----qualify max(bot_flag) Over(partition by user_id order by event_msk_date ) = 0
 ),
