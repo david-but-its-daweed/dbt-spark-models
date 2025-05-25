@@ -12,125 +12,155 @@
     }
 ) }}
 
-with 
-interactions as (
-select user_id, friendly_source, utm_campaign from {{ ref('fact_marketing_utm_interactions') }}
-where first_visit_flag ) ,
-ss_users as (select user_id,questionnaire_grade,Marketing_Lead_Type, 1 as ss_user
- from  {{ ref('ss_users_table') }}
- ), 
-cohort as (
-select 
-user_id, 
-min(event_msk_date) as cohort_date,
-DATE_TRUNC( min(event_msk_date), WEEK(MONDAY))  as cohort_week, 
-DATE_TRUNC( min(event_msk_date), MONTH)  as cohort_month,
-DATE_DIFF(DATE_TRUNC( current_date() ,WEEK(MONDAY)) , DATE_TRUNC( min(event_msk_date), WEEK(MONDAY)) , WEEK) as max_week_number, 
-DATE_DIFF(DATE_TRUNC( current_date() ,MONTH ) , DATE_TRUNC( min(event_msk_date), MONTH) , MONTH) as max_month_number
-from  {{ ref('ss_events_startsession') }}
-where landing IN ('pt-br', 'es-mx') AND bot_flag != 1 
-group by 1),
-activity as (
-  select user_id, 
-       event_msk_date 
-  from  {{ ref('ss_events_startsession') }} st
-  group by all 
-),
-activity_week as (
-  select 
-  cohort.user_id, 
-  DATE_DIFF( event_msk_date , cohort_week , WEEK) as  week_number,
-  max(1) as is_active 
-  from cohort 
-  join activity using(user_id)
-  group by all 
-),
-activity_month as (
-  select 
-  cohort.user_id, 
-  DATE_DIFF( event_msk_date , cohort_month , WEEK) as  month_number,
-  max(1) as is_active 
-  from cohort 
-  join activity using(user_id)
-  group by all 
+WITH 
+interactions AS (
+  SELECT 
+    user_id, 
+    friendly_source, 
+    utm_campaign 
+  FROM {{ ref('fact_marketing_utm_interactions') }}
+  WHERE first_visit_flag
 ),
 
-deals as (select 
-                 deal_created_date,
-                 deal_id, 
-                 user_id,
-                 coalesce(final_gmv, 0) final_gmv
+ss_users AS (
+  SELECT 
+    user_id,
+    questionnaire_grade,
+    Marketing_Lead_Type,
+    1 AS ss_user
+  FROM {{ ref('ss_users_table') }}
+), 
 
-from {{ ref('fact_deals_with_requests') }}
-where deal_type != 'Sample'
+cohort AS (
+  SELECT 
+    user_id, 
+    MIN(event_msk_date) AS cohort_date,
+    DATE_TRUNC('WEEK', MIN(event_msk_date)) AS cohort_week, 
+    DATE_TRUNC('MONTH', MIN(event_msk_date)) AS cohort_month,
+    FLOOR(DATEDIFF(DATE_TRUNC('WEEK', current_date()), DATE_TRUNC('WEEK', MIN(event_msk_date))) / 7) AS max_week_number, 
+    CAST(MONTHS_BETWEEN(DATE_TRUNC('MONTH', current_date()), DATE_TRUNC('MONTH', MIN(event_msk_date))) AS INT) AS max_month_number
+  FROM {{ ref('ss_events_startsession') }}
+  WHERE landing IN ('pt-br', 'es-mx') AND bot_flag != 1 
+  GROUP BY user_id
 ),
-base_s as (
-select * , 
-DATE_DIFF(DATE_TRUNC( deal_created_date, MONTH), cohort_month, Month) as month_number, 
-DATE_DIFF(DATE_TRUNC( deal_created_date, WEEK(MONDAY)), cohort_week, WEEK) as week_number
-from cohort
-join deals using(user_id)
-where deal_created_date >= cohort_date
-),
-agg_week as (
-  select user_id,
-     week_number, 
-     count(deal_id) deals, sum(final_gmv) as gmv
- from base_s 
-where week_number is not null  
-group by ALL
-),
-agg_month as (
-  select user_id,
-     month_number, 
-    count(deal_id) deals, sum(final_gmv) as gmv
 
- from base_s 
-where month_number is not null  
-group by ALL
+activity AS (
+  SELECT 
+    user_id, 
+    event_msk_date 
+  FROM {{ ref('ss_events_startsession') }}
+  GROUP BY user_id, event_msk_date
 ),
-counter as (SELECT x 
-FROM UNNEST(GENERATE_ARRAY(0, 500)) AS x),
-week_retention as (
-select 
-'week' as retention_detalization,
-cohort.*,
-x as period_number, 
-coalesce(is_active, 0) as is_active, 
-coalesce(deals,0) as deals,
-coalesce(gmv,0) as gmv
-from cohort 
-join counter on counter.x <= max_week_number
-left join agg_week on agg_week.user_id = cohort.user_id and agg_week.week_number = counter.x 
-left join activity_week on activity_week.user_id = cohort.user_id and activity_week.week_number = counter.x 
+
+activity_week AS (
+  SELECT 
+    cohort.user_id, 
+    FLOOR(DATEDIFF(event_msk_date, cohort_week) / 7) AS week_number,
+    MAX(1) AS is_active 
+  FROM cohort 
+  JOIN activity USING(user_id)
+  GROUP BY cohort.user_id, cohort_week, event_msk_date
 ),
-month_retention as (
-select 
-'month' as retention_detalization,
-cohort.*,
-x as period_number, 
-coalesce(is_active, 0) as is_active, 
-coalesce(deals,0) as deals,
-coalesce(gmv,0) as gmv
-from cohort 
-join counter on counter.x <= max_month_number
-left join agg_month on agg_month.user_id = cohort.user_id and agg_month.month_number = counter.x 
-left join activity_month on activity_month.user_id = cohort.user_id and activity_month.month_number = counter.x
+
+activity_month AS (
+  SELECT 
+    cohort.user_id, 
+    CAST(MONTHS_BETWEEN(event_msk_date, cohort_month) AS INT) AS month_number,
+    MAX(1) AS is_active 
+  FROM cohort 
+  JOIN activity USING(user_id)
+  GROUP BY cohort.user_id, cohort_month, event_msk_date
 ),
-data_ as (
-select * from month_retention 
-union all
-select * from week_retention
+
+deals AS (
+  SELECT 
+    deal_created_date,
+    deal_id, 
+    user_id,
+    COALESCE(final_gmv, 0) AS final_gmv
+  FROM {{ ref('fact_deals_with_requests') }}
+  WHERE deal_type != 'Sample'
+),
+
+base_s AS (
+  SELECT *, 
+    CAST(MONTHS_BETWEEN(DATE_TRUNC('MONTH', deal_created_date), cohort_month) AS INT) AS month_number, 
+    FLOOR(DATEDIFF(DATE_TRUNC('WEEK', deal_created_date), cohort_week) / 7) AS week_number
+  FROM cohort
+  JOIN deals USING(user_id)
+  WHERE deal_created_date >= cohort_date
+),
+
+agg_week AS (
+  SELECT 
+    user_id,
+    week_number, 
+    COUNT(deal_id) AS deals, 
+    SUM(final_gmv) AS gmv
+  FROM base_s 
+  WHERE week_number IS NOT NULL  
+  GROUP BY user_id, week_number
+),
+
+agg_month AS (
+  SELECT 
+    user_id,
+    month_number, 
+    COUNT(deal_id) AS deals, 
+    SUM(final_gmv) AS gmv
+  FROM base_s 
+  WHERE month_number IS NOT NULL  
+  GROUP BY user_id, month_number
+),
+
+counter AS (
+  SELECT posexplode(sequence(0, 500)) AS (x, dummy)  -- sequence от 0 до 500
+),
+
+week_retention AS (
+  SELECT 
+    'week' AS retention_detalization,
+    cohort.*,
+    x AS period_number, 
+    COALESCE(is_active, 0) AS is_active, 
+    COALESCE(deals, 0) AS deals,
+    COALESCE(gmv, 0) AS gmv
+  FROM cohort 
+  JOIN counter ON x <= max_week_number
+  LEFT JOIN agg_week ON agg_week.user_id = cohort.user_id AND agg_week.week_number = x 
+  LEFT JOIN activity_week ON activity_week.user_id = cohort.user_id AND activity_week.week_number = x 
+),
+
+month_retention AS (
+  SELECT 
+    'month' AS retention_detalization,
+    cohort.*,
+    x AS period_number, 
+    COALESCE(is_active, 0) AS is_active, 
+    COALESCE(deals, 0) AS deals,
+    COALESCE(gmv, 0) AS gmv
+  FROM cohort 
+  JOIN counter ON x <= max_month_number
+  LEFT JOIN agg_month ON agg_month.user_id = cohort.user_id AND agg_month.month_number = x 
+  LEFT JOIN activity_month ON activity_month.user_id = cohort.user_id AND activity_month.month_number = x
+),
+
+data_ AS (
+  SELECT * FROM month_retention 
+  UNION ALL
+  SELECT * FROM week_retention
 )
-select 
-data_.*, 
-friendly_source, 
-utm_campaign , 
-questionnaire_grade,
-Marketing_Lead_Type, 
-coalesce( ss_user, 0) as ss_user
-from data_
-left join interactions using(user_id)
-left join ss_users using(user_id)
+
+SELECT 
+  data_.*, 
+  friendly_source, 
+  utm_campaign, 
+  questionnaire_grade,
+  Marketing_Lead_Type, 
+  COALESCE(ss_user, 0) AS ss_user
+FROM data_
+LEFT JOIN interactions USING(user_id)
+LEFT JOIN ss_users USING(user_id)
+
 
 
