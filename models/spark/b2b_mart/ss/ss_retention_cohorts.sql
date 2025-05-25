@@ -70,7 +70,7 @@ DATE_DIFF(DATE_TRUNC( deal_created_date, MONTH), cohort_month, Month) as month_n
 DATE_DIFF(DATE_TRUNC( deal_created_date, WEEK(MONDAY)), cohort_week, WEEK) as week_number
 from cohort
 join deals using(user_id)
-where deal_created_date >= cohort_date and 
+where deal_created_date >= cohort_date
 ),
 agg_week as (
   select user_id,
