@@ -14,7 +14,7 @@
 
 with 
 interactions as (
-select user_id, friendly_source, utm_campaign from `b2b_mart.fact_marketing_utm_interactions` 
+select user_id, friendly_source, utm_campaign from {{ ref('fact_marketing_utm_interactions') }}
 where first_visit_flag ) ,
 ss_users as (select user_id,questionnaire_grade,Marketing_Lead_Type, 1 as ss_user
  from  {{ ref('ss_users_table') }}
