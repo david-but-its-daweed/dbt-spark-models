@@ -70,25 +70,25 @@ SELECT
     --AVG(fbj_orders_in_parcel) AS avg_fbj_orders_in_parcel,
     --
     COUNT(IF(orders_in_parcel = fbj_orders_in_parcel, parcel_id, null)) AS fbj_parcel_cnt,
-    AVG(IF(orders_in_parcel = fbj_orders_in_parcel, dif_days, null)) AS avg_fbj_dif_days,
-    AVG(IF(orders_in_parcel = fbj_orders_in_parcel, quantity_in_parcel, null)) AS avg_quantity_in_fbj_parcel, -- в среднем штучек в fbj посылке
-    AVG(IF(orders_in_parcel = fbj_orders_in_parcel, orders_in_parcel, null)) AS avg_orders_in_fbj_parcel, -- в среднем заказов в fbj посылке
-    AVG(IF(orders_in_parcel = fbj_orders_in_parcel, fbj_quantity_in_parcel, null)) AS avg_fbj_quantity_in_fbj_parcel, -- в среднем штучек в fbj посылке
-    AVG(IF(orders_in_parcel = fbj_orders_in_parcel, fbj_orders_in_parcel, null)) AS avg_fbj_orders_in_fbj_parcel, -- в среднем заказов в fbj посылке
+    ROUND(AVG(IF(orders_in_parcel = fbj_orders_in_parcel, dif_days, null)), 3) AS avg_fbj_dif_days,
+    ROUND(AVG(IF(orders_in_parcel = fbj_orders_in_parcel, quantity_in_parcel, null)), 3) AS avg_quantity_in_fbj_parcel, -- в среднем штучек в fbj посылке
+    ROUND(AVG(IF(orders_in_parcel = fbj_orders_in_parcel, orders_in_parcel, null)), 3) AS avg_orders_in_fbj_parcel, -- в среднем заказов в fbj посылке
+    ROUND(AVG(IF(orders_in_parcel = fbj_orders_in_parcel, fbj_quantity_in_parcel, null)), 3) AS avg_fbj_quantity_in_fbj_parcel, -- в среднем штучек в fbj посылке
+    ROUND(AVG(IF(orders_in_parcel = fbj_orders_in_parcel, fbj_orders_in_parcel, null)), 3) AS avg_fbj_orders_in_fbj_parcel, -- в среднем заказов в fbj посылке
     --
     COUNT(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, parcel_id, null)) AS not_only_fbj_parcel_cnt,
-    AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, dif_days, null)) AS avg_not_only_fbj_dif_days,
-    AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, quantity_in_parcel, null)) AS avg_quantity_in_not_only_fbj_parcel, -- в среднем штучек в посылке
-    AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, orders_in_parcel, null)) AS avg_orders_in_not_only_fbj_parcel, -- в среднем заказов в осылке
-    AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_quantity_in_parcel, null)) AS avg_fbj_quantity_in_not_only_fbj_parcel, -- в среднем fbj штучек в посылке
-    AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_orders_in_parcel, null)) AS avg_fbj_orders_in_not_only_fbj_parcel, -- в среднем заказов в fbj посылке
-    AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_quantity_in_parcel / quantity_in_parcel, null)) AS avg_fbj_quantity_share_in_not_only_fbj_parcel,
-    AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_orders_in_parcel / orders_in_parcel, null)) AS avg_fbj_order_share_in_not_only_fbj_parcel,
+    ROUND(AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, dif_days, null)), 3) AS avg_not_only_fbj_dif_days,
+    ROUND(AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, quantity_in_parcel, null)), 3) AS avg_quantity_in_not_only_fbj_parcel, -- в среднем штучек в посылке
+    ROUND(AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, orders_in_parcel, null)), 3) AS avg_orders_in_not_only_fbj_parcel, -- в среднем заказов в осылке
+    ROUND(AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_quantity_in_parcel, null)), 3) AS avg_fbj_quantity_in_not_only_fbj_parcel, -- в среднем fbj штучек в посылке
+    ROUND(AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_orders_in_parcel, null)), 3) AS avg_fbj_orders_in_not_only_fbj_parcel, -- в среднем заказов в fbj посылке
+    ROUND(AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_quantity_in_parcel / quantity_in_parcel, null)), 3) AS avg_fbj_quantity_share_in_not_only_fbj_parcel,
+    ROUND(AVG(IF(orders_in_parcel <> fbj_orders_in_parcel AND fbj_orders_in_parcel > 0, fbj_orders_in_parcel / orders_in_parcel, null)), 3) AS avg_fbj_order_share_in_not_only_fbj_parcel,
     --
     COUNT(IF(fbj_orders_in_parcel = 0, parcel_id, null)) AS not_fbj_parcel_cnt,
-    AVG(IF(fbj_orders_in_parcel = 0, dif_days, null)) AS avg_not_fbj_dif_days,
-    AVG(IF(fbj_orders_in_parcel = 0, quantity_in_parcel, null)) AS avg_quantity_in_not_fbj_parcel, -- в среднем штучек в fbj посылке
-    AVG(IF(fbj_orders_in_parcel = 0, orders_in_parcel, null)) AS avg_orders_in_not_fbj_parcel--, -- в среднем заказов в fbj посылке
+    ROUND(AVG(IF(fbj_orders_in_parcel = 0, dif_days, null)), 3) AS avg_not_fbj_dif_days,
+    ROUND(AVG(IF(fbj_orders_in_parcel = 0, quantity_in_parcel, null)), 3) AS avg_quantity_in_not_fbj_parcel, -- в среднем штучек в fbj посылке
+    ROUND(AVG(IF(fbj_orders_in_parcel = 0, orders_in_parcel, null)), 3) AS avg_orders_in_not_fbj_parcel--, -- в среднем заказов в fbj посылке
     --AVG(IF(fbj_orders_in_parcel = 0, fbj_quantity_in_parcel, null)) AS avg_fbj_quantity_in_not_fbj_parcel, -- в среднем штучек в fbj посылке
     --AVG(IF(fbj_orders_in_parcel = 0, fbj_orders_in_parcel, null)) AS avg_fbj_orders_in_not_fbj_parcel -- в среднем заказов в fbj посылке
 FROM data
