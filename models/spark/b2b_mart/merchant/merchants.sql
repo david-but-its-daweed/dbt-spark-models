@@ -23,11 +23,11 @@ SELECT
     END AS kyc_status,
 
     m.enabled AS is_enabled,
-    (DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) >= '2025-03-01' AND map.type = '2') AS is_internal,
+    (DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) >= '2025-03-01' AND ap.type = '2') AS is_internal,
     DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) AS created_date
 FROM
-    mongo.b2b_core_merchants_daily_snapshot AS m
+    {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }} AS m
 LEFT JOIN
-    mongo.b2b_core_merchant_appendixes_daily_snapshot AS map ON m._id = map._id
+    {{ source('mongo', 'b2b_core_merchant_appendixes_daily_snapshot') }} AS ap ON m._id = ap._id
 LEFT JOIN
-    mongo.b2b_core_merchant_kyc_profiles_daily_snapshot AS kyc ON m._id = kyc._id
+    {{ source('mongo', 'b2b_core_merchant_kyc_profiles_daily_snapshot') }} AS kyc ON m._id = kyc._id
