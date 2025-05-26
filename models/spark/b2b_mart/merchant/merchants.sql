@@ -23,7 +23,7 @@ SELECT
     END AS kyc_status,
 
     m.enabled AS is_enabled,
-    (DATE(FROM_UNIXTIME(m.createdTimeMs)) >= '2025-03-01' AND map.type = '2') AS is_internal,
+    (DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) >= '2025-03-01' AND map.type = '2') AS is_internal,
     DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) AS created_date
 FROM
     mongo.b2b_core_merchants_daily_snapshot AS m
