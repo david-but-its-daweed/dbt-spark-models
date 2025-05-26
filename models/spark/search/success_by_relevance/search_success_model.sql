@@ -6,7 +6,7 @@
     meta = {
         'model_owner': '@itangaev',
         'team': 'search',
-        'bigquery_load': 'false'
+        'bigquery_load': 'true'
     }
 ) }}
 WITH markup AS (
