@@ -63,9 +63,9 @@ SELECT
     dt,
     country_type,
     COUNT(parcel_id) AS parcel_cnt, -- количество посылок всего
-    AVG(dif_days) AS avg_dif_days, -- скорость посылок средняя
-    AVG(quantity_in_parcel) AS avg_quantity_in_parcel, -- в среднем штучек в посылке
-    AVG(orders_in_parcel) AS avg_orders_in_parcel, -- в среднем заказов в посылке
+    ROUND(AVG(dif_days), 3) AS avg_dif_days, -- скорость посылок средняя
+    ROUND(AVG(quantity_in_parcel), 3) AS avg_quantity_in_parcel, -- в среднем штучек в посылке
+    ROUND(AVG(orders_in_parcel), 3) AS avg_orders_in_parcel, -- в среднем заказов в посылке
     --AVG(fbj_quantity_in_parcel) AS avg_fbj_quantity_in_parcel,
     --AVG(fbj_orders_in_parcel) AS avg_fbj_orders_in_parcel,
     --
