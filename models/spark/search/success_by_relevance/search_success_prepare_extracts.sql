@@ -176,7 +176,7 @@ LEFT JOIN clicks AS c
 JOIN device_info AS d
     ON s.device_id = d.device_id
     AND s.search_date = d.date_msk
-JOIN classified_queries_by_frequency AS q
+LEFT JOIN classified_queries_by_frequency AS q
     ON s.query = q.query
     AND s.top_country_code = q.top_country_code
 LEFT JOIN product_categories AS pc
