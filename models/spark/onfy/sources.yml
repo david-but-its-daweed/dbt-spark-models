@@ -8,6 +8,7 @@ sources:
       - name: ads_dashboard
       - name: refunds
       - name: auto_discount_rules
+      - name: promocodes_dash
   - name: pharmacy_landing
     tables:
       - name: product_category_flat

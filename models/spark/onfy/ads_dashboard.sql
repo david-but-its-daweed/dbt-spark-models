@@ -1,6 +1,7 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    file_format='delta',
     partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
@@ -45,7 +46,7 @@ corrected_sources as
             else 'onfy'
         end as partner,
         coalesce(next_source_dt, source_dt + interval 168 hours) as window_next_session
-    from {{source('onfy', 'sources')}} 
+    from {{source('onfy', 'sources')}}
     where 1=1
 
 ),
@@ -56,24 +57,30 @@ corrected_sources as
 order_data as 
 (
     select 
-        user_email_hash,
-        device_id,
-        order_id,
-        order_created_time_cet,
-        date_trunc('day', order_created_time_cet) as order_created_date_cet,
-        purchase_num,
-        sum(if(type = 'DISCOUNT', price, 0)) as promocode_discount,
-        sum(gmv_initial) as gmv_initial,
-        sum(gross_profit_initial) as gross_profit_initial
+        transactions.user_email_hash,
+        transactions.device_id,
+        transactions.order_id,
+        transactions.order_created_time_cet,
+        date_trunc('day', transactions.order_created_time_cet) as order_created_date_cet,
+        transactions.purchase_num,
+        promocode_id,
+        promocode_name,
+        sum(if(type = 'DISCOUNT', transactions.price, 0)) as promocode_discount,
+        sum(transactions.gmv_initial) as gmv_initial,
+        sum(transactions.gross_profit_initial) as gross_profit_initial
     from {{source('onfy', 'transactions')}}
+    left join {{source('onfy', 'promocodes_dash')}}
+        on promocodes_dash.order_id = transactions.order_id
     where 1=1
         and currency = 'EUR'
     group by 
-        user_email_hash,
-        device_id,
-        order_id,
-        order_created_time_cet,
-        purchase_num
+        transactions.user_email_hash,
+        transactions.device_id,
+        transactions.order_id,
+        transactions.order_created_time_cet,
+        transactions.purchase_num,
+        promocode_id,
+        promocode_name
 ),
 
 
@@ -129,7 +136,7 @@ session_precalc as
         if(lower(source_corrected) = 'facebook', utm_medium, '') as utm_medium,
         landing_page,
         parse_url(concat("https://onfy.de", landing_page), 'QUERY', 'gclid') as gclid,
-        cast(regexp_extract(landing_page, 'artikel/(\d+)/', 1) as string) as landing_pzn,
+        regexp_extract(landing_page, '/artikel/([^/?]+)', 1) as landing_pzn,
         user_email_hash,
         order_id,
         order_created_time_cet,
@@ -137,6 +144,8 @@ session_precalc as
         purchase_num,
         promocode_discount,
         gmv_initial,
+        promocode_id,
+        promocode_name,
         gross_profit_initial
     from corrected_sources
     full join order_data 
@@ -190,13 +199,26 @@ sessions as
         significant_source_window,
         timeout_source_window,
         ultimate_window,
+        ultimate_window_awin,
     
-        first_value(sessions_window.source_dt) over (partition by device_id, if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as attributed_session_dt,
-        date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt)) as attributed_session_date,
-        first_value(sessions_window.source_corrected) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as source,
-        first_value(sessions_window.campaign_corrected) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as campaign,
-        first_value(sessions_window.utm_medium) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as medium,
-        first_value(sessions_window.gclid) over (partition by device_id,  if(coalesce(promocode_discount, 0) > 0, ultimate_window_awin, ultimate_window) order by source_dt) as attributed_gclid,
+        if(promocode_discount > 0 and promocode_id is null, 
+           first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_awin order by source_dt),
+           first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window order by source_dt)) as attributed_session_dt,
+        if(promocode_discount > 0 and promocode_id is null,
+           date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_awin order by source_dt)),
+           date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window order by source_dt))) as attributed_session_date,
+        if(promocode_discount > 0 and promocode_id is null,
+           first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window_awin order by source_dt),
+           first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window order by source_dt)) as source,
+        if(promocode_discount > 0 and promocode_id is null,
+           first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window_awin order by source_dt),
+           first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window order by source_dt)) as campaign,
+        if(promocode_discount > 0 and promocode_id is null,
+           first_value(sessions_window.utm_medium) over (partition by device_id, ultimate_window_awin order by source_dt),
+           first_value(sessions_window.utm_medium) over (partition by device_id, ultimate_window order by source_dt)) as medium,
+        if(promocode_discount > 0 and promocode_id is null,
+           first_value(sessions_window.gclid) over (partition by device_id, ultimate_window_awin order by source_dt),
+           first_value(sessions_window.gclid) over (partition by device_id, ultimate_window order by source_dt)) as attributed_gclid,
     
         first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt) as attributed_session_dt_1,
         date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt)) as attributed_session_date_1,
@@ -215,7 +237,9 @@ sessions as
     
         landing_page,
         gclid,
-        landing_pzn
+        landing_pzn,
+        promocode_id,
+        promocode_name
     from sessions_window
 ),
 
@@ -324,7 +348,9 @@ filtered_data as
         attributed_gclid,
         landing_page,
         gclid,
-        landing_pzn
+        landing_pzn,
+        promocode_id,
+        promocode_name
     from sessions as sessions
     join uid 
         on sessions.device_id = uid.device_id
@@ -392,7 +418,9 @@ data_combined as
         attributed_gclid,
         landing_page,
         gclid,
-        landing_pzn
+        landing_pzn,
+        promocode_id,
+        promocode_name
     from filtered_data as sessions
     full join ads_spends 
         on date_trunc('day', ads_spends.partition_date) = sessions.session_date
@@ -484,11 +512,12 @@ spend_distributed as
         attributed_gclid,
         landing_page,
         gclid,
-        landing_pzn
+        landing_pzn,
+        promocode_id,
+        promocode_name
     from data_combined
 )
-
-
+    
 select 
     session_dt,
     attributed_session_dt,
@@ -526,6 +555,8 @@ select
     min(session_dt) over (partition by user_email_hash order by session_dt) as first_user_session_dt,
     min(order_dt) over (partition by user_email_hash order by order_dt) as first_order_dt,
     promocode_discount,
+    promocode_name,
+    promocode_id,
     order_id,
     gmv_initial,
     gross_profit_initial,
