@@ -33,7 +33,9 @@ SELECT user['userId'] AS user_id,
        payload.source,
        payload.isRegistrationCompleted,
        payload.productId AS product_id,
-       payload.position
+       payload.position,
+       payload.popupType,
+       payload.section
 FROM {{ source('b2b_mart', 'device_events') }} AS de
 LEFT JOIN bots ON de.device.id = bots.device_id
 WHERE partition_date >= '2024-04-01'
@@ -43,6 +45,7 @@ WHERE partition_date >= '2024-04-01'
         'rfqOpen',
         'cartOpen',
         'addToCart',
+        'popupOpen',
         'pageLeave',
         'orderOpen',
         'ordersOpen',
