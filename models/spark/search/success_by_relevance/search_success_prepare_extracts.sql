@@ -169,12 +169,13 @@ SELECT
     contexts.search.strings.searchRelevanceModel AS searchRelevanceModel
 FROM {{ source('mart', 'device_events') }}
 WHERE
-    partition_date >= DATE('2025-03-01')
+    partition_date >= CURRENT_DATE() - INTERVAL 30 DAYS
     AND type = 'productPreview'
     AND lastContext.name = 'search'
     AND lastContext.searchQuery IS NOT NULL
-     AND contexts.search.strings.searchRelevanceModel = "s3://joom.models/tf_serving/catboost/search/search-v17-relevance-v3/model"
-     AND contexts.search.floats.searchRelevanceScore IS NOT NULL
+    AND contexts.search.strings.searchRelevanceModel = "s3://joom.models/tf_serving/catboost/search/search-v17-relevance-v3/model"
+    AND contexts.search.floats.searchRelevanceScore IS NOT NULL
+    AND device.pref_country not in ("ru", "RU") -- простая оптимизация чтения данных
 ),
 
 prod_text_relevance_stat AS (
