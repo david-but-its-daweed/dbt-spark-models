@@ -35,7 +35,9 @@ SELECT
     a.category_relevance,
     b.text_relevance,
     COALESCE(b.text_relevance, CAST(a.category_relevance AS INT)) AS relevance,
-    DATEDIFF(CURRENT_DATE(), CAST(a.search_date AS DATE)) <= 6 AS is_last_7_days
+    DATEDIFF(CURRENT_DATE(), CAST(a.search_date AS DATE)) <= 6 AS is_last_7_days,
+    a.prod_text_top10previews_relevance_rate,
+    a.prod_text_relevance_rate
 FROM {{ ref('search_success_prepare_extracts') }} AS a
 LEFT JOIN markup AS b
     ON a.product_id = b.product_id

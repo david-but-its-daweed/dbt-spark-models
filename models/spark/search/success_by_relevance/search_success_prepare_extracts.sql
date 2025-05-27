@@ -151,6 +151,44 @@ device_info AS (
     WHERE TRUE
         AND date_msk >= DATE('2025-03-01')
         AND DATEDIFF(date_msk, join_date_msk) <= 30
+),
+
+prod_text_relevance AS (
+SELECT
+    IF(contexts.search.floats.searchRelevanceScore > 1.38, 1, 0) as is_relevant,  -- порог релевантности 1.38
+    device_id,
+    partition_date,
+    DATE(FROM_UNIXTIME(event_ts / 1000)) as search_date,
+    lastContext.searchQuery AS query,
+    lastContext.position AS position,
+    lastContext.requestId AS requestId,
+    type,
+    device.pref_country AS country_code,
+    payload.productId AS product_id,
+    contexts.search.floats.searchRelevanceScore AS searchRelevanceScore,
+    contexts.search.strings.searchRelevanceModel AS searchRelevanceModel
+FROM {{ source('mart', 'device_events') }}
+WHERE
+    partition_date >= DATE('2025-03-01')
+    AND type = 'productPreview'
+    AND lastContext.name = 'search'
+    AND lastContext.searchQuery IS NOT NULL
+     AND contexts.search.strings.searchRelevanceModel = "s3://joom.models/tf_serving/catboost/search/search-v17-relevance-v3/model"
+     AND contexts.search.floats.searchRelevanceScore IS NOT NULL
+),
+
+prod_text_relevance_stat AS (
+    SELECT
+        device_id,
+        query,
+        search_date,
+        count(DISTINCT requestId) as reqids,
+        count(DISTINCT product_id) as previews,
+        count(DISTINCT IF(position < 10, product_id, null)) as top10previews,
+        round(count(DISTINCT IF(is_relevant = 1, product_id, null)) / previews, 4) as relevant_previews_rate,
+        round(count(DISTINCT IF(is_relevant = 1 and position < 10, product_id, null)) / top10previews, 4) as relevant_top10previews_rate
+    FROM prod_text_relevance
+    GROUP BY search_date, device_id, query
 )
 
 SELECT
@@ -167,7 +205,9 @@ SELECT
     q.frequency_cluster,
     pc.clean_category_ids,
     IF(ARRAY_CONTAINS(pc.clean_category_ids, s.search_category_id), 1, 0) AS category_relevance,
-    DATEDIFF(c.event_date, s.search_date) AS days_from_search_to_event
+    DATEDIFF(c.event_date, s.search_date) AS days_from_search_to_event,
+    ptr.relevant_top10previews_rate as prod_text_top10previews_relevance_rate,
+    ptr.relevant_previews_rate as prod_text_relevance_rate
 FROM searches_with_top_countries AS s
 LEFT JOIN clicks AS c
     ON s.device_id = c.device_id
@@ -181,3 +221,7 @@ LEFT JOIN classified_queries_by_frequency AS q
     AND s.top_country_code = q.top_country_code
 LEFT JOIN product_categories AS pc
     ON c.product_id = pc.product_id
+LEFT JOIN prod_text_relevance_stat as ptr
+    ON s.search_date = ptr.search_date
+    AND s.device_id = ptr.device_id
+    AND s.query = ptr.query
