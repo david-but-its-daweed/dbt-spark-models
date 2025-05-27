@@ -50,7 +50,7 @@ sources:
       - name: b2b_core_offer_products_daily_snapshot
       - name: b2b_core_analytics_payments_daily_snapshot
       - name: b2b_core_sla_trackers_daily_snapshot
-      - name: b2b_core_product_jpa_matches_daily_snapshot
+      - name: b2b_product_product_jpa_matches_daily_snapshot
       - name: b2b_core_analytics_subscriptions_daily_snapshot
       - name: b2b_product_product_prices_daily_snapshot
       - name: b2b_core_promotions_daily_snapshot

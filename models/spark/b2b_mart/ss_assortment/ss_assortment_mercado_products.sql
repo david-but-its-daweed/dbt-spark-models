@@ -14,4 +14,4 @@ SELECT
     d AS score,
     dt,
     MILLIS_TO_TS_MSK(uber_loader_eventtimems) AS update_time
-FROM {{ source('mongo', 'b2b_core_product_jpa_matches_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_product_product_jpa_matches_daily_snapshot') }}
