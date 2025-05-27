@@ -449,6 +449,34 @@ log_orders AS (
     GROUP BY
         b.partition_date,
         b.variant_id
+),
+
+product_rating AS (
+    SELECT
+        b.partition_date,
+        b.product_id,
+        ROUND(
+            MAX( -- чтобы не было дублей по продукту
+                (
+                    prc.rating_counts.count_1_star * 1.0
+                    + prc.rating_counts.count_2_star * 2.0
+                    + prc.rating_counts.count_3_star * 3.0
+                    + prc.rating_counts.count_4_star * 4.0
+                    + prc.rating_counts.count_5_star * 5.0
+                )
+                / (prc.rating_counts.count_1_star + prc.rating_counts.count_2_star + prc.rating_counts.count_3_star + prc.rating_counts.count_4_star + prc.rating_counts.count_5_star)
+            ),
+            3
+        ) AS rating
+    FROM base AS b
+    LEFT JOIN {{ source('mart', 'product_rating_counters') }} AS prc -- mart.product_rating_counters
+        ON
+            1 = 1
+            AND b.product_id = prc.product_id
+            AND CAST(b.partition_date AS TIMESTAMP) BETWEEN prc.effective_ts AND prc.next_effective_ts
+    GROUP BY
+        b.partition_date,
+        b.product_id
 )
 
 SELECT
@@ -553,7 +581,8 @@ SELECT
     m_k.merchant_name,
     m_k.main_merchant_name,
     m_k.kam_email AS kam,
-    lo.amount AS fulfilled_amount
+    lo.amount AS fulfilled_amount,
+    pr_rating.rating AS product_rating
 FROM base AS b
 LEFT JOIN {{ ref('gold_products') }} AS gp --gold.products as gp -- данные только на текущий момент
     ON
@@ -618,3 +647,8 @@ LEFT JOIN log_orders AS lo
         1 = 1
         AND b.partition_date = lo.partition_date
         AND b.variant_id = lo.variant_id
+LEFT JOIN product_rating AS pr_rating
+    ON
+        1 = 1
+        AND b.product_id = pr_rating.product_id
+        AND b.partition_date = pr_rating.partition_date

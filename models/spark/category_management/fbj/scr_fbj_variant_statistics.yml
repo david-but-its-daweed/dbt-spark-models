@@ -335,3 +335,7 @@ models:
       - name: fulfilled_amount
         description: "Amount of items fulfilled in a day"
         data_type: "LONG"
+
+      - name: product_rating
+        description: "Rating of product"
+        data_type: "DOUBLE"
