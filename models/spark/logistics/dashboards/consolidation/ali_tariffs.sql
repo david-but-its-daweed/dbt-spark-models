@@ -1,9 +1,11 @@
 {{
   config(
     meta = {
-      'model_owner' : '@e.kotsegubov'
+      'model_owner' : '@logistics.analytics.duty'
     },
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     schema='jl_models',
   )
 }}

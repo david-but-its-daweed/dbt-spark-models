@@ -1,8 +1,10 @@
 {{
   config(
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
-      'model_owner' : '@general_analytics',
+      'model_owner' : '@logistics.analytics.duty',
       'bigquery_load': 'true'
     }
   )
@@ -12,7 +14,7 @@
 WITH draft_time AS (
     SELECT
         parcel_id,
-        MIN(FILTER(statusHistory, x -> x.status = 10)[0].createdTime) as bag_draft_time_utc
+        MIN(FILTER(statusHistory, x -> x.status = 10)[0].createdTime) as bag_draft_time_utc -- sqlfluff ругается на эту строку, обсудили с Колей, что так бывает и можно игнорировать
     FROM {{ source('mongo', 'logistics_bags_daily_snapshot') }}
     LATERAL VIEW EXPLODE(parcelIds) AS parcel_id
     GROUP BY 1
@@ -32,7 +34,7 @@ raw_data_channels AS (
     LEFT JOIN draft_time dt ON fo.parcel_id = dt.parcel_id
     LEFT JOIN {{ source('mongo', 'logistics_channels_daily_snapshot') }} ch ON fo.channel_id = ch._id
     WHERE
-        fo.consolidation_group_id IS NULL
+        fo.transfer_to_consolidation_checkpoint_time_utc IS NULL
         AND (fo.refund_type IS NULL OR fo.refund_type NOT IN ('cancelled_by_customer', 'cancelled_by_merchant'))
         AND fo.origin_country = 'CN' -- китайские заказы
         AND DATE(fo.check_in_time_utc) >= DATE '2024-02-05'
