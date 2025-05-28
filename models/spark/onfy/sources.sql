@@ -63,7 +63,10 @@ WITH sources AS (
                 WHEN onfy_mart.device_events.type = 'externalLink' AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%billiger%'
                     THEN 'billiger'
                 WHEN onfy_mart.device_events.type = 'externalLink' AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%awin%'
-                    THEN 'awin'
+                    THEN IF(
+                        payload.link LIKE '%yieldkit%', 'http://yieldkit.com/',
+                        REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_REPLACE(REGEXP_EXTRACT(payload.link, '[?&]awin_sitename=([^&]+)', 1), '%3A', ':'), '%2F', '/'), '\\+', ' ')
+                    )
                 WHEN
                     onfy_mart.device_events.type = 'externalLink'
                     AND LOWER(onfy_mart.device_events.payload.params.utm_source) LIKE '%google%'

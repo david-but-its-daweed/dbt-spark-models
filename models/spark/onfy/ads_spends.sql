@@ -1,5 +1,6 @@
 {{ config(
     schema='onfy_mart',
+    file_format='delta',
     materialized='table',
     meta = {
       'model_owner' : '@annzaychik',
@@ -169,8 +170,8 @@ awin_costs as
 (
     select 
         null as campaign_id,
-        'awin' as campaign_name,
-        publisher_url as medium,
+        site_name as campaign_name,
+        publisher_id as medium,
         'awin' as source,
         'onfy' as partner,
         'web' as campaign_platform,
@@ -182,7 +183,7 @@ awin_costs as
         and commission_status = 'approved'
     group by 
         site_name,
-        publisher_url,
+        publisher_id,
         coalesce(click_date, validation_date)
 ),
               
