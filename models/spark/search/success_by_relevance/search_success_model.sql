@@ -19,25 +19,11 @@ WITH markup AS (
     FROM {{ source('search', 'text_search_success_filter_marked_up') }}
 )
 SELECT
-    a.search_date,
+    a.*,
     a.event_date AS partition_date,  -- дата покупки
-    a.device_id,
-    a.query,
-    a.search_category_id,
-    a.search_type,
-    a.product_id,
-    a.os_type,
-    a.device_country,
-    a.has_open,
-    a.has_to_cart,
-    a.has_purchase,
-    a.days_from_search_to_event,
-    a.category_relevance,
     b.text_relevance,
     COALESCE(b.text_relevance, CAST(a.category_relevance AS INT)) AS relevance,
-    DATEDIFF(CURRENT_DATE(), CAST(a.search_date AS DATE)) <= 6 AS is_last_7_days,
-    a.prod_text_top10previews_relevance_rate,
-    a.prod_text_relevance_rate
+    DATEDIFF(CURRENT_DATE(), CAST(a.search_date AS DATE)) <= 6 AS is_last_7_days
 FROM {{ ref('search_success_prepare_extracts') }} AS a
 LEFT JOIN markup AS b
     ON a.product_id = b.product_id
