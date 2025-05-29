@@ -71,7 +71,7 @@ final AS (
 SELECT
     t2.*,
     t1.shift_date,
-    t1.hour_start,
+    t1.working_hour_start,
     t1.detailed,
     t1.working_hours,
     CASE

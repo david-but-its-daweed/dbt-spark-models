@@ -6,7 +6,7 @@ models:
   columns:
     - name: shift_date
       description: Calendar date of the shift.
-    - name: hour_start
+    - name: working_hour_start
       description: Start-of-hour timestamp representing the beginning of the hour block.
     - name: function
       description: Agent’s function or role.
