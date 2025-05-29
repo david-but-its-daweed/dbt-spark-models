@@ -1,0 +1,22 @@
+version: 2
+
+models:
+- name: schedule_implementation
+  description: Table containing agents' working hours with hourly granularity.
+  columns:
+    - name: shift_date
+      description: Calendar date of the shift.
+    - name: hour_start
+      description: Start-of-hour timestamp representing the beginning of the hour block.
+    - name: function
+      description: Agent’s function or role.
+    - name: holistics_team
+      description: Agent’s Shiftbase team, used for dashboard filtering.
+    - name: email
+      description: Agent’s email address.
+    - name: detailed
+      description: Detailed description of the agent’s work during the hour.
+    - name: working_hours
+      description: Number of hours worked during the hourly interval (typically 1.0 or less).
+    - name: business_unit
+      description: Business unit the agent belongs to — e.g., Marketplace, Onfy, or JoomPro.

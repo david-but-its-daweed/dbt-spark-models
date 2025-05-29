@@ -116,6 +116,15 @@ sources:
       - name: payment_order
       - name: order_groups
       - name: checkout_data
+
+  - name: support
+    tables:
+      - name: shiftbase_rosters_latest_snapshot
+
+  - name: support_mart
+    tables:
+      - name: agents
+
   - name: recom
     tables:
       - name: context_device_counters_v6
