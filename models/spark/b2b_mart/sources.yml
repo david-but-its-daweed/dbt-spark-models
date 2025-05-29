@@ -64,6 +64,10 @@ sources:
       - name: operational_events
       - name: dim_merchant
       - name: purchasing_and_production_report
+      - name: merchant_products
+      - name: ss_assortment_products
+      - name: fact_customer_requests
+      - name: ss_events_customer_journey
   - name: joompro_analytics
     tables:
       - name: mercadolibre_category_info
