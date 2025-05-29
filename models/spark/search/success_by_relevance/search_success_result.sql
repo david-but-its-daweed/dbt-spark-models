@@ -30,3 +30,4 @@ LEFT JOIN markup AS b
     AND a.query = b.query
     AND a.search_date = b.search_date
     AND a.event_date = b.partition_date
+WHERE a.event_date >= "2025-04-01"
