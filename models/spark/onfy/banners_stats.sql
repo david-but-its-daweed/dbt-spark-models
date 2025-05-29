@@ -26,15 +26,12 @@ WITH views AS (
         device_id,
         event_ts_cet,
         event_id,
-        IF(payload.pzn IS NOT NULL, payload.pzn, 'banner') AS promo_type, -- если был pzn, то это либо показ в поиске, либо на продакт пейдже. если нет, то это баннер
-        payload.blockName -- Campain
+        IF(payload.pzn IS NOT NULL, payload.pzn, 'banner') AS promo_type,
+        payload.blockName
     FROM onfy_mart.device_events
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
-        AND (
-            type = 'producerBannerShown' -- показ баннера на главной
-            OR type = 'producerBannerClicked' -- клик по баннеру на главной
-        )
+        AND type IN ('producerBannerShown', 'producerBannerClicked')
 ),
 
 clicks AS (
@@ -69,38 +66,54 @@ joined_clicks AS (
             AND views.event_ts_cet + INTERVAL 30 MINUTE >= clicks.event_ts_cet
 ),
 
+ranked_orders AS (
+    SELECT
+        joined_clicks.device_id,
+        joined_clicks.partition_date_cet,
+        joined_clicks.sourceScreen,
+        joined_clicks.promo_type,
+        joined_clicks.blockName,
+        joined_clicks.clicks_pzn,
+        orders.order_id,
+        orders.products_price,
+        orders.quantity,
+        ROW_NUMBER() OVER (PARTITION BY orders.order_id ORDER BY joined_clicks.clicks_event_ts_cet ASC) AS rn
+    FROM joined_clicks
+    INNER JOIN onfy.orders_info AS orders
+        ON
+            joined_clicks.device_id = orders.device_id
+            AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet
+            AND joined_clicks.clicks_event_ts_cet + INTERVAL 5 HOUR >= orders.order_created_time_cet
+            AND joined_clicks.clicks_pzn = orders.pzn
+    WHERE
+        joined_clicks.type = 'producerBannerClicked'
+        AND joined_clicks.clicks_event_id IS NOT NULL
+),
+
+deduped_orders AS (
+    SELECT
+        order_id,
+        FIRST_VALUE(partition_date_cet) OVER w AS partition_date_cet,
+        FIRST_VALUE(sourceScreen) OVER w AS sourceScreen,
+        FIRST_VALUE(promo_type) OVER w AS promo_type,
+        FIRST_VALUE(blockName) OVER w AS blockName,
+        MAX(products_price) OVER w AS products_price,
+        MAX(quantity) OVER w AS quantity
+    FROM ranked_orders
+    WHERE rn = 1
+    WINDOW w AS (PARTITION BY order_id)
+),
+
 joined_orders AS (
     SELECT
         partition_date_cet,
         sourceScreen,
         promo_type,
         blockName,
-        COUNT(DISTINCT order_id) AS orders,
+        COUNT(*) AS orders,
         SUM(products_price) AS gmv,
         SUM(quantity) AS packs_sold
-    FROM (
-        SELECT
-            joined_clicks.device_id,
-            joined_clicks.partition_date_cet,
-            joined_clicks.sourceScreen,
-            joined_clicks.promo_type,
-            joined_clicks.blockName,
-            joined_clicks.clicks_pzn,
-            orders.order_id,
-            orders.products_price,
-            orders.quantity
-        FROM joined_clicks
-        INNER JOIN onfy.orders_info AS orders
-            ON
-                joined_clicks.device_id = orders.device_id
-                AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet
-                AND joined_clicks.clicks_event_ts_cet + INTERVAL 5 HOUR >= orders.order_created_time_cet
-                AND joined_clicks.clicks_pzn = orders.pzn
-        WHERE
-            joined_clicks.type = 'producerBannerClicked'
-            AND joined_clicks.clicks_event_id IS NOT NULL
-        GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
-    )
+    FROM deduped_orders
     GROUP BY
         partition_date_cet,
         sourceScreen,
@@ -141,4 +154,3 @@ LEFT JOIN joined_orders
         AND groupped_clicks.sourceScreen = joined_orders.sourceScreen
         AND groupped_clicks.promo_type = joined_orders.promo_type
         AND groupped_clicks.blockName = joined_orders.blockName
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9

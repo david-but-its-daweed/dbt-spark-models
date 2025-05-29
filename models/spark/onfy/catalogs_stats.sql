@@ -17,7 +17,6 @@
 
 ---------------------------------------------------------------------
 
-
 WITH CatalogData AS (
     SELECT
         partition_date_cet,
@@ -31,8 +30,7 @@ WITH CatalogData AS (
     FROM onfy_mart.device_events
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
-        AND type = 'catalogOpen' -- открытие каталога
-
+        AND type = 'catalogOpen'
 ),
 
 views AS (
@@ -55,14 +53,14 @@ views AS (
     FROM onfy_mart.device_events
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
-        AND type = 'productPreview' -- пред показ карточки
+        AND type = 'productPreview'
         AND payload.isSponsored
         AND payload.promoKey IS NOT NULL
         AND payload.sourceScreen = 'catalog'
 ),
 
 clicks AS (
-    SELECT                    -- Open card directly from Catalog
+    SELECT
         device_id,
         event_ts_cet,
         event_id,
@@ -74,7 +72,7 @@ clicks AS (
         AND type = 'productOpen'
         AND payload.sourceScreen = 'catalog'
     UNION ALL
-    SELECT                   -- Add to Cart directly from Catalog
+    SELECT
         device_id,
         event_ts_cet,
         event_id,
@@ -104,7 +102,6 @@ joined_views AS (
             CatalogData.device_id = views.device_id
             AND CatalogData.event_ts_cet <= views.event_ts_cet
             AND CatalogData.event_ts_cet + INTERVAL 2 MINUTE >= views.event_ts_cet
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9
 ),
 
 joined_clicks AS (
@@ -126,7 +123,6 @@ joined_clicks AS (
             AND joined_views.views_event_ts_cet <= clicks.event_ts_cet
             AND joined_views.views_event_ts_cet + INTERVAL 30 MINUTE >= clicks.event_ts_cet
             AND joined_views.pzn = clicks.pzn
-    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 ),
 
 clicks_info AS (
@@ -138,11 +134,7 @@ clicks_info AS (
         categoryName,
         COUNT(DISTINCT clicks_event_id) AS clicks
     FROM joined_clicks
-    WHERE
-        pzn IS NOT NULL
-        AND promoKey IS NOT NULL
-        AND categoryId IS NOT NULL
-        AND categoryName IS NOT NULL
+    WHERE pzn IS NOT NULL AND promoKey IS NOT NULL AND categoryId IS NOT NULL AND categoryName IS NOT NULL
     GROUP BY 1, 2, 3, 4, 5
 ),
 
@@ -155,45 +147,59 @@ impressions_info AS (
         categoryName,
         COUNT(DISTINCT views_event_id) AS impressions
     FROM joined_views
-    WHERE
-        pzn IS NOT NULL
-        AND promoKey IS NOT NULL
-        AND categoryId IS NOT NULL
-        AND categoryName IS NOT NULL
+    WHERE pzn IS NOT NULL AND promoKey IS NOT NULL AND categoryId IS NOT NULL AND categoryName IS NOT NULL
     GROUP BY 1, 2, 3, 4, 5
+),
+
+ranked_orders AS (
+    SELECT
+        joined_clicks.device_id,
+        joined_clicks.partition_date_cet,
+        joined_clicks.pzn,
+        joined_clicks.categoryId,
+        joined_clicks.categoryName,
+        joined_clicks.promoKey,
+        orders.order_id,
+        orders.products_price,
+        orders.quantity,
+        ROW_NUMBER() OVER (PARTITION BY orders.order_id ORDER BY joined_clicks.clicks_event_ts_cet ASC) AS rn
+    FROM joined_clicks
+    INNER JOIN onfy.orders_info AS orders
+        ON
+            joined_clicks.device_id = orders.device_id
+            AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet
+            AND joined_clicks.clicks_event_ts_cet + INTERVAL 5 HOUR >= orders.order_created_time_cet
+            AND joined_clicks.pzn = orders.pzn
+    WHERE joined_clicks.clicks_event_id IS NOT NULL
+),
+
+deduped_orders AS (
+    SELECT
+        partition_date_cet,
+        pzn,
+        categoryId,
+        categoryName,
+        promoKey,
+        order_id,
+        MAX(products_price) AS products_price,
+        MAX(quantity) AS quantity
+    FROM ranked_orders
+    WHERE rn = 1
+    GROUP BY partition_date_cet, pzn, categoryId, categoryName, promoKey, order_id
 ),
 
 orders_info AS (
     SELECT
         partition_date_cet,
+        promoKey,
         pzn,
         categoryId,
         categoryName,
         COUNT(DISTINCT order_id) AS orders,
         SUM(products_price) AS gmv,
         SUM(quantity) AS packs_sold
-    FROM (
-        SELECT
-            joined_clicks.device_id,
-            joined_clicks.partition_date_cet,
-            joined_clicks.pzn,
-            joined_clicks.categoryId,
-            joined_clicks.categoryName,
-            orders.order_id,
-            orders.products_price,
-            orders.quantity
-        FROM joined_clicks
-        INNER JOIN onfy.orders_info AS orders
-            ON
-                joined_clicks.device_id = orders.device_id
-                AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet
-                AND joined_clicks.clicks_event_ts_cet + INTERVAL 5 HOUR >= orders.order_created_time_cet
-                AND joined_clicks.pzn = orders.pzn
-        WHERE
-            joined_clicks.clicks_event_id IS NOT NULL
-        GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
-    )
-    GROUP BY 1, 2, 3, 4
+    FROM deduped_orders
+    GROUP BY partition_date_cet, promoKey, pzn, categoryId, categoryName
 )
 
 SELECT
@@ -214,10 +220,11 @@ LEFT JOIN clicks_info
         AND impressions_info.pzn = clicks_info.pzn
         AND impressions_info.categoryId = clicks_info.categoryId
         AND impressions_info.categoryName = clicks_info.categoryName
+        AND impressions_info.promoKey = clicks_info.promoKey
 LEFT JOIN orders_info
     ON
         impressions_info.partition_date_cet = orders_info.partition_date_cet
         AND impressions_info.pzn = orders_info.pzn
         AND impressions_info.categoryId = orders_info.categoryId
         AND impressions_info.categoryName = orders_info.categoryName
-GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
+        AND impressions_info.promoKey = orders_info.promoKey
