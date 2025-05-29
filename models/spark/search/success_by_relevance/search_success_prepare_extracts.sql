@@ -190,6 +190,7 @@ prod_text_relevance_stat AS (
         round(count(DISTINCT IF(is_relevant = 1, product_id, null)) / previews, 4) as relevant_previews_rate,
         round(count(DISTINCT IF(is_relevant = 1 and position < 10, product_id, null)) / top10previews, 4) as relevant_top10previews_rate
     FROM prod_text_relevance
+    WHERE search_date = partition_date
     GROUP BY search_date, device_id, query
 )
 
