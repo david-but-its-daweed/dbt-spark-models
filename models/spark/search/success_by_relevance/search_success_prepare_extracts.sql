@@ -170,7 +170,7 @@ SELECT
     contexts.search.strings.searchRelevanceModel AS searchRelevanceModel
 FROM {{ source('mart', 'device_events') }}
 WHERE
-    partition_date >= CURRENT_DATE() - INTERVAL 30 DAYS
+    partition_date >= CURRENT_DATE() - INTERVAL 14 DAYS
     AND type = 'productPreview'
     AND lastContext.name = 'search'
     AND lastContext.searchQuery IS NOT NULL
