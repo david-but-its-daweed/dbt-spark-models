@@ -90,14 +90,10 @@ calendar AS (
 kams AS (
     SELECT
         merchant_id,
-        import_date AS partition_date,
-        CONCAT_WS(',', COLLECT_LIST(DISTINCT kam_name)) AS kams
-    FROM {{ source('merchant', 'kam') }}
-    {% if is_incremental() %}
-        WHERE import_date = DATE('{{ var("start_date_ymd") }}')
-    {% else %}
-        WHERE import_date >= '2025-03-20'
-    {% endif %}
+        quarter AS partition_quarter,
+        REPLACE(MAX_BY(kam_email, import_time), '@joom.com', '') AS kams
+    FROM {{ source('category_management', 'merchant_kam_materialized') }}
+    WHERE merchant_id IS NOT NULL
     GROUP BY 1, 2
 ),
 
@@ -266,6 +262,6 @@ LEFT JOIN labels AS l USING (product_id, partition_date)
 
 LEFT JOIN {{ ref('gold_products') }} AS p ON p.product_id = pi1688.product_id
 LEFT JOIN {{ ref('gold_merchants') }} AS m ON m.merchant_id = p.merchant_id
-LEFT JOIN kams AS k USING (merchant_id, partition_date)
+LEFT JOIN kams AS k ON k.merchant_id = p.merchant_id AND DATE(DATE_TRUNC('QUARTER', pi1688.partition_date)) = k.partition_quarter
 LEFT JOIN {{ ref('gold_merchant_categories') }} AS mc ON p.merchant_category_id = mc.merchant_category_id
 

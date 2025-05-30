@@ -232,6 +232,7 @@ sources:
       - name: categories_with_ce_requirements
       - name: js_focus_1688_products
       - name: merchant_kam_materialized
+      - name: joom_select_variant_target_prices
 
   - name: merchant
     tables:
