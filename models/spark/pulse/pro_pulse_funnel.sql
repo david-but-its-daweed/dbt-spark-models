@@ -61,23 +61,32 @@ utm_labels AS (
     WHERE rn = 1
 ),
 
+payments AS (
+    SELECT entity_id as deal_id, min(event_ts_msk) AS paid_date 
+    FROM {{ ref('fact_issues_statuses') }}
+    WHERE status = "PaymentToMerchant"
+    GROUP BY entity_id
+)
+
 gmv_by_sources AS (
     SELECT
         user_id,
-        MIN(deal_created_date) AS first_date_paid,
+        MIN(first_date_paid) AS first_date_paid,
         SUM(final_gmv) AS gmv_total,
         SUM(CASE WHEN final_gmv > 0 THEN final_gmv END) AS gmv_first_order,
         COUNT(order_id) AS orders
     FROM
     (
     SELECT
-        user_id,
-        deal_created_date,
-        final_gmv,
-        order_id,
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY number_user_deal) = 1 AS first_order
-    FROM {{ ref("fact_deals_with_requests") }}
-    WHERE deal_reject_reason IS NULL AND final_gmv > 0
+        d.user_id,
+        DATE(p.paid_date) AS first_date_paid,
+        d.final_gmv,
+        d.deal_id,
+        d.order_id,
+        ROW_NUMBER() OVER (PARTITION BY d.user_id ORDER BY d.number_user_deal) = 1 AS first_order
+    FROM {{ ref("fact_deals_with_requests") }} AS d
+    JOIN payments AS p ON d.deal_id = p.deal_id
+    WHERE d.deal_reject_reason IS NULL AND d.final_gmv > 0 AND p.paid_date IS NOT NULL
     )
     GROUP BY user_id
 )
