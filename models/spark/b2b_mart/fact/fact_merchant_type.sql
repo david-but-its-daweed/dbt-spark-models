@@ -12,7 +12,7 @@
 
 with products as 
 (select count(distinct _id) as products, merchantId 
-from {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }}
+from {{ source('mongo', 'b2b_product_published_products_daily_snapshot') }}
 group by merchantId
 ),
 

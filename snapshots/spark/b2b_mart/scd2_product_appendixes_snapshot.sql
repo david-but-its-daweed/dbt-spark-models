@@ -17,5 +17,5 @@
 
 
 SELECT *
-FROM {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
 {% endsnapshot %}

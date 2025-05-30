@@ -75,7 +75,7 @@ product_prices AS (
     FROM
         {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }} AS v
     LEFT JOIN
-        {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }} AS p
+        {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }} AS p
         ON v.pId = p._id
     WHERE
         p.ccy IS NOT NULL

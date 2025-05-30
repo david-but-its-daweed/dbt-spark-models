@@ -25,7 +25,7 @@ ali1688 AS (
     SELECT
         _id AS b2b_product_id,
         IF(extId IS NOT NULL, SPLIT(extId, 'ali1688/')[1], NULL) AS ali1688_product_id
-    FROM {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+    FROM {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
 ),
 
 matching AS (

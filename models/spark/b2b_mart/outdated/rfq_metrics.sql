@@ -150,7 +150,7 @@ LEFT JOIN response AS rp ON rq.rfq_request_id = rp.rfq_request_id
 price as (
     select min(least(prc[0], prc[1], prc[2])) as price, _id as product_id
     from
-    (select _id, prcQtyDis from {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+    (select _id, prcQtyDis from {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
     where prcQtyDis[0] is not null) a
     left join 
     (select pId, prc from {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }}

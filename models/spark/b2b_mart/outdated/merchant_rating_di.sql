@@ -27,7 +27,7 @@
 with price as (
     select min(least(prc[0], prc[1], prc[2])) as price, _id as product_id
     from
-    (select _id, prcQtyDis from {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+    (select _id, prcQtyDis from {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
     where prcQtyDis[0] is not null) a
     left join 
     (select pId, prc from {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }}
@@ -69,7 +69,7 @@ rfq_recieved_1 as (
     from
     (select distinct merchantId, split(path, '/')[0] as categoryId 
      from
-    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
+    {{ source('mongo', 'b2b_product_published_products_daily_snapshot') }} a
      join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id
      ) c
     left join (SELECT
@@ -91,7 +91,7 @@ rfq_recieved_2 as (
     from
     (select distinct merchantId, split(path, '/')[0] as categoryId 
      from
-    {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }} a
+    {{ source('mongo', 'b2b_product_published_products_daily_snapshot') }} a
      join {{ source('mart', 'category_levels') }} b  on a.categoryId = b.category_id
      ) c
     left join (SELECT

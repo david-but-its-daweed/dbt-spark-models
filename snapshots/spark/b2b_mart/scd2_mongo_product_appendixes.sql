@@ -1,4 +1,4 @@
-{% snapshot scd2_mongo_product_appendixes.sql %}
+{% snapshot scd2_mongo_product_appendixes %}
 
     {{
         config(
@@ -21,6 +21,6 @@
                   searchTags.topProduct as is_top_product,
                   supplierLink as supplier_link,
                   supplierProductLink as supplier_product_link
-           from   {{ source('mongo', 'b2b_core_product_appendixes_daily_snapshot') }}
+           from   {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
 
 {% endsnapshot %}

@@ -27,5 +27,5 @@ SELECT  _id as product_id,
            sku,
            storeId as store_id,
            millis_to_ts_msk(updatedTimeMs) as update_ts_msk
-FROM {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_product_published_products_daily_snapshot') }}
 {% endsnapshot %}

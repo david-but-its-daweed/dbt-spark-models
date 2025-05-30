@@ -17,5 +17,5 @@
 
 
 SELECT *, millis_to_ts_msk(updatedTimeMs)  AS update_ts_msk
-FROM {{ source('mongo', 'b2b_core_published_products_daily_snapshot') }}
+FROM {{ source('mongo', 'b2b_product_published_products_daily_snapshot') }}
 {% endsnapshot %}
