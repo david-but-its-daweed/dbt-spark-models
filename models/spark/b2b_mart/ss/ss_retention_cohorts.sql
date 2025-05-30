@@ -59,7 +59,7 @@ activity_week AS (
     MAX(1) AS is_active 
   FROM cohort 
   JOIN activity USING(user_id)
-  GROUP BY cohort.user_id, cohort_week, event_msk_date
+  GROUP BY ALL
 ),
 
 activity_month AS (
@@ -69,7 +69,7 @@ activity_month AS (
     MAX(1) AS is_active 
   FROM cohort 
   JOIN activity USING(user_id)
-  GROUP BY cohort.user_id, cohort_month, event_msk_date
+  GROUP BY All
 ),
 
 deals AS (
