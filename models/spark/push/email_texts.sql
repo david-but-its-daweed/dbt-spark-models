@@ -8,7 +8,7 @@
     schema = 'push',
     meta = {
         'model_owner' : '@ekutynina',
-        'bigquery_load': 'true'
+        'bigquery_load': 'false'
     }
   )
 }}
