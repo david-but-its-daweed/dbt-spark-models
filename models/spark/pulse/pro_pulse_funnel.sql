@@ -66,7 +66,7 @@ payments AS (
     FROM {{ ref('fact_issues_statuses') }}
     WHERE status = "PaymentToMerchant"
     GROUP BY entity_id
-)
+),
 
 gmv_by_sources AS (
     SELECT
