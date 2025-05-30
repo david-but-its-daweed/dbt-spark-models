@@ -36,8 +36,8 @@ stats AS (
         ap.level_1_category_name,
         ap.level_2_category_name,
         ap.level_3_category_name,
-        COUNT_IF(cjm.type = 'productClick') AS open,
-        COUNT_IF(cjm.type = 'addToCart') AS add_to_cart
+        COUNT(DISTINCT IF(cjm.type = 'productClick', cjm.user_id, NULL)) AS open,
+        COUNT(DISTINCT IF(cjm.type = 'addToCart', cjm.user_id, NULL)) AS add_to_cart
     FROM {{ source('b2b_mart', 'ss_events_customer_journey') }} AS cjm
     INNER JOIN {{ source('b2b_mart', 'ss_assortment_products') }} AS ap ON cjm.product_id = ap.product_id
     WHERE
