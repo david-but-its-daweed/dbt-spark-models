@@ -1,0 +1,17 @@
+{{ config(
+    schema='joompro_analytics_internal_mart',
+    materialized='table',
+    file_format='parquet',
+    meta = {
+      'model_owner' : '@amitiushkina',
+      'bigquery_load': 'true',
+      'bigquery_project_id': 'joom-analytics-joompro-public',
+      'bigquery_check_counts': 'false',
+      'priority_weight': '150'
+    }
+) }}
+
+
+SELECT *
+FROM {{ ref("fact_deals_with_requests") }}
+WHERE utm_source = "pulse"
