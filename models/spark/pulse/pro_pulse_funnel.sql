@@ -14,12 +14,10 @@
 WITH order_deals AS (
     SELECT DISTINCT
         f.user_id,
-        MIN(g.t) AS paid_date,
-        MIN(DATE(f.created_ts_msk)) AS created_date,
-        MIN(CASE WHEN g.order_id IS NOT NULL THEN DATE(f.created_ts_msk) END) AS paid_created_date
-    FROM {{ ref("fact_deals") }} AS f
-    LEFT JOIN {{ ref("gmv_by_sources") }} AS g ON f.order_id = g.order_id
-    WHERE f.reject_id IS NULL
+        MIN(DATE(f.deal_created_date)) AS created_date,
+        MIN(CASE WHEN f.order_id IS NOT NULL AND f.final_gmv > 0 THEN DATE(f.deal_created_date) END) AS paid_created_date
+    FROM {{ ref("fact_deals_with_requests") }} AS f
+    WHERE f.deal_reject_reason IS NULL
     GROUP BY f.user_id
 ),
 
@@ -66,19 +64,20 @@ utm_labels AS (
 gmv_by_sources AS (
     SELECT
         user_id,
-        MIN(t) AS first_date_paid,
-        SUM(gmv_initial) AS gmv_total,
-        SUM(CASE WHEN first_order THEN gmv_initial END) AS gmv_first_order,
+        MIN(deal_created_date) AS first_date_paid,
+        SUM(final_gmv) AS gmv_total,
+        SUM(CASE WHEN final_gmv > 0 THEN final_gmv END) AS gmv_first_order,
         COUNT(order_id) AS orders
     FROM
     (
     SELECT
         user_id,
-        t,
-        gmv_initial,
+        deal_created_date,
+        final_gmv,
         order_id,
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY t) = 1 AS first_order
-    FROM {{ ref("gmv_by_sources") }}
+        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY number_user_deal) = 1 AS first_order
+    FROM {{ ref("fact_deals_with_requests") }}
+    WHERE deal_reject_reason IS NULL AND final_gmv > 0
     )
     GROUP BY user_id
 )
