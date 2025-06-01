@@ -63,6 +63,7 @@ proposals AS (
         product_id,
         approved_at,
         cancelled_at,
+        current_status,
         previous_proposal_status,
         tvp.variant_id,
         tvp.price / 1e6 AS target_price,
@@ -153,6 +154,7 @@ SELECT
     p.previous_proposal_status,
     p.next_proposal_dt,
     p.is_expiring,
+    p.current_status,
 
     o.gmv_l30d,
     o.orders_l30d,
