@@ -9,7 +9,15 @@
     }
 ) }}
 
-SELECT *
+SELECT     
+    product_id,
+    null as store_id,
+    channel,
+    weight,
+    pessimization_type,
+    discount_percent,
+    source,
+    comment
 FROM {{ source('onfy', 'auto_discount_rules') }}
 UNION ALL
 SELECT *

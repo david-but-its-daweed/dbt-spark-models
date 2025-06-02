@@ -231,8 +231,7 @@ google_data as
 precalculation as 
 (
     select 
-        m.id as product_id, 
-        null as store_id, 
+        m.id as product_id, -- убираем store_id, если вся колонка null
         'google' as channel, 
         31 as weight, 
         'filter_out' as pessimization_type, 
@@ -246,7 +245,6 @@ precalculation as
     union all
     select 
         m.id as product_id, 
-        null as store_id, 
         'ohm' as channel, 
         31 as weight, 
         'filter_out' as pessimization_type, 
@@ -260,7 +258,6 @@ precalculation as
     union all
     select 
         m.id as product_id, 
-        null as store_id, 
         'idealo' as channel, 
         31 as weight, 
         'use_max_price' as pessimization_type, 
@@ -274,7 +271,6 @@ precalculation as
     union all
     select 
         m.id as product_id, 
-        null as store_id, 
         'billiger' as channel, 
         31 as weight, 
         'use_max_price' as pessimization_type, 
@@ -287,7 +283,7 @@ precalculation as
     where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
 )
 
-select *
+select * 
 from precalculation 
 where 1=1
     and product_id not in (select distinct product_id from manufacturers_products)
