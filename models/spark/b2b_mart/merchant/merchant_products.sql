@@ -73,7 +73,7 @@ product_prices AS (
         MIN(ELEMENT_AT(v.prc, -1)) / 1e6 AS min_price,
         MAX(ELEMENT_AT(v.prc, 1)) / 1e6 AS max_price
     FROM
-        {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }} AS v
+        {{ source('mongo', 'b2b_product_variant_appendixes_daily_snapshot') }} AS v
     LEFT JOIN
         {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }} AS p
         ON v.pId = p._id

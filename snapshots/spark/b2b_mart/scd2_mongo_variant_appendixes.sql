@@ -31,7 +31,7 @@ select _id as variant_id,
    prc[2] AS price_max_qnty,
    article,
    trMrk as trademark
-from  {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }}
+from  {{ source('mongo', 'b2b_product_variant_appendixes_daily_snapshot') }}
 
 
 {% endsnapshot %}

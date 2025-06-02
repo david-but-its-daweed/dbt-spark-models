@@ -24,7 +24,7 @@ with price as (
     (select _id, prcQtyDis from {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
     where prcQtyDis[0] is not null) a
     left join 
-    (select pId, prc from {{ source('mongo', 'b2b_core_variant_appendixes_daily_snapshot') }}
+    (select pId, prc from {{ source('mongo', 'b2b_product_variant_appendixes_daily_snapshot') }}
     where prc[0] is not null) b on _id = pId
     group by _id
 ),
