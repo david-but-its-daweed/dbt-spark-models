@@ -1,6 +1,5 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
     materialized='incremental',
     incremental_strategy='insert_overwrite',
