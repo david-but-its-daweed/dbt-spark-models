@@ -26,6 +26,8 @@ collect_data_from_roasters AS (
     SELECT
         DATE(date) AS shift_date,
         user_id,
+        starttime AS shift_start_time,
+        endtime AS shift_end_time,
         TO_TIMESTAMP(date || " " || starttime, "yyyy-MM-dd HH:mm:ss") AS start_datetime,
         TO_TIMESTAMP(date || " " || endtime, "yyyy-MM-dd HH:mm:ss")
         + IF(endtime < starttime, INTERVAL 1 DAY, INTERVAL 0 DAY) AS end_datetime,
@@ -71,6 +73,8 @@ final AS (
 SELECT
     t2.*,
     t1.shift_date,
+    t1.shift_start_time,
+    t1.shift_end_time,
     t1.working_hour_start,
     t1.detailed,
     t1.working_hours,

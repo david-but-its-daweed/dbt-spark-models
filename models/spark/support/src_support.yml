@@ -6,6 +6,10 @@ models:
   columns:
     - name: shift_date
       description: Calendar date of the shift.
+    - name: shift_start_time
+      description: Shift start time from shiftbase.
+    - name: shift_end_time
+      description: Shift end time from shiftbase.
     - name: working_hour_start
       description: Start-of-hour timestamp representing the beginning of the hour block.
     - name: function
@@ -20,3 +24,4 @@ models:
       description: Number of hours worked during the hourly interval (typically 1.0 or less).
     - name: business_unit
       description: Business unit the agent belongs to — e.g., Marketplace, Onfy, or JoomPro.
+
