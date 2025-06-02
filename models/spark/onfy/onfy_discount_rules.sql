@@ -1,6 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -9,9 +11,9 @@
     }
 ) }}
 
-SELECT     
+SELECT
     product_id,
-    null as store_id,
+    null AS store_id,
     channel,
     weight,
     pessimization_type,
