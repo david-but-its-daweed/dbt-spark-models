@@ -1,6 +1,7 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    file_format='delta',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
