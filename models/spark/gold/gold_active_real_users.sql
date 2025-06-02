@@ -1,10 +1,11 @@
 {{
     config(
-        materialized='table',
+        materialized='incremental',
         alias='active_real_users',
         schema='gold',
-        clustered_by=['real_user_id'],
-        file_format='parquet',
+        file_format='delta',
+        incremental_strategy='insert_overwrite',
+        partition_by=['date_msk'],
         meta = {
             'model_owner' : '@analytics.duty',
             'bigquery_load': 'true',
@@ -17,42 +18,71 @@
     )
 }}
 
-WITH real_users_0 AS (
-    SELECT
-        date_msk,
+WITH user_days AS (
+    SELECT DISTINCT
         real_user_id,
-        country_code,
-        app_language,
-        legal_entity,
-        app_entity,
-        MIN(MIN(join_date_msk)) OVER (PARTITION BY real_user_id) AS join_date_msk,
-        FIRST_VALUE(real_user_segment) AS real_user_segment,
-        MIN(MIN(join_date_msk)) OVER (PARTITION BY real_user_id) = date_msk AS is_new_real_user,
-        DATEDIFF(date_msk, MIN(MIN(join_date_msk)) OVER (PARTITION BY real_user_id)) AS real_user_lifetime,
-        FIRST_VALUE(is_product_opened) AS is_product_opened,
-        FIRST_VALUE(is_product_added_to_cart) AS is_product_added_to_cart,
-        FIRST_VALUE(is_product_purchased) AS is_product_purchased,
-        FIRST_VALUE(is_product_to_favourites) AS is_product_to_favourites,
-        FIRST_VALUE(is_cart_opened) AS is_cart_opened,
-        FIRST_VALUE(is_checkout_started) AS is_checkout_started,
-        FIRST_VALUE(is_checkout_payment_method_selected) AS is_checkout_payment_method_selected,
-        FIRST_VALUE(is_checkout_delivery_selected) AS is_checkout_delivery_selected,
-        SUM(gmv_per_day_initial) AS gmv_per_day_initial,
-        SUM(gmv_per_day_final) AS gmv_per_day_final,
-        SUM(order_gross_profit_per_day_final_estimated) AS order_gross_profit_per_day_final_estimated,
-        SUM(order_gross_profit_per_day_final) AS order_gross_profit_per_day_final,
-        SUM(ecgp_per_day_initial) AS ecgp_per_day_initial,
-        SUM(ecgp_per_day_final) AS ecgp_per_day_final,
-        SUM(number_of_orders) AS number_of_orders,
-        MAX(is_payer) AS is_payer,
-        MAX(is_converted) AS is_converted,
+        date_msk
+    FROM {{ ref('gold_active_devices') }}
+),
+
+join_dates AS (
+    SELECT
+        real_user_id,
+        MIN(join_date_msk) AS join_date_msk
+    FROM {{ ref('gold_active_devices') }}
+    GROUP BY 1
+),
+
+activity_dates AS (
+    SELECT
+        real_user_id,
+        date_msk,
+        LAG(date_msk) OVER (PARTITION BY real_user_id ORDER BY date_msk) AS prev_date_msk,
+        LEAD(date_msk) OVER (PARTITION BY real_user_id ORDER BY date_msk) AS next_date_msk
+    FROM user_days
+),
+
+real_users_0 AS (
+    SELECT
+        d.date_msk,
+        d.real_user_id,
+        d.country_code,
+        d.app_language,
+        d.legal_entity,
+        d.app_entity,
+        MIN(j.join_date_msk) AS join_date_msk,
+        FIRST_VALUE(d.real_user_segment) AS real_user_segment,
+        MAX(j.join_date_msk = d.date_msk) AS is_new_real_user,
+        DATEDIFF(d.date_msk, MIN(j.join_date_msk)) AS real_user_lifetime,
+        MAX(d.is_product_opened) AS is_product_opened,
+        MAX(d.is_product_added_to_cart) AS is_product_added_to_cart,
+        MAX(d.is_product_purchased) AS is_product_purchased,
+        MAX(d.is_product_to_favourites) AS is_product_to_favourites,
+        MAX(d.is_cart_opened) AS is_cart_opened,
+        MAX(d.is_checkout_started) AS is_checkout_started,
+        MAX(d.is_checkout_payment_method_selected) AS is_checkout_payment_method_selected,
+        MAX(d.is_checkout_delivery_selected) AS is_checkout_delivery_selected,
+        SUM(d.gmv_per_day_initial) AS gmv_per_day_initial,
+        SUM(d.gmv_per_day_final) AS gmv_per_day_final,
+        SUM(d.order_gross_profit_per_day_final_estimated) AS order_gross_profit_per_day_final_estimated,
+        SUM(d.order_gross_profit_per_day_final) AS order_gross_profit_per_day_final,
+        SUM(d.ecgp_per_day_initial) AS ecgp_per_day_initial,
+        SUM(d.ecgp_per_day_final) AS ecgp_per_day_final,
+        SUM(d.number_of_orders) AS number_of_orders,
+        MAX(d.is_payer) AS is_payer,
+        MAX(d.is_converted) AS is_converted,
 
         -- столбцы нужны для определения страны/платформы пользователя. Отдаем приоритет стране, где у пользователя больше gmv за дату
-        SUM(SUM(gmv_per_day_initial)) OVER (PARTITION BY real_user_id, date_msk, country_code) AS gmv_initial_per_country_code,
-        SUM(SUM(gmv_per_day_initial)) OVER (PARTITION BY real_user_id, date_msk, app_language) AS gmv_initial_per_app_language,
-        SUM(SUM(gmv_per_day_initial)) OVER (PARTITION BY real_user_id, date_msk, legal_entity) AS gmv_initial_per_legal_entity,
-        SUM(SUM(gmv_per_day_initial)) OVER (PARTITION BY real_user_id, date_msk, app_entity) AS gmv_initial_per_app_entity
-    FROM {{ ref('gold_active_devices') }}
+        SUM(SUM(d.gmv_per_day_initial)) OVER (PARTITION BY d.real_user_id, d.date_msk, d.country_code) AS gmv_initial_per_country_code,
+        SUM(SUM(d.gmv_per_day_initial)) OVER (PARTITION BY d.real_user_id, d.date_msk, d.app_language) AS gmv_initial_per_app_language,
+        SUM(SUM(d.gmv_per_day_initial)) OVER (PARTITION BY d.real_user_id, d.date_msk, d.legal_entity) AS gmv_initial_per_legal_entity,
+        SUM(SUM(d.gmv_per_day_initial)) OVER (PARTITION BY d.real_user_id, d.date_msk, d.app_entity) AS gmv_initial_per_app_entity
+    FROM {{ ref('gold_active_devices') }} AS d
+    LEFT JOIN join_dates AS j USING (real_user_id)
+    {% if is_incremental() %}
+        WHERE d.date_msk >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 230 DAYS
+    {% endif %}
+
     GROUP BY 1, 2, 3, 4, 5, 6
 ),
 
@@ -76,18 +106,18 @@ real_users_1 AS (
         FIRST_VALUE(app_language) AS app_language,
         FIRST_VALUE(legal_entity) AS legal_entity,
         FIRST_VALUE(app_entity) AS app_entity,
-        MIN(MIN(join_date_msk)) OVER (PARTITION BY real_user_id) AS join_date_msk,
-        FIRST_VALUE(real_user_segment) AS real_user_segment,
-        MIN(MIN(join_date_msk)) OVER (PARTITION BY real_user_id) = date_msk AS is_new_real_user,
-        DATEDIFF(date_msk, MIN(MIN(join_date_msk)) OVER (PARTITION BY real_user_id)) AS real_user_lifetime,
-        FIRST_VALUE(is_product_opened) AS is_product_opened,
-        FIRST_VALUE(is_product_added_to_cart) AS is_product_added_to_cart,
-        FIRST_VALUE(is_product_purchased) AS is_product_purchased,
-        FIRST_VALUE(is_product_to_favourites) AS is_product_to_favourites,
-        FIRST_VALUE(is_cart_opened) AS is_cart_opened,
-        FIRST_VALUE(is_checkout_started) AS is_checkout_started,
-        FIRST_VALUE(is_checkout_payment_method_selected) AS is_checkout_payment_method_selected,
-        FIRST_VALUE(is_checkout_delivery_selected) AS is_checkout_delivery_selected,
+        MAX(join_date_msk) AS join_date_msk,
+        MAX(real_user_segment) AS real_user_segment,
+        MAX(is_new_real_user) AS is_new_real_user,
+        MAX(real_user_lifetime) AS real_user_lifetime,
+        MAX(is_product_opened) AS is_product_opened,
+        MAX(is_product_added_to_cart) AS is_product_added_to_cart,
+        MAX(is_product_purchased) AS is_product_purchased,
+        MAX(is_product_to_favourites) AS is_product_to_favourites,
+        MAX(is_cart_opened) AS is_cart_opened,
+        MAX(is_checkout_started) AS is_checkout_started,
+        MAX(is_checkout_payment_method_selected) AS is_checkout_payment_method_selected,
+        MAX(is_checkout_delivery_selected) AS is_checkout_delivery_selected,
         SUM(gmv_per_day_initial) AS gmv_per_day_initial,
         SUM(gmv_per_day_final) AS gmv_per_day_final,
         SUM(order_gross_profit_per_day_final_estimated) AS order_gross_profit_per_day_final_estimated,
@@ -103,10 +133,11 @@ real_users_1 AS (
 
 real_users_2 AS (
     SELECT
-        *,
-        LAG(date_msk) OVER (PARTITION BY real_user_id ORDER BY date_msk) AS prev_date_msk, -- смотрим на предыдущий день активности
-        LEAD(date_msk) OVER (PARTITION BY real_user_id ORDER BY date_msk) AS next_date_msk  -- смотрим на следующий  день активности
-    FROM real_users_1
+        ru.*,
+        ad.prev_date_msk, -- смотрим на предыдущий день активности
+        ad.next_date_msk  -- смотрим на следующий  день активности
+    FROM real_users_1 AS ru
+    LEFT JOIN activity_dates AS ad USING (real_user_id, date_msk)
 ),
 
 real_users_3 AS (
@@ -281,3 +312,4 @@ SELECT
     real_users.is_churned_28
 FROM real_users_5 AS real_users
 LEFT JOIN {{ ref('gold_countries') }} AS countries USING (country_code)
+DISTRIBUTE BY real_users.date_msk

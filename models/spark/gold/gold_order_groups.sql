@@ -1,14 +1,20 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
     alias='order_groups',
     schema='gold',
-    file_format='parquet',
+    file_format='delta',
+    incremental_strategy='insert_overwrite',
+    partition_by=['order_date_msk'],
+    on_schema_change='sync_all_columns',
+
     meta = {
         'model_owner' : '@analytics.duty',
         'bigquery_load': 'true',
-        'bigquery_overwrite': 'true',
+        'bigquery_partitioning_date_column': 'order_date_msk',
+        'bigquery_upload_horizon_days': '230',
         'priority_weight': '1000',
+        'full_reload_on': '6',
     }
   )
 }}
@@ -87,6 +93,9 @@ order_groups AS (
         SUM(coupon_discount) AS coupon_discount,
         SUM(points_initial) AS points_initial
     FROM {{ ref('gold_orders') }}
+    {% if is_incremental() %}
+        WHERE order_date_msk >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 230 DAYS
+    {% endif %}
     GROUP BY 1, 2, 3, 4, 5, 6, 7
 )
 
@@ -145,3 +154,4 @@ SELECT
     n.real_user_order_groups_number
 FROM order_groups AS og
 INNER JOIN numbers AS n USING (order_group_id, device_id, real_user_id, user_id)
+DISTRIBUTE BY og.order_date_msk
