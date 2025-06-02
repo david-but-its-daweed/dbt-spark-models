@@ -31,11 +31,13 @@ products AS (
 stats AS (
     SELECT
         cjm.event_msk_date,
+
         cjm.product_id,
         ap.category_name,
         ap.level_1_category_name,
         ap.level_2_category_name,
         ap.level_3_category_name,
+
         COUNT(DISTINCT IF(cjm.type = 'productClick', cjm.user_id, NULL)) AS open,
         COUNT(DISTINCT IF(cjm.type = 'addToCart', cjm.user_id, NULL)) AS add_to_cart
     FROM {{ source('b2b_mart', 'ss_events_customer_journey') }} AS cjm
@@ -70,8 +72,10 @@ deals AS (
 
 SELECT
     p.partition_date,
+
     p.merchant_id,
     p.product_id,
+
     COALESCE(s.open, 0) AS open,
     COALESCE(s.add_to_cart, 0) AS add_to_cart,
     COALESCE(d.deals, 0) AS deals,
