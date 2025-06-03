@@ -124,18 +124,17 @@ add_to_cart AS (
         AND de.type = 'addToCart'
 ),
 
-
 /* Создание сделки после добавления товара в корзину после просмотра товара из подборки */
 create_deal AS (
     SELECT
-        c.user_id,
-        c.event_ts_msk,
-        c.product_id AS productId
-    FROM
-        {{ ref('ss_events_cart') }} AS c
-    WHERE
-        c.event_msk_date >= '2024-11-07'
-        AND c.actionType = 'move_to_deal'
+        d.user_id,
+        d.deal_friendly_id,
+        d.deal_created_ts AS event_ts_msk,
+        REGEXP_EXTRACT(c.link, r'products/([^/?]+)') AS productId
+    FROM {{ ref('fact_deals_with_requests') }} AS d
+    LEFT JOIN {{ ref('fact_customer_requests') }} AS c
+        ON c.next_effective_ts_msk IS NULL
+        AND d.deal_id = c.deal_id
 ),
 
 promotions AS (
@@ -209,10 +208,10 @@ main AS (
             AND atc.event_ts_msk < pc.next_same_product_click
     LEFT JOIN create_deal AS mtd
         ON
-            atc.user_id = mtd.user_id
-            AND atc.productId = mtd.productId
-            AND mtd.event_ts_msk >= atc.event_ts_msk
-            AND mtd.event_ts_msk < atc.next_same_add_to_cart
+            pc.user_id = mtd.user_id
+            AND pc.productId = mtd.productId
+            AND mtd.event_ts_msk >= pc.event_ts_msk
+            AND mtd.event_ts_msk < pc.next_same_product_click
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
 )
 
@@ -234,7 +233,7 @@ SELECT
     main.product_id,
     main.index + 1 AS product_index,
     main.product_click_at,
-    main.add_to_cart_at,
+    least(main.add_to_cart_at, coalesce(main.move_to_deal_at, main.add_to_cart_at)) AS add_to_cart_at,
     main.move_to_deal_at
 FROM main
 LEFT JOIN promotions AS pi ON main.promotion_id = pi.promotion_id
