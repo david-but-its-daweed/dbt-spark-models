@@ -211,7 +211,7 @@ WITH base_deal AS (
 ), 
 success_statuses as (
     select deal_id, max(1) as paid_achieved 
-  from  { ref('fact_deals_status_history') }}
+  from  {{ ref('fact_deals_status_history') }}
     where status_name_small_deal like '%ProcurementConfirmation' or status_name  like '%PaymentToMerchant'
     group by deal_id
     )
