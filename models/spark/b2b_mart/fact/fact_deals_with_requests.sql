@@ -208,14 +208,7 @@ WITH base_deal AS (
            first_type,
            number_of_interactions
     FROM {{ ref('fact_marketing_deals_interactions') }}
-), 
-success_statuses as (
-    select deal_id, max(1) as paid_achieved 
-  from  {{ ref('fact_deals_status_history') }}
-    where status_name_small_deal like '%ProcurementConfirmation' or status_name  like '%PaymentToMerchant'
-    group by deal_id
-    )
-
+)
 
 SELECT
     d.deal_id,
@@ -283,8 +276,7 @@ SELECT
     first_source,
     first_type,
     number_of_interactions AS count_visits,
-    ROW_NUMBER() OVER (PARTITION BY d.user_id ORDER BY deal_created_ts) AS number_user_deal, 
-    paid_achieved 
+    ROW_NUMBER() OVER (PARTITION BY d.user_id ORDER BY deal_created_ts) AS number_user_deal
 FROM deals_agg_stat AS d
 LEFT JOIN order_data AS o ON d.order_id = o.order_id
 LEFT JOIN marketing_deals_interactions AS di ON d.deal_id = di.deal_id
