@@ -280,4 +280,3 @@ SELECT
 FROM deals_agg_stat AS d
 LEFT JOIN order_data AS o ON d.order_id = o.order_id
 LEFT JOIN marketing_deals_interactions AS di ON d.deal_id = di.deal_id
-LEFT JOIN success_statuses using(deal_id) 
