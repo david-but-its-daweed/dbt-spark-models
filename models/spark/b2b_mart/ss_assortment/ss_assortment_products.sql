@@ -76,8 +76,8 @@ SELECT
 
     MILLIS_TO_TS_MSK(pp.updatedTimeMs) AS update_ts_msk,
     DATE(MILLIS_TO_TS_MSK(pp.updatedTimeMs)) AS update_date,
-    MILLIS_TO_TS_MSK(pp.publishedTimeMs) AS published_ts_msk,
-    DATE(MILLIS_TO_TS_MSK(pp.publishedTimeMs)) AS published_date
+    MILLIS_TO_TS_MSK(pp.createdTimeMs) AS published_ts_msk,
+    DATE(MILLIS_TO_TS_MSK(pp.createdTimeMs)) AS published_date
 FROM {{ ref('scd2_published_products_snapshot') }} AS pp
 LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
 LEFT JOIN matching AS m ON pp._id = m.product_id
