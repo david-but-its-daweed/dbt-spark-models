@@ -1,4 +1,7 @@
 #!/bin/bash
 
-
-python3 ./run.py --changed-only $@
+python3 -m dbttools.run_dev \
+  --profile=spark \
+  --changed-only \
+  --prod-profiles-dir=production/profiles \
+  $@

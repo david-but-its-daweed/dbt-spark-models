@@ -11,6 +11,9 @@ from infra.dbtjoom.invocation import compile
 from infra.dbtjoom.load import load_dbt_run_results, load_spark_profile
 from infra.dbtjoom.thrift_client import ThriftClient
 
+# FIXME: This script is still in use in datasci/analytics/joom/deploy/docker/dbt/run.sh,
+#  need to replace the usage to `python3 -m dbttools.run_cleanup ...` and drop this
+
 logging.basicConfig(
     format='%(message)s',
     datefmt='%Y-%m-%d %H:%M:%S',
