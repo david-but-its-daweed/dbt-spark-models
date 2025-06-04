@@ -47,6 +47,7 @@ SELECT
     m.ali1688_product_id,
     m.joom_product_id,
 
+    pp.m1688.categoryId AS ali1688_category_id,
     pp.categoryId AS category_id,
     cat.category_name,
     cat.level_1_category_name,
