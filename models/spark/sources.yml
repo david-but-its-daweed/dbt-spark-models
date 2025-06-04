@@ -94,6 +94,7 @@ sources:
       - name: logistics_replenishments_stock_daily_snapshot
       - name: warehouse_warehouse_stocks_daily_snapshot
       - name: core_warehouses_daily_snapshot
+      - name: core_i18ndata_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
