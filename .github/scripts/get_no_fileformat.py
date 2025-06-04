@@ -1,9 +1,10 @@
 from infra.dbtjoom.load import load_manifest
 from itertools import groupby
 import subprocess
+from typing import *
 
 
-def get_changed_files(base_branch="origin/master") -> list[str]:
+def get_changed_files(base_branch="origin/master") -> List[str]:
     result = subprocess.run(
         ["git", "diff", "--name-only", "--diff-filter=AM", base_branch],
         stdout=subprocess.PIPE,
