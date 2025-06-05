@@ -1,6 +1,7 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    file_format='parquet',
     partition_by=['session_start_date'],
     meta = {
       'model_owner' : '@annzaychik',
