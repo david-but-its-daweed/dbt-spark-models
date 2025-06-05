@@ -1,11 +1,12 @@
 {{ config (
     schema='holistics',
     materialized='incremental',
+    incremental_strategy='insert_overwrite',
+    file_format='delta',
     meta = {
       'model_owner' : '@general_analytics',
       'bigquery_load': 'true'
     },
-    incremental_strategy='insert_overwrite',
     partition_by=['date_msk'],
     ) 
 }}
