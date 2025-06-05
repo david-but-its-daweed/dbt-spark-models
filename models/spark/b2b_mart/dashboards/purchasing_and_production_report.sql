@@ -155,6 +155,19 @@ WITH procurement_orders AS (
            MAX_BY(procurement_status_name, status_time) AS current_status,
            MAX_BY(procurement_sub_status_name, status_time) AS current_sub_status,
            MAX(status_time) AS current_status_ts,
+           /* Cancel Reason */
+           MAX(CASE WHEN procurement_status_name = 'cancelled' THEN rejectReason END) AS reject_reason_id,
+           CASE MAX(CASE WHEN procurement_status_name = 'cancelled' THEN rejectReason END)
+               WHEN 0 THEN 'Empty'
+               WHEN 1 THEN 'Other'
+               WHEN 2 THEN 'InvoiceNotIssued'
+               WHEN 3 THEN 'ProductDiscontinued'
+               WHEN 4 THEN 'ProductOutOfStock'
+               WHEN 5 THEN 'NoResponseFromSeller'
+               WHEN 6 THEN 'NoSupportOfSmallQuantityOrders'
+               ELSE 'Unknown'
+           END AS reject_reason_name,
+           MAX(CASE WHEN procurement_status_name = 'cancelled' THEN rejectReasonDescription END) AS reject_reason_description,
            /* Status */
            MIN(CASE WHEN procurement_status_name = 'preProcessing' THEN status_time END) AS status_pre_processing_ts,
            MIN(CASE WHEN procurement_status_name = 'formingOrder' THEN status_time END) AS status_forming_order_ts,
@@ -214,6 +227,8 @@ WITH procurement_orders AS (
                    ps.comment,
                    ps.status,
                    ps.subStatus,
+                   ps.rejectReason,
+                   ps.rejectReasonDescription,
                    millis_to_ts_msk(ps.statusTime) AS status_time
             FROM procurement_orders AS po
             LATERAL VIEW EXPLODE(po.procurement_statuses) AS ps
@@ -544,6 +559,10 @@ SELECT
     pch.current_status,
     pch.current_sub_status,
     pch.current_status_ts,
+    /* В PO могут проставить статус cancelled, а потом убрать его, поэтому у нас сохранится, что есть время статуса cancelled. Поэтому доп. обрабатываем это */
+    CASE WHEN pch.current_status = 'cancelled' THEN pch.reject_reason_id END AS reject_reason_id,
+    CASE WHEN pch.current_status = 'cancelled' THEN pch.reject_reason_name END AS reject_reason_name,
+    CASE WHEN pch.current_status = 'cancelled' THEN pch.reject_reason_description END AS reject_reason_description,
     pch.sub_status_forming_order_unassigned_ts,
     pch.sub_status_filling_in_information_ts,
     pch.sub_status_confirmed_by_procurement_ts,
@@ -571,7 +590,7 @@ SELECT
     pch.sub_status_final_payment_acquired_ts,
     pch.sub_status_pick_up_payment_picked_up_ts,
     pch.sub_status_completed_ts,
-    pch.sub_status_cancelled_ts,
+    CASE WHEN pch.current_status = 'cancelled' THEN pch.sub_status_cancelled_ts END AS sub_status_cancelled_ts,
     ph.current_psi_status,
     ph.current_psi_status_ts,
     ph.psi_waiting_ts,
