@@ -47,7 +47,7 @@ SELECT
     m.ali1688_product_id,
     m.joom_product_id,
 
-    pp.m1688.categoryId AS ali1688_category_id,
+    pa.m1688.categoryId AS ali1688_category_id,
     pp.categoryId AS category_id,
     cat.category_name,
     cat.level_1_category_name,
@@ -80,6 +80,7 @@ SELECT
     MILLIS_TO_TS_MSK(pp.createdTimeMs) AS published_ts_msk,
     DATE(MILLIS_TO_TS_MSK(pp.createdTimeMs)) AS published_date
 FROM {{ ref('scd2_published_products_snapshot') }} AS pp
+LEFT JOIN {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }} AS pa ON pp._id = pa._id
 LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
 LEFT JOIN matching AS m ON pp._id = m.product_id
 WHERE
