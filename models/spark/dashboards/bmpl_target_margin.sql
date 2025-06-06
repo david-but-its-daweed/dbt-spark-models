@@ -1,6 +1,8 @@
 {{
   config(
-    materialized='table',
+    materialized='incremental',
+    file_format='delta',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@general_analytics',
       'priority_weight': '1000',

@@ -1,8 +1,10 @@
 {{
   config(
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
-      'model_owner' : '@general_analytics',
+      'model_owner' : '@catman-analytics.duty',
       'priority_weight': '1000',
       'bigquery_load': 'true'
     }

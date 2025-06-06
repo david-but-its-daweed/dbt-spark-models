@@ -1,8 +1,9 @@
 {{
     config(
+        file_format='delta',
         materialized='incremental',
         incremental_strategy='insert_overwrite',
-        partition_by=['month_msk'],
+        partition_by=['date_msk'],
         on_schema_change='sync_all_columns',
         meta = {
             'model_owner' : '@general_analytics',
@@ -48,7 +49,6 @@ checkout_funnel AS (
 SELECT
     COALESCE(p.device_id, c.device_id) AS device_id,
     COALESCE(p.date_msk, c.date_msk) AS date_msk,
-    TRUNC(COALESCE(p.date_msk, c.date_msk), "MM") AS month_msk,
     p.productOpens,
     p.productAddToCarts,
     p.productPurchases,
@@ -59,4 +59,4 @@ SELECT
     c.checkoutDeliverySelects
 FROM product_funnel AS p
 FULL OUTER JOIN checkout_funnel AS c USING (device_id, date_msk)
-DISTRIBUTE BY month_msk, ABS(HASH(device_id)) % 10
+DISTRIBUTE BY date_msk

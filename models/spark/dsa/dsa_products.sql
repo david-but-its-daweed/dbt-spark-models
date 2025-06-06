@@ -1,9 +1,11 @@
 {{
   config(
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@general_analytics',
-    },
-    materialized='table'
+    }
   )
 }}
 

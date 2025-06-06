@@ -1,6 +1,8 @@
 {{
   config(
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
         'model_owner' : '@general_analytics',
         'bigquery_load': 'true'
