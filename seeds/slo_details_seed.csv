@@ -25,5 +25,5 @@ slo_gold,Gold,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,9,Gold-dataset
 slo_jm_base_tables,JM Main Tables,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,10,Joom Marketplace main tables,mart,80,2,,6
 slo_main_report,⭐ Main,@yatsushko,#slo-monitoring,10,Data for Main dashboard https://secure.holistics.io/dashboards/v3/16602-main,report,80,2,,6
 slo_country_info_report,Country Info,@yatsushko,#slo-monitoring,10,Data for Country Info report https://secure.holistics.io/dashboards/v3/17297-country-info,report,80,2,,6
-slo_jm_plan_fact_priority,JM Plan Fact Priority,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,10,Priority tables for JM Plan Fact Reports,mart,90,1,#analytics-achtung,6
-slo_jm_plan_fact_priority_9am,JM Plan Fact Priority 9AM,<!subteam^SDN6W6X71|analytics.duty>,#slo-monitoring,10,Priority tables for JM Plan Fact Reports (9am),mart,90,1,#analytics-achtung,6
+slo_jm_plan_fact_priority,JM Plan Fact Priority,<!subteam^SDN6W6X71|analytics.duty> @ads.duty,#slo-monitoring,10,Priority tables for JM Plan Fact Reports,mart,90,1,#analytics-achtung,6
+slo_jm_plan_fact_priority_9am,JM Plan Fact Priority 9AM,<!subteam^SDN6W6X71|analytics.duty> @ads.duty,#slo-monitoring,10,Priority tables for JM Plan Fact Reports (9am),mart,90,1,#analytics-achtung,6
