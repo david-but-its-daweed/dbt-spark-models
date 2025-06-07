@@ -2,7 +2,7 @@ spark:
   target: prod
   outputs:
     prod:
-      host: thrift-service-prod.joom.ai
+      host: thrift-service-prod.thrift-service.svc
       method: thrift
       port: 10000
       schema: models
