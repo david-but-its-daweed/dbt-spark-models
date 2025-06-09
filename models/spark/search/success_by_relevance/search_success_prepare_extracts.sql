@@ -1,8 +1,9 @@
 {{ config(
     schema = 'search',
-    materialized = 'table',
     partition_by = ['search_date'],
-    file_format = 'parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
         'model_owner': '@itangaev',
         'team': 'search',
