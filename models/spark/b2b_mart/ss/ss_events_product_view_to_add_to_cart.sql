@@ -28,7 +28,7 @@ pre_data AS (
         de.type,
         de.event_ts_msk,
         CAST(de.event_ts_msk AS DATE) AS event_msk_date,
-        de.bot_flag,
+        bots.bot_flag,
         de.payload.pageurl,
         de.payload.pagename,
         LEAD(de.type) OVER (PARTITION BY de.`user`['userId'], de.payload.pageurl ORDER BY de.event_ts_msk) AS lead_type,
