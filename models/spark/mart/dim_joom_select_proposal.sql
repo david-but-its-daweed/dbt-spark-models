@@ -16,7 +16,7 @@ SELECT
     status_history,
     target_variant_prices,
     cancel_info,
-    will_be_cancelled_time
+    will_be_cancelled_time,
     TIMESTAMP(dbt_valid_from) AS effective_ts,
     TIMESTAMP(dbt_valid_to) AS next_effective_ts
 FROM {{ ref('scd2_mongo_joom_select_proposal') }}
