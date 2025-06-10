@@ -27,7 +27,8 @@ SELECT
     )) AS status_history,
     TRANSFORM(tps, price -> NAMED_STRUCT(
         'variant_id', price.vid,
-        'price', CAST(price.p AS DOUBLE)
+        'price', CAST(price.p AS DOUBLE),
+        'price_source', price.s
     )) AS target_variant_prices,
     IF(ci IS NOT NULL, NAMED_STRUCT(
         'reason', CASE
@@ -38,6 +39,8 @@ SELECT
             WHEN ci.r = 5 THEN 'replacedByOtherProposal'
             WHEN ci.r = 6 THEN 'tooLowPrices'
             WHEN ci.r = 7 THEN 'other'
+            WHEN ci.r = 8 THEN 'anotherProposalWasNotApproved'
+            WHEN ci.r = 9 THEN 'incompatible'
             ELSE ''
         END,
         'source', CASE
@@ -45,5 +48,6 @@ SELECT
             WHEN ci.s = 2 THEN 'joom'
             ELSE ''
         END
-    ), NULL) AS cancel_info
+    ), NULL) AS cancel_info,
+    wbct AS will_be_cancelled_time
 FROM {{ source('mongo', 'product_merchant_joom_select_proposals_daily_snapshot') }}

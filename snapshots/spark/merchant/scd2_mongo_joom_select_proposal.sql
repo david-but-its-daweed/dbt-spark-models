@@ -21,7 +21,8 @@
         merchant_id,
         status_history,
         target_variant_prices,
-        cancel_info
+        cancel_info,
+        will_be_cancelled_time
     FROM {{ ref('joom_select_proposal') }}
 
 {% endsnapshot %}
