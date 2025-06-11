@@ -33,7 +33,8 @@ previous_deals AS (
 statuses AS (
     SELECT
         deal_id,
-        MAX(1) AS achieved_paid
+        MAX(1) AS achieved_paid,
+        min(cast(event_ts_msk as date)) as achieved_paid_date
     FROM {{ ref('fact_deals_status_history') }}
     WHERE status_name_small_deal LIKE '%ProcurementConfirmation' OR status_name LIKE '%PaymentToMerchant'
     GROUP BY 1
@@ -107,6 +108,7 @@ SELECT
         WHEN pr.day_after_previous_deal > 90 THEN 'g.Four_Month_and_more'
     END AS previous_deal_days_group,
     COALESCE(st.achieved_paid, 0) AS achived_payment,
+    achieved_paid_date,
     t1.promo_code,
     t1.promo_code_discount,
     t1.promo_code_type
