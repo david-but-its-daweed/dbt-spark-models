@@ -77,7 +77,8 @@ deals AS (
     deal_created_date,
     deal_id, 
     user_id,
-    COALESCE(final_gmv, 0) AS final_gmv
+    COALESCE(final_gmv, 0) AS final_gmv,
+    COALESCE(gmv_initial, 0) as gmv_initial
   FROM {{ ref('fact_deals_with_requests') }}
   WHERE deal_type != 'Sample'
 ),
@@ -96,7 +97,8 @@ agg_week AS (
     user_id,
     week_number, 
     COUNT(deal_id) AS deals, 
-    SUM(final_gmv) AS gmv
+    SUM(gmv_initial) AS gmv,
+    SUM(final_gmv) as final_gmv
   FROM base_s 
   WHERE week_number IS NOT NULL  
   GROUP BY user_id, week_number
@@ -107,7 +109,8 @@ agg_month AS (
     user_id,
     month_number, 
     COUNT(deal_id) AS deals, 
-    SUM(final_gmv) AS gmv
+    SUM(gmv_initial) AS gmv,
+    SUM(final_gmv) as final_gmv
   FROM base_s 
   WHERE month_number IS NOT NULL  
   GROUP BY user_id, month_number
