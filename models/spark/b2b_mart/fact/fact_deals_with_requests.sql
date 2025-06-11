@@ -208,6 +208,14 @@ WITH base_deal AS (
            first_type,
            number_of_interactions
     FROM {{ ref('fact_marketing_deals_interactions') }}
+),
+fact_finance as (
+select 
+    order_id,
+    gmv_initial,
+    initial_gross_profit,
+    final_gross_profit
+    from {{ ref('gmv_by_sources') }} 
 )
 
 SELECT
@@ -261,10 +269,13 @@ SELECT
     o.order_friendly_id,
     o.order_current_status,
     o.total_confirmed_price,
-    o.final_gross_profit,
-    o.initial_gross_profit,
+  --  o.final_gross_profit,
+  --  o.initial_gross_profit,
     o.owner_moderator_id,
     o.final_gmv,
+    ff.gmv_initial,
+    ff.initial_gross_profit,
+    ff.final_gross_profit,
     utm_campaign,
     utm_source,
     utm_medium,
@@ -280,3 +291,4 @@ SELECT
 FROM deals_agg_stat AS d
 LEFT JOIN order_data AS o ON d.order_id = o.order_id
 LEFT JOIN marketing_deals_interactions AS di ON d.deal_id = di.deal_id
+LEFT JOIN fact_finance ff using(order_id)
