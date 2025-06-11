@@ -32,7 +32,7 @@ final AS (
         ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY cnt DESC) AS rn
     FROM session_landings
     WHERE landing IS NOT NULL
-),
+)
 
 SELECT
     user_id,
