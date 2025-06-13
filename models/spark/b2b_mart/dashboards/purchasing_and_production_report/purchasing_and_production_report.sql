@@ -90,12 +90,20 @@ main_with_last AS (
             END
         ) OVER (PARTITION BY deal_id) AS last_ready_for_shipment_in_deal_ts
     FROM main
+),
 
+gmv AS (
+    SELECT
+        procurement_order_id,
+        SUM(price_per_item_usd_raw * final_qty_raw) AS gmv_usd
+    FROM {{ ref('purchasing_and_production_report_boxes') }}
+    GROUP BY 1
 )
 
 
 SELECT
     main.*,
+    gmv.gmv_usd,
     (UNIX_TIMESTAMP(sub_status_ready_for_shipment_ts) - UNIX_TIMESTAMP(first_ready_for_shipment_in_deal_ts)) / 3600 / 24
         AS waiting_ready_for_shipment_from_first_order_in_deal,
     (UNIX_TIMESTAMP(last_ready_for_shipment_in_deal_ts) - UNIX_TIMESTAMP(first_ready_for_shipment_in_deal_ts)) / 3600 / 24
@@ -103,3 +111,4 @@ SELECT
     (UNIX_TIMESTAMP(first_shipped_in_deal_ts) - UNIX_TIMESTAMP(last_ready_for_shipment_in_deal_ts)) / 3600 / 24
         AS waiting_shipped_from_last_ready_for_shipment_in_deal
 FROM main_with_last AS main
+LEFT JOIN gmv ON main.procurement_order_id = gmv.procurement_order_id
