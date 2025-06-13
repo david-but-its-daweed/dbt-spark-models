@@ -12,7 +12,8 @@ WITH request AS (
     SELECT
         customer_request_id,
         SUM(qty) AS qty,
-        ROUND(SUM(merchant_price_per_item * qty) / SUM(qty), 2) AS merchant_price_per_item,
+        SUM(merchant_price_per_item) AS merchant_price_per_item,
+        SUM(merchant_price_per_item * qty) / SUM(qty) AS weighted_avg_merchant_price_per_item,
         SUM(number_of_boxes * box_weight) AS brutto_kg,
         SUM(box_length * box_width * box_height * number_of_boxes / 1000000) AS volume
     FROM (
@@ -41,7 +42,8 @@ WITH request AS (
 merchant AS (
     SELECT
         procurement_order_id,
-        ROUND(SUM(price_per_item * original_qty) / SUM(original_qty), 2) AS price_per_item,
+        SUM(price_per_item) AS price_per_item,
+        SUM(price_per_item * original_qty) / SUM(original_qty) AS weighted_avg_price_per_item,
         SUM(original_qty) AS original_qty,
         SUM(qty) AS qty,
         SUM(number_of_boxes * box_weight) AS brutto_kg,
@@ -136,12 +138,14 @@ SELECT
     -- SS data
     ss.qty AS request_qty_raw,
     ss.merchant_price_per_item AS merchant_price_per_item_raw,
+    ss.weighted_avg_merchant_price_per_item AS weighted_avg_merchant_price_per_item_raw,
     ss.brutto_kg AS request_weight_raw,
     ss.volume AS request_volume_raw,
 
     -- Merchant data
     m.price_per_item AS price_per_item_raw,
     m.price_per_item * cr.rate AS price_per_item_usd_raw,
+    m.weighted_avg_price_per_item AS weighted_avg_price_per_item_raw,
     m.original_qty AS original_qty_raw,
     m.qty AS final_qty_raw,
     m.brutto_kg AS merchant_weight_raw,
