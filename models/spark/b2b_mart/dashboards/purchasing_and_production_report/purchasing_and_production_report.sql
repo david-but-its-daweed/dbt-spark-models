@@ -95,9 +95,8 @@ main_with_last AS (
 gmv AS (
     SELECT
         procurement_order_id,
-        SUM(price_per_item_usd_raw * final_qty_raw) AS gmv_usd
+        total_price_usd_raw AS gmv_usd
     FROM {{ ref('purchasing_and_production_report_boxes') }}
-    GROUP BY 1
 )
 
 
