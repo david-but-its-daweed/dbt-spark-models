@@ -175,13 +175,13 @@ SELECT
 
     -- Comparison 2
     CASE
-        WHEN (m.price_per_item IS NOT NULL AND ss.merchant_price_per_item IS NOT NULL)
+        WHEN (m.weighted_avg_price_per_item IS NOT NULL AND ss.weighted_avg_merchant_price_per_item IS NOT NULL)
           OR (m.brutto_kg IS NOT NULL AND ss.brutto_kg IS NOT NULL)
           OR (m.volume IS NOT NULL AND ss.volume IS NOT NULL)
         THEN 1 ELSE 0
     END AS is_for_confirmed_comparison,
 
-    (m.price_per_item - ss.merchant_price_per_item) / ss.merchant_price_per_item AS merchant_price_diff_pct_raw,
+    (m.weighted_avg_price_per_item - ss.weighted_avg_merchant_price_per_item) / ss.weighted_avg_merchant_price_per_item AS merchant_price_diff_pct_raw,
     (m.brutto_kg - ss.brutto_kg) / ss.brutto_kg AS request_weight_diff_pct_raw,
     (m.volume - ss.volume) / ss.volume AS request_volume_diff_pct_raw
 
