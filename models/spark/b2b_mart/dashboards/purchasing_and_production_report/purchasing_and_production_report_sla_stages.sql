@@ -10,13 +10,13 @@
 
 WITH big_batch_raw AS (
     SELECT *
-    FROM {{ ref('procurement_orders') }}
+    FROM {{ ref('purchasing_and_production_report') }}
     WHERE is_small_batch = 0
       AND current_status != 'cancelled'
 ),
      small_batch_raw AS (
     SELECT *
-    FROM {{ ref('procurement_orders') }}
+    FROM {{ ref('purchasing_and_production_report') }}
     WHERE is_small_batch = 1
       AND current_status != 'cancelled'
 ),
