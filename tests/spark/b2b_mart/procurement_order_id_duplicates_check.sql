@@ -1,4 +1,4 @@
 SELECT procurement_order_id
-FROM {{ source('b2b_mart', 'purchasing_and_production_report') }}
+FROM {{ source('b2b_mart', 'procurement_orders') }}
 GROUP BY procurement_order_id
 HAVING COUNT("*") > 1
