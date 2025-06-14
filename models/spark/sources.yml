@@ -95,6 +95,8 @@ sources:
       - name: warehouse_warehouse_stocks_daily_snapshot
       - name: core_warehouses_daily_snapshot
       - name: core_i18ndata_daily_snapshot
+      - name: product_product_cluster_links_daily_snapshot
+      - name: product_product_clusters_daily_snapshot
   - name: default
     tables:
       - name: sat_store_performance
