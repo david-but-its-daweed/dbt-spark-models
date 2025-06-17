@@ -36,6 +36,7 @@ search_agg_with_category_names AS (
         s.textQueryOrCategory,
         s.search_type,
         s.search_date,
+        FIRST(s.user_id) AS user_id,
         FIRST(s.payload.query) AS query,
         FIRST(s.search_category_id) AS search_category_id,
         FIRST(s.payload.numResults) AS numResults,
@@ -47,8 +48,7 @@ search_agg_with_category_names AS (
         FIRST(s.device.language) AS language,
         FIRST(s.device.os_type) AS os_type,
         FIRST(s.event_ts / 1000) as search_ts,
-        FIRST(a.nameRu) AS category_name,
-        FIRST(a.user_id) AS user_id
+        FIRST(a.nameRu) AS category_name
     FROM searches AS s
     LEFT JOIN {{ source('mongo', 'abu_core_catalog_daily_snapshot') }} AS a
         ON s.search_category_id = a._id
