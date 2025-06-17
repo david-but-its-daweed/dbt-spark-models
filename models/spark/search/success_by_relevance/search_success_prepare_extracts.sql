@@ -26,7 +26,13 @@ WITH searches AS (
         COALESCE(search_category_id, payload.query) AS textQueryOrCategory,
         DATE(FROM_UNIXTIME(event_ts / 1000)) AS search_date
     FROM {{ source('mart', 'device_events') }} AS t
-    WHERE partition_date >= DATE('2025-04-15')
+    WHERE
+        {% if is_incremental() %}
+            AND partition_date >= DATE'{{ var("start_date_ymd") }}' - INTERVAL 14 DAYS
+            AND partition_date < DATE'{{ var("end_date_ymd") }}'
+        {% else %}
+            AND partition_date >= CURRENT_DATE() - INTERVAL 90 DAYS
+        {% endif %}
         AND type = 'search'
 ),
 
@@ -134,7 +140,12 @@ clicks AS (
         'productToCart',
         'productPurchase'
     )
-        AND partition_date >= DATE('2025-04-15')
+        {% if is_incremental() %}
+            AND partition_date >= DATE'{{ var("start_date_ymd") }}' - INTERVAL 14 DAYS
+            AND partition_date < DATE'{{ var("end_date_ymd") }}'
+        {% else %}
+            AND partition_date >= CURRENT_DATE() - INTERVAL 90 DAYS
+        {% endif %}
     GROUP BY device_id, product_id, event_date
 ),
 
@@ -152,7 +163,12 @@ device_info AS (
         top_country_code
     FROM {{ ref('gold_active_devices_with_ephemeral') }}
     WHERE TRUE
-        AND date_msk >= DATE('2025-04-15')
+        {% if is_incremental() %}
+            AND date_msk >= DATE'{{ var("start_date_ymd") }}' - INTERVAL 14 DAYS
+            AND date_msk < DATE'{{ var("end_date_ymd") }}'
+        {% else %}
+            AND date_msk >= CURRENT_DATE() - INTERVAL 90 DAYS
+        {% endif %}
         AND DATEDIFF(date_msk, join_date_msk) <= 30
 )
 
