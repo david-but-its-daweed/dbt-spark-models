@@ -26,7 +26,7 @@ WITH searches AS (
         COALESCE(search_category_id, payload.query) AS textQueryOrCategory,
         DATE(FROM_UNIXTIME(event_ts / 1000)) AS search_date
     FROM {{ source('mart', 'device_events') }} AS t
-    WHERE partition_date >= DATE('2025-03-01')
+    WHERE partition_date >= DATE('2025-03-01') and partition_date < DATE('2025-05-01')
         AND type = 'search'
 ),
 
@@ -134,7 +134,7 @@ clicks AS (
         'productToCart',
         'productPurchase'
     )
-        AND partition_date >= DATE('2025-03-01')
+        AND partition_date >= DATE('2025-03-01') and partition_date < DATE('2025-05-01')
     GROUP BY device_id, product_id, event_date
 ),
 
@@ -152,7 +152,7 @@ device_info AS (
         top_country_code
     FROM {{ ref('gold_active_devices_with_ephemeral') }}
     WHERE TRUE
-        AND date_msk >= DATE('2025-03-01')
+        AND date_msk >= DATE('2025-03-01') and date_msk < DATE('2025-05-01')
         AND DATEDIFF(date_msk, join_date_msk) <= 30
 )
 
