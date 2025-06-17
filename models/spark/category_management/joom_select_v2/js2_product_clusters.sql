@@ -58,7 +58,8 @@ clusters AS (
             WHEN st = 1 THEN "Invisible"
             WHEN st = 2 THEN "Disabled"
             ELSE "Unknown"
-        END AS cluster_state
+        END AS cluster_state,
+        EXPLODE(vars) AS vars
     FROM {{ source('mongo', 'product_product_clusters_daily_snapshot') }}
 )
 
@@ -76,4 +77,6 @@ SELECT
     l.store_link_type,
     l.current_link_status
 FROM clusters AS c
-INNER JOIN cluster_links AS l USING (cluster_id)
+INNER JOIN cluster_links AS l ON
+    l.cluster_id = c.cluster_id
+    AND l.cluster_variant_id = c.vars._id

@@ -196,7 +196,6 @@ sources:
   - name: mi_analytics
     tables:
       - name: aliexpress_logistics_prices
-      - name: aliexpress_joom_price_index_v2
       - name: aliexpress_joom_automatching_price_index
       - name: ali1688_joom_target_prices
 
@@ -229,17 +228,14 @@ sources:
 
   - name: category_management
     tables:
-      - name: joom_select_manual_criteria
       - name: joom_select_product_white_list
       - name: joom_select_product_black_list
       - name: categories_with_ce_requirements
-      - name: js_focus_1688_products
       - name: merchant_kam_materialized
       - name: joom_select_variant_target_prices
 
   - name: merchant
     tables:
-      - name: merchant_performance
       - name: order_data
       - name: kam
 
