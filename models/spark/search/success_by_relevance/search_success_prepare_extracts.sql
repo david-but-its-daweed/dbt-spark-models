@@ -47,7 +47,8 @@ search_agg_with_category_names AS (
         FIRST(s.device.language) AS language,
         FIRST(s.device.os_type) AS os_type,
         FIRST(s.event_ts / 1000) as search_ts,
-        FIRST(a.nameRu) AS category_name
+        FIRST(a.nameRu) AS category_name,
+        FIRST(a.user_id) AS user_id
     FROM searches AS s
     LEFT JOIN {{ source('mongo', 'abu_core_catalog_daily_snapshot') }} AS a
         ON s.search_category_id = a._id
