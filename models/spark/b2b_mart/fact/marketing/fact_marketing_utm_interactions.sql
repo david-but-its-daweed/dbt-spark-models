@@ -89,8 +89,10 @@ visit_date,
 traffic_type, 
 utm_source,
 utm_medium,
-case when (utm_campaign is null or  utm_campaign = '') and 
+case
+when (utm_campaign is null or  utm_campaign = '') and 
 utm_medium like '%google%' then 'unrecognized_google_campaign'
+when LOWER(utm_source) like '%pulse%'  and  utm_campaign is null then utm_medium
 when  (utm_campaign is null or  utm_campaign = '') and  utm_medium like '%Exhibition%' then 'unrecognized_exhibition_campaign'
 when traffic_type = 'advertising' and (utm_campaign is null or  utm_campaign = '')  then 'unrecognized_campaign'
 else utm_campaign
@@ -109,6 +111,8 @@ case
     when LOWER(utm_source) like '%youtube%' or  LOWER(utm_medium) like '%youtube%' then 'Youtube'
     when LOWER(utm_source) like '%social%' or  LOWER(utm_medium) like '%social%' then 'Social'
     when LOWER(utm_source) like '%partners%' or  LOWER(utm_medium) like '%partners%' then 'Partners'
+    when LOWER(utm_medium) like '%extension%' then 'Extension'
+    when LOWER(utm_source) like '%pulse%' or  LOWER(utm_medium) like '%pulse%' then 'Pulse'
     when utm_source like '%SDR%' or utm_campaign  like '%SDR%' or utm_medium like '%SDR%' then 'SDR'
     when LOWER(utm_source) like '%sponsored%' or LOWER(utm_medium) like '%sponsored%' then 'Sponsor'
     when LOWER(utm_source) like '%exhibition%' or  LOWER(utm_medium) like '%exhibition%' then 'Exhibition'
