@@ -123,6 +123,7 @@ FROM (
                 END
             ) AS subscribtion_months
         FROM {{ source('mongo', 'b2b_core_analytics_subscriptions_daily_snapshot') }} AS subscription
+        WHERE subscription.payhubSubsciptionId != ""
     ) AS s
 ) AS subscription
 INNER JOIN currency ON TO_DATE(subscription.created_time) = currency.date
