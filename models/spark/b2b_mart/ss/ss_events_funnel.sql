@@ -28,6 +28,7 @@ events AS (
         `user`.userId AS user_id,
         de.type AS event_type,
 
+        CAST(payload.source AS STRING) AS source,
         CASE
             WHEN de.type = 'search' AND CAST(payload.query AS STRING) = '' THEN 'category'
             WHEN de.type = 'search' AND CAST(payload.query AS STRING) > '' AND CAST(payload.isSearchByImage AS BOOLEAN) IS NULL THEN 'query'
@@ -39,21 +40,29 @@ events AS (
     FROM b2b_mart.device_events AS de
     LEFT JOIN bots AS b ON de.device.id = b.device_id
     WHERE
-        de.partition_date >= '2025-01-01'
+        de.partition_date >= '2024-01-01'
         AND de.`user`.userId IS NOT NULL
-        AND de.type IN ('search', 'moreProductsClick', 'productPreview', 'productClick', 'addToCart')
+        AND de.type IN ('search', 'productPreview', 'productClick', 'addToCart')
         AND b.bot_flag IS NULL
 ),
 
 events_with_step AS (
     SELECT
-        *,
+        partition_date,
+        event_ts,
+        user_id,
+        event_type,
+
+        source,
+        MAX(search_type) OVER (PARTITION BY search_id) AS search_type,
+        search_id,
+        product_id,
+        index,
         CASE
             WHEN event_type = 'search' THEN 1
-            WHEN event_type = 'moreProductsClick' THEN 2
-            WHEN event_type = 'productPreview' THEN 3
-            WHEN event_type = 'productClick' THEN 4
-            WHEN event_type = 'addToCart' THEN 5
+            WHEN event_type = 'productPreview' THEN 2
+            WHEN event_type = 'productClick' THEN 3
+            WHEN event_type = 'addToCart' THEN 4
         END AS funnel_step
     FROM events
 ),
@@ -63,7 +72,7 @@ funnel_progress AS (
         user_id,
         search_id,
         product_id,
-        MAX(COALESCE (funnel_step, 0)) AS max_step
+        MAX(COALESCE(funnel_step, 0)) AS max_step
     FROM events_with_step
     WHERE search_id IS NOT NULL AND product_id IS NOT NULL
     GROUP BY user_id, search_id, product_id
