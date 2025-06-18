@@ -26,7 +26,7 @@ WITH searches AS (
         COALESCE(search_category_id, payload.query) AS textQueryOrCategory,
         DATE(FROM_UNIXTIME(event_ts / 1000)) AS search_date
     FROM {{ source('mart', 'device_events') }} AS t
-    WHERE
+    WHERE TRUE
         {% if is_incremental() %}
             AND partition_date >= DATE'{{ var("start_date_ymd") }}' - INTERVAL 14 DAYS
             AND partition_date < DATE'{{ var("end_date_ymd") }}'
