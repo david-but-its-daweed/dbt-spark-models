@@ -668,8 +668,8 @@ SELECT
         /* Для мелкого опта */
         WHEN po.is_small_batch = 1 THEN
             CASE
-                /* Не учитываем PO исполнителем которых является a.pushkareva@joom.com. Подробное обоснование в Notion */
-                WHEN pola.assignee_email = 'a.pushkareva@joom.com' THEN 0
+                /* Не учитываем PO исполнителем которых является a.pushkareva@joom.com или redbird@joom.com (он разработчик). Подробное обоснование в Notion */
+                WHEN pola.assignee_email IN ('a.pushkareva@joom.com', 'redbird@joom.com') THEN 0
                 /* Оставляем все заказы в админке с 1 апреля 2025 */
                 WHEN DATE(coalesce(po.created_ts, pch.first_status_ts)) >= '2025-04-01' THEN 1
                 ELSE 0
