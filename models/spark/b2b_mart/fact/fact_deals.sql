@@ -179,6 +179,7 @@ SELECT DISTINCT
     users.company_name AS client_company_name,
     d.isSelfService AS self_service,
     d.isSmallBatch as small_batch,
+    clientComment as client_comment,
     users.ss_customer,
     paymentmethod.payment_method,
     paymentmethod.delivery_channel_type,
