@@ -51,10 +51,11 @@ SELECT
     workScheme,
     isSelfService,
     isSmallBatch,
+    clientComment,
     promoCode.code AS promo_code,
     promoCode.discount AS promo_code_discount,
     promoCode.type AS promo_code_type,
-    MILLIS_TO_TS_MSK(utms + 3 + CASE WHEN promoCode.code IS NOT NULL THEN 3 ELSE 0 END) AS update_ts_msk
+    MILLIS_TO_TS_MSK(utms + 4 + CASE WHEN promoCode.code IS NOT NULL THEN 3 ELSE 0 END) AS update_ts_msk
 FROM {{ source('mongo', 'b2b_core_deals_daily_snapshot') }}
 
 {% endsnapshot %}
