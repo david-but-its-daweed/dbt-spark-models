@@ -63,6 +63,12 @@ FROM (
         'phone' AS source
     FROM pulse_phones
     INNER JOIN pro_phones ON pulse_phones.phone_number = pro_phones.phone_number
+    UNION ALL
+    SELECT
+        _id AS pulse_user_id,
+        joomProID AS pro_user_id,
+        'users_collection' AS source
+    FROM {{ source("mongo", "b2b_core_analytics_users_extras_daily_snapshot") }}
 )
 GROUP BY
     pulse_user_id,
