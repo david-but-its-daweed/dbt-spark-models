@@ -16,18 +16,22 @@
 }}
 
 
-select 
-_id as offer_product_id, 
-id as product_id,
-offerId as offer_id,
-trademark,
-hsCode as hs_code,
-manufacturerId as manufacturer_id,
-name, 
-nameInv as name_inv,
-type,
-disabled,
-link,
-millis_to_ts_msk(ctms) as created_time_msk
-from {{ source('mongo', 'b2b_core_offer_products_daily_snapshot') }}
+
+SELECT
+    _id AS offer_product_id,
+    id AS product_id,
+    offerId AS offer_id,
+    trademark AS trademark,
+    hsCode AS hs_code,
+    manufacturerId AS manufacturer_id,
+    name AS name,
+    nameInv AS name_inv,
+    type AS type,
+    disabled AS disabled,
+    link AS link,
+    logisticFields.isCertificationRequired AS is_certification_required,
+    logisticFields.isAgencyRegistrationRequired AS is_agency_registration_required,
+    logisticFields.agencyName AS agency_name,
+    millis_to_ts_msk(ctms+1) AS created_time_msk
+FROM mongo.b2b_core_offer_products_daily_snapshot
 {% endsnapshot %}
