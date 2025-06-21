@@ -212,12 +212,13 @@ sources:
       - name: auth_proxy_dim_devices
       - name: sellers_for_outreach
       - name: contacts_cpf
-  
+
   - name: joompro_analytics_mart
     tables:
       - name: mercadolibre_products_snapshot
       - name: cube_mlb_products
       - name: items_parsed_number
+      - name: cube_mlb_connected_stores_listings
 
   - name: joompro_analytics
     tables:
