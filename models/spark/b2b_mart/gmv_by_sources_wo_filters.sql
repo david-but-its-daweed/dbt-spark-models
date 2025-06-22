@@ -1047,7 +1047,9 @@ order_v2_mongo AS (
 '6841f7d9127c422b7471a1a6',
 '6841fa54127c422b7471a1b7',
 '6841f232b4d67eca1cd65b3b',
-'684338357330e6e835504410'
+'684338357330e6e835504410',
+'6847480b5463b5bd0a992161',
+'68487cc706f123c6aee11638'
     ) AND fo.next_effective_ts_msk IS NULL) or 
         (fo.last_order_status < 60
         AND fo.last_order_status >= 10
