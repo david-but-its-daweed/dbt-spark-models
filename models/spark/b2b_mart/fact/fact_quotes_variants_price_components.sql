@@ -8,29 +8,44 @@
 ) }}
 
 
-WITH currency_rates AS (
+WITH currency_rates_flat AS (
     SELECT
         _id,
-        COLLECT_LIST(
-            NAMED_STRUCT(
-                'currency', key,
-                'exchRate', value.exchRate / 1000000
-            )
-        ) AS currency_rates
-    FROM mongo.b2b_core_quotes_daily_snapshot
+        key AS currency_pair,
+        value.exchRate / 1000000 AS exch_rate
+    FROM {{ source('mongo', 'b2b_core_quotes_daily_snapshot') }}
     LATERAL VIEW explode(currencyRates) AS key, value
-    GROUP BY 1
+),
+
+pc AS (
+    SELECT
+        q._id AS quote_id,
+        q.dealId AS deal_id,
+        q.dealFriendlyId AS deal_friendly_id,
+        product.customerRequestID AS customer_request_id,
+        variant.variantId AS variant_id,
+        pc.key AS price_component,
+        pc.value.ccy AS price_component_ccy,
+        pc.value.amount / 1000000 AS price_component_amount
+    FROM {{ source('mongo', 'b2b_core_quotes_daily_snapshot') }} AS q
+    LATERAL VIEW EXPLODE(products) AS product
+    LATERAL VIEW EXPLODE(product.variants) AS variant
+    LATERAL VIEW EXPLODE(MAP_ENTRIES(variant.priceComponents)) AS pc
 )
 
 
-SELECT product.customerRequestID AS customer_request_id,
-       variant.variantId AS variant_id,
-       pc.key AS price_component,
-       pc.value.ccy AS price_component_ccy,
-       pc.value.amount / 1000000 AS price_component_amount,
-       cr.currency_rates
-FROM {{ source('mongo', 'b2b_core_quotes_daily_snapshot') }} AS q
-LEFT JOIN currency_rates AS cr ON q._id = cr._id
-LATERAL VIEW EXPLODE(products) AS product
-LATERAL VIEW EXPLODE(product.variants) AS variant
-LATERAL VIEW EXPLODE(MAP_ENTRIES(variant.priceComponents)) AS pc
+SELECT
+    p.*,
+    CASE
+        WHEN price_component_ccy = 'BRL' THEN 1
+        ELSE cr.exch_rate
+    END AS exch_rate_to_brl,
+    CASE
+        WHEN price_component_ccy = 'BRL'
+            THEN price_component_amount
+        ELSE price_component_amount * cr.exch_rate
+    END AS price_component_amount_brl
+FROM pc AS p
+LEFT JOIN currency_rates_flat AS cr
+    ON p.quote_id = cr._id
+   AND CONCAT(p.price_component_ccy, '-BRL') = cr.currency_pair
