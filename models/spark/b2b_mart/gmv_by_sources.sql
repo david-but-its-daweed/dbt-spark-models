@@ -2206,7 +2206,12 @@ WHEN order_id = '68487cc706f123c6aee11638' THEN 2631.12
 WHEN order_id = '6849edddcafd6c50cc380af5' THEN 208.63
 WHEN order_id = '684b0fe8009d799129a998e2' THEN 6527.83
 WHEN order_id = '6849df0cb3b046672a4c93ce' THEN 631.78
-    
+
+WHEN order_id = '67e40c7e28d1a6a4fe3449b5' THEN 16279.8
+WHEN order_id = '67efb46be65a8de26d81c1c2' THEN 588.73
+WHEN order_id = '67eaf0295bcfb75c3737fc5b' THEN 1682.58
+WHEN order_id = '6847480b5463b5bd0a992161' THEN 9881.05
+WHEN order_id = '68487cc706f123c6aee11638' THEN 2631.12
     
     
         ELSE gmv_initial
@@ -3374,6 +3379,24 @@ WHEN order_id = '68487cc706f123c6aee11638' THEN 263.11
 WHEN order_id = '6849edddcafd6c50cc380af5' THEN 20.86
 WHEN order_id = '684b0fe8009d799129a998e2' THEN 652.78
 WHEN order_id = '6849df0cb3b046672a4c93ce' THEN 63.18
+
+WHEN order_id = '67900498cbf322f5bc3cc460' THEN 16.38
+WHEN order_id = '67d82589c954fc23e3d8bc56' THEN 155.20
+WHEN order_id = '67b8f37112b9c436847b87f1' THEN 0.00
+WHEN order_id = '67d9afd3e0689a2e6e96193b' THEN -1344.23
+WHEN order_id = '67efb46be65a8de26d81c1c2' THEN -90.01
+WHEN order_id = '67eaf0295bcfb75c3737fc5b' THEN 168.26
+WHEN order_id = '67e5aa005bc9a00bd7e3017b' THEN -134.40
+WHEN order_id = '682168216244d4534f5daa2b' THEN 8.93
+WHEN order_id = '682187434ffdc7744fee2d99' THEN 12.61
+WHEN order_id = '6821863c6244d4534f65e593' THEN 95.12
+WHEN order_id = '682172878b31958ecd8d7661' THEN 299.24
+WHEN order_id = '682184b1b1d43cd9a1db1a11' THEN 17.89
+WHEN order_id = '682490a8048fd2cc0c80a5f0' THEN 154.30
+WHEN order_id = '6825f78040514df2fe234194' THEN 29.84
+WHEN order_id = '6824aeee82be808df5d30a2e' THEN 126.32
+WHEN order_id = '6847480b5463b5bd0a992161' THEN 988.10
+WHEN order_id = '68487cc706f123c6aee11638' THEN 263.11
         ELSE initial_gross_profit
     END AS initial_gross_profit,
 
@@ -4541,6 +4564,25 @@ WHEN order_id = '68487cc706f123c6aee11638' THEN 263.11
 WHEN order_id = '6849edddcafd6c50cc380af5' THEN 20.86
 WHEN order_id = '684b0fe8009d799129a998e2' THEN 652.78
 WHEN order_id = '6849df0cb3b046672a4c93ce' THEN 63.18
+
+WHEN order_id = '67900498cbf322f5bc3cc460' THEN 16.38
+WHEN order_id = '67d82589c954fc23e3d8bc56' THEN 155.20
+WHEN order_id = '67b8f37112b9c436847b87f1' THEN 0.00
+WHEN order_id = '67d9afd3e0689a2e6e96193b' THEN -1344.23
+WHEN order_id = '67efb46be65a8de26d81c1c2' THEN -90.01
+WHEN order_id = '67eaf0295bcfb75c3737fc5b' THEN 168.26
+WHEN order_id = '67e5aa005bc9a00bd7e3017b' THEN -134.40
+WHEN order_id = '682168216244d4534f5daa2b' THEN 8.93
+WHEN order_id = '682187434ffdc7744fee2d99' THEN 12.61
+WHEN order_id = '6821863c6244d4534f65e593' THEN 95.12
+WHEN order_id = '682172878b31958ecd8d7661' THEN 299.24
+WHEN order_id = '682184b1b1d43cd9a1db1a11' THEN 17.89
+WHEN order_id = '682490a8048fd2cc0c80a5f0' THEN 154.30
+WHEN order_id = '6825f78040514df2fe234194' THEN 29.84
+WHEN order_id = '6824aeee82be808df5d30a2e' THEN 126.32
+WHEN order_id = '6847480b5463b5bd0a992161' THEN 988.10
+WHEN order_id = '68487cc706f123c6aee11638' THEN 263.11
+    
         ELSE final_gross_profit
     END AS final_gross_profit,
     utm_campaign,
