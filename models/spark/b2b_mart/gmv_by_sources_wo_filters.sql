@@ -1338,6 +1338,8 @@ WHERE  (a.gmv_initial > 0 or
                 
     ))
 and a.order_id not in (
+    '68487cc706f123c6aee11638',
+    '6847480b5463b5bd0a992161',
     '67f045501dc7dc786ce7f226',
 '6806d2a9d7e3d70238f84911',
 '67f9e26d17ff257b1adf332f',
