@@ -1,17 +1,17 @@
 product_id,store_id,channel,weight,pessimization_type,discount_percent,source,comment
 ,,,0,,0,manual,no default discount
-,,apomio,10,,20,manual,apomio
-,,medizinfuchs,10,,20,manual,medizinfuchs
-,,idealo,10,,20,manual,idealo
-,,billiger,10,,20,manual,billiger
-,7631548fbb5649f28a9523f661a8dac3,,11,,17,manual,fliegende-pillen
-,7c0538da9fe5425d8ad61f96b0aff6f1,,11,,19,manual,arzneiDoc
-,c4191b579b634b2592b64bf0cf174bf4,,11,,17,manual,disapo
-,f6d85f9f5ca847c89d030f1b9e506d76,,11,,18,manual,welapo
-,42d0e7c3c8754984b302831006f2143c,,11,,16,manual,st. bernward apotheke
+,,apomio,10,,19,manual,apomio
+,,medizinfuchs,10,,19,manual,medizinfuchs
+,,idealo,10,,19,manual,idealo
+,,billiger,10,,19,manual,billiger
+,7631548fbb5649f28a9523f661a8dac3,,11,,16,manual,fliegende-pillen
+,7c0538da9fe5425d8ad61f96b0aff6f1,,11,,18,manual,arzneiDoc
+,c4191b579b634b2592b64bf0cf174bf4,,11,,16,manual,disapo
+,f6d85f9f5ca847c89d030f1b9e506d76,,11,,17,manual,welapo
+,42d0e7c3c8754984b302831006f2143c,,11,,15,manual,st. bernward apotheke
 ,f818f7e2da64439890e406b3fe87e35e,,11,,0,manual,weitling
-,0957abe85f5d42cebb7dc813788068de,,11,,14.5,manual,petersberg
-,b03df824cbe343648077f75fb0b42a12,,11,,16,manual,schiller apotheke
+,0957abe85f5d42cebb7dc813788068de,,11,,13.5,manual,petersberg
+,b03df824cbe343648077f75fb0b42a12,,11,,15,manual,schiller apotheke
 2836f66a8e484eb7bd0efc161331f1d7,,,45,,25,manual,07424884 boost
 9a88f18aacb747d3af54fa28393b04a9,,,45,,25,manual,12444127 boost
 229c3507b3e54ef59a6404c88fc61c6d,,,45,,25,manual,04796852 boost (medice)
