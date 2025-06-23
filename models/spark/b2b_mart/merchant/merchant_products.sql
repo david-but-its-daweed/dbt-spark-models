@@ -35,8 +35,16 @@ internal_merchants AS (
     SELECT *
     FROM merchants
     WHERE
-        created_date >= '2025-03-01'
-        AND merchant_type = 2
+        (created_date >= '2025-03-01' AND merchant_type = 2)
+        OR
+        merchant_id IN (
+            '676a4d2beeb675d30389d043',
+            '64254b3135d4115da48679a0',
+            '676a4d2beeb675d30389d043',
+            '6850052109a0bf1534da972b',
+            '684c0518701dadd2e101dbee',
+            '68479f3d1dcc89034a7fa7e0'
+        )
 ),
 
 categories AS (

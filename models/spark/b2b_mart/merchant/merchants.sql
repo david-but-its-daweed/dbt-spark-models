@@ -23,7 +23,18 @@ SELECT
     END AS kyc_status,
 
     m.enabled AS is_enabled,
-    (DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) >= '2025-03-01' AND ap.type = '2') AS is_internal,
+    (
+        DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) >= '2025-03-01' AND ap.type = '2'
+        OR
+        m._id IN (
+            '676a4d2beeb675d30389d043',
+            '64254b3135d4115da48679a0',
+            '676a4d2beeb675d30389d043',
+            '6850052109a0bf1534da972b',
+            '684c0518701dadd2e101dbee',
+            '68479f3d1dcc89034a7fa7e0'
+        )
+    ) AS is_internal,
     DATE(FROM_UNIXTIME(m.createdTimeMs / 1000)) AS created_date
 FROM
     {{ source('mongo', 'b2b_core_merchants_daily_snapshot') }} AS m
