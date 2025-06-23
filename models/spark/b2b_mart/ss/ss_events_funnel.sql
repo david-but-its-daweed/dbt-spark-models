@@ -57,7 +57,7 @@ events_with_step AS (
         MAX(search_type) OVER (PARTITION BY search_id) AS search_type,
         search_id,
         product_id,
-        index,
+        MIN(CASE WHEN index IS NOT NULL AND event_type != 'search' THEN index END) OVER (PARTITION BY product_id) AS index,
         CASE
             WHEN event_type = 'search' THEN 1
             WHEN event_type = 'productPreview' THEN 2
