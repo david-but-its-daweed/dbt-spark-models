@@ -23,6 +23,7 @@ select
     dealId as deal_id,
     country,
     desc,
+    customizationDescription AS customization_description,
     expectedQuantity as expected_quantity,
     link,
     model,
