@@ -192,5 +192,4 @@ LEFT JOIN warehouse AS w ON r.procurement_order_id = w.procurement_order_id
 LEFT JOIN currency_rate AS cr
     ON TO_DATE(r.created_ts) = cr.dt
     AND r.currency = cr.currency_code
-WHERE r.is_for_purchasing_and_production_report = 1
 ORDER BY 1, 2
