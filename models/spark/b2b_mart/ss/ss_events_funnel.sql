@@ -37,7 +37,7 @@ events AS (
         CAST(payload.searchResultsUniqId AS STRING) AS search_id,
         CAST(payload.productId AS STRING) AS product_id,
         CAST(payload.index AS INT) AS index
-    FROM b2b_mart.device_events AS de
+    FROM {{ source('b2b_mart', 'device_events') }} AS de
     LEFT JOIN bots AS b ON de.device.id = b.device_id
     WHERE
         de.partition_date >= '2024-01-01'

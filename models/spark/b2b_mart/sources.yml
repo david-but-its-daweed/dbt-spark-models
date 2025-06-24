@@ -67,6 +67,7 @@ sources:
       - name: ss_assortment_products
       - name: fact_customer_requests
       - name: ss_events_customer_journey
+      - name: ss_events_by_session
   - name: joompro_analytics
     tables:
       - name: mercadolibre_category_info

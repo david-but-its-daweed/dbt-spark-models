@@ -16,7 +16,7 @@ WITH session_landings AS (
         events.event_landing AS landing,
         COUNT(*) AS cnt
     FROM
-        b2b_mart.ss_events_by_session
+        {{ source('b2b_mart', 'ss_events_by_session') }}
         LATERAL VIEW EXPLODE(events_in_session) AS events
     WHERE
         events.event_landing IS NOT NULL
