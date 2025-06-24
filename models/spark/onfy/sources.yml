@@ -9,6 +9,8 @@ sources:
       - name: refunds
       - name: auto_discount_rules
       - name: promocodes_dash
+      - name: search_serp_requests_i
+      - name: search_serp_items_i
   - name: pharmacy_landing
     tables:
       - name: product_category_flat
