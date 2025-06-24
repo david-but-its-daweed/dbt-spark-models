@@ -69,7 +69,8 @@ products AS (
         orig_name,
         orig_main_image_url,
         created_date,
-        IF(update_ts_msk = MAX(update_ts_msk) OVER (PARTITION BY product_id ORDER BY update_ts_msk), NULL, update_ts_msk) AS update_ts_msk
+        update_ts_msk,
+        IF(update_ts_msk = MAX(update_ts_msk) OVER (PARTITION BY product_id ORDER BY update_ts_msk), TRUE, FALSE) AS is_effective
     FROM
         {{ ref('ss_assortment_products') }}
 ),
@@ -94,7 +95,8 @@ product_prices AS (
 product_states AS (
     SELECT
         product_id,
-        IF(update_ts_msk = MAX(update_ts_msk) OVER (PARTITION BY product_id ORDER BY update_ts_msk), NULL, update_ts_msk) AS update_ts_msk,
+        update_ts_msk,
+        IF(update_ts_msk = MAX(update_ts_msk) OVER (PARTITION BY product_id ORDER BY update_ts_msk), TRUE, FALSE) AS is_effective,
         CASE
             WHEN status = 1 THEN 'Active'
             WHEN status = 2 THEN 'Pending'
@@ -156,6 +158,7 @@ result AS (
         c.level_2_category_name AS l2_category_name,
         c.level_3_category_name AS l3_category_name,
         p.created_date AS product_created_date,
+        DATE(p.update_ts_msk) AS product_update_date,
         CONCAT('https://admin.joompro.io/products/', p.product_id) AS product_link,
 
         pp.min_price,
@@ -176,8 +179,7 @@ result AS (
     LEFT JOIN
         variants AS v ON p.product_id = v.product_id
     WHERE
-        p.update_ts_msk IS NULL
-        AND pc.update_ts_msk IS NULL
+        p.is_effective AND pc.is_effective
 )
 
 SELECT *
