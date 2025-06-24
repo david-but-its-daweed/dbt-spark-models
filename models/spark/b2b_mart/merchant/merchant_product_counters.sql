@@ -38,12 +38,13 @@ stats AS (
         ap.level_2_category_name,
         ap.level_3_category_name,
 
+        COUNT(DISTINCT IF(cjm.type = 'productPreview', cjm.user_id, NULL)) AS preview,
         COUNT(DISTINCT IF(cjm.type = 'productClick', cjm.user_id, NULL)) AS open,
         COUNT(DISTINCT IF(cjm.type = 'addToCart', cjm.user_id, NULL)) AS add_to_cart
     FROM {{ source('b2b_mart', 'ss_events_customer_journey') }} AS cjm
     INNER JOIN {{ source('b2b_mart', 'ss_assortment_products') }} AS ap ON cjm.product_id = ap.product_id
     WHERE
-        cjm.type IN ('productClick', 'addToCart')
+        cjm.type IN ('productPreview', 'productClick', 'addToCart')
         AND cjm.event_msk_date >= DATE('2025-03-01')
     GROUP BY
         cjm.event_msk_date, cjm.product_id,
@@ -76,6 +77,7 @@ SELECT
     p.merchant_id,
     p.product_id,
 
+    COALESCE(s.preview, 0) AS preview,
     COALESCE(s.open, 0) AS open,
     COALESCE(s.add_to_cart, 0) AS add_to_cart,
     COALESCE(d.deals, 0) AS deals,

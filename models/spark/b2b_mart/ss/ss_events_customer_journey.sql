@@ -56,6 +56,7 @@ WHERE partition_date >= '2024-04-01'
         'categoryClick',
         'translateImage',
         'contactUsClick',
+        'productPreview',
         'userProfileClick',
         'removeOneFromCart',
         'sampleCheckoutOpen',
