@@ -96,7 +96,7 @@ gmv AS (
     SELECT
         procurement_order_id,
         total_price_usd_raw AS gmv_usd
-    FROM {{ ref('purchasing_and_production_report_boxes') }}
+    FROM {{ ref('procurement_orders_boxes') }}
 )
 
 
