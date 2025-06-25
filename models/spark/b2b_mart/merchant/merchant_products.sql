@@ -62,15 +62,13 @@ categories AS (
 ),
 
 products AS (
-    SELECT
+    SELECT DISTINCT
         product_id,
         merchant_id,
         category_id,
         orig_name,
         orig_main_image_url,
-        created_date,
-        update_ts_msk,
-        IF(update_ts_msk = MAX(update_ts_msk) OVER (PARTITION BY product_id ORDER BY update_ts_msk), TRUE, FALSE) AS is_effective
+        created_date
     FROM
         {{ ref('ss_assortment_products') }}
 ),
@@ -96,7 +94,6 @@ product_states AS (
     SELECT
         product_id,
         update_ts_msk,
-        IF(update_ts_msk = MAX(update_ts_msk) OVER (PARTITION BY product_id ORDER BY update_ts_msk), TRUE, FALSE) AS is_effective,
         CASE
             WHEN status = 1 THEN 'Active'
             WHEN status = 2 THEN 'Pending'
@@ -122,6 +119,8 @@ product_states AS (
         END AS reject_reason
     FROM
         {{ ref('scd2_mongo_product_state') }}
+    WHERE
+        dbt_valid_to IS NULL
 ),
 
 variants AS (
@@ -150,15 +149,15 @@ result AS (
         p.orig_name AS product_name,
         p.orig_main_image_url AS product_image_url,
 
-        pc.status AS product_status,
-        pc.reject_reason AS product_reject_reason,
+        ps.status AS product_status,
+        ps.reject_reason AS product_reject_reason,
 
         p.category_id,
         c.level_1_category_name AS l1_category_name,
         c.level_2_category_name AS l2_category_name,
         c.level_3_category_name AS l3_category_name,
         p.created_date AS product_created_date,
-        DATE(p.update_ts_msk) AS product_update_date,
+        DATE(ps.update_ts_msk) AS product_last_updated_date,
         CONCAT('https://admin.joompro.io/products/', p.product_id) AS product_link,
 
         pp.min_price,
@@ -173,13 +172,11 @@ result AS (
     LEFT JOIN
         categories AS c ON p.category_id = c.category_id
     LEFT JOIN
-        product_states AS pc ON p.product_id = pc.product_id
+        product_states AS ps ON p.product_id = ps.product_id
     LEFT JOIN
         product_prices AS pp ON p.product_id = pp.product_id
     LEFT JOIN
         variants AS v ON p.product_id = v.product_id
-    WHERE
-        p.is_effective AND pc.is_effective
 )
 
 SELECT *
