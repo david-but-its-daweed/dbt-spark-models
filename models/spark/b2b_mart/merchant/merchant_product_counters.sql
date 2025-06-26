@@ -56,6 +56,7 @@ stats AS (
 
 deals AS (
     SELECT
+        DATE(created_time) AS partition_date,
         CASE
             WHEN link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(link, 'https://joom.pro/pt-br/products/(.*)', 1)
             ELSE link
@@ -63,12 +64,11 @@ deals AS (
         COUNT(DISTINCT deal_id) AS deals,
         COUNT(DISTINCT customer_request_id) AS requests
     FROM {{ source('b2b_mart', 'fact_customer_requests') }}
-    WHERE country IN ('BR', 'MX') AND (link LIKE 'https://joom.pro/pt-br/products/%' OR link LIKE '6%')
+    WHERE
+        country IN ('BR', 'MX') AND (link LIKE 'https://joom.pro/pt-br/products/%' OR link LIKE '6%')
+        AND next_effective_ts_msk IS NULL
     GROUP BY
-        CASE
-            WHEN link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(link, 'https://joom.pro/pt-br/products/(.*)', 1)
-            ELSE link
-        END
+        1, 2
 )
 
 SELECT
@@ -86,4 +86,4 @@ FROM products AS p
 LEFT JOIN stats AS s
     ON p.product_id = s.product_id AND p.partition_date = s.event_msk_date
 LEFT JOIN deals AS d
-    ON p.product_id = d.product_id
+    ON p.product_id = d.product_id AND p.partition_date = d.partition_date
