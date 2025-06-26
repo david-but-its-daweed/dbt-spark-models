@@ -59,3 +59,11 @@ seeds:
     config:
       schema: holistics
       alias: holistics_cache_updater_wbl
+
+  - name: onfy_nonperf_spend
+    config:
+      schema: onfy
+
+  - name: onfy_manual_marketing_spends
+    config:
+      schema: onfy
