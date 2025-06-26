@@ -95,7 +95,7 @@ main_with_last AS (
 gmv AS (
     SELECT
         procurement_order_id,
-        total_price_usd_raw AS gmv_usd
+        total_price_usd AS gmv_usd
     FROM {{ ref('procurement_orders_boxes') }}
 )
 
