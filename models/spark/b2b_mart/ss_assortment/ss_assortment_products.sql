@@ -29,16 +29,16 @@ ali1688 AS (
 ),
 
 matching AS (
-    SELECT DISTINCT
+    SELECT
         ali1688.b2b_product_id AS product_id,
-        ali1688.ali1688_product_id,
-
-        joom_ids.joom_product_id
+        COLLECT_SET(ali1688.ali1688_product_id) AS ali1688_product_id,
+        COLLECT_SET(joom_ids.joom_product_id) AS joom_product_id
     FROM
         ali1688
     LEFT JOIN
         {{ source('productsmatching', 'joom_1688_product_variant_matches') }} AS joom_ids
         ON ali1688.ali1688_product_id = joom_ids.ali_1688_product_id
+    GROUP BY 1
 )
 
 SELECT
