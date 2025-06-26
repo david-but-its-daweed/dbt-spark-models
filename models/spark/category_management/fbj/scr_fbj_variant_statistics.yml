@@ -180,8 +180,12 @@ models:
         description: "Timestamp of previous completed status" 
         data_type: "TIMESTAMP"
 
+      - name: first_replenishment_created_at
+        description: "Timestamp of the first replanishment created" 
+        data_type: "TIMESTAMP"
+
       - name: last_replenishment_created_at
-        description: "Timestamp of previous replanishment created" 
+        description: "Timestamp of the last replanishment created" 
         data_type: "TIMESTAMP"
 
       - name: last_replenishment_status
@@ -252,6 +256,10 @@ models:
         description: "Number of items that are stored great than 360 days" 
         data_type: "LONG"
 
+      - name: paid_status
+        description: "The status of stock paid or free"
+        data_type: "STRING"
+
       - name: discount
         description: "Discount from promo" 
         data_type: "DOUBLE"
@@ -285,11 +293,35 @@ models:
         data_type: "BOOLEAN"
 
       - name: opens
-        description: "Number of opens from best context"
+        description: "Number of opens from all contexts"
         data_type: "LONG"
 
       - name: previews
+        description: "Number of previews from all contexts"
+        data_type: "LONG"
+
+      - name: best_opens
+        description: "Number of opens from best context"
+        data_type: "LONG"
+
+      - name: best_previews
         description: "Number of previews from best context"
+        data_type: "LONG"
+
+      - name: calatog_opens
+        description: "Number of opens from calatog context"
+        data_type: "LONG"
+
+      - name: calatog_previews
+        description: "Number of previews from calatog context"
+        data_type: "LONG"
+      
+      - name: search_opens
+        description: "Number of opens from search context"
+        data_type: "LONG"
+
+      - name: search_previews
+        description: "Number of previews from search context"
         data_type: "LONG"
 
       - name: tier

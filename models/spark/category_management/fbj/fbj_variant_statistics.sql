@@ -19,9 +19,9 @@ WITH calendar AS ( -- делаем календарь, который по су�
         SELECT DATE '{{ var("start_date_ymd") }}' AS dt -- +1 день потому что в таблице st хранится current_date а в start_date_ymd предыдущий день
     --select current_date as dt -- +1 день потому что в таблице st хранится current_date а в start_date_ymd предыдущий день
     {% else %}
-    select EXPLODE(SEQUENCE(to_date('2024-07-01'),  DATE '{{ var("start_date_ymd") }}', INTERVAL 1 DAY)) AS dt
+        SELECT EXPLODE(SEQUENCE(TO_DATE('2024-07-01'), DATE '{{ var("start_date_ymd") }}', INTERVAL 1 DAY)) AS dt
     --select EXPLODE(SEQUENCE(to_date('2025-03-20'), to_date(CURRENT_DATE()), INTERVAL 1 DAY)) AS dt
-{% endif %}
+    {% endif %}
 ),
 
 cal_x_stock AS ( -- отбираем варианты которые находятся на складе
@@ -195,6 +195,7 @@ variant_repl_status AS (
         MAX(IF(fmr.current_status = '8. Canceled by Merchant', fmr.last_updated_at, NULL)) AS last_canceled_by_merch_at,
         MAX(IF(fmr.current_status = '7. Completed', fmr.last_updated_at, NULL)) AS last_completed_at,
         --
+        MIN(fmr.created_at) AS first_replenishment_created_at,
         MAX(fmr.created_at) AS last_replenishment_created_at, -- когда был создан последний репленишмент
         -- 8 статус со временем не переходит в другой, поэтому можно посмотреть когда был последний раз такой статус среди репленишментов созданых ранее и это и будет последненяя дата
         COALESCE(COUNT(IF(fmr.current_status IN ('8. Canceled by Joom', '8. Canceled by Merchant'), fmr.replenishment_id, NULL)), 0) / COUNT(fmr.replenishment_id) AS variant_cancel_rate,
@@ -396,19 +397,24 @@ product_public AS (
         b.product_id
 ),
 
-product_best AS (
+product_counters AS (
     SELECT
         b.partition_date,
         b.product_id,
         SUM(c.open_count) AS opens,
-        SUM(c.preview_count) AS previews
+        SUM(c.preview_count) AS previews,
+        SUM(IF(c.context_name = 'best', c.open_count, 0)) AS best_opens,
+        SUM(IF(c.context_name = 'best', c.preview_count, 0)) AS best_previews,
+        SUM(IF(c.context_name = 'calatog', c.open_count, 0)) AS calatog_opens,
+        SUM(IF(c.context_name = 'calatog', c.preview_count, 0)) AS calatog_previews,
+        SUM(IF(c.context_name = 'search', c.open_count, 0)) AS search_opens,
+        SUM(IF(c.context_name = 'search', c.preview_count, 0)) AS search_previews
     FROM base AS b
-    LEFT JOIN {{ source('platform', 'context_product_counters_v5') }} AS c  --mart.context_product_counters_v5 as c
+    LEFT JOIN {{ source('platform', 'context_product_counters_v5') }} AS c --platform.context_product_counters_v5 AS c
         ON
             1 = 1
             AND b.product_id = c.product_id
             AND b.partition_date = c.partition_date
-            AND c.context_name = 'best'
     GROUP BY
         b.partition_date,
         b.product_id
@@ -529,6 +535,7 @@ SELECT
     vrs.last_canceled_by_joom_at,
     vrs.last_canceled_by_merch_at,
     vrs.last_completed_at,
+    vrs.first_replenishment_created_at,
     vrs.last_replenishment_created_at,
     vrs.last_replenishment_status,
     --
@@ -550,6 +557,7 @@ SELECT
     ps.ps_lt180,
     ps.ps_lt360,
     ps.ps_gt360,
+    IF(ps.ps_lt60 + ps.ps_lt90 + ps.ps_lt120 + ps.ps_lt180 + ps.ps_lt360 + ps.ps_gt360 > 0, 'paid', 'free') AS paid_status,
     --
     pp.discount,
     IF(pp.promos > 0, 1, 0) AS is_product_in_promo,
@@ -558,17 +566,31 @@ SELECT
     --
     ftis.first_time_in_stock,
     CASE
-        WHEN b.number_in_stock > 0 THEN 'IN_STOCK'
-        WHEN ftis.first_time_in_stock IS NULL THEN 'NEW'
-        WHEN b.enabled_flg = 0 THEN 'RUN_OUT_DISABLED'
-        ELSE 'OOS'
+        WHEN b.number_in_stock > 0 AND vp.is_variant_public IS FALSE THEN 'In stock, non-public variant'
+        WHEN b.number_in_stock > 0 AND p_pub.is_product_public IS FALSE THEN 'In stock, non-public product'
+        WHEN b.number_in_stock > 0 AND vp.is_variant_public IS TRUE AND p_pub.is_product_public IS TRUE AND vo.to_30 IS NULL THEN 'In stock, no sales 30 days'
+        WHEN b.number_in_stock > 0 AND vp.is_variant_public IS TRUE AND p_pub.is_product_public IS TRUE AND vo.to_30 >= 30 THEN 'In stock, deadstock'
+        WHEN b.number_in_stock > 0 AND vp.is_variant_public IS TRUE AND p_pub.is_product_public IS TRUE AND vo.to_30 > 21 AND vo.to_30 < 30 THEN 'In stock, unhealthy stock'
+        WHEN b.number_in_stock > 0 AND vp.is_variant_public IS TRUE AND p_pub.is_product_public IS TRUE AND vo.to_30 <= 21 THEN 'In stock, healthy stock'
+        WHEN b.number_in_stock = 0 AND ftis.first_time_in_stock IS NULL AND vrs.first_replenishment_created_at IS NULL THEN 'No stock, NEW, no replenishments'
+        WHEN b.number_in_stock = 0 AND ftis.first_time_in_stock IS NULL AND vrs.first_replenishment_created_at < (b.partition_date - INTERVAL 30 DAY) THEN 'No stock, NEW, undeliverable'
+        WHEN b.number_in_stock = 0 AND ftis.first_time_in_stock IS NULL AND vrs.first_replenishment_created_at >= (b.partition_date - INTERVAL 30 DAY) THEN 'No stock, NEW, recently added'
+        WHEN b.number_in_stock = 0 AND ftis.first_time_in_stock IS NOT NULL AND b.enabled_flg = 1 THEN 'No stock, OLD, enabled'
+        WHEN b.number_in_stock = 0 AND ftis.first_time_in_stock IS NOT NULL AND b.enabled_flg = 0 THEN 'No stock, OLD, disabled'
+        ELSE 'other'
     END AS stock_status,
     --
     vp.is_variant_public,
     vp.variant_merchant_price_usd,
     p_pub.is_product_public,
-    p_best.opens,
-    p_best.previews,
+    p_counters.opens,
+    p_counters.previews,
+    p_counters.best_opens,
+    p_counters.best_previews,
+    p_counters.calatog_opens,
+    p_counters.calatog_previews,
+    p_counters.search_opens,
+    p_counters.search_previews,
     p_tier.tier,
     --
     gp.product_name,
@@ -632,11 +654,11 @@ LEFT JOIN product_public AS p_pub
         1 = 1
         AND b.partition_date = p_pub.partition_date
         AND b.product_id = p_pub.product_id
-LEFT JOIN product_best AS p_best
+LEFT JOIN product_counters AS p_counters
     ON
         1 = 1
-        AND b.partition_date = p_best.partition_date
-        AND b.product_id = p_best.product_id
+        AND b.partition_date = p_counters.partition_date
+        AND b.product_id = p_counters.product_id
 LEFT JOIN product_tier AS p_tier
     ON
         1 = 1
