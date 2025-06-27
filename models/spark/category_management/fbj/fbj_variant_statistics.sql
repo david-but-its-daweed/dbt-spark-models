@@ -405,8 +405,8 @@ product_counters AS (
         SUM(c.preview_count) AS previews,
         SUM(IF(c.context_name = 'best', c.open_count, 0)) AS best_opens,
         SUM(IF(c.context_name = 'best', c.preview_count, 0)) AS best_previews,
-        SUM(IF(c.context_name = 'calatog', c.open_count, 0)) AS calatog_opens,
-        SUM(IF(c.context_name = 'calatog', c.preview_count, 0)) AS calatog_previews,
+        SUM(IF(c.context_name = 'catalog', c.open_count, 0)) AS catalog_opens,
+        SUM(IF(c.context_name = 'catalog', c.preview_count, 0)) AS catalog_previews,
         SUM(IF(c.context_name = 'search', c.open_count, 0)) AS search_opens,
         SUM(IF(c.context_name = 'search', c.preview_count, 0)) AS search_previews
     FROM base AS b
@@ -587,8 +587,8 @@ SELECT
     p_counters.previews,
     p_counters.best_opens,
     p_counters.best_previews,
-    p_counters.calatog_opens,
-    p_counters.calatog_previews,
+    p_counters.catalog_opens,
+    p_counters.catalog_previews,
     p_counters.search_opens,
     p_counters.search_previews,
     p_tier.tier,

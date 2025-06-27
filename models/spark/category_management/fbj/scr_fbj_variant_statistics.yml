@@ -308,12 +308,12 @@ models:
         description: "Number of previews from best context"
         data_type: "LONG"
 
-      - name: calatog_opens
-        description: "Number of opens from calatog context"
+      - name: catalog_opens
+        description: "Number of opens from catalog context"
         data_type: "LONG"
 
-      - name: calatog_previews
-        description: "Number of previews from calatog context"
+      - name: catalog_previews
+        description: "Number of previews from catalog context"
         data_type: "LONG"
       
       - name: search_opens
