@@ -65,6 +65,7 @@ order_data AS (
         COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'SERVICE_FEE' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS service_fee,
         COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'SERVICE_FEE_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS service_fee_refund,
         COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DISCOUNT' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS discount,
+        COALESCE(SUM(CASE WHEN onfy_mart.transactions.type = 'DISCOUNT_REVERSAL' THEN onfy_mart.transactions.price ELSE 0 END), 0) AS discount_refund,
         pharmacy_landing.order.payment_method,
         CASE
             WHEN payment_method = 'PAY_PAL' then 0.35
@@ -126,7 +127,7 @@ turnover_refunds AS (
     SELECT
         order_data.*,
         products_price + delivery + delivery_surcharge - discount + service_fee AS turnover,
-        products_price_refund + delivery_refund + delivery_surcharge_refund + service_fee_refund AS refund
+        products_price_refund + delivery_refund + delivery_surcharge_refund + service_fee_refund - discount_refund AS refund
     FROM 
         order_data
 ),
@@ -207,7 +208,7 @@ transactions_psp AS (
         LEFT JOIN {{ source('pharmacy_landing', 'store') }}
             ON pharmacy_landing.store.id = pharmacy_landing.order_parcel.store_id
     WHERE 1=1
-        AND NOT (type in ('charge_fee', 'REFUND_FEE') AND from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') < '2023-07-21')
+        AND NOT (lower(type) in ('charge_fee', 'refund_fee') AND from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') < '2023-07-21')
         UNION
     SELECT * FROM psp_initial
         UNION
@@ -252,7 +253,7 @@ transactions_eur AS (
         AS float) AS gross_profit_initial,
         CAST(
             CASE 
-                WHEN transactions_psp.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'COMMISSION_REVERSAL_VAT', 'SERVICE_FEE_REVERSAL_VAT', 'DELIVERY_SURCHARGE_REVERSAL_VAT', 'MEDIA_REVENUE', 'REFUND_FEE') THEN transactions_psp.price
+                WHEN transactions_psp.type IN ('COMMISSION', 'SERVICE_FEE', 'DELIVERY_SURCHARGE', 'DISCOUNT_REVERSAL', 'COMMISSION_REVERSAL_VAT', 'SERVICE_FEE_REVERSAL_VAT', 'DELIVERY_SURCHARGE_REVERSAL_VAT', 'MEDIA_REVENUE', 'REFUND_FEE') THEN transactions_psp.price
                 WHEN transactions_psp.type IN ('COMMISSION_VAT', 'SERVICE_FEE_VAT', 'DELIVERY_SURCHARGE_VAT', 'DISCOUNT', 'COMMISSION_REVERSAL', 'SERVICE_FEE_REVERSAL', 'DELIVERY_SURCHARGE_REVERSAL', 'CHARGE_FEE') THEN -transactions_psp.price
                 ELSE 0 
             END
