@@ -46,16 +46,52 @@ events AS (
         AND b.bot_flag IS NULL
 ),
 
-events_with_step AS (
+non_nulls AS (
+    SELECT
+        user_id,
+        event_ts,
+        search_type,
+        search_id
+    FROM
+        events
+    WHERE
+        search_id IS NOT NULL AND event_type = 'search'
+),
+
+filled_search AS (
+    SELECT
+        e.partition_date,
+        e.event_ts,
+        e.user_id,
+        e.event_type,
+        e.source,
+        e.product_id,
+        e.index,
+
+        n.search_type,
+        n.search_id,
+        ROW_NUMBER() OVER (
+            PARTITION BY e.user_id, e.event_ts, e.product_id
+            ORDER BY n.event_ts DESC
+        ) AS order_rank
+    FROM events AS e
+    LEFT JOIN non_nulls AS n
+        ON
+            e.user_id = n.user_id
+            AND n.event_ts BETWEEN e.event_ts - INTERVAL 1 HOURS AND e.event_ts
+),
+
+full_events AS (
     SELECT
         partition_date,
         event_ts,
         user_id,
         event_type,
-
         source,
-        MAX(search_type) OVER (PARTITION BY search_id) AS search_type,
+
+        search_type,
         search_id,
+
         product_id,
         MIN(CASE WHEN index IS NOT NULL AND event_type != 'search' THEN index END) OVER (PARTITION BY product_id) AS index,
         CASE
@@ -64,7 +100,8 @@ events_with_step AS (
             WHEN event_type = 'productClick' THEN 3
             WHEN event_type = 'addToCart' THEN 4
         END AS funnel_step
-    FROM events
+    FROM filled_search
+    WHERE order_rank = 1
 ),
 
 funnel_progress AS (
@@ -73,22 +110,22 @@ funnel_progress AS (
         search_id,
         product_id,
         MAX(COALESCE(funnel_step, 0)) AS max_step
-    FROM events_with_step
+    FROM full_events
     WHERE search_id IS NOT NULL AND product_id IS NOT NULL
     GROUP BY user_id, search_id, product_id
 )
 
 SELECT
-    e.*,
+    fe.*,
     fp.max_step AS funnel_progress_step
-FROM events_with_step AS e
+FROM full_events AS fe
 LEFT JOIN funnel_progress AS fp
     ON
-        e.user_id = fp.user_id
-        AND e.search_id = fp.search_id
-        AND e.product_id = fp.product_id
+        fe.user_id = fp.user_id
+        AND fe.search_id = fp.search_id
+        AND fe.product_id = fp.product_id
 ORDER BY
-    e.user_id,
-    e.event_ts,
-    e.index,
-    e.funnel_step
+    fe.user_id,
+    fe.event_ts,
+    fe.index,
+    fe.funnel_step
