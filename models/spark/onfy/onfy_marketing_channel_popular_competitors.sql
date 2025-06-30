@@ -121,8 +121,9 @@ ranked_base AS (
 SELECT
     channel,
     pharmacy_name,
-    COUNT(DISTINCT product_id) AS num_products,
+    COUNT(DISTINCT CASE WHEN product_price IS NOT NULL THEN product_id END) AS num_products,
     COUNT(DISTINCT CASE WHEN price_onfy IS NOT NULL THEN product_id END) AS num_products_onfy_intersections,
+    ROUND(AVG(CASE WHEN price_onfy IS NOT NULL THEN (product_price - price_onfy) / price_onfy END), 2) AS onfy_price_comparison,
     AVG(price_rank) AS mean_rank,
     AVG(product_price) AS mean_price,
     MIN(product_price) AS min_price,
@@ -131,7 +132,6 @@ SELECT
     PERCENTILE(product_price, 0.5) AS median_price,
     PERCENTILE(product_price, 0.75) AS percentile_75_price,
     STDDEV(product_price) AS std_price,
-    AVG(CASE WHEN price_onfy IS NOT NULL THEN (product_price - price_onfy) / price_onfy END) AS onfy_price_comparison,
     COUNT(DISTINCT date) AS num_dates_stats
 FROM ranked_base
 GROUP BY
