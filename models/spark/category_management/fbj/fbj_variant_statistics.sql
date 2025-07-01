@@ -178,6 +178,7 @@ variant_repl_status AS (
         -- сколько айтемов было заказано в текущий день
         SUM(IF(fmr.partition_date = b.partition_date, fmr.requested_count, 0)) AS qty_created,
         -- сколько айтемов в репленишментах созданных до текущего дня сейчас находятся в разных статусах
+        SUM(IF(fmr.last_updated_at = fmr.created_at, fmr.requested_count, 0)) AS 1_qty_in_pending_approve,
         SUM(IF(fmr.last_updated_at = fmr.2_pending_inbound_dt, fmr.requested_count, 0)) AS 2_qty_in_pending_inbound,
         SUM(IF(fmr.last_updated_at = fmr.3_pending_shipping_dt, fmr.requested_count, 0)) AS 3_qty_in_pending_shipping,
         SUM(IF(fmr.last_updated_at = fmr.4_shipped_dt, fmr.requested_count, 0)) AS 4_qty_in_shipped_by_merchant,
@@ -523,6 +524,7 @@ SELECT
     vo.to_30,
     --
     vrs.qty_created,
+    vrs.1_qty_in_pending_approve,
     vrs.2_qty_in_pending_inbound,
     vrs.3_qty_in_pending_shipping,
     vrs.4_qty_in_shipped_by_merchant,
