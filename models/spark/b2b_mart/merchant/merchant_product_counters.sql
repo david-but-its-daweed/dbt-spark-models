@@ -8,82 +8,108 @@
     }
 ) }}
 
--- Создание календаря через последовательность дат
-WITH calendar_dt AS (
-    SELECT
-        EXPLODE(
-            SEQUENCE(
-                DATE('2025-03-01'),
-                CURRENT_DATE()
-            )
-        ) AS partition_date
-),
-
-products AS (
+WITH products AS (
     SELECT DISTINCT
-        c.partition_date,
-        mp.merchant_id,
-        mp.product_id
-    FROM {{ source('b2b_mart', 'merchant_products') }} AS mp
-    CROSS JOIN calendar_dt AS c
+        merchant_id,
+        product_id
+    FROM {{ source('b2b_mart', 'merchant_products') }}
 ),
 
-stats AS (
+raw_events AS (
     SELECT
-        cjm.event_msk_date,
-
+        cjm.event_msk_date AS partition_date,
         cjm.product_id,
-        ap.category_name,
-        ap.level_1_category_name,
-        ap.level_2_category_name,
-        ap.level_3_category_name,
+        cjm.user_id,
 
-        COUNT(DISTINCT IF(cjm.type = 'productPreview', cjm.user_id, NULL)) AS preview,
-        COUNT(DISTINCT IF(cjm.type = 'productClick', cjm.user_id, NULL)) AS open,
-        COUNT(DISTINCT IF(cjm.type = 'addToCart', cjm.user_id, NULL)) AS add_to_cart
+        cjm.type AS event_type,
+
+        CASE
+            WHEN
+                cjm.type = 'addToCart' AND LAG(cjm.type) OVER (PARTITION BY cjm.user_id, cjm.product_id ORDER BY cjm.event_ts_msk) != 'addToCart'
+                THEN
+                    LAG(cjm.pageUrl) OVER (PARTITION BY cjm.user_id, cjm.product_id ORDER BY cjm.event_ts_msk)
+            ELSE cjm.pageUrl
+        END AS page_url
     FROM {{ source('b2b_mart', 'ss_events_customer_journey') }} AS cjm
-    INNER JOIN {{ source('b2b_mart', 'ss_assortment_products') }} AS ap ON cjm.product_id = ap.product_id
+    INNER JOIN products AS p ON cjm.product_id = p.product_id
     WHERE
         cjm.type IN ('productPreview', 'productClick', 'addToCart')
-        AND cjm.event_msk_date >= DATE('2025-03-01')
-    GROUP BY
-        cjm.event_msk_date, cjm.product_id,
-        ap.category_name,
-        ap.level_1_category_name,
-        ap.level_2_category_name,
-        ap.level_3_category_name
+        AND cjm.event_msk_date >= '2025-03-01'
+),
+
+events AS (
+    SELECT
+        partition_date,
+        product_id,
+        user_id,
+
+        event_type,
+        CASE
+            WHEN page_url LIKE '%/search/%' AND page_url LIKE '%q.%' THEN 'query search'
+            WHEN page_url LIKE '%/search/%' AND page_url LIKE '%i.%' THEN 'image search'
+            WHEN page_url LIKE '%/search/%' AND page_url LIKE '%c.%' THEN 'category'
+            WHEN page_url LIKE '%/search%' THEN 'catalog'
+            WHEN page_url LIKE '%/products/%' THEN 'products' 
+            WHEN page_url LIKE '%promotions%' THEN 'promotions'
+            ELSE 'other'
+        END AS event_info
+    FROM raw_events AS re
 ),
 
 deals AS (
-    SELECT
-        DATE(created_time) AS partition_date,
+    SELECT DISTINCT
+        DATE(fcr.created_time) AS partition_date,
         CASE
-            WHEN link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(link, 'https://joom.pro/pt-br/products/(.*)', 1)
-            ELSE link
+            WHEN fcr.link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(fcr.link, 'https://joom.pro/pt-br/products/(.*)', 1)
+            ELSE fcr.link
         END AS product_id,
-        COUNT(DISTINCT deal_id) AS deals,
-        COUNT(DISTINCT customer_request_id) AS requests
-    FROM {{ source('b2b_mart', 'fact_customer_requests') }}
+        fcr.user_id,
+
+        'deal' AS event_type,
+        fcr.deal_id AS event_info
+    FROM {{ source('b2b_mart', 'fact_customer_requests') }} AS fcr
+    INNER JOIN
+        products AS p
+        ON
+            CASE
+                WHEN fcr.link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(fcr.link, 'https://joom.pro/pt-br/products/(.*)', 1)
+                ELSE fcr.link
+            END = p.product_id
     WHERE
-        country IN ('BR', 'MX') AND (link LIKE 'https://joom.pro/pt-br/products/%' OR link LIKE '6%')
-        AND next_effective_ts_msk IS NULL
-    GROUP BY
-        1, 2
+        fcr.country IN ('BR', 'MX') AND (fcr.link LIKE 'https://joom.pro/pt-br/products/%' OR fcr.link LIKE '6%')
+        AND fcr.next_effective_ts_msk IS NULL
+        AND DATE(fcr.created_time) >= '2025-03-01'
+),
+
+stats AS (
+    SELECT * FROM events
+    UNION ALL
+    SELECT * FROM deals
+),
+
+full AS (
+    SELECT
+        s.*,
+        (ut.user_id IS NOT NULL) AS is_registrated
+    FROM stats AS s
+    LEFT JOIN {{ source('b2b_mart', 'ss_users_table') }} AS ut
+    ON
+        s.user_id = ut.user_id
+        AND s.partition_date >= DATE(ut.registration_start)
 )
 
 SELECT
-    p.partition_date,
+    f.partition_date,
+    f.user_id,
+    f.is_registrated,
 
-    p.merchant_id,
-    p.product_id,
+    f.event_type,
+    f.event_info,
 
-    COALESCE(s.preview, 0) AS preview,
-    COALESCE(s.open, 0) AS open,
-    COALESCE(s.add_to_cart, 0) AS add_to_cart,
-    COALESCE(d.deals, 0) AS deals,
-    COALESCE(d.requests, 0) AS requests
-FROM products AS p
-LEFT JOIN stats AS s
-    ON p.product_id = s.product_id AND p.partition_date = s.event_msk_date
-LEFT JOIN deals AS d
-    ON p.product_id = d.product_id AND p.partition_date = d.partition_date
+    f.product_id,
+    ap.category_name,
+    ap.level_1_category_name,
+    ap.level_2_category_name,
+    ap.level_3_category_name
+FROM full AS f
+LEFT JOIN {{ source('b2b_mart', 'ss_assortment_products') }} AS ap ON f.product_id = ap.product_id
