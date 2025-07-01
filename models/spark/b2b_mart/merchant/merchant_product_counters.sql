@@ -11,15 +11,21 @@
 WITH products AS (
     SELECT DISTINCT
         merchant_id,
-        product_id
+        merchant_name,
+        product_id,
+        product_name
     FROM {{ source('b2b_mart', 'merchant_products') }}
 ),
 
 raw_events AS (
     SELECT
         cjm.event_msk_date AS partition_date,
-        cjm.product_id,
         cjm.user_id,
+
+        p.merchant_id,
+        p.merchant_name,
+        p.product_id,
+        p.product_name,
 
         cjm.type AS event_type,
 
@@ -40,8 +46,12 @@ raw_events AS (
 events AS (
     SELECT
         partition_date,
-        product_id,
         user_id,
+
+        merchant_id,
+        merchant_name,
+        product_id,
+        product_name,
 
         event_type,
         CASE
@@ -59,11 +69,12 @@ events AS (
 deals AS (
     SELECT DISTINCT
         DATE(fcr.created_time) AS partition_date,
-        CASE
-            WHEN fcr.link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(fcr.link, 'https://joom.pro/pt-br/products/(.*)', 1)
-            ELSE fcr.link
-        END AS product_id,
         fcr.user_id,
+
+        p.merchant_id,
+        p.merchant_name,
+        p.product_id,
+        p.product_name,
 
         'deal' AS event_type,
         fcr.deal_id AS event_info
@@ -106,7 +117,12 @@ SELECT
     f.event_type,
     f.event_info,
 
+    f.merchant_id,
+    f.merchant_name,
+    
     f.product_id,
+    f.product_name,
+
     ap.category_name,
     ap.level_1_category_name,
     ap.level_2_category_name,
