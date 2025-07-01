@@ -10,7 +10,7 @@
       'alerts_channel': '#onfy-etl-monitoring',
       'bigquery_partitioning_date_column': 'search_event_date',
       'bigquery_overwrite': 'true',
-      'bigquery_known_gaps': ['2025-02-28', '2025-03-01', '2025-03-02', '2025-03-03', '2025-03-04', '2025-03-05'] -- broken searchServer logging
+      'bigquery_known_gaps': ['2025-02-28', '2025-03-01', '2025-03-02', '2025-03-03', '2025-03-04', '2025-03-05']
     }
 ) }}
 
