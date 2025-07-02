@@ -30,6 +30,7 @@ WITH device_info AS (
         FIRST_VALUE(ad.real_user_id) AS real_user_id,
         FIRST_VALUE(IF(ad.legal_entity = 'jmt', 'JMT', 'SIA')) AS legal_entity,
         FIRST_VALUE(CASE WHEN ad.date_msk < '2023-07-01' THEN 'joom' ELSE ad.app_entity END) AS app_entity,
+        FIRST_VALUE(CASE WHEN ad.date_msk < '2023-07-01' THEN 'joom' ELSE ad.app_entity_group END) AS app_entity_group,
         FIRST_VALUE(ad.custom_domain) AS custom_domain,
         FIRST_VALUE(COALESCE(f.productOpens > 0, FALSE)) AS is_product_opened,
         FIRST_VALUE(COALESCE(f.productAddToCarts > 0, FALSE)) AS is_product_added_to_cart,
@@ -69,6 +70,7 @@ SELECT
     d.os_version,
     d.app_version,
     d.app_entity,
+    d.app_entity_group,
     CASE
         WHEN UPPER(d.app_entity) = 'SHOPY' THEN d.custom_domain
     END AS shopy_blogger_domain,

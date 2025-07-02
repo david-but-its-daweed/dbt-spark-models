@@ -141,6 +141,7 @@ active_devices_ext1 AS (
         main.legal_entity,
         {% if device_or_user_id == 'device_id' %}
             main.app_entity,
+            main.app_entity_group,
             main.shopy_blogger_domain,
             main.is_product_opened,
             main.is_product_added_to_cart,
@@ -213,6 +214,7 @@ active_devices_ext3 AS (
         a.legal_entity,
         {% if device_or_user_id == 'device_id' %}
             a.app_entity,
+            a.app_entity_group,
             a.shopy_blogger_domain,
             a.is_product_opened,
             a.is_product_added_to_cart,
@@ -344,6 +346,7 @@ SELECT
     legal_entity,
     {% if device_or_user_id == 'device_id' %}
         app_entity,
+        app_entity_group,
         shopy_blogger_domain,
         is_product_opened,
         is_product_added_to_cart,

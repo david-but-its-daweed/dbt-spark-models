@@ -26,6 +26,8 @@ models:
       description: Legal entity through which payments will be made for `device_id`. Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main)
     - name: app_entity
       description: "The name of the online store where the order was placed. By 'online store,' we mean the distinction between 'joom' (the main marketplace), 'joom_geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'cool_be' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019). Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
+    - name: app_entity_group
+      description: "The group of the online stores where the order was placed. By 'online store,' we mean the distinction between 'joom' (the main marketplace), 'joom_geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'cool_be' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019). Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
     - name: join_date_msk
       description: Date of the user's first activity in UTC+3
     - name: real_user_segment
@@ -108,6 +110,8 @@ models:
       description: Legal entity through which payments will be made for `device_id`. Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main)
     - name: app_entity
       description: "The name of the online store where the order was placed. By 'online store,' we mean the distinction between 'joom' (the main marketplace), 'joom_geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'cool_be' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019). Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
+    - name: app_entity_group
+      description: "The group of the online stores where the order was placed. By 'online store,' we mean the distinction between 'joom' (the main marketplace), 'joom_geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'cool_be' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019). Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
     - name: shopy_blogger_domain
       description: the unique part of the subdomain before the main domain (rosa.shopy.pro, shopy_blogger_domain = "rosa", app_entity = "shopy")
     - name: join_date_msk
@@ -488,6 +492,8 @@ models:
       description: The legal entity through which payments will be made for `device_id`. Used to differentiate orders through the main Joom app and through JMT. For the Russia and Belarus segments, a separate 'JMT' app is launched, for others - 'Joom' (main).
     - name: app_entity
       description: "The name of the online store where the order was placed. This field is true for `order_group_id`. By 'online store,' we mean the distinction between 'joom' (the main marketplace), 'joom_geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'cool_be' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019). Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
+    - name: app_entity_group
+      description: "The group of the online stores where the order was placed. This field is true for `order_group_id`. By 'online store,' we mean the distinction between 'joom' (the main marketplace), 'joom_geek' (a separate website for geek products, more details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee) and 'cool_be' (sales in Google Shopping, more details can be found here: https://www.notion.so/joomteam/Coolbe-Google-Shopping-a20dc4a7e673455fa8fa5eb2172f9019). Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
     - name: shopy_blogger_domain
       description: the unique part of the subdomain before the main domain (rosa.shopy.pro, shopy_blogger_domain = "rosa", app_entity = "shopy")
     - name: merchant_id
@@ -686,6 +692,8 @@ models:
       description: Legal entity through which payments will be made for `device_id`. Used for distinguishing orders through the main Joom app and through JMT. Under the Russia and Belarus segment, a separate 'JMT' app is launched, for others - 'Joom' (main).
     - name: app_entity
       description: "Name of the online store where the order was placed. The field is true for `order_group_id`. Under 'online store,' the breakdown is between 'joom' (main marketplace) and 'joom_geek' (a separate site with products for geeks). More details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee. Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
+    - name: app_entity_group
+      description: "Group of the online stores where the order was placed. The field is true for `order_group_id`. Under 'online store,' the breakdown is between 'joom' (main marketplace) and 'joom_geek' (a separate site with products for geeks). More details can be found here: https://www.notion.so/joomteam/JoomGeek-4df5f98d0151417ea3c7213020ba48ee. Before 2023-07-01 it's always 'joom', after that day this field can be NULL."
     - name: country_code
       description: Country code (A2 code). In case a user requests the deletion of their personal data from our storage, the field will be set to an empty string ('').
     - name: top_country_code

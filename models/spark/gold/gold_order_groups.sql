@@ -50,6 +50,7 @@ order_groups AS (
         order_date_msk,
         legal_entity,
         app_entity,
+        app_entity_group,
         currency_code,
 
         FIRST_VALUE(platform) AS platform,
@@ -96,7 +97,7 @@ order_groups AS (
     {% if is_incremental() %}
         WHERE order_date_msk >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 230 DAYS
     {% endif %}
-    GROUP BY 1, 2, 3, 4, 5, 6, 7
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8
 )
 
 SELECT
@@ -106,6 +107,7 @@ SELECT
     og.order_date_msk,
     og.legal_entity,
     og.app_entity,
+    og.app_entity_group,
     og.currency_code,
 
     og.platform,
