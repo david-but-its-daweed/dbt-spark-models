@@ -55,11 +55,11 @@ events AS (
 
         event_type,
         CASE
-            WHEN page_url LIKE '%/search/%' AND page_url LIKE '%q.%' THEN 'query search'
+            WHEN page_url LIKE '%/search/%' AND page_url LIKE '%q.%' THEN 'keyword search'
             WHEN page_url LIKE '%/search/%' AND page_url LIKE '%i.%' THEN 'image search'
-            WHEN page_url LIKE '%/search/%' AND page_url LIKE '%c.%' THEN 'category'
+            WHEN page_url LIKE '%/search/%' AND page_url LIKE '%c.%' THEN 'category search'
             WHEN page_url LIKE '%/search%' THEN 'catalog'
-            WHEN page_url LIKE '%/products/%' THEN 'products' 
+            WHEN page_url LIKE '%/products/%' THEN 'similar products' 
             WHEN page_url LIKE '%promotions%' THEN 'promotions'
             ELSE 'other'
         END AS event_info
