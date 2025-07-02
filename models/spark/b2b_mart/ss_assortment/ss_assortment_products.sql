@@ -39,6 +39,39 @@ matching AS (
         {{ source('productsmatching', 'joom_1688_product_variant_matches') }} AS joom_ids
         ON ali1688.ali1688_product_id = joom_ids.ali_1688_product_id
     GROUP BY 1
+),
+
+product_states AS (
+    SELECT
+        product_id,
+
+        CASE
+            WHEN status = 1 THEN 'Active'
+            WHEN status = 2 THEN 'Pending'
+            WHEN status = 3 THEN 'Rejected'
+            WHEN status = 4 THEN 'Suspended'
+            WHEN status = 5 THEN 'Disabled'
+        END AS status,
+
+        CASE
+            WHEN status = 1 THEN NULL
+            ELSE
+                CONCAT(
+                    UPPER(SUBSTRING(reject_reason, 1, 1)),
+                    LOWER(
+                        REGEXP_REPLACE(
+                            REGEXP_REPLACE(
+                                SUBSTRING(reject_reason, 2), '([A-Z])', ' $1'
+                            ),
+                            '([0-9]+)', ' $1'
+                        )
+                    )
+                )
+        END AS reject_reason
+    FROM
+        {{ ref('scd2_mongo_product_state') }}
+    WHERE
+        dbt_valid_to IS NULL
 )
 
 SELECT
@@ -60,6 +93,8 @@ SELECT
     MILLIS_TO_TS_MSK(pp.createdTimeMs) AS created_ts_msk,
     DATE(MILLIS_TO_TS_MSK(pp.createdTimeMs)) AS created_date,
 
+    ps.status,
+    ps.reject_reason,
     pp.dangerousKind AS dangerous_kind,
 
     pp.merchantId AS merchant_id,
@@ -81,6 +116,7 @@ SELECT
     DATE(MILLIS_TO_TS_MSK(pp.createdTimeMs)) AS published_date
 FROM {{ ref('scd2_published_products_snapshot') }} AS pp
 LEFT JOIN {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }} AS pa ON pp._id = pa._id
+LEFT JOIN product_states AS ps ON pp._id = ps.product_id
 LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
 LEFT JOIN matching AS m ON pp._id = m.product_id
 WHERE
