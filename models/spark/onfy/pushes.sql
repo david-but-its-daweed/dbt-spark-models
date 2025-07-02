@@ -1,6 +1,7 @@
 {{ config(
     schema='onfy',
     materialized='table',
+    file_format='delta',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -35,6 +36,34 @@ WITH pushes_sent AS (
         channelname = 'MobilePush'
         AND mailingaction = 'MailingSend'
         AND userid IS NOT NULL
+        AND DATE(datetimeutc) < '2025-07-02'
+
+    UNION ALL
+
+    SELECT
+        userId,
+        mailingName AS campaign,
+        CASE
+            WHEN mailingName LIKE '%items have been added to the cart but not purchased%' THEN TRUE
+            WHEN mailingName LIKE '%Registration without order within%' THEN TRUE
+            WHEN mailingName LIKE '%Abandoned Category%' THEN TRUE
+            WHEN mailingName LIKE '%The total basket price has been discounted%' THEN TRUE
+            WHEN mailingName LIKE '%The price of the viewed item has been reduced%' THEN TRUE
+            WHEN mailingName LIKE '%items have been viewed but not purchased%' THEN TRUE
+            WHEN mailingName LIKE '%Would you like to repeat the experience%' THEN TRUE
+            ELSE FALSE
+        END AS is_transactional,
+        FROM_UTC_TIMESTAMP(dateTimeUtc, 'Europe/Berlin') AS push_sent_dt,
+        COALESCE(
+            LEAD(FROM_UTC_TIMESTAMP(dateTimeUtc, 'Europe/Berlin')) OVER (PARTITION BY userId, mailingName ORDER BY dateTimeUtc),
+            '2100-01-01 00:00:00'
+        ) AS next_push_sent_dt
+    FROM {{ source('pharmacy', 'mindbox_events_v2') }}
+    WHERE
+        mailingChannel = 'MobilePush'
+        AND mailingStatusName = 'Sent'
+        AND userId IS NOT NULL
+        AND DATE(datetimeutc) >= '2025-07-02'
 ),
 
 pushes_clicked AS (
@@ -47,6 +76,21 @@ pushes_clicked AS (
         channelname = 'MobilePush'
         AND mailingaction = 'MailingClick'
         AND userid IS NOT NULL
+        AND DATE(datetimeutc) < '2025-07-02'
+
+
+    UNION ALL
+
+    SELECT
+        userId,
+        mailingName AS campaign,
+        FROM_UTC_TIMESTAMP(dateTimeUtc, 'Europe/Berlin') AS push_clicked_dt
+    FROM {{ source('pharmacy', 'mindbox_events_v2') }}
+    WHERE
+        mailingChannel = 'MobilePush'
+        AND mailingStatusName = 'Clicked'
+        AND userId IS NOT NULL
+        AND DATE(datetimeutc) >= '2025-07-02'
 ),
 
 pushes AS (
@@ -75,7 +119,7 @@ sessions_orders AS (
         sessions.gross_profit_initial,
         sessions.promocode_discount
     FROM {{ source('onfy', 'onfy_sessions') }} AS sessions
-        JOIN {{ source('pharmacy_landing', 'device') }} AS device
+    INNER JOIN {{ source('pharmacy_landing', 'device') }} AS device
         ON sessions.device_id = device.id
 )
 
