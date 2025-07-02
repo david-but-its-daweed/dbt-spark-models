@@ -68,7 +68,7 @@ ads_dashboard_predata AS (
     WHERE partition_date >= "2025-04-01"
         AND source IN ('billiger', 'idealo', 'medizinfuchs')
         AND landing_page LIKE '/artikel/%'
-        AND session_dt >= current_date() - interval 5 day
+        AND session_dt >= current_date() - interval 31 day
         AND session_dt < current_date() - 1
 ),
 
@@ -108,7 +108,7 @@ base_data AS (
         product_price
     FROM pharmacy.marketing_channel_price_fast_scd2
     WHERE
-        effective_ts >= CURRENT_DATE() - INTERVAL 5 DAY
+        effective_ts >= CURRENT_DATE() - INTERVAL 31 DAY
         AND effective_ts < CURRENT_DATE() - 1
         AND status = "ACTIVE"
         AND product_id IN (
