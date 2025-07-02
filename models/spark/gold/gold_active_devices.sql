@@ -62,6 +62,8 @@ SELECT
     is_rw3,
     is_rw4,
     is_churned_14,
-    is_churned_28
+    is_churned_28,
+    is_converted_next_w1,
+    is_converted_next_w2
 FROM {{ ref('gold_active_devices_with_ephemeral') }}
 WHERE is_ephemeral_device = FALSE

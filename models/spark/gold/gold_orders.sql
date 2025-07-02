@@ -152,6 +152,7 @@ orders_ext0 AS (
         ROUND(COALESCE (FILTER(ord.discounts, x -> x.type = 'specialPriceFinal')[0].amount * 1e6, 0), 3) AS special_price_discount,
         ROUND(COALESCE (FILTER(ord.discounts, x -> x.type = 'specialPrice')[0].amount * 1e6, 0), 3) AS special_price_potential_discount,
         ord.discounts,
+        ord.is_1688_product,
 
         ord.refund_reason IS NOT NULL AS is_refunded,
         ord.refund_reason,
@@ -366,6 +367,8 @@ orders_ext2 AS (
         special_price_discount,
         special_price_potential_discount,
         discounts,
+        is_1688_product,
+
         is_refunded,
         refund_reason,
         detailed_refund_reason,
@@ -493,6 +496,7 @@ orders_ext5 AS (
         a.special_price_discount,
         a.special_price_potential_discount,
         a.discounts,
+        a.is_1688_product,
         a.is_refunded,
         a.refund_reason,
         a.detailed_refund_reason,
@@ -645,6 +649,7 @@ SELECT
     special_price_discount,
     special_price_potential_discount,
     discounts,
+    is_1688_product,
 
     is_refunded,
     refund_reason,

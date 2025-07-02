@@ -82,6 +82,18 @@ models:
       description: Flag indicating whether `device_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `device_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: is_converted_next_w1
+      description: >-
+        Flag indicating whether device_id made a purchase in the 1st calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 1 and 7 days following `date_msk`; NULL if fewer than 7 days have
+        elapsed.
+    - name: is_converted_next_w2
+      description: >-
+        Flag indicating whether device_id made a purchase in the 2nd calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 8 and 14 days following `date_msk`; NULL if fewer than 14 days have
+        elapsed.
     - name: month_msk
       description: Month of activity in UTC+3 (based on `date_msk`)
 
@@ -166,6 +178,18 @@ models:
       description: Flag indicating whether `device_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `device_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: is_converted_next_w1
+      description: >-
+        Flag indicating whether device_id made a purchase in the 1st calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 1 and 7 days following `date_msk`; NULL if fewer than 7 days have
+        elapsed.
+    - name: is_converted_next_w2
+      description: >-
+        Flag indicating whether device_id made a purchase in the 2nd calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 8 and 14 days following `date_msk`; NULL if fewer than 14 days have
+        elapsed.
 
 - name: gold_active_users_with_ephemeral
   description: Key metrics of a user on a specific date. Primary key - `user_id` and `date_msk`
@@ -234,6 +258,18 @@ models:
       description: Flag indicating whether `user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `user_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: is_converted_next_w1
+      description: >-
+        Flag indicating whether user_id made a purchase in the 1st calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 1 and 7 days following `date_msk`; NULL if fewer than 7 days have
+        elapsed.
+    - name: is_converted_next_w2
+      description: >-
+        Flag indicating whether user_id made a purchase in the 2nd calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 8 and 14 days following `date_msk`; NULL if fewer than 14 days have
+        elapsed.
     - name: month_msk
       description: Month of activity in UTC+3 (based on `date_msk`)
 
@@ -304,6 +340,18 @@ models:
       description: Flag indicating whether `user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `user_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: is_converted_next_w1
+      description: >-
+        Flag indicating whether user_id made a purchase in the 1st calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 1 and 7 days following `date_msk`; NULL if fewer than 7 days have
+        elapsed.
+    - name: is_converted_next_w2
+      description: >-
+        Flag indicating whether user_id made a purchase in the 2nd calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 8 and 14 days following `date_msk`; NULL if fewer than 14 days have
+        elapsed.
 
 - name: gold_active_real_users
   description: Key metrics of a real_user on a specific date. Primary key - `real_user_id` and `date_msk`
@@ -370,6 +418,18 @@ models:
       description: Flag indicating whether `real_user_id` entered Churn with a 14-day calendar window (If the required number of days has not passed yet, it will be NULL)
     - name: is_churned_28
       description: Flag indicating whether `real_user_id` entered Churn with a 28-day calendar window (If the required number of days has not passed yet, it will be NULL)
+    - name: is_converted_next_w1
+      description: >-
+        Flag indicating whether real_user_id made a purchase in the 1st calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 1 and 7 days following `date_msk`; NULL if fewer than 7 days have
+        elapsed.
+    - name: is_converted_next_w2
+      description: >-
+        Flag indicating whether real_user_id made a purchase in the 2nd calendar week
+        after the activity date (`date_msk`). True if at least one purchase occurred
+        between 8 and 14 days following `date_msk`; NULL if fewer than 14 days have
+        elapsed.
 
 - name: gold_countries
   description: Information about countries. Primary key - `country_code` or `country_code`
@@ -616,6 +676,10 @@ models:
       description: Potential discount amount due to Special Price for product converted to USD. That's the discount which could be given for the purchased product if user completed Special Price condition (3+ items in cart). Only SP1 discount, not including SP2 (6+ items). 0$ if product_id not taking part in SpecialPrice
     - name: discounts
       description: Dictionary storing applied discounts
+    - name: is_1688_product
+      description: >-
+        Flag indicating whether the product was imported from 1688.com (Alibaba Group).
+        True if `product_id` was added via 1688; FALSE otherwise.
     - name: is_refunded
       description: Flag indicating if there was a refund for the order
     - name: refund_reason

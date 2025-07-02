@@ -216,7 +216,17 @@ real_users_4 AS (
             DATEDIFF(CURRENT_DATE(), date_msk) >= 28,
             (next_date_msk_lag > 28 OR (next_date_msk_lag IS NULL AND DATEDIFF(CURRENT_DATE(), date_msk) >= 28)),
             NULL
-        ) AS is_churned_28
+        ) AS is_churned_28,
+        IF(
+            DATEDIFF(CURRENT_DATE() - 1, date_msk) >= 7,
+            MAX(is_converted) OVER (PARTITION BY real_user_id ORDER BY UNIX_DATE(date_msk) RANGE BETWEEN 1 FOLLOWING AND 7 FOLLOWING),
+            NULL
+        ) AS is_converted_next_w1,
+        IF(
+            DATEDIFF(CURRENT_DATE() - 1, date_msk) >= 14,
+            MAX(is_converted) OVER (PARTITION BY real_user_id ORDER BY UNIX_DATE(date_msk) RANGE BETWEEN 8 FOLLOWING AND 14 FOLLOWING),
+            NULL
+        ) AS is_converted_next_w2
     FROM real_users_3
 ),
 
@@ -261,7 +271,9 @@ real_users_5 AS (
         real_users.is_rw3,
         real_users.is_rw4,
         real_users.is_churned_14,
-        real_users.is_churned_28
+        real_users.is_churned_28,
+        real_users.is_converted_next_w1,
+        real_users.is_converted_next_w2
     FROM real_users_4 AS real_users
     LEFT JOIN adjusted_slices USING (real_user_id, date_msk)
 )
@@ -309,7 +321,9 @@ SELECT
     real_users.is_rw3,
     real_users.is_rw4,
     real_users.is_churned_14,
-    real_users.is_churned_28
+    real_users.is_churned_28,
+    real_users.is_converted_next_w1,
+    real_users.is_converted_next_w2
 FROM real_users_5 AS real_users
 LEFT JOIN {{ ref('gold_countries') }} AS countries USING (country_code)
 DISTRIBUTE BY real_users.date_msk

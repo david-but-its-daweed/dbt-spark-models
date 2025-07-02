@@ -302,7 +302,17 @@ active_devices_ext4 AS (
             DATEDIFF(CURRENT_DATE(), date_msk) >= 28,
             (next_date_msk_lag > 28 OR (next_date_msk_lag IS NULL AND DATEDIFF(CURRENT_DATE(), date_msk) >= 28)),
             NULL
-        ) AS is_churned_28
+        ) AS is_churned_28,
+        IF(
+            DATEDIFF(CURRENT_DATE() - 1, date_msk) >= 7,
+            MAX(is_converted) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY UNIX_DATE(date_msk) RANGE BETWEEN 1 FOLLOWING AND 7 FOLLOWING),
+            NULL
+        ) AS is_converted_next_w1,
+        IF(
+            DATEDIFF(CURRENT_DATE() - 1, date_msk) >= 14,
+            MAX(is_converted) OVER (PARTITION BY {{ device_or_user_id }} ORDER BY UNIX_DATE(date_msk) RANGE BETWEEN 8 FOLLOWING AND 14 FOLLOWING),
+            NULL
+        ) AS is_converted_next_w2
     FROM active_devices_ext3
 ),
 
@@ -386,6 +396,8 @@ SELECT
     is_rw4,
     is_churned_14,
     is_churned_28,
+    is_converted_next_w1,
+    is_converted_next_w2,
     trunc(date_msk, 'MM') AS month_msk
 FROM active_devices_ext6
 DISTRIBUTE by month_msk, abs(hash({{ device_or_user_id }})) % 10
