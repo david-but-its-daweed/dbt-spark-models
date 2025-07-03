@@ -21,6 +21,7 @@ select
     category_name,
     millis_to_ts_msk(ctms) as created_time,
     dealId as deal_id,
+    regexp_extract(link, '/products/([a-f0-9]+)$', 1) AS product_id,
     country,
     desc,
     customizationDescription AS customization_description,
