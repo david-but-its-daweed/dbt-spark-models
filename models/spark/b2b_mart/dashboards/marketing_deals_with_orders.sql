@@ -78,6 +78,7 @@ SELECT
     t1.final_gross_profit,
     t1.initial_gross_profit,
     t1.final_gmv,
+    t1.gmv_initial,
     t1.utm_campaign,
     t1.utm_source,
     t1.utm_medium,
