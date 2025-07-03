@@ -237,6 +237,7 @@ SELECT
         WHEN d.is_sample = 1 THEN 'Sample'
         WHEN d.is_small_batch = 1 THEN 'Small Deal'
         WHEN d.self_service = 1 THEN 'Big Deal'
+        WHEN d.country in ('BR', 'MX') and lower(deal_name) not like '%sample%' THEN 'VIP'
         ELSE 'Other'
     END AS deal_type,
     d.deal_created_ts,
