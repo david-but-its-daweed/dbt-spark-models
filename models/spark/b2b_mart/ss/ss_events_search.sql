@@ -1,4 +1,3 @@
-
 {{ config(
     schema='b2b_mart',
     materialized='view',
@@ -14,33 +13,64 @@
 ) }}
 
 
-WITH search_events AS (
-    SELECT user['userId'] AS user_id, 
-           event_ts_msk, 
-           type, 
-           payload.pageUrl, 
-           payload.source, 
-           payload.productId AS product_id, 
-           payload.timeBeforeClick, 
-           payload.categories, 
-           payload.productsNumber, 
-           payload.page AS page_num, 
-           payload.query AS query, 
-           payload.hotPriceProductsNumber, 
-           payload.topProductsNumber, 
-           payload.hasNextPage, 
-           payload.searchResultsUniqId, 
-           payload.page, 
-           payload.isSearchByImage AS is_search_by_image,
-           payload.index AS index,
-           ROW_NUMBER() OVER (
-               PARTITION BY payload.searchResultsUniqId, type 
-               ORDER BY event_ts_msk
-           ) AS event_number
-      FROM {{ source('b2b_mart', 'device_events') }}
-     WHERE partition_date >= '2024-07-01'
-       AND type IN ('productClick', 'search')
-       AND payload.searchResultsUniqId IS NOT NULL
+WITH bots AS (
+    SELECT
+        device_id,
+        MAX(1) AS bot_flag
+    FROM
+        threat.bot_devices_joompro
+    WHERE
+        is_device_marked_as_bot OR is_retrospectively_detected_bot
+    GROUP BY
+        1
+),
+
+fake_search AS (
+    SELECT
+        user_id,
+        COUNT(DISTINCT e.element.event_type) = 1 AND MAX(e.element.event_type) = 'search' AS is_fake
+    FROM
+        b2b_mart.ss_events_by_session,
+        UNNEST(events_in_session.list) AS e
+    WHERE
+        DATE(session_start) >= '2024-07-01'
+    GROUP BY 1
+    HAVING is_fake = True
+),
+
+search_events AS (
+    SELECT
+        de.`user`['userId'] AS user_id,
+        de.event_ts_msk,
+        de.type,
+        payload.pageUrl,
+        payload.source,
+        payload.productId AS product_id,
+        payload.timeBeforeClick,
+        payload.categories,
+        payload.productsNumber,
+        payload.page AS page_num,
+        payload.query,
+        payload.hotPriceProductsNumber,
+        payload.topProductsNumber,
+        payload.hasNextPage,
+        payload.searchResultsUniqId,
+        payload.page,
+        payload.isSearchByImage AS is_search_by_image,
+        payload.index,
+        ROW_NUMBER() OVER (
+            PARTITION BY payload.searchResultsUniqId, de.type
+            ORDER BY de.event_ts_msk
+        ) AS event_number
+    FROM {{ source('b2b_mart', 'device_events') }} AS de
+    LEFT JOIN bots AS b ON de.device.id = b.device_id
+    LEFT JOIN fake_search AS fs ON `user`['userId'] = fs.user_id
+    WHERE
+        de.partition_date >= '2024-07-01'
+        AND de.type IN ('productClick', 'search')
+        AND payload.searchResultsUniqId IS NOT NULL
+        AND b.bot_flag IS NULL
+        AND fs.user_id IS NULL
 ),
 
 search AS (
