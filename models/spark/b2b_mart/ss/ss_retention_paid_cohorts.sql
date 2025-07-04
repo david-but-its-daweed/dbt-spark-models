@@ -53,7 +53,7 @@ group by 1,2
 ),
 deals AS (
   SELECT 
-    deal_created_date,
+    achieved_paid_date,
     deal_id, 
     user_id,
     COALESCE(final_gmv, 0) AS final_gmv,
@@ -64,11 +64,11 @@ deals AS (
 
 base_s AS (
   SELECT *, 
-    CAST(MONTHS_BETWEEN(DATE_TRUNC('MONTH', deal_created_date), cohort_month) AS INT) AS month_number, 
-    FLOOR(DATEDIFF(DATE_TRUNC('WEEK', deal_created_date), cohort_week) / 7) AS week_number
+    CAST(MONTHS_BETWEEN(DATE_TRUNC('MONTH', achieved_paid_date), cohort_month) AS INT) AS month_number, 
+    FLOOR(DATEDIFF(DATE_TRUNC('WEEK', achieved_paid_date), cohort_week) / 7) AS week_number
   FROM cohort
   JOIN deals USING(user_id)
-  WHERE deal_created_date >= cohort_date
+  WHERE achieved_paid_date >= cohort_date
 ),
 
 agg_week AS (
