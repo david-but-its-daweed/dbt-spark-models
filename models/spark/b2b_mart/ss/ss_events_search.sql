@@ -29,7 +29,7 @@ fake_search AS (
         s.user_id,
         COUNT(DISTINCT e.event_type) = 1 AND MAX(e.event_type) = 'search' AS is_fake
     FROM
-        b2b_mart.ss_events_by_session AS s
+        {{ source('b2b_mart', 'ss_events_by_session') }} AS s
         LATERAL VIEW EXPLODE(events_in_session) AS e
     WHERE
         DATE(s.session_start) >= '2024-07-01'

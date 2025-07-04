@@ -22,7 +22,7 @@ WITH bots AS (
         1
 ),
 
-events AS (
+raw_events AS (
     SELECT DISTINCT
         `user`.userId AS user_id,
         device.id AS device_id,
@@ -58,6 +58,25 @@ events AS (
         AND de.`user`.userId IS NOT NULL
         AND de.type NOT IN ('deviceCreate')
         AND b.bot_flag IS NULL
+),
+
+fake_search AS (
+    SELECT
+        `user`.userId AS user_id,
+        COUNT(DISTINCT type) = 1 AND MAX(type) = 'search' AS is_fake
+    FROM
+        {{ source('b2b_mart', 'device_events') }}
+    WHERE
+        DATE(event_ts_msk) >= '2024-04-01'
+    GROUP BY 1
+    HAVING is_fake = TRUE
+),
+
+events AS (
+    SELECT re.*
+    FROM raw_events AS re
+    LEFT JOIN fake_search AS fs ON re.user_id = fs.user_id
+    WHERE fs.is_fake IS NULL
 ),
 
 events_with_gap AS (
@@ -134,11 +153,11 @@ final AS (
                 'event_time', event_ts_msk,
                 'event_landing',
                 (
-                CASE
-                    WHEN INSTR(FROM_JSON(event_params, 'pageUrl STRING').pageUrl, 'pt-br') > 0 OR INSTR(FROM_JSON(event_params, 'pageUrl STRING').pageUrl, 'br_search') > 0 THEN 'BR'
-                    WHEN INSTR(FROM_JSON(event_params, 'pageUrl STRING').pageUrl, 'es-mx') > 0 THEN 'MX'
-                    ELSE NULL 
-                END
+                    CASE
+                        WHEN INSTR(FROM_JSON(event_params, 'pageUrl STRING').pageUrl, 'pt-br') > 0 OR INSTR(FROM_JSON(event_params, 'pageUrl STRING').pageUrl, 'br_search') > 0 THEN 'BR'
+                        WHEN INSTR(FROM_JSON(event_params, 'pageUrl STRING').pageUrl, 'es-mx') > 0 THEN 'MX'
+                        ELSE NULL 
+                    END
                 ),
                 'device_id', device_id,
                 'device_oc_type', device_os_type,
