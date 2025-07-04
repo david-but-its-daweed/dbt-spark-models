@@ -66,7 +66,7 @@ ads_dashboard_predata AS (
         REGEXP_EXTRACT(landing_page, '/artikel/([^/?]+)', 1) AS medicine_id -- is there a better way ??
     FROM {{ source('onfy', 'ads_dashboard') }} ad
     WHERE 
-        AND source IN ('billiger', 'idealo', 'medizinfuchs')
+        source IN ('billiger', 'idealo', 'medizinfuchs')
         AND landing_page LIKE '/artikel/%'
         AND session_dt >= CURRENT_DATE() - interval 91 day
         AND session_dt < CURRENT_DATE() - 1
