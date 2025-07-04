@@ -11,7 +11,6 @@
     }
 ) }}
 
-
 WITH orders_precalc AS (
     SELECT
         "key" AS _key,
@@ -66,10 +65,10 @@ ads_dashboard_predata AS (
         source,
         REGEXP_EXTRACT(landing_page, '/artikel/([^/?]+)', 1) AS medicine_id -- is there a better way ??
     FROM {{ source('onfy', 'ads_dashboard') }} ad
-    WHERE partition_date >= "2025-04-01"
+    WHERE 
         AND source IN ('billiger', 'idealo', 'medizinfuchs')
         AND landing_page LIKE '/artikel/%'
-        AND session_dt >= CURRENT_DATE() - interval 90 day
+        AND session_dt >= CURRENT_DATE() - interval 91 day
         AND session_dt < CURRENT_DATE() - 1
 ),
 
@@ -109,7 +108,7 @@ base_data AS (
         product_price
     FROM {{ source('pharmacy', 'marketing_channel_price_fast_scd2') }} 
     WHERE
-        effective_ts >= CURRENT_DATE() - INTERVAL 90 DAY
+        effective_ts >= CURRENT_DATE() - INTERVAL 91 DAY
         AND effective_ts < CURRENT_DATE() - 1
         AND status = "ACTIVE"
         AND product_id IN (
@@ -156,6 +155,36 @@ cheapest_pharmacy AS (
     WHERE price_rank = 1
 ),
 
+first_rank AS (
+    SELECT
+        product_id,
+        channel,
+        effective_ts,
+        product_price AS first_rank_price
+    FROM ranked_prices
+    WHERE price_rank = 1
+),
+
+second_rank AS (
+    SELECT
+        product_id,
+        channel,
+        effective_ts,
+        product_price AS second_rank_price
+    FROM ranked_prices
+    WHERE price_rank = 2
+),
+
+third_rank AS (
+    SELECT
+        product_id,
+        channel,
+        effective_ts,
+        product_price AS third_rank_price
+    FROM ranked_prices
+    WHERE price_rank = 3
+),
+
 aggregated AS (
     SELECT
         product_id,
@@ -179,16 +208,17 @@ aggregated AS (
 
 goods_in_base AS (
     SELECT
-        medicine.id AS product_id,
-        medicine.country_local_id AS pzn,
-        product.name AS product_name,
-        product_store.price AS base_price
-    FROM {{ source('pharmacy_landing', 'medicine') }}
-    LEFT JOIN {{ source('pharmacy_landing', 'product') }} AS product
-        ON medicine.id = product.id
-    LEFT JOIN {{ source('pharmacy_landing', 'product_store') }}
-        ON medicine.id = product_store.product_id
+        feed_loaders_state.date AS date,
+        feed_loaders_state.product_id AS product_id,
+        feed_loaders_state.price_eur AS base_price,
+        product.name AS product_name
+    FROM pharmacy.feed_loaders_state
+    LEFT JOIN {{ source('pharmacy_landing', 'product') }}
+    ON feed_loaders_state.product_id = product.id
+    WHERE feed_loaders_state.date >= CURRENT_DATE() - INTERVAL 91 DAY
+
 ),
+
 
 united AS (
     SELECT
@@ -198,7 +228,9 @@ united AS (
         DATE_FORMAT(DATE(a.effective_ts), "MMMM") AS month_name,
         o.onfy_rank,
         c.cheapest_pharmacy,
-        gnb.pzn,
+        first_rank.first_rank_price,
+        second_rank.second_rank_price,
+        third_rank.third_rank_price,
         gnb.product_name,
         gnb.base_price,
         CASE
@@ -211,8 +243,14 @@ united AS (
         ON a.product_id = o.product_id AND a.channel = o.channel AND a.effective_ts = o.effective_ts
     LEFT JOIN cheapest_pharmacy AS c
         ON a.product_id = c.product_id AND a.channel = c.channel AND a.effective_ts = c.effective_ts
+    LEFT JOIN first_rank
+        ON a.product_id = first_rank.product_id AND a.channel = first_rank.channel AND a.effective_ts = first_rank.effective_ts
+    LEFT JOIN second_rank
+        ON a.product_id = second_rank.product_id AND a.channel = second_rank.channel AND a.effective_ts = second_rank.effective_ts
+    LEFT JOIN third_rank
+        ON a.product_id = third_rank.product_id AND a.channel = third_rank.channel AND a.effective_ts = third_rank.effective_ts
     LEFT JOIN goods_in_base AS gnb
-        ON a.product_id = gnb.product_id
+        ON a.product_id = gnb.product_id AND DATE(a.effective_ts) = gnb.date
     INNER JOIN orders
         ON a.product_id = orders.product_id
 ),
@@ -221,7 +259,6 @@ united_groupped AS (
     SELECT
         date,
         channel,
-        pzn,
         product_id,
         FIRST(orders) AS num_total_orders,
         FIRST(day_of_week) AS day_of_week,
@@ -236,19 +273,22 @@ united_groupped AS (
         ROUND(AVG(percentile_25_price), 2) AS mean_competitors_price_25_percentile,
         ROUND(AVG(median_price), 2) AS mean_competitors_price_median,
         ROUND(AVG(percentile_75_price), 2) AS mean_competitors_price_75_percentile,
+        ROUND(AVG(first_rank_price), 2) AS mean_first_rank_price,
+        ROUND(AVG(second_rank_price), 2) AS mean_second_rank_price,
+        ROUND(AVG(third_rank_price), 2) AS mean_third_rank_price,
         ARRAY_DISTINCT(FLATTEN(COLLECT_LIST(pharmacy_name_list))) AS pharmacy_name_set
     FROM united
     WHERE
         price_onfy IS NOT NULL
-    GROUP BY date, channel, pzn, product_id
+    GROUP BY date, channel, product_id
 )
 
 
 SELECT
     united_groupped.*,
-    groupped_ads_dashboard.sum_gross_profit_initial_onfy,
-    groupped_ads_dashboard.visits_from_pa,
-    groupped_ads_dashboard.orders
+    ROUND(groupped_ads_dashboard.sum_gross_profit_initial_onfy, 2) AS sum_gross_profit_initial_onfy,
+    ROUND(groupped_ads_dashboard.visits_from_pa, 2) AS visits_from_pa,
+    ROUND(groupped_ads_dashboard.orders, 2) AS orders
 FROM united_groupped
 LEFT JOIN groupped_ads_dashboard
     ON
