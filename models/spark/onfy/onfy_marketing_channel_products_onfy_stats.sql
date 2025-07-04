@@ -11,6 +11,7 @@
     }
 ) }}
 
+
 WITH orders_precalc AS (
     SELECT
         "key" AS _key,
@@ -68,8 +69,8 @@ ads_dashboard_predata AS (
     WHERE partition_date >= "2025-04-01"
         AND source IN ('billiger', 'idealo', 'medizinfuchs')
         AND landing_page LIKE '/artikel/%'
-        AND session_dt >= current_date() - interval 31 day
-        AND session_dt < current_date() - 1
+        AND session_dt >= CURRENT_DATE() - interval 90 day
+        AND session_dt < CURRENT_DATE() - 1
 ),
 
 ads_dashboard_data AS (
@@ -108,7 +109,7 @@ base_data AS (
         product_price
     FROM pharmacy.marketing_channel_price_fast_scd2
     WHERE
-        effective_ts >= CURRENT_DATE() - INTERVAL 31 DAY
+        effective_ts >= CURRENT_DATE() - INTERVAL 90 DAY
         AND effective_ts < CURRENT_DATE() - 1
         AND status = "ACTIVE"
         AND product_id IN (
@@ -120,99 +121,19 @@ base_data AS (
         AND LOWER(pharmacy_name) != "tablettenbote.de"
 ),
 
-calendar AS (
-    SELECT DISTINCT
-        channel,
-        effective_ts
-    FROM base_data
-),
-
-product_list AS (
-    SELECT DISTINCT
-        channel,
-        product_id,
-        pharmacy_name
-    FROM base_data
-),
-
-full_calendar AS (
-    SELECT
-        p.product_id,
-        p.channel,
-        p.pharmacy_name,
-        t.effective_ts
-    FROM product_list p
-    INNER JOIN calendar t
-        ON p.channel = t.channel
-),
-
-joined_data AS (
-    SELECT
-        fc.product_id,
-        fc.channel,
-        fc.pharmacy_name,
-        fc.effective_ts,
-        bd.product_price
-    FROM full_calendar AS fc
-    LEFT JOIN base_data AS bd
-    ON 
-        fc.product_id = bd.product_id
-        AND fc.channel = bd.channel
-        AND fc.pharmacy_name = bd.pharmacy_name
-        AND fc.effective_ts = bd.effective_ts
-),
-
-filled_data AS ( --As we don't parse all goods every hour, we keep last available price (but no longer than 1 day)
-    SELECT
-        *,
-        LAST(
-            CASE WHEN product_price IS NOT NULL THEN effective_ts END,
-            TRUE
-        ) OVER (
-            PARTITION BY product_id, channel, pharmacy_name
-            ORDER BY effective_ts
-            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS last_seen_ts,
-        LAST(
-            product_price,
-            TRUE
-        ) OVER (
-            PARTITION BY product_id, channel, pharmacy_name
-            ORDER BY effective_ts
-            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
-        ) AS raw_filled_price
-    FROM joined_data
-),
-
-filtered_filled_data AS (
-    SELECT
-        product_id,
-        channel,
-        pharmacy_name,
-        effective_ts,
-        UNIX_TIMESTAMP(effective_ts) - UNIX_TIMESTAMP(last_seen_ts) AS age_seconds,
-        last_seen_ts,
-        CASE
-            WHEN UNIX_TIMESTAMP(effective_ts) - UNIX_TIMESTAMP(last_seen_ts) <= 93600 THEN raw_filled_price -- day + 2 hours
-        END AS filled_price
-    FROM filled_data
-),
-
 ranked_prices AS (
     SELECT
         product_id,
         channel,
         effective_ts,
-        last_seen_ts,
-        age_seconds,
         pharmacy_name,
-        filled_price,
+        product_price,
         DENSE_RANK() OVER (
             PARTITION BY product_id, channel, effective_ts
-            ORDER BY filled_price ASC
+            ORDER BY product_price ASC
         ) AS price_rank
-    FROM filtered_filled_data
-    WHERE filled_price IS NOT NULL
+    FROM base_data
+    WHERE product_price IS NOT NULL
 ),
 
 onfy_ranked AS (
@@ -240,16 +161,15 @@ aggregated AS (
         product_id,
         channel,
         effective_ts,
-        MIN(last_seen_ts) AS min_last_seen_ts,
-        MIN(filled_price) AS min_price,
-        MAX(filled_price) AS max_price,
-        AVG(filled_price) AS mean_price,
-        PERCENTILE(filled_price, 0.25) AS percentile_25_price,
-        PERCENTILE(filled_price, 0.5) AS median_price,
-        PERCENTILE(filled_price, 0.75) AS percentile_75_price,
-        STDDEV(filled_price) AS std_price,
+        MIN(product_price) AS min_price,
+        MAX(product_price) AS max_price,
+        AVG(product_price) AS mean_price,
+        PERCENTILE(product_price, 0.25) AS percentile_25_price,
+        PERCENTILE(product_price, 0.5) AS median_price,
+        PERCENTILE(product_price, 0.75) AS percentile_75_price,
+        STDDEV(product_price) AS std_price,
         COLLECT_LIST(pharmacy_name) AS pharmacy_name_list,
-        MIN(CASE WHEN LOWER(pharmacy_name) = "onfy.de" THEN filled_price END) AS price_onfy
+        MIN(CASE WHEN LOWER(pharmacy_name) = "onfy.de" THEN product_price END) AS price_onfy
     FROM ranked_prices
     GROUP BY
         product_id,
@@ -335,3 +255,4 @@ LEFT JOIN groupped_ads_dashboard
         united_groupped.product_id = groupped_ads_dashboard.product_id
         AND united_groupped.channel = groupped_ads_dashboard.source
         AND united_groupped.date = groupped_ads_dashboard.date
+
