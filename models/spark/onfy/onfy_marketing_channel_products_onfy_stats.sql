@@ -21,7 +21,7 @@ WITH orders_precalc AS (
         SUM(before_products_price) AS before_products_price,
         SUM(quantity) AS quantity,
         COUNT(DISTINCT order_id) AS orders
-    FROM onfy.orders_info
+    FROM {{ source('onfy', 'orders_info') }}
     WHERE partition_date >= CURRENT_DATE() - INTERVAL 366 DAY
     GROUP BY
         GROUPING SETS (
@@ -65,7 +65,7 @@ ads_dashboard_predata AS (
         session_spend,
         source,
         REGEXP_EXTRACT(landing_page, '/artikel/([^/?]+)', 1) AS medicine_id -- is there a better way ??
-    FROM onfy.ads_dashboard ad
+    FROM {{ source('onfy', 'ads_dashboard') }} ad
     WHERE partition_date >= "2025-04-01"
         AND source IN ('billiger', 'idealo', 'medizinfuchs')
         AND landing_page LIKE '/artikel/%'
@@ -107,7 +107,7 @@ base_data AS (
         effective_ts,
         pharmacy_name,
         product_price
-    FROM pharmacy.marketing_channel_price_fast_scd2
+    FROM {{ source('pharmacy', 'marketing_channel_price_fast_scd2') }} 
     WHERE
         effective_ts >= CURRENT_DATE() - INTERVAL 90 DAY
         AND effective_ts < CURRENT_DATE() - 1
@@ -183,10 +183,10 @@ goods_in_base AS (
         medicine.country_local_id AS pzn,
         product.name AS product_name,
         product_store.price AS base_price
-    FROM pharmacy_landing.medicine
-    LEFT JOIN pharmacy_landing.product AS product
+    FROM {{ source('pharmacy_landing', 'medicine') }}
+    LEFT JOIN {{ source('pharmacy_landing', 'product') }} AS product
         ON medicine.id = product.id
-    LEFT JOIN pharmacy_landing.product_store
+    LEFT JOIN {{ source('pharmacy_landing', 'product_store') }}
         ON medicine.id = product_store.product_id
 ),
 

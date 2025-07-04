@@ -22,6 +22,7 @@ sources:
       - name: dosage_form
       - name: order_parcel_delivery
       - name: price_applier_applied_for_object
+      - name: product_store
   - name: pharmacy
     tables:
       - name: bing_partner_insights
@@ -36,3 +37,4 @@ sources:
       - name: adjust_report_cohort_insights
       - name: marketing_channel_price_fast_scd2
       - name: mindbox_events_v2
+      - name: feed_loaders_state

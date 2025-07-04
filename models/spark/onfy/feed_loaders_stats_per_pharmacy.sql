@@ -23,7 +23,7 @@ SELECT
     PERCENTILE(discount_percent, 0.5) AS median_discount_percent,
     PERCENTILE(discount_percent, 0.25) AS discount_percent_percent_percentile_25,
     PERCENTILE(discount_percent, 0.75) AS median_discount_percent_percentile_75
-FROM pharmacy.feed_loaders_state
+FROM {{ source('pharmacy', 'feed_loaders_state') }}
 GROUP BY
     date,
     channel,
