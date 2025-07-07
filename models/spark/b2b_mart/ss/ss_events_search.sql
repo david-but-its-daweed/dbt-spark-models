@@ -118,7 +118,12 @@ clicks AS (
     WHERE type = 'productClick'
 )
 
-SELECT *
+SELECT
+    *,
+    FIRST_VALUE(search_results_uniq_id) OVER (
+        PARTITION BY user_id, search_date, query, search_type
+        ORDER BY search_ts_msk
+    ) AS search_group_id
 FROM (
     SELECT
         search.user_id,
@@ -128,6 +133,12 @@ FROM (
         search.product_number,
         search.query,
         search.is_search_by_image,
+        CASE
+            WHEN search.query = '' THEN 'catalog'
+            WHEN search.query > '' AND search.is_search_by_image = TRUE THEN 'image'
+            WHEN search.query > '' AND search.is_search_by_image IS NULL THEN 'query'
+        END AS search_type,
+
         clicks.click_ts_msk,
         clicks.position,
         clicks.product_id,
