@@ -189,6 +189,7 @@ sources:
     tables:
       - name: sale_dates_v1
       - name: user_campaign_relevance
+      - name: mail_user_events     
   - name: experiments
     tables:
       - name: experiments_setup

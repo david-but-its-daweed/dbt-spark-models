@@ -74,8 +74,21 @@ link AS (
         {% else %}
             AND partition_date >= DATE("2025-05-20")
         {% endif %}
-)
+),
 
+opens AS (
+    SELECT
+        user_id,
+        email_id
+    FROM {{ source('push', 'mail_user_events') }}
+    WHERE
+        event_type = "emailOpen"
+        {% if is_incremental() %}
+            AND partition_date >= DATE '{{ var("start_date_ymd") }}' - INTERVAL 1 DAY
+        {% else %}
+            AND partition_date >= DATE("2025-05-20")
+        {% endif %}
+)
 
 SELECT
     partition_date,
@@ -87,26 +100,25 @@ SELECT
     subject_text,
     COUNT(email_id) AS emails,
     SUM(clicks) AS clicks,
+    SUM(opens) AS opens,
     FIRST(texts) AS full_text
-
 FROM (
     SELECT
         s.partition_date,
         s.email_type,
         s.language,
         s.email_id,
+        COUNT(DISTINCT o.email_id) AS opens,
         COUNT(DISTINCT l.utm_email_id) AS clicks,
-        MAX(IF(s.text_place = "preview", s.text_id, NULL)) AS preview_text_id,
-        MAX(IF(s.text_place = "subject", s.text_id, NULL)) AS subject_text_id,
+        CAST(ROUND(MAX(IF(s.text_place = "preview", s.text_id, NULL)), 0) AS STRING) AS preview_text_id,
+        CAST(ROUND(MAX(IF(s.text_place = "subject", s.text_id, NULL)), 0) AS STRING) AS subject_text_id,
         MAX(IF(s.text_place = "preview", s.text, NULL)) AS preview_text,
         MAX(IF(s.text_place = "subject", s.text, NULL)) AS subject_text,
         CONCAT_WS(",", COLLECT_LIST(s.text_place || s.text_id || " ," || s.text)) AS texts
     FROM sent AS s
     LEFT JOIN link AS l ON s.email_id = l.utm_email_id
+    LEFT JOIN opens AS o ON s.email_id = o.email_id
     GROUP BY 1, 2, 3, 4
-
 )
 GROUP BY 1, 2, 3, 4, 5, 6, 7
-
-
 
