@@ -206,20 +206,6 @@ aggregated AS (
         effective_ts
 ),
 
-goods_in_base AS (
-    SELECT
-        feed_loaders_state.date AS date,
-        feed_loaders_state.product_id AS product_id,
-        feed_loaders_state.price_eur AS base_price,
-        product.name AS product_name
-    FROM pharmacy.feed_loaders_state
-    LEFT JOIN {{ source('pharmacy_landing', 'product') }}
-    ON feed_loaders_state.product_id = product.id
-    WHERE feed_loaders_state.date >= CURRENT_DATE() - INTERVAL 91 DAY
-
-),
-
-
 united AS (
     SELECT
         a.*,
@@ -231,13 +217,8 @@ united AS (
         first_rank.first_rank_price,
         second_rank.second_rank_price,
         third_rank.third_rank_price,
-        gnb.product_name,
-        gnb.base_price,
-        CASE
-            WHEN a.price_onfy IS NOT NULL AND gnb.base_price IS NOT NULL
-                THEN (gnb.base_price - a.price_onfy) / gnb.base_price
-        END AS discount,
-        orders.orders
+        orders.orders,
+        product.name AS product_name
     FROM aggregated AS a
     LEFT JOIN onfy_ranked AS o
         ON a.product_id = o.product_id AND a.channel = o.channel AND a.effective_ts = o.effective_ts
@@ -249,10 +230,11 @@ united AS (
         ON a.product_id = second_rank.product_id AND a.channel = second_rank.channel AND a.effective_ts = second_rank.effective_ts
     LEFT JOIN third_rank
         ON a.product_id = third_rank.product_id AND a.channel = third_rank.channel AND a.effective_ts = third_rank.effective_ts
-    LEFT JOIN goods_in_base AS gnb
-        ON a.product_id = gnb.product_id AND DATE(a.effective_ts) = gnb.date
     INNER JOIN orders
         ON a.product_id = orders.product_id
+    LEFT JOIN {{ source('pharmacy_landing', 'product') }}
+        ON a.product_id = product.id
+
 ),
 
 united_groupped AS (
@@ -266,16 +248,14 @@ united_groupped AS (
         FIRST(product_name) AS product_name,
         ROUND(AVG(price_onfy), 2) AS mean_onfy_price,
         ROUND(AVG(onfy_rank), 2) AS mean_onfy_rank,
-        ROUND(AVG(discount), 2) AS mean_onfy_discount,
-        ROUND(FIRST(base_price), 2) AS onfy_base_price,
         ROUND(MIN(min_price), 2) AS min_competitors_price_of_the_day,
         ROUND(AVG(mean_price), 2) AS mean_competitors_price,
         ROUND(AVG(percentile_25_price), 2) AS mean_competitors_price_25_percentile,
         ROUND(AVG(median_price), 2) AS mean_competitors_price_median,
         ROUND(AVG(percentile_75_price), 2) AS mean_competitors_price_75_percentile,
-        ROUND(AVG(first_rank_price), 2) AS mean_first_rank_price,
-        ROUND(AVG(second_rank_price), 2) AS mean_second_rank_price,
-        ROUND(AVG(third_rank_price), 2) AS mean_third_rank_price,
+        ROUND(MIN(first_rank_price), 2) AS mean_first_rank_price,
+        ROUND(MIN(second_rank_price), 2) AS mean_second_rank_price,
+        ROUND(MIN(third_rank_price), 2) AS mean_third_rank_price,
         ARRAY_DISTINCT(FLATTEN(COLLECT_LIST(pharmacy_name_list))) AS pharmacy_name_set
     FROM united
     WHERE
@@ -288,11 +268,11 @@ SELECT
     united_groupped.*,
     ROUND(groupped_ads_dashboard.sum_gross_profit_initial_onfy, 2) AS sum_gross_profit_initial_onfy,
     ROUND(groupped_ads_dashboard.visits_from_pa, 2) AS visits_from_pa,
-    ROUND(groupped_ads_dashboard.orders, 2) AS orders
+    ROUND(groupped_ads_dashboard.orders, 2) AS orders,
+    SIZE(united_groupped.pharmacy_name_set) AS num_competitors
 FROM united_groupped
 LEFT JOIN groupped_ads_dashboard
     ON
         united_groupped.product_id = groupped_ads_dashboard.product_id
         AND united_groupped.channel = groupped_ads_dashboard.source
         AND united_groupped.date = groupped_ads_dashboard.date
-
