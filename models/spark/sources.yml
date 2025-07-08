@@ -175,8 +175,6 @@ sources:
     tables:
       - name: lndc_user_attribution
         description: Last paid source for a user / device
-      - name: sources
-        description: Traffic sources by device and session date
       - name: transactions
         description: Main financial source
       - name: conversion_funnel
