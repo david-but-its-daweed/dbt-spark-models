@@ -41,11 +41,19 @@ base AS (
         LEAD(pageName) OVER (PARTITION BY user_id, product_id ORDER BY event_ts_msk) AS next_pageName,
         LEAD(type) OVER (PARTITION BY user_id, product_id ORDER BY event_ts_msk) AS next_type
     FROM prep
-),
-
+)
 
 SELECT
-    *,
+    user_id,
+    event_ts_msk,
+    event_msk_date,
+    product_id,
+    pageUrl,
+    type,
+    position,
+    pageName,
+    next_pageName,
+    next_type,
     CASE
         WHEN pageUrl LIKE '%/search/%' AND pageUrl LIKE '%q.%' THEN 'query_search'
         WHEN pageUrl LIKE '%/search/%' AND pageUrl LIKE '%i.%' THEN 'image_search'
