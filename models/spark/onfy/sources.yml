@@ -11,7 +11,7 @@ sources:
       - name: promocodes_dash
       - name: search_serp_requests_i
       - name: search_serp_items_i
-      - name: onfy_sources
+      - name: sources
   - name: pharmacy_landing
     tables:
       - name: product_category_flat
