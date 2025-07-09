@@ -637,6 +637,8 @@ SELECT
     pio.status_shipped_ts AS pickup_order_status_shipped_ts,
     pio.status_suspended_ts AS pickup_order_status_suspended_ts,
     CASE
+        /* Не учитываем PO исполнителем которых является a.pushkareva@joom.com, redbird@joom.com (разработчик), asoboleva@joom.com (тестировщик) */
+        WHEN pola.assignee_email IN ('a.pushkareva@joom.com', 'redbird@joom.com', 'asoboleva@joom.com') THEN 0
         /* Для крупного опта в Бразилии */
         WHEN po.country = 'BR' AND po.is_small_batch = 0 THEN
             CASE
@@ -668,8 +670,6 @@ SELECT
         /* Для мелкого опта */
         WHEN po.is_small_batch = 1 THEN
             CASE
-                /* Не учитываем PO исполнителем которых является a.pushkareva@joom.com или redbird@joom.com (он разработчик). Подробное обоснование в Notion */
-                WHEN pola.assignee_email IN ('a.pushkareva@joom.com', 'redbird@joom.com') THEN 0
                 /* Оставляем все заказы в админке с 1 апреля 2025 */
                 WHEN DATE(coalesce(po.created_ts, pch.first_status_ts)) >= '2025-04-01' THEN 1
                 ELSE 0
