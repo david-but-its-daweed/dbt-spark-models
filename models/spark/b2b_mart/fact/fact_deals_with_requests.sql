@@ -83,10 +83,12 @@ WITH base_deal AS (
         exwPerItem / 1000000 AS exwPerItem,
         taxBasePerItem / 1000000 AS taxBasePerItem,
         totalPerItem / 1000000 AS totalPerItem,
+        totalPerItem_ccy,
         CAST(expectedQuantity AS INT) * ddpPerItem / 1000000 AS ddp,
         CAST(expectedQuantity AS INT) * exwPerItem / 1000000 AS exw,
         CAST(expectedQuantity AS INT) * taxBasePerItem / 1000000 AS taxBase,
         CAST(expectedQuantity AS INT) * totalPerItem / 1000000 AS total,
+        sampleDDPPrice_ccy,
         CAST(expectedQuantity AS INT) * sampleDDPPrice / 1000000 AS sample_ddp
     FROM {{ ref('fact_customer_requests_variants') }}
 ),
@@ -134,6 +136,7 @@ WITH base_deal AS (
             ROUND(SUM(taxBase + CASE WHEN payment_method = 'deferred' THEN exw / 105 ELSE 0 END), 2) AS other,
             ROUND(SUM(CASE WHEN payment_method = 'deferred' THEN exw * 100 / 105 ELSE exw END), 2) AS exw,
             ROUND(SUM(total + CASE WHEN total = 0 AND sample_ddp IS NOT NULL THEN sample_ddp ELSE 0 END), 2) AS ddp,
+            MAX(CASE WHEN totalPerItem_ccy = 'XXX' AND sampleDDPPrice_ccy IS NULL THEN NULL WHEN total = 0 and sample_ddp IS NOT NULL THEN sampleDDPPrice_ccy ELSE totalPerItem_ccy END) as ddp_currency,
             MAX(CASE WHEN sample_type = 0 THEN 1 ELSE 0 END) AS with_onlineReview,
             MAX(CASE WHEN sample_type = 1 THEN 1 ELSE 0 END) AS with_sampleDelivery,
             MAX(CASE WHEN standart_deal OR (rfq_deal IS FALSE AND sample IS FALSE AND manual IS FALSE) THEN 1 ELSE 0 END) AS is_standart,
@@ -215,7 +218,7 @@ select
     gmv_initial,
     initial_gross_profit,
     final_gross_profit
-    from {{ ref('gmv_by_sources') }} 
+    from {{ ref('gmv_by_sources') }}
 )
 
 SELECT
@@ -257,6 +260,8 @@ SELECT
     d.other,
     d.exw,
     d.ddp,
+    d.ddp_currency,
+    round(d.ddp*cr.rate, 2) as ddp_usd,
     d.with_onlineReview,
     d.with_sampleDelivery,
     d.is_standart,
@@ -293,3 +298,4 @@ FROM deals_agg_stat AS d
 LEFT JOIN order_data AS o ON d.order_id = o.order_id
 LEFT JOIN marketing_deals_interactions AS di ON d.deal_id = di.deal_id
 LEFT JOIN fact_finance ff using(order_id)
+LEFT JOIN {{ ref('dim_pair_currency_rate') }} AS cr ON d.ddp_currency = cr.currency_code AND cr.currency_code_to = 'USD' AND d.deal_created_date = cr.effective_date
