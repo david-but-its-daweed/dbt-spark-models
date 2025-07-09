@@ -42,6 +42,7 @@ search_events AS (
         de.`user`['userId'] AS user_id,
         de.event_ts_msk,
         de.type,
+        device.osType AS device_os_type,
         payload.pageUrl,
         payload.source,
         payload.productId AS product_id,
@@ -94,6 +95,7 @@ search AS (
             type,
             productsNumber AS product_number,
             query,
+            device_os_type,
             is_search_by_image,
             LAG(event_ts_msk) OVER (
                 PARTITION BY user_id, query
@@ -120,6 +122,7 @@ clicks AS (
 
 SELECT
     *,
+    
     FIRST_VALUE(search_results_uniq_id) OVER (
         PARTITION BY user_id, search_date, query, search_type
         ORDER BY search_ts_msk
@@ -138,6 +141,12 @@ FROM (
             WHEN search.query > '' AND search.is_search_by_image = TRUE THEN 'image'
             WHEN search.query > '' AND search.is_search_by_image IS NULL THEN 'query'
         END AS search_type,
+
+        CASE
+            WHEN search.device_os_type IN ('android', 'ios', 'tizen', 'harmonyos') THEN 'mobile'
+            WHEN search.device_os_type IN ('ubuntu', 'linux', 'mac os', 'windows', 'chromium os') THEN 'desktop'
+            ELSE 'other'
+        END AS device_platform,
 
         clicks.click_ts_msk,
         clicks.position,
