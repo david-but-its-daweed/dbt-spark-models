@@ -33,29 +33,22 @@ finalized AS (
         type IN ("finalize")
 ),
 
-types_for_finalize AS (
-    SELECT INLINE(ARRAY(
-        STRUCT("referral" AS transaction_type),
-        STRUCT("cashback" AS transaction_type)  -- this list will be expanded in future
-    ))
-),
-
 points AS (
     SELECT
         t1.user_id,
         t1.type AS point_transaction_type,
         t1.date_msk,
         COUNT(*) AS num_transactions,
-        SUM(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.effective_usd, t1.effective_usd)) AS effective_usd,
-        SUM(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.amount.value, t1.amount.value)) AS value,
-        FIRST(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.amount.ccy, t1.amount.ccy)) AS ccy,
-        FIRST(IF(t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f), t2.amount.mult, t1.amount.mult)) AS mult
+        SUM(IF(t1.pending IS NOT NULL, t2.effective_usd, t1.effective_usd)) AS effective_usd,  -- transactions with any not empty status must be finalized. Details:
+        SUM(IF(t1.pending IS NOT NULL, t2.amount.value, t1.amount.value)) AS value,  -- https://joom-team.slack.com/archives/C07UQNX1QH3/p1751916673062799?thread_ts=1751640605.267709&cid=C07UQNX1QH3
+        FIRST(IF(t1.pending IS NOT NULL, t2.amount.ccy, t1.amount.ccy)) AS ccy,
+        FIRST(IF(t1.pending IS NOT NULL, t2.amount.mult, t1.amount.mult)) AS mult
     FROM {{ ref('fact_user_points_transactions') }} AS t1
     LEFT JOIN finalized AS t2
         ON t1.id = t2.refid
     WHERE
         t1.type != "finalize"
-        AND NOT (t1.type IN (SELECT f.transaction_type FROM types_for_finalize AS f) AND t2.refid IS NULL) -- filter transactions which must have finalize status but don't have it after join by refid
+        AND NOT (t1.pending IS NOT NULL AND t2.refid IS NULL) -- filter transactions which must have finalize status but don't have it after join by refid
     GROUP BY 1, 2, 3
 ),
 
@@ -82,6 +75,9 @@ points_type_to_group_mapping AS (
     SELECT *
     FROM INLINE(ARRAY(
         STRUCT("cashback" AS point_transaction_type, "Marketing" AS point_transaction_group),
+        STRUCT("favoriteCategoryCashback" AS point_transaction_type, "Marketing" AS point_transaction_group),
+        STRUCT("personalGoals" AS point_transaction_type, "Marketing" AS point_transaction_group),
+        STRUCT("web2AppCashback" AS point_transaction_type, "Marketing" AS point_transaction_group),
         STRUCT("refund" AS point_transaction_type, "Refund" AS point_transaction_group),
         STRUCT("customUserRefund" AS point_transaction_type, "Refund" AS point_transaction_group),
         STRUCT("admin_bloggers" AS point_transaction_type, "Marketing" AS point_transaction_group),
