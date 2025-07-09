@@ -40,6 +40,7 @@ payments AS (
             payment.usedId AS user_id,
             MILLIS_TO_TS(payment.createdTimeMs) AS payment_created_time,
             payment.packageSnapshot._id AS package_id,
+            CASE WHEN payment.packageSnapshot._id LIKE "%diamond%" THEN "Diamond" ELSE "Premium" END AS package_type,
             payment.packageSnapshot.duration.unit AS package_duration_unit,
             CASE
                 WHEN payment.packageSnapshot.duration.unit = "year" THEN payment.packageSnapshot.duration.value * 12
@@ -67,6 +68,7 @@ SELECT
     payment.user_id,
     payment.package_date,
     payment.package_id,
+    payment.package_type,
     payment.package_duration_unit,
     payment.package_duration,
     payment.package_price,

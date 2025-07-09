@@ -31,6 +31,7 @@ SELECT
     ADD_MONTHS(subscription.created_time, (subscription.time_payed * subscription.package_duration)) AS payment_created_time,
     ADD_MONTHS(subscription.created_date, (subscription.time_payed * subscription.package_duration)) AS payment_created_date,
     subscription.package_id,
+    subscription.package_type,
     subscription.package_duration_unit,
     subscription.package_duration,
     subscription.package_price,
@@ -56,6 +57,7 @@ FROM (
         s.payhub_subsciption_id,
         s.payment_created_time,
         s.package_id,
+        s.package_type,
         s.package_duration_unit,
         s.package_duration,
         s.package_price,
@@ -83,6 +85,7 @@ FROM (
             subscription.usedId AS user_id,
             MILLIS_TO_TS(subscription.createdTimeMs) AS payment_created_time,
             subscription.packageSnapshot._id AS package_id,
+            CASE WHEN subscription.packageSnapshot._id LIKE "%diamond%" THEN "Diamond" ELSE "Premium" END AS package_type,
             subscription.packageSnapshot.duration.unit AS package_duration_unit,
             CASE
                 WHEN subscription.packageSnapshot.duration.unit = "year" THEN subscription.packageSnapshot.duration.value * 12
