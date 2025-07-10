@@ -16,6 +16,8 @@ models:
         description: flag of search with actual results listing or empty results
       - name: is_suggest
         description: flag of suggest search (clicked from suggest below the input)
+      - name: search_or_catalog_flg
+        description: indicator of search or catalog type of event
       - name: platform
         description: device platform
       - name: is_not_robot_flg

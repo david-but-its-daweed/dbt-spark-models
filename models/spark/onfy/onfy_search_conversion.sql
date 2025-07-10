@@ -25,7 +25,7 @@ WITH marketing_sources AS (
         source_corrected AS marketing_source,
         source_dt,
         next_source_dt
-    FROM {{ source('onfy', 'sources') }}
+    FROM {{ ref('sources') }}
     WHERE next_source_dt >= CURRENT_DATE() - INTERVAL 365 DAYS
 ),
 
@@ -39,7 +39,7 @@ orders_info AS (
         order_created_time_cet,
         before_products_price,
         products_price
-    FROM {{ source('onfy', 'orders_info') }}
+    FROM {{ ref('orders_info') }}
     WHERE order_created_time_cet >= CURRENT_DATE() - INTERVAL 365 DAYS
 ),
 
@@ -54,6 +54,7 @@ search_requests AS (
         device_stats.preview.total_num > 0 AS is_not_robot_flg,
 
         serp_id,
+        (category_id IS NULL AND query IS NOT NULL) AS is_search_flg,
         partition_date_cet AS event_dt,
         FROM_UTC_TIMESTAMP(event_ts_utc, 'Europe/Berlin') AS event_ts_cet,
         FROM_UTC_TIMESTAMP(
@@ -96,6 +97,7 @@ searched_products AS (
         sr.is_category_search,
         sr.has_product_results,
         sr.is_suggest,
+        IF(sr.is_search_flg, 'search', 'catalog') AS search_or_catalog_flg,
 
         si.product_id,
         si.is_sponsored,
@@ -284,6 +286,7 @@ pre_final_flat_table AS (
         sp.is_category_search,
         sp.has_product_results,
         sp.is_suggest,
+        sp.search_or_catalog_flg,
         sp.is_sponsored,
 
         -- touched product (openned, added to cart, bought)
@@ -353,6 +356,7 @@ pre_final_flat_table AS (
         sp.is_category_search,
         sp.has_product_results,
         sp.is_suggest,
+        sp.search_or_catalog_flg,
         sp.is_sponsored,
 
         COALESCE(ato.product_id, sta.product_id, sto.product_id),
@@ -383,6 +387,7 @@ SELECT
     is_category_search,
     has_product_results,
     is_suggest,
+    search_or_catalog_flg,
 
     platform,
     is_not_robot_flg,
@@ -410,6 +415,7 @@ GROUP BY
     is_category_search,
     has_product_results,
     is_suggest,
+    search_or_catalog_flg,
 
     platform,
     is_not_robot_flg,
