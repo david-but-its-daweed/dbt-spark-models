@@ -211,7 +211,7 @@ orders_ext0 AS (
         ord.customer_refund_reason IS NOT NULL AND ord.customer_refund_reason IN (2, 5, 16, 24, 25, 26, 28) AS is_not_delivered_refund,
         ord.customer_refund_reason IS NOT NULL AND ord.customer_refund_reason IN (3, 4, 6, 7, 8, 9, 10, 11, 14, 17, 21, 22, 23, 27) AS is_quality_refund,
 
-        COALESCE(ord.refund_reason IN ('cancelled_by_merchant', 'other'), FALSE) AS is_canceled_by_merchant,
+        COALESCE(ord.refund_reason = 'cancelled_by_merchant', FALSE) AS is_canceled_by_merchant,
 
         COALESCE(ord.jl_shipping_type_initial, 'offline') AS shipping_type_initial,
         ord.estimated_delivery_min_days,
