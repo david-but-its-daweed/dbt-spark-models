@@ -40,3 +40,37 @@ models:
         description: sum of before discounts product price (price * quantity)
       - name: order_products_price
         description: sum of product price (price * quantity)
+
+  - name: onfy_source_campaign_funnels
+    description: aggregated dataset of sources previews, product openings, addings to cart and orders
+    columns:
+      - name: event_dt
+        description: the date of the users searches
+      - name: event_date
+        description: tech date field for partitioning
+      - name: source
+        description: type of channel from the latest interaction in the user experience funnel based on the time (search, catalog, recommendation widget, banner, email, popup)
+      - name: first_page
+        description: source screen or page where preview was loaded
+      - name: placement
+        description: search query or category name, recommendation_type for recommendations, pzn for email, product_id for popup
+      - name: campaign_name
+        description: promo_key from product preview event, block_name from banner, utm_campaign from campaign
+      - name: product_id
+        description: id of a touched (previewed, opened, added, ordered) product
+      - name: product_name
+        description: name of a touched (previewed, opened, added, ordered) product
+      - name: pzn
+        description: pzn of a touched (previewed, opened, added, ordered) product
+      - name: previews
+        description: number of product previews of specific product within the mentioned sources
+      - name: openings
+        description: number of detailed product page openings of specific product within the mentioned sources
+      - name: addings
+        description: number of product addings to cart of specific product within the mentioned sources
+      - name: order_id
+        description: id of an order with specific product included (needed for recalculations within different filter set)
+      - name: order_products_price
+        description: sum of gmv in this order for this product (there are may be 2+ packages with diff quantity of a product for diff price)
+      - name: order_quantity
+        description: number of packs bought in this order for this product
