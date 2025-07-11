@@ -22,9 +22,9 @@ select
     millis_to_ts_msk(ctms) as created_time,
     dealId as deal_id,
     CASE
-        WHEN link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(link, 'https://joom.pro/pt-br/products/(.*)', 1)
-        WHEN link LIKE 'https://joom.pro/es-mx/products/%' THEN REGEXP_EXTRACT(link, 'https://joom.pro/es-mx/products/(.*)', 1)
-        ELSE link
+        WHEN STARTSWITH(link, 'https://joom.pro') THEN REGEXP_EXTRACT(link, '/products/([a-f0-9]+)$', 1)
+        WHEN STARTSWITH(link, '6') THEN link
+        ELSE NULL
     END AS product_id,
     country,
     desc,
