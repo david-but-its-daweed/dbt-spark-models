@@ -239,7 +239,7 @@ sessions as
         first_value(sessions_window.source_corrected) over (partition by device_id, second_ultimate_window order by source_dt) as second_source,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, second_ultimate_window order by source_dt) as second_campaign,
         first_value(sessions_window.utm_medium) over (partition by device_id, second_ultimate_window order by source_dt) as second_medium,
-        first_value(sessions_window.glcid) over (partition by device_id, second_ultimate_window order by source_dt) as second_gclid,
+        first_value(sessions_window.gclid) over (partition by device_id, second_ultimate_window order by source_dt) as second_gclid,
         first_value(sessions_window.landing_page) over (partition by device_id, second_ultimate_window order by source_dt) as second_landing_page,
         first_value(sessions_window.landing_pzn) over (partition by device_id, second_ultimate_window order by source_dt) as second_landing_pzn,
 
