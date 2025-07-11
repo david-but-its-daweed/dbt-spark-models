@@ -54,7 +54,7 @@ search_requests AS (
         device_stats.preview.total_num > 0 AS is_not_robot_flg,
 
         serp_id,
-        (category_id IS NULL AND query IS NOT NULL) AS is_search_flg,
+        category_id IS NULL AS is_search_flg,
         partition_date_cet AS event_dt,
         FROM_UTC_TIMESTAMP(event_ts_utc, 'Europe/Berlin') AS event_ts_cet,
         FROM_UTC_TIMESTAMP(
