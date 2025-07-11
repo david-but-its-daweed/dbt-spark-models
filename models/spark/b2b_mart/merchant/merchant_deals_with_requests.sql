@@ -30,7 +30,7 @@ WITH requests_with_statuses AS (
             WHEN status = 70 THEN 'Other'
             WHEN status = 80 THEN 'WrongProductLink'
             WHEN status = 90 THEN 'NoAnswerFromMerchant'
-            WHEN status = 100 AND status = 110 THEN 'Cancelled'
+            WHEN status = 100 OR status = 110 THEN 'Cancelled'
         END AS request_status
     FROM
         {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }}
@@ -40,17 +40,17 @@ WITH requests_with_statuses AS (
 
 requests AS (
     SELECT
-        rs.deal_id, 
+        rs.deal_id,
         cr.customer_request_id AS request_id,
         rs.product_id,
         rs.request_status,
-        CAST(expectedQuantity AS INT) AS request_product_qty,
-        
-        CAST(expectedQuantity AS INT) * totalPerItem / 1e6 AS total,
-        CAST(expectedQuantity AS INT) * sampleDDPPrice AS sample
+        CAST(cr.expectedQuantity AS INT) AS request_product_qty,
+
+        CAST(cr.expectedQuantity AS INT) * cr.totalPerItem / 1e6 AS total,
+        CAST(cr.expectedQuantity AS INT) * cr.sampleDDPPrice AS sample
     FROM {{ source('b2b_mart', 'fact_customer_requests_variants') }} AS cr
-    JOIN requests_with_statuses AS rs ON cr.deal_id = rs.deal_id AND cr.customer_request_id = rs.request_id
-    WHERE CAST(expectedQuantity AS INT) IS NOT NULL AND CAST(expectedQuantity AS INT) > 0
+    INNER JOIN requests_with_statuses AS rs ON cr.deal_id = rs.deal_id AND cr.customer_request_id = rs.request_id
+    WHERE CAST(cr.expectedQuantity AS INT) IS NOT NULL AND CAST(cr.expectedQuantity AS INT) > 0
 ),
 
 requests_agg AS (
@@ -61,7 +61,7 @@ requests_agg AS (
         request_status,
         SUM(request_product_qty) AS request_product_qty,
         ROUND(SUM(total + CASE WHEN total = 0 AND sample IS NOT NULL THEN sample ELSE 0 END), 2) AS ddp_request
-    FROM 
+    FROM
         requests
     GROUP BY
         1, 2, 3, 4
