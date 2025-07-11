@@ -46,7 +46,7 @@ corrected_sources as
             else 'onfy'
         end as partner,
         coalesce(next_source_dt, source_dt + interval 168 hours) as window_next_session
-    from {{source('onfy', 'sources')}}
+    from {{ref('sources')}}
     where 1=1
 
 ),
@@ -68,8 +68,8 @@ order_data as
         sum(if(type = 'DISCOUNT', transactions.price, 0)) as promocode_discount,
         sum(transactions.gmv_initial) as gmv_initial,
         sum(transactions.gross_profit_initial) as gross_profit_initial
-    from {{source('onfy', 'transactions')}}
-    left join {{source('onfy', 'promocodes_dash')}}
+    from {{ref('transactions')}}
+    left join {{ref('promocodes_dash')}}
         on promocodes_dash.order_id = transactions.order_id
     where 1=1
         and currency = 'EUR'
@@ -219,21 +219,37 @@ sessions as
         if(promocode_discount > 0 and promocode_id is null,
            first_value(sessions_window.gclid) over (partition by device_id, ultimate_window_awin order by source_dt),
            first_value(sessions_window.gclid) over (partition by device_id, ultimate_window order by source_dt)) as attributed_gclid,
+        if(promocode_discount > 0 and promocode_id is null,
+           first_value(sessions_window.landing_page) over (partition by device_id, ultimate_window_awin order by source_dt),
+           first_value(sessions_window.landing_page) over (partition by device_id, ultimate_window order by source_dt)) as attributed_landing_page,
+        if(promocode_discount > 0 and promocode_id is null,
+           first_value(sessions_window.landing_pzn) over (partition by device_id, ultimate_window_awin order by source_dt),
+           first_value(sessions_window.landing_pzn) over (partition by device_id, ultimate_window order by source_dt)) as attributed_landing_pzn,
     
         first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt) as attributed_session_dt_1,
         date_trunc('day', first_value(sessions_window.source_dt) over (partition by device_id, ultimate_window_1 order by source_dt)) as attributed_session_date_1,
         first_value(sessions_window.source_corrected) over (partition by device_id, ultimate_window_1 order by source_dt) as source_1,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, ultimate_window_1 order by source_dt) as campaign_1,
         first_value(sessions_window.utm_medium) over (partition by device_id, ultimate_window_1 order by source_dt) as medium_1, 
+        first_value(sessions_window.gclid) over (partition by device_id, ultimate_window_1 order by source_dt) as gclid_1, 
+        first_value(sessions_window.landing_page) over (partition by device_id, ultimate_window_1 order by source_dt) as landing_page_1,
+        first_value(sessions_window.landing_pzn) over (partition by device_id, ultimate_window_1 order by source_dt) as landing_pzn_1, 
     
         first_value(sessions_window.source_dt) over (partition by device_id, second_ultimate_window order by source_dt) as second_attributed_session_dt,
         first_value(sessions_window.source_corrected) over (partition by device_id, second_ultimate_window order by source_dt) as second_source,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, second_ultimate_window order by source_dt) as second_campaign,
         first_value(sessions_window.utm_medium) over (partition by device_id, second_ultimate_window order by source_dt) as second_medium,
-    
+        first_value(sessions_window.glcid) over (partition by device_id, second_ultimate_window order by source_dt) as second_gclid,
+        first_value(sessions_window.landing_page) over (partition by device_id, second_ultimate_window order by source_dt) as second_landing_page,
+        first_value(sessions_window.landing_pzn) over (partition by device_id, second_ultimate_window order by source_dt) as second_landing_pzn,
+
+        first_value(sessions_window.source_dt) over (partition by device_id, significant_source_window order by source_dt) as session_dt_significant,
         first_value(sessions_window.source_corrected) over (partition by device_id, significant_source_window order by source_dt) as source_significant,
         first_value(sessions_window.campaign_corrected) over (partition by device_id, significant_source_window order by source_dt) as campaign_significant,
         first_value(sessions_window.utm_medium) over (partition by device_id, significant_source_window order by source_dt) as medium_significant,
+        first_value(sessions_window.gclid) over (partition by device_id, significant_source_window order by source_dt) as gclid_significant,
+        first_value(sessions_window.landing_page) over (partition by device_id, significant_source_window order by source_dt) as landing_page_significant,
+        first_value(sessions_window.landing_pzn) over (partition by device_id, significant_source_window order by source_dt) as landing_pzn_significant,
     
         landing_page,
         gclid,
@@ -274,7 +290,7 @@ ads_spends as
         if(united_spends.source = 'facebook', medium, '') as medium,
         sum(spend) as spend,
         sum(clicks) as clicks
-    from {{source('onfy_mart', 'ads_spends')}} as united_spends
+    from {{ref('ads_spends')}} as united_spends
     left join {{ref("spends_campaign_corrected")}} as spends_campaigns_corrected
         on lower(united_spends.campaign_name) = lower(spends_campaigns_corrected.campaign_name)
         and lower(united_spends.source) = lower(spends_campaigns_corrected.source)
@@ -312,8 +328,8 @@ filtered_data as
     select distinct
         source_dt as session_dt,
         sessions.source_date as session_date,
-        attributed_session_date,
-        attributed_session_dt,
+        coalesce(attributed_session_date, date(sessions.second_session_date), date(sessions.source_date)) as attributed_session_date,
+        coalesce(attributed_session_dt, sessions.second_session_dt, sessions.source_dt) as attributed_session_dt,
         attributed_session_date_1,
         attributed_session_dt_1,
         coalesce(sessions.source, sessions.second_source, sessions.source_corrected, 'unknown') as source,
@@ -347,8 +363,10 @@ filtered_data as
         sessions.user_email_hash,
         attributed_gclid,
         landing_page,
+        coalesce(attributed_landing_page, second_landing_page, landing_page) as attributed_landing_page,
         gclid,
         landing_pzn,
+        coalesce(attributed_landing_pzn, second_landing_pzn, landing_pzn) as attributed_landing_pzn,
         promocode_id,
         promocode_name
     from sessions as sessions
@@ -417,8 +435,10 @@ data_combined as
         coalesce(sessions.app_type, ads_spends.campaign_platform) as report_app_type,
         attributed_gclid,
         landing_page,
+        attributed_landing_page,
         gclid,
         landing_pzn,
+        attributed_landing_pzn,
         promocode_id,
         promocode_name
     from filtered_data as sessions
@@ -511,8 +531,10 @@ spend_distributed as
         medium_1d) as attributed_campaign_purchases_1d,
         attributed_gclid,
         landing_page,
+        attributed_landing_page,
         gclid,
         landing_pzn,
+        attributed_landing_pzn,
         promocode_id,
         promocode_name
     from data_combined
@@ -583,8 +605,10 @@ select
     if(order_id is not null, attributed_spend_1d, 0) / if(source_1d <> 'unknown' and campaign_1d <> 'unknown', attributed_campaign_purchases_1d, 1) as attributed_order_spend_1d,
     attributed_gclid,
     landing_page,
+    attributed_landing_page,
     gclid,
-    landing_pzn
+    landing_pzn,
+    attributed_landing_pzn
 from spend_distributed
 WHERE report_date IS NOT NULL
 DISTRIBUTE BY partition_date
