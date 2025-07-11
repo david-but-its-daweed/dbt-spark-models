@@ -291,7 +291,7 @@ ads_spends as
         sum(spend) as spend,
         sum(clicks) as clicks
     from {{ref('ads_spends')}} as united_spends
-    left join {{ref("spends_campaign_corrected")}} as spends_campaigns_corrected
+    left join {{ref('spends_campaign_corrected')}} as spends_campaigns_corrected
         on lower(united_spends.campaign_name) = lower(spends_campaigns_corrected.campaign_name)
         and lower(united_spends.source) = lower(spends_campaigns_corrected.source)
     group by 
@@ -328,8 +328,8 @@ filtered_data as
     select distinct
         source_dt as session_dt,
         sessions.source_date as session_date,
-        coalesce(attributed_session_date, date(sessions.second_session_date), date(sessions.source_date)) as attributed_session_date,
-        coalesce(attributed_session_dt, sessions.second_session_dt, sessions.source_dt) as attributed_session_dt,
+        coalesce(attributed_session_date, date(sessions.second_attributed_session_dt), date(sessions.source_date)) as attributed_session_date,
+        coalesce(attributed_session_dt, sessions.second_attributed_session_dt, sessions.source_dt) as attributed_session_dt,
         attributed_session_date_1,
         attributed_session_dt_1,
         coalesce(sessions.source, sessions.second_source, sessions.source_corrected, 'unknown') as source,
