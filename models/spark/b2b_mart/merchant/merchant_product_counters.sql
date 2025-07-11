@@ -77,7 +77,7 @@ deals AS (
         p.product_name,
 
         'deal' AS event_type,
-        fcr.deal_id AS event_info
+        fcr.deal_friendly_id AS event_info
     FROM {{ source('b2b_mart', 'fact_customer_requests') }} AS fcr
     INNER JOIN
         products AS p
