@@ -187,7 +187,7 @@ search_catalog_requests AS (
     SELECT
         device_id,
         serp_id,
-        (category_id IS NULL AND query IS NOT NULL) AS is_search_flg,
+        category_id IS NULL AS is_search_flg,
         partition_date_cet AS event_dt,
         FROM_UTC_TIMESTAMP(event_ts_utc, 'Europe/Berlin') AS event_ts_cet,
         FROM_UTC_TIMESTAMP(
