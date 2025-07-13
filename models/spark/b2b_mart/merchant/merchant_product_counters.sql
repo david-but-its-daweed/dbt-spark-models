@@ -77,7 +77,7 @@ deals AS (
         p.product_name,
 
         'deal' AS event_type,
-        fcr.deal_friendly_id AS event_info
+        fdwr.deal_friendly_id AS event_info
     FROM {{ source('b2b_mart', 'fact_customer_requests') }} AS fcr
     INNER JOIN
         products AS p
@@ -86,6 +86,7 @@ deals AS (
                 WHEN fcr.link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(fcr.link, 'https://joom.pro/pt-br/products/(.*)', 1)
                 ELSE fcr.link
             END = p.product_id
+    LEFT JOIN {{ source('b2b_mart', 'fact_deals_with_requests') }} AS fdwr
     WHERE
         fcr.country IN ('BR', 'MX') AND (fcr.link LIKE 'https://joom.pro/pt-br/products/%' OR fcr.link LIKE '6%')
         AND fcr.next_effective_ts_msk IS NULL
