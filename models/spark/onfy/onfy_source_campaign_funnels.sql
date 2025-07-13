@@ -243,7 +243,13 @@ product_previews AS (
         *,
         LEAD(event_ts_cet) OVER (PARTITION BY device_id, product_id ORDER BY event_ts_cet) AS next_event_ts_cet
     FROM aggregated_session_events
-    WHERE event_type = 'preview'
+    WHERE
+        event_type = 'preview'
+        AND source_screen IN (
+            'home', 'search', 'catalog', 'product', 'cart',
+            'cartRecommendations', 'favorites', 'profile', 'suggest', 'blogArticle'
+        )
+        AND NOT (source_screen = 'cart' AND widget_type IS NULL) -- previews from cart
 ),
 
 product_opens AS (
@@ -741,7 +747,7 @@ pre_final_flat_table AS (
         ps.event_type AS first_page,
         COALESCE(ps.search_query, ps.category_name) AS placement,
         ps.sponsored_key AS campaign_name,
-        COALESCE(a2o.order_created_dttm, p2a.adding_event_dttm, p2o.opening_event_dttm, ps.preview_event_dttm) AS source_event_ts_cet,
+        COALESCE(p2a.adding_event_dttm, p2o.opening_event_dttm, ps.preview_event_dttm) AS source_event_ts_cet,
 
         COALESCE(a2o.product_id, p2a.product_id, p2o.product_id, ps.product_id) AS product_id,
         COALESCE(a2o.product_name, p2a.product_name, p2o.product_name) AS product_name,
@@ -774,7 +780,7 @@ pre_final_flat_table AS (
         ps.event_type,
         COALESCE(ps.search_query, ps.category_name),
         ps.sponsored_key,
-        COALESCE(a2o.order_created_dttm, p2a.adding_event_dttm, p2o.opening_event_dttm, ps.preview_event_dttm),
+        COALESCE(p2a.adding_event_dttm, p2o.opening_event_dttm, ps.preview_event_dttm),
 
         COALESCE(a2o.product_id, p2a.product_id, p2o.product_id, ps.product_id),
         COALESCE(a2o.product_name, p2a.product_name, p2o.product_name),
@@ -796,7 +802,7 @@ pre_final_flat_table AS (
         pr.source_screen AS first_page,
         pr.recommendation_type AS placement,
         pr.promo_key AS campaign_name,
-        COALESCE(a2o.order_created_dttm, r2a.adding_event_dttm, p2o.opening_event_dttm, pr.preview_event_dttm) AS source_event_ts_cet,
+        COALESCE(r2a.adding_event_dttm, p2o.opening_event_dttm, pr.preview_event_dttm) AS source_event_ts_cet,
 
         COALESCE(a2o.product_id, r2a.product_id, p2o.product_id, pr.product_id) AS product_id,
         COALESCE(a2o.product_name, r2a.product_name, p2o.product_name) AS product_name,
@@ -830,7 +836,7 @@ pre_final_flat_table AS (
         pr.source_screen,
         pr.recommendation_type,
         pr.promo_key,
-        COALESCE(a2o.order_created_dttm, r2a.adding_event_dttm, p2o.opening_event_dttm, pr.preview_event_dttm),
+        COALESCE(r2a.adding_event_dttm, p2o.opening_event_dttm, pr.preview_event_dttm),
 
         COALESCE(a2o.product_id, r2a.product_id, p2o.product_id, pr.product_id),
         COALESCE(a2o.product_name, r2a.product_name, p2o.product_name),
@@ -852,7 +858,7 @@ pre_final_flat_table AS (
         bs.source_screen AS first_page,
         NULL AS placement,
         bs.block_name AS campaign_name,
-        COALESCE(a2o.order_created_dttm, o2a.adding_event_dttm, b2o.opening_event_dttm, bs.preview_event_dttm) AS source_event_ts_cet,
+        COALESCE(o2a.adding_event_dttm, b2o.opening_event_dttm, bs.preview_event_dttm) AS source_event_ts_cet,
 
         COALESCE(a2o.product_id, o2a.product_id, b2o.product_id) AS product_id,
         COALESCE(a2o.product_name, o2a.product_name, b2o.product_name) AS product_name,
@@ -883,7 +889,7 @@ pre_final_flat_table AS (
         bs.event_dt,
         bs.source_screen,
         bs.block_name,
-        COALESCE(a2o.order_created_dttm, o2a.adding_event_dttm, b2o.opening_event_dttm, bs.preview_event_dttm),
+        COALESCE(o2a.adding_event_dttm, b2o.opening_event_dttm, bs.preview_event_dttm),
 
         COALESCE(a2o.product_id, o2a.product_id, b2o.product_id),
         COALESCE(a2o.product_name, o2a.product_name, b2o.product_name),
@@ -905,7 +911,7 @@ pre_final_flat_table AS (
         e2o.event_type AS first_page,
         COALESCE(a2o.pzn, o2a.pzn, e2o.pzn) AS placement,
         e2o.utm_campaign AS campaign_name,
-        COALESCE(a2o.order_created_dttm, o2a.adding_event_dttm, e2o.opening_event_dttm, e2o.preview_event_dttm) AS source_event_ts_cet,
+        COALESCE(o2a.adding_event_dttm, e2o.opening_event_dttm, e2o.preview_event_dttm) AS source_event_ts_cet,
 
         COALESCE(a2o.product_id, o2a.product_id) AS product_id,
         COALESCE(a2o.product_name, o2a.product_name) AS product_name,
@@ -933,7 +939,7 @@ pre_final_flat_table AS (
         e2o.event_type,
         COALESCE(a2o.pzn, o2a.pzn, e2o.pzn),
         e2o.utm_campaign,
-        COALESCE(a2o.order_created_dttm, o2a.adding_event_dttm, e2o.opening_event_dttm, e2o.preview_event_dttm),
+        COALESCE(o2a.adding_event_dttm, e2o.opening_event_dttm, e2o.preview_event_dttm),
 
         COALESCE(a2o.product_id, o2a.product_id),
         COALESCE(a2o.product_name, o2a.product_name),
@@ -955,7 +961,7 @@ pre_final_flat_table AS (
         pp.event_type AS first_page,
         pp.product_id AS placement,
         NULL AS campaign_name,
-        COALESCE(a2o.order_created_dttm, p2a.adding_event_dttm, pp.opening_event_dttm) AS source_event_ts_cet,
+        COALESCE(p2a.adding_event_dttm, pp.opening_event_dttm) AS source_event_ts_cet,
 
         COALESCE(a2o.product_id, p2a.product_id, pp.alternative_product_id) AS product_id,
         COALESCE(a2o.product_name, p2a.product_name) AS product_name,
@@ -982,7 +988,7 @@ pre_final_flat_table AS (
         pp.event_dt,
         pp.event_type,
         pp.product_id,
-        COALESCE(a2o.order_created_dttm, p2a.adding_event_dttm, pp.opening_event_dttm),
+        COALESCE(p2a.adding_event_dttm, pp.opening_event_dttm),
 
         COALESCE(a2o.product_id, p2a.product_id, pp.alternative_product_id),
         COALESCE(a2o.product_name, p2a.product_name),
