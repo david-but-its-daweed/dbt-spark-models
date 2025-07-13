@@ -74,6 +74,7 @@ search_items AS (
     SELECT
         serp_id,
         product_id,
+        MAX(has_preview) AS has_preview,
         MAX(sponsored_key IS NOT NULL) AS is_sponsored,
         MIN(COALESCE(v_pos, 0)) AS vertical_position,
         MIN(COALESCE(h_pos, 0)) AS horizontal_position
@@ -108,6 +109,7 @@ searched_products AS (
     FROM search_requests AS sr
     LEFT JOIN search_items AS si
         ON sr.serp_id = si.serp_id
+    WHERE sr.is_search_flg AND si.has_preview
 ),
 
 --------------------------------------------------------------------------------------------------------------------------
@@ -319,24 +321,15 @@ pre_final_flat_table AS (
 
     -- join search → opening CTE
     LEFT JOIN search_to_openings AS sto
-        ON
-            sp.serp_id = sto.search_event_id
-            AND sp.device_id = sto.device_id
-            AND sp.product_id = sto.product_id
+        ON sp.serp_id = sto.search_event_id
 
     -- join search → cart addings CTE
     LEFT JOIN search_to_cart_addings AS sta
-        ON
-            sp.serp_id = sta.search_event_id
-            AND sp.device_id = sta.device_id
-            AND sp.product_id = sta.product_id
+        ON sp.serp_id = sta.search_event_id
 
     -- join cart → order CTE
     LEFT JOIN cart_addings_to_orders AS ato
-        ON
-            sta.adding_event_id = ato.adding_event_id
-            AND sta.device_id = ato.device_id
-            AND sta.product_id = ato.product_id
+        ON sta.adding_event_id = ato.adding_event_id
 
     WHERE
         TRUE
