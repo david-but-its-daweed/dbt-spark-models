@@ -638,7 +638,7 @@ email_click_to_openings AS (
         ON
             ce.device_id = po.device_id
             AND ce.event_ts_cet <= po.event_ts_cet
-            AND COALESCE(ce.next_event_ts_cet, ce.event_ts_cet + INTERVAL 2 MINUTE) > po.event_ts_cet
+            AND COALESCE(ce.event_ts_cet + INTERVAL 10 SECOND) > po.event_ts_cet
 ),
 
 
@@ -704,6 +704,7 @@ openings_to_cart_addings AS (
     INNER JOIN cart_addings AS ca
         ON
             po.device_id = ca.device_id
+            AND po.product_id = ca.product_id
             AND po.event_ts_cet <= ca.event_ts_cet
             AND COALESCE(po.next_event_ts_cet, po.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
     WHERE ca.widget_type NOT IN ('recommendations', 'recommendation') -- without recommendations addings
