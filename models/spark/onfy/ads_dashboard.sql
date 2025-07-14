@@ -133,7 +133,7 @@ session_precalc as
                 else campaign_corrected
             end
             , " ", 1) as campaign_corrected,
-        if(lower(source_corrected) = 'facebook', utm_medium, '') as utm_medium,
+        utm_medium,
         landing_page,
         parse_url(concat("https://onfy.de", landing_page), 'QUERY', 'gclid') as gclid,
         regexp_extract(landing_page, '/artikel/([^/?]+)', 1) as landing_pzn,
@@ -446,20 +446,17 @@ data_combined as
         on date_trunc('day', ads_spends.partition_date) = sessions.session_date
         and lower(ads_spends.campaign_corrected) = lower(sessions.campaign_corrected)
         and lower(ads_spends.source_corrected) = lower(sessions.source_corrected)
-        and lower(ads_spends.medium) = lower(sessions.utm_medium)
         and ads_spends.campaign_platform = sessions.app_type
     left join ads_spends as ads_spends_attributed
         on date_trunc('day', ads_spends_attributed.partition_date) = sessions.attributed_session_date
         and lower(ads_spends_attributed.campaign_corrected) = lower(sessions.campaign)
         and lower(ads_spends_attributed.source_corrected) = lower(sessions.source)
-        and lower(ads_spends_attributed.medium) = lower(sessions.medium)
         and ads_spends_attributed.campaign_platform = sessions.app_type
     left join ads_spends as ads_spends_attributed_1
         on date_trunc('day', ads_spends_attributed_1.partition_date) = sessions.attributed_session_date_1
         and lower(ads_spends_attributed_1.campaign_corrected) = lower(sessions.campaign_1)
         and ads_spends_attributed_1.campaign_platform = sessions.app_type
         and lower(ads_spends_attributed_1.source_corrected) = lower(sessions.source_1)
-        and lower(ads_spends_attributed_1.medium) = lower(sessions.medium_1) 
 ),
 
 -----------------------------------------
