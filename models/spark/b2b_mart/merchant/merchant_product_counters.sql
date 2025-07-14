@@ -86,7 +86,7 @@ deals AS (
                 WHEN fcr.link LIKE 'https://joom.pro/pt-br/products/%' THEN REGEXP_EXTRACT(fcr.link, 'https://joom.pro/pt-br/products/(.*)', 1)
                 ELSE fcr.link
             END = p.product_id
-    LEFT JOIN {{ source('b2b_mart', 'fact_deals_with_requests') }} AS fdwr
+    LEFT JOIN {{ source('b2b_mart', 'fact_deals_with_requests') }} AS fdwr ON fcr.deal_id = fdwr.deal_id
     WHERE
         fcr.country IN ('BR', 'MX') AND (fcr.link LIKE 'https://joom.pro/pt-br/products/%' OR fcr.link LIKE '6%')
         AND fcr.next_effective_ts_msk IS NULL
