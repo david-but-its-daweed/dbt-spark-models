@@ -51,6 +51,7 @@ search AS (
         MAX(CASE WHEN user_id IS NOT null THEN 1 ELSE 0 END) AS once_had_search,
         MAX(CASE WHEN is_search_by_image THEN 1 ELSE 0 END) AS once_had_search_by_image
     FROM {{ ref('ss_events_search') }}
+    WHERE query <> ''
     GROUP BY 1
 ),
 
