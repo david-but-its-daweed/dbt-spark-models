@@ -1,7 +1,7 @@
 {{ config(
     schema='b2b_mart',
     materialized='table',
-    file_format='parquet',
+    file_format='delta',
     meta = {
       'model_owner' : '@tigran',
       'bigquery_load': 'true',
@@ -84,6 +84,7 @@ SELECT
     t1.utm_medium,
     t1.source,
     t1.type,
+    t1.first_visit_date,
     t1.first_utm_campaign,
     t1.first_utm_sourceas,
     t1.first_utm_medium,
