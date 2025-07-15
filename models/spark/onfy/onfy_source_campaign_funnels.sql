@@ -614,7 +614,7 @@ crm_emails AS (
         *,
         LEAD(event_ts_cet) OVER (PARTITION BY device_id, product_id ORDER BY event_ts_cet) AS next_event_ts_cet
     FROM aggregated_session_events
-    WHERE event_type = 'crm_email'
+    WHERE event_type = 'crm_email' AND utm_medium = 'email'
 ),
 
 -- Email Clicks → Product Opens (within 2 min)
