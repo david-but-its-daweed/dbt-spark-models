@@ -61,7 +61,7 @@ requests_agg AS (
         product_id,
         request_status,
         SUM(request_product_qty) AS request_product_qty,
-        ROUND(SUM(total + CASE WHEN total = 0 AND sample IS NOT NULL THEN sample ELSE 0 END), 2) AS ddp_request
+        ROUND(SUM(total + CASE WHEN total = 0 AND sample IS NOT NULL THEN sample ELSE 0 END), 2) AS request_ddp
     FROM
         requests
     GROUP BY
@@ -71,8 +71,7 @@ requests_agg AS (
 deals_with_requests AS (
     SELECT
         *,
-        SUM(CASE WHEN request_status IN ('PreEstimate', 'PendingResponses') THEN request_product_qty ELSE 0 END) OVER (PARTITION BY deal_id) AS deal_product_qty,
-        SUM(CASE WHEN request_status IN ('PreEstimate', 'PendingResponses') THEN ddp_request ELSE 0 END) OVER (PARTITION BY deal_id) AS ddp_deal,
+        SUM(CASE WHEN request_status IN ('PreEstimate', 'PendingResponses') THEN ddp_request ELSE 0 END) OVER (PARTITION BY deal_id) AS active_deal_ddp,
         COUNT(request_id) OVER (PARTITION BY deal_id) AS requests,
         COUNT(IF(request_status IN ('PreEstimate', 'PendingResponses'), request_id, NULL)) OVER (PARTITION BY deal_id) AS active_requests
     FROM
@@ -101,11 +100,10 @@ merchant_deals AS (
 
         d.request_status,
 
-        d.ddp_request,
+        d.request_ddp,
         d.request_product_qty,
 
-        d.ddp_deal,
-        d.deal_product_qty,
+        d.active_deal_ddp,
 
         d.requests,
         d.active_requests
@@ -120,7 +118,8 @@ SELECT
     d.deal_friendly_id,
     md.deal_id,
     d.deal_type,
-    d.deal_status_group AS deal_status,
+    d.deal_status,
+    d.deal_status_group,
 
     md.request_id,
     md.request_status,
@@ -130,10 +129,9 @@ SELECT
     md.product_id,
     md.product_name,
 
-    md.ddp_request,
+    md.request_ddp,
     md.request_product_qty,
-    md.ddp_deal,
-    md.deal_product_qty,
+    md.active_deal_ddp,
 
     md.requests,
     md.active_requests
