@@ -90,6 +90,7 @@ product_names AS (
         TRUE
         AND is_current
         AND NOT is_deleted
+        AND legal_form != 'RX'
     GROUP BY 1, 2, 3, 4, 5
 )
 
@@ -97,7 +98,7 @@ product_names AS (
 SELECT
     pn.product_id,
     pn.pzn AS product_pzn,
-    pn.product_name AS product_name,
+    pn.product_name,
     pn.package_size AS product_package_size,
     pn.manufacturer AS product_manufacturer,
     pn.min_price AS product_min_price,
