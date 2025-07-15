@@ -30,7 +30,8 @@ WITH requests_with_statuses AS (
             WHEN status = 70 THEN 'Other'
             WHEN status = 80 THEN 'WrongProductLink'
             WHEN status = 90 THEN 'NoAnswerFromMerchant'
-            WHEN status = 100 OR status = 110 THEN 'Cancelled'
+            WHEN status = 100 THEN 'RejectedByProcurement'
+            WHEN status = 110 THEN 'NeedsCertification'
         END AS request_status
     FROM
         {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }}
