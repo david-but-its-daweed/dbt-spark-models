@@ -289,13 +289,29 @@ WITH big_batch_raw AS (
         SELECT explode(sequence(to_timestamp('2023-01-01 00:00:00'), to_timestamp('2026-12-31 23:59:59'), interval 1 hour)) AS ts
     ) AS sequence
 ),
-
+     main AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY procurement_order_id
+            ORDER BY GREATEST(
+                COALESCE(start_ts, to_timestamp('0001-01-01')),
+                COALESCE(end_ts, to_timestamp('0001-01-01'))
+            ) DESC, stage DESC
+        ) AS rn
+    FROM all_orders
+    UNION ALL
+    SELECT
+        *,
+        NULL AS rn
+    FROM total_stage
+),
      weekend_hours AS (
     SELECT
         procurement_order_id,
         stage,
         COUNT(*) AS weekend_hours
-    FROM all_orders AS ao
+    FROM main AS ao
     JOIN calendar_hours AS ch
       ON ch.hour_ts >= date_trunc('hour', ao.start_ts)
      AND ch.hour_ts < date_trunc('hour', ao.end_ts)
@@ -343,23 +359,7 @@ SELECT
     END AS is_stage_skipped,
     MAX(CASE WHEN m.stage = 'Total Production' AND m.start_ts IS NOT NULL AND m.end_ts IS NULL THEN 1 ELSE 0 END)
         OVER (PARTITION BY m.procurement_order_id) AS is_order_in_production
-FROM (
-    SELECT
-        *,
-        ROW_NUMBER() OVER (
-            PARTITION BY procurement_order_id
-            ORDER BY GREATEST(
-                COALESCE(start_ts, to_timestamp('0001-01-01')),
-                COALESCE(end_ts, to_timestamp('0001-01-01'))
-            ) DESC, stage DESC
-        ) AS rn
-    FROM all_orders
-    UNION ALL
-    SELECT
-        *,
-        NULL AS rn
-    FROM total_stage
-) AS m
+FROM main AS m
 LEFT JOIN weekend_hours AS wh
     ON m.procurement_order_id = wh.procurement_order_id
     AND m.stage = wh.stage
