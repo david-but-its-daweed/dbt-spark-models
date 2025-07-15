@@ -24,6 +24,7 @@ WITH products_list AS (
         AND is_current
         AND NOT is_deleted
         AND stock_quantity IS NOT NULL
+        AND legal_form != 'RX'
 ),
 
 visits AS (
@@ -45,7 +46,7 @@ orders AS (
         COUNT(DISTINCT order_id) as orders,
         SUM(quantity) as ordered_items,
         SUM(before_products_price) as before_products_price
-    FROM {{ source('onfy', 'orders_info') }}
+    FROM {{ ref('orders_info') }}
     WHERE partition_date >= CURRENT_DATE() - INTERVAL 730 DAYS
     GROUP BY 1, 2
 ),
