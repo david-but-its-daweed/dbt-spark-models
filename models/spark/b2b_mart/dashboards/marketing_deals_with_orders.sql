@@ -34,7 +34,7 @@ statuses AS (
     SELECT
         deal_id,
         MAX(1) AS achieved_paid,
-        min(cast(event_ts_msk as date)) as achieved_paid_date
+        MIN(CAST(event_ts_msk AS DATE)) AS achieved_paid_date
     FROM {{ ref('fact_deals_status_history') }}
     WHERE status_name_small_deal LIKE '%ProcurementConfirmation' OR status_name LIKE '%PaymentToMerchant'
     GROUP BY 1
@@ -84,6 +84,25 @@ SELECT
     t1.utm_medium,
     t1.source,
     t1.type,
+    CASE
+        WHEN DATEDIFF(t1.deal_created_date, t1.first_visit_date) = 0 THEN 'first day'
+        WHEN
+            DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 0
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 8 THEN 'first week'
+        WHEN
+            DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 7
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 31 THEN 'first month'
+        WHEN
+            DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 30
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 93 THEN 'first quarter'
+        WHEN
+            DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 92
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 181 THEN 'first halfyear'
+        WHEN
+            DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 180
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 366 THEN 'first year'
+        WHEN DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 365 THEN 'more than a year'
+    END AS first_visit_deal_flg,
     t1.first_visit_date,
     t1.first_utm_campaign,
     t1.first_utm_sourceas,
@@ -110,7 +129,7 @@ SELECT
         WHEN pr.day_after_previous_deal > 90 THEN 'g.Four_Month_and_more'
     END AS previous_deal_days_group,
     COALESCE(st.achieved_paid, 0) AS achived_payment,
-    achieved_paid_date,
+    st.achieved_paid_date,
     t1.promo_code,
     t1.promo_code_discount,
     t1.promo_code_type
