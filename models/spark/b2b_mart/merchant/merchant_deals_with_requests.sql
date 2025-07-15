@@ -21,7 +21,7 @@ WITH requests_with_statuses AS (
         CASE
             WHEN status = 0 THEN 'Unknown'
             WHEN status = 10 THEN 'PreEstimate'
-            WHEN status = 15 THEN 'PendingResponses'
+            WHEN status = 15 THEN 'InProgress'
             WHEN status = 20 THEN 'PriceTooHigh'
             WHEN status = 30 THEN 'ClientNoResponse'
             WHEN status = 40 THEN 'ProductNotFound'
@@ -122,7 +122,7 @@ SELECT
     d.deal_status_group,
 
     md.request_id,
-    md.request_status,
+    CASE WHEN md.request_status = 'InProgress' AND d.deal_status = 'DealCompleted' THEN 'Completed' ELSE md.request_status END AS request_status,
 
     md.merchant_id,
     md.merchant_name,
