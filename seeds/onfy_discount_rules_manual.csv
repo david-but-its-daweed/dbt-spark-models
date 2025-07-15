@@ -4,6 +4,7 @@ product_id,store_id,channel,weight,pessimization_type,discount_percent,source,co
 ,,medizinfuchs,10,,19,manual,medizinfuchs
 ,,idealo,10,,19,manual,idealo
 ,,billiger,10,,19,manual,billiger
+,,mindbox,10000,,0,manual,mindbox
 ,7631548fbb5649f28a9523f661a8dac3,,11,,16,manual,fliegende-pillen
 ,7c0538da9fe5425d8ad61f96b0aff6f1,,11,,18,manual,arzneiDoc
 ,c4191b579b634b2592b64bf0cf174bf4,,11,,16,manual,disapo
