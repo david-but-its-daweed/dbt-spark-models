@@ -8,7 +8,7 @@
     }
 ) }}
 
-WITH requests_with_statuses AS (
+WITH raw_requests AS (
     SELECT
         dealId AS deal_id,
         _id AS request_id,
@@ -37,6 +37,81 @@ WITH requests_with_statuses AS (
         {{ source('mongo', 'b2b_core_customer_requests_daily_snapshot') }}
     WHERE
         link LIKE 'https://joom.pro/pt-br/products/%' OR link LIKE '6%'
+),
+
+status AS (
+    SELECT DISTINCT
+        entityid AS request_id,
+        friendlyid AS deal_friendly_id,
+        LAST_VALUE(col.rejectReason) OVER (PARTITION BY entityid, friendlyid ORDER BY TIMESTAMP(col.ctms / 1000) ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS status
+    FROM
+        {{ source('mongo', 'b2b_core_issues_daily_snapshot') }}
+        LATERAL VIEW
+        EXPLODE(statushistory) AS col
+),
+
+reject_reasons AS (
+    SELECT
+        request_id,
+        deal_friendly_id,
+        CASE
+            WHEN status = 0 THEN 'Empty'
+            WHEN status = 1 THEN 'Other'
+            WHEN status = 2 THEN 'NotEnoughDataFromMerchant'
+            WHEN status = 3 THEN 'UnableToWorkWithMerchant'
+            WHEN status = 4 THEN 'ProductIsNotAvailable'
+            WHEN status = 5 THEN 'NotEnoughDataForSourcing'
+            WHEN status = 6 THEN 'NoResponseFromMerchant'
+            WHEN status = 7 THEN 'ProductCannotBeExported'
+            WHEN status = 8 THEN 'MinimumOrderQuantity'
+            WHEN status = 9 THEN 'PriceTooHigh'
+            WHEN status = 10 THEN 'ImpossibleToDeliver'
+            WHEN status = 11 THEN 'ProductNotFound'
+            WHEN status = 12 THEN 'Test'
+            WHEN status = 13 THEN 'NoLegalEntityJoomPro'
+            WHEN status = 14 THEN 'NoBankAccountJoomPro'
+            WHEN status = 15 THEN 'UnsuitableDeliveryTerms'
+            WHEN status = 16 THEN 'UnsuitableFinancialTerms'
+            WHEN status = 17 THEN 'UnsuitableSamples'
+            WHEN status = 18 THEN 'ClosedWithCompetitor'
+            WHEN status = 19 THEN 'Duplicated'
+            WHEN status = 20 THEN 'ClientNoResponseAtAll'
+            WHEN status = 21 THEN 'ClientNoResponseBeforeDDPQuotation'
+            WHEN status = 22 THEN 'ClientNoResponseAfterDDPQuotation'
+            WHEN status = 23 THEN 'MarketResearch'
+            WHEN status = 24 THEN 'Certification'
+            WHEN status = 25 THEN 'LocalMarketPrice'
+            WHEN status = 26 THEN 'NeverReply'
+            WHEN status = 27 THEN 'PermissionNeeded'
+            WHEN status = 28 THEN 'Empty'
+            WHEN status = 29 THEN 'OriginalBrandedProduct'
+            WHEN status = 30 THEN 'UnderstatedTargetPrice'
+            WHEN status = 31 THEN 'LogisticsCost'
+            WHEN status = 32 THEN 'CertificationCost'
+            WHEN status = 33 THEN 'DoNotMeetTarget'
+            WHEN status = 34 THEN 'MoreThanCompetitorOffer'
+            WHEN status = 35 THEN 'NoBudget'
+            WHEN status = 36 THEN 'FailedToProvideFinancing'
+            WHEN status = 37 THEN 'CashFlow'
+            WHEN status = 38 THEN 'NeedTimeForDecision'
+            WHEN status = 39 THEN 'CanceledByProcurement'
+            WHEN status = 40 THEN 'LackOfInfo'
+        END AS reject_reason
+    FROM
+        status
+),
+
+requests_with_statuses AS (
+    SELECT
+        req.deal_id,
+        req.request_id,
+
+        req.product_id,
+        CASE WHEN req.request_status = 'Other' THEN COALESCE(rej.reject_reason, req.request_status) ELSE req.request_status END AS request_status
+    FROM
+        raw_requests AS req
+    LEFT JOIN
+        reject_reasons AS rej ON req.request_id = rej.request_id
 ),
 
 requests AS (
