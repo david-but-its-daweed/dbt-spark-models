@@ -41,7 +41,7 @@ WITH raw_requests AS (
 
 status AS (
     SELECT DISTINCT
-        entityid AS request_id,
+        entityid AS entity_id,
         friendlyid AS deal_friendly_id,
         LAST_VALUE(col.rejectReason) OVER (PARTITION BY entityid, friendlyid ORDER BY TIMESTAMP(col.ctms / 1000) ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING) AS status
     FROM
@@ -52,7 +52,7 @@ status AS (
 
 reject_reasons AS (
     SELECT
-        request_id,
+        entity_id,
         deal_friendly_id,
         CASE
             WHEN status = 0 THEN 'Empty'
@@ -111,7 +111,10 @@ requests_with_statuses AS (
     FROM
         raw_requests AS req
     LEFT JOIN
-        reject_reasons AS rej ON req.request_id = rej.request_id
+        reject_reasons AS rej
+        ON
+            req.request_id = rej.entity_id
+            OR req.deal_id = rej.entity_id
 ),
 
 requests AS (
