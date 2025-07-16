@@ -90,7 +90,9 @@ product_names AS (
         TRUE
         AND is_current
         AND NOT is_deleted
-        AND legal_form != 'RX'
+        AND store_state != 'RESTRICTED' -- only active pharmacies
+        AND legal_form != 'RX' -- not prescribed products (without recipe)
+        AND stock_quantity > 0 -- available for purchase at the moment
     GROUP BY 1, 2, 3, 4, 5
 )
 
