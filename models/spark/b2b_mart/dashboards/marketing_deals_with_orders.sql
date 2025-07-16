@@ -85,23 +85,23 @@ SELECT
     t1.source,
     t1.type,
     CASE
-        WHEN DATEDIFF(t1.deal_created_date, t1.first_visit_date) = 0 THEN 'first day'
+        WHEN DATEDIFF(t1.deal_created_date, t1.first_visit_date) = 0 THEN CONCAT(REPEAT('\u200a', 1), 'first day')
         WHEN
             DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 0
-            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 8 THEN 'first week'
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 8 THEN CONCAT(REPEAT('\u200a', 2), 'first week')
         WHEN
             DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 7
-            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 31 THEN 'first month'
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 31 THEN CONCAT(REPEAT('\u200a', 3), 'first month')
         WHEN
             DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 30
-            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 93 THEN 'first quarter'
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 93 THEN CONCAT(REPEAT('\u200a', 4), 'first quarter')
         WHEN
             DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 92
-            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 181 THEN 'first halfyear'
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 181 THEN CONCAT(REPEAT('\u200a', 5), 'first halfyear')
         WHEN
             DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 180
-            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 366 THEN 'first year'
-        WHEN DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 365 THEN 'more than a year'
+            AND DATEDIFF(t1.deal_created_date, t1.first_visit_date) < 366 THEN CONCAT(REPEAT('\u200a', 6), 'first year')
+        WHEN DATEDIFF(t1.deal_created_date, t1.first_visit_date) > 365 THEN CONCAT(REPEAT('\u200a', 7), 'more than a year')
     END AS first_visit_deal_flg,
     t1.first_visit_date,
     t1.first_utm_campaign,
