@@ -68,7 +68,8 @@ product_views AS (
     SELECT DISTINCT
         user_id,
         1 AS once_had_product_view
-    FROM {{ ref('product_views') }}
+    FROM {{ ref('ss_product_preview_next_steps_allocaton') }}
+    WHERE next_type = 'pageView' AND next_pageName = 'product' AND type = 'productPreview'
 )
 
 
