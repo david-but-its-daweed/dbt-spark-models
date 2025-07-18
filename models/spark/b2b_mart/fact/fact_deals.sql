@@ -150,6 +150,17 @@ SELECT DISTINCT
         WHEN d.sourcingDealType = 0 THEN 'standard'
         WHEN d.sourcingDealType = 1 THEN 'vip'
     END AS sourcing_deal_type,
+    CASE coalesce(d.creationDealType, 0)
+        WHEN 0 THEN 'Unknown'
+        WHEN 1 THEN 'Standart'
+        WHEN 2 THEN 'RFQ'
+        WHEN 3 THEN 'Sample'
+        WHEN 4 THEN '1688'
+        WHEN 5 THEN 'Manual'
+        WHEN 6 THEN 'ManualSample'
+        WHEN 7 THEN 'ExternalPublicAPI'
+        ELSE 'Other'
+    END AS creation_deal_type,
     d.promo_code,
     d.promo_code_discount,
     d.promo_code_type,
