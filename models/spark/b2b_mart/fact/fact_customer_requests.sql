@@ -43,8 +43,17 @@ select
     plannedOfferCost.ccy as planned_offer_currency,
     userId as user_id,
     case when request.type = 1 then TRUE else FALSE end as fake_door,
-    request.source as creation_source, 
-    case when request.source = 0 then True else False end as manual, 
+    coalesce(request.source, 0) as creation_source, 
+    CASE coalesce(request.source, 0)
+        WHEN 0 THEN 'Admin'
+        WHEN 1 THEN 'Standart'
+        WHEN 2 THEN 'RFQ'
+        WHEN 3 THEN 'Sample'
+        WHEN 4 THEN '1688'
+        WHEN 5 THEN 'ExternalPublicAPI'
+        ELSE 'Unknown'
+    END AS creation_source_type,
+    case when coalesce(request.source, 0) = 0 then True else False end as manual, 
     case when request.source = 1 then True else False end as standart_deal, 
     case when request.source = 2 then True else False end as rfq_deal, 
     case when request.source = 3 then True else False end as sample, 
