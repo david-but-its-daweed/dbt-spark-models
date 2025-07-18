@@ -149,9 +149,9 @@ requests_agg AS (
 deals_with_requests AS (
     SELECT
         *,
-        SUM(CASE WHEN request_status IN ('PreEstimate', 'PendingResponses') THEN request_ddp ELSE 0 END) OVER (PARTITION BY deal_id) AS active_deal_ddp,
+        SUM(CASE WHEN request_status IN ('PreEstimate', 'InProgress') THEN request_ddp ELSE 0 END) OVER (PARTITION BY deal_id) AS active_deal_ddp,
         COUNT(request_id) OVER (PARTITION BY deal_id) AS requests,
-        COUNT(IF(request_status IN ('PreEstimate', 'PendingResponses'), request_id, NULL)) OVER (PARTITION BY deal_id) AS active_requests
+        COUNT(IF(request_status IN ('PreEstimate', 'InProgress'), request_id, NULL)) OVER (PARTITION BY deal_id) AS active_requests
     FROM
         requests_agg
 ),
