@@ -90,8 +90,8 @@ weekend_hours AS (
         COUNT(*) AS weekend_hours
     FROM main AS ao
     JOIN calendar_hours AS ch
-      ON ch.hour_ts >= date_trunc('hour', ao.start_ts)
-     AND ch.hour_ts < date_trunc('hour', ao.end_ts)
+      ON ch.hour_ts >= date_trunc('hour', ao.start_ts) + INTERVAL 5 HOURS
+     AND ch.hour_ts < date_trunc('hour', ao.end_ts) + INTERVAL 5 HOURS
      AND ch.is_weekend = 1
     GROUP BY 1,2
 )
@@ -106,11 +106,13 @@ SELECT
     start_ts,
     end_ts,
     (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 / 24 AS fact_value_with_weekends,
-    CASE
-        WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN (
-            (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
-        ) / 24
-    END AS fact_value_without_weekends
+    GREATEST(
+        CASE
+            WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN (
+                (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
+            ) / 24
+        END,
+    0) AS fact_value_without_weekends
 FROM main AS m
 LEFT JOIN weekend_hours AS wh
     ON m.deal_friendly_id = wh.deal_friendly_id

@@ -330,8 +330,8 @@ WITH big_batch_raw AS (
         COUNT(*) AS weekend_hours
     FROM main AS ao
     JOIN calendar_hours AS ch
-      ON ch.hour_ts >= date_trunc('hour', ao.start_ts)
-     AND ch.hour_ts < date_trunc('hour', ao.end_ts)
+      ON ch.hour_ts >= date_trunc('hour', ao.start_ts) + INTERVAL 5 HOURS
+     AND ch.hour_ts < date_trunc('hour', ao.end_ts) + INTERVAL 5 HOURS
      AND ch.is_weekend = 1
     GROUP BY 1,2
 )
@@ -344,14 +344,16 @@ SELECT
     m.stage,
     m.sla_granularity,
     m.sla_value,
-    (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 / 24 AS fact_value_with_weekends,
-    CASE
-        WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN (
-            (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
-        ) / 24
-    END AS fact_value_without_weekends,
     m.start_ts,
     m.end_ts,
+    (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 / 24 AS fact_value_with_weekends,
+    GREATEST(
+        CASE
+            WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN (
+                (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
+            ) / 24
+        END,
+    0) AS fact_value_without_weekends,
     CASE WHEN m.rn = 1 AND m.end_ts IS NULL THEN 1 ELSE 0 END AS is_current_stage,
     COALESCE(
         MAX(CASE WHEN m.rn = 1 AND m.end_ts IS NULL THEN m.stage END) OVER (PARTITION BY m.procurement_order_id),
