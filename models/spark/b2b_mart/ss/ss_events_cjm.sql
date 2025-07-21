@@ -42,7 +42,8 @@ SELECT
     payload.productId AS product_id,
     payload.position,
     payload.popupType,
-    payload.section
+    payload.section,
+    payload.message
 FROM {{ source('b2b_mart', 'device_events') }} AS de
 LEFT JOIN bots ON de.device.id = bots.device_id
 WHERE partition_date >= '2024-04-01'
