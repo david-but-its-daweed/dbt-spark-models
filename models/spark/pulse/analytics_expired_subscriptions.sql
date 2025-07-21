@@ -21,7 +21,7 @@ WITH currency AS (
             )
         ) AS date
     FROM {{ source('mart', 'dim_currency_rate') }}
-    WHERE currency_code = "BRL"
+    WHERE currency_code = "BRL" AND effective_date <= LEAST(next_effective_date - INTERVAL 1 DAY, CURRENT_DATE())
 ),
 
 last_subscription_payment AS (
@@ -67,7 +67,7 @@ payments AS (
         FROM last_subscription_payment AS subscription
         WHERE
             package_duration_unit IN ("year", "month")
-            AND rn = 1
+            AND rn = 1 AND payment_created_time <= CURRENT_DATE()
     )
 )
 
