@@ -295,7 +295,7 @@ WITH big_batch_raw AS (
             )
             ELSE FALSE
         END
-    GROUP BY 1,2,3
+    GROUP BY 1,2,3,4
 ),
      calendar_hours AS (
     SELECT
