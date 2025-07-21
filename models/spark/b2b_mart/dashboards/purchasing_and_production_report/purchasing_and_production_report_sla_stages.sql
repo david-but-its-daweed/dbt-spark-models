@@ -22,6 +22,7 @@ WITH big_batch_raw AS (
 ),
      big_batch AS (
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -35,6 +36,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -48,6 +50,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -61,6 +64,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -74,6 +78,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -87,6 +92,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -100,6 +106,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -112,6 +119,7 @@ WITH big_batch_raw AS (
 ),
      small_batch AS (
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -125,6 +133,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -138,6 +147,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -151,6 +161,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -164,6 +175,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -177,6 +189,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -190,6 +203,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -203,6 +217,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -223,6 +238,7 @@ WITH big_batch_raw AS (
     UNION ALL
 
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -242,6 +258,7 @@ WITH big_batch_raw AS (
 ),
      total_stage AS (
     SELECT
+        deal_friendly_id,
         is_small_batch,
         procurement_order_id,
         created_ts,
@@ -321,6 +338,7 @@ WITH big_batch_raw AS (
 
 
 SELECT
+    m.deal_friendly_id,
     m.is_small_batch,
     m.procurement_order_id,
     m.stage,
