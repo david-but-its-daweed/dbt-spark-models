@@ -106,13 +106,11 @@ SELECT
     start_ts,
     end_ts,
     (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 / 24 AS fact_value_with_weekends,
-    GREATEST(
-        CASE
-            WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN (
-                (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
-            ) / 24
-        END,
-    0) AS fact_value_without_weekends
+    CASE
+        WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN GREATEST((
+            (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
+        ) / 24, 0)
+    END AS fact_value_without_weekends
 FROM main AS m
 LEFT JOIN weekend_hours AS wh
     ON m.deal_friendly_id = wh.deal_friendly_id

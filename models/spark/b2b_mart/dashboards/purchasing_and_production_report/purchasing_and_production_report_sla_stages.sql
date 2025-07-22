@@ -347,13 +347,11 @@ SELECT
     m.start_ts,
     m.end_ts,
     (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 / 24 AS fact_value_with_weekends,
-    GREATEST(
-        CASE
-            WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN (
-                (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
-            ) / 24
-        END,
-    0) AS fact_value_without_weekends,
+    CASE
+        WHEN m.start_ts IS NOT NULL AND m.end_ts IS NOT NULL THEN GREATEST((
+            (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
+        ) / 24, 0)
+    END AS fact_value_without_weekends,
     CASE WHEN m.rn = 1 AND m.end_ts IS NULL THEN 1 ELSE 0 END AS is_current_stage,
     COALESCE(
         MAX(CASE WHEN m.rn = 1 AND m.end_ts IS NULL THEN m.stage END) OVER (PARTITION BY m.procurement_order_id),
