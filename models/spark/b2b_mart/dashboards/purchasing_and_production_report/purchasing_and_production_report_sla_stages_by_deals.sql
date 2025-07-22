@@ -3,7 +3,7 @@
     materialized='view',
     meta = {
       'model_owner' : '@abadoyan',
-      'bigquery_load': 'true'
+       'bigquery_load': 'false'
     }
 ) }}
 
