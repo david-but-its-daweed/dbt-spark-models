@@ -2,6 +2,7 @@
     schema='onfy',
     materialized='table',
     partition_by=['effective_date'],
+    file_format='delta',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -26,6 +27,7 @@ join {{ source('pharmacy_landing', 'medicine') }}
 where 1=1
     and product_price is not null
     and effective_ts >= '2023-01-01'
+    and status = 'ACTIVE'
 group by 
     product_id,
     medicine.country_local_id,
