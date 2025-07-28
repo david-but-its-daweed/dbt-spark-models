@@ -39,8 +39,22 @@ SELECT
     END AS package_duration,
     payment.packageSnapshot.price.amount / 1000000 AS package_price,
     payment.packageSnapshot.price.ccy AS package_price_ccy,
-    COALESCE(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs)) AS paid_time,
-    TO_DATE(COALESCE(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs))) AS paid_date,
+    COALESCE(MILLIS_TO_TS(
+        CASE WHEN payment.paidTimeMs > 0 
+            AND DATE_DIFF(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs)) <= 1
+            AND MILLIS_TO_TS(payment.createdTimeMs) >= '2025-07-01'
+            AND MILLIS_TO_TS(payment.createdTimeMs) <= '2025-07-28'
+            THEN Payment.paidTimeMs
+        END
+        ), MILLIS_TO_TS(payment.createdTimeMs)) AS paid_time,
+    TO_DATE(COALESCE(MILLIS_TO_TS(
+        CASE WHEN payment.paidTimeMs > 0 
+            AND DATE_DIFF(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs)) <= 1
+            AND MILLIS_TO_TS(payment.createdTimeMs) >= '2025-07-01'
+            AND MILLIS_TO_TS(payment.createdTimeMs) <= '2025-07-28'
+            THEN Payment.paidTimeMs
+        END
+        ), MILLIS_TO_TS(payment.createdTimeMs))) AS paid_date,
     payment.price.amount / 1000000 AS price,
     payment.price.ccy AS currency,
     payment.promocodeSnapshot._id AS promocode_id,
