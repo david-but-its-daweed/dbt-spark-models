@@ -65,4 +65,4 @@ SELECT
     payment.status
 FROM {{ source('mongo', 'b2b_core_analytics_payments_daily_snapshot') }} AS payment
 INNER JOIN currency ON TO_DATE(MILLIS_TO_TS(payment.createdTimeMs)) = currency.date
-WHERE COALESCE(payment.refundStatus, "") != "finished"
+-- WHERE COALESCE(payment.refundStatus, "") != "finished"
