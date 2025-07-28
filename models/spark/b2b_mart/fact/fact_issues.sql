@@ -14,8 +14,8 @@ WITH admins AS (
         email,
         role
     FROM {{ ref('dim_user_admin') }}
-)
-,
+),
+
 assigned AS (
     SELECT DISTINCT
         f._id,
@@ -47,6 +47,7 @@ assigned AS (
     ) AS f
     LEFT JOIN admins AS fa ON f.first_assignee_id = fa.admin_id
 )
+
 
 SELECT DISTINCT
     issues.issue_id,
@@ -81,6 +82,7 @@ SELECT DISTINCT
     assigned.times_assigned,
     team,
     teams,
+    tags,
     effective_ts_msk,
     next_effective_ts_msk
 FROM (
@@ -108,6 +110,7 @@ FROM (
         element_at(teamHistory, cast((array_position(teamHistory.ctms,
                                        array_max(teamHistory.ctms))) as INTEGER)) as team,
         size(teamHistory) as teams,
+        tags,
         TIMESTAMP(null) as effective_ts_msk,
         TIMESTAMP(null) as next_effective_ts_msk
     FROM (
