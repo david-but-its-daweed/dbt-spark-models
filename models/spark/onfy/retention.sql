@@ -1,7 +1,7 @@
  {{ config(
     schema='onfy',
     materialized='table',
-    file_format='parquet',
+    file_format='delta',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -27,8 +27,8 @@ transactions_gmv AS (
         order_id,
         SUM(gmv_initial) as gmv_initial
     FROM
-        {{ source('onfy', 'transactions') }}
-    WHERE 
+        {{ ref('transactions') }}
+    WHERE
         currency = 'EUR'
     GROUP BY
         order_id
@@ -72,21 +72,21 @@ base_email AS (
             ELSE
                 transactions_gmv.gmv_initial
         END as gmv_initial
-    FROM 
+    FROM
         {{ source('pharmacy_landing', 'order') }}
-        LEFT JOIN first_purchases
-            ON first_purchases.user_email_hash = pharmacy_landing.order.user_email_hash
-        LEFT JOIN {{ source('pharmacy_landing', 'device') }}
-            ON pharmacy_landing.device.id = first_purchases.first_purchase_device_id
-        LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }}
-            ON pharmacy_landing.order.id = pharmacy_landing.order_parcel.order_id
-        LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_item') }}
-            ON pharmacy_landing.order_parcel.id = pharmacy_landing.order_parcel_item.order_parcel_id
-            AND pharmacy_landing.order_parcel_item.product_id IS NOT NULL
-        LEFT JOIN {{ source('onfy', 'lndc_user_attribution') }}
-            ON onfy.lndc_user_attribution.user_email_hash = pharmacy_landing.order.user_email_hash
-        LEFT JOIN transactions_gmv
-            ON transactions_gmv.order_id = pharmacy_landing.order.id
+    LEFT JOIN first_purchases
+        ON first_purchases.user_email_hash = pharmacy_landing.order.user_email_hash
+    LEFT JOIN {{ source('pharmacy_landing', 'device') }}
+        ON pharmacy_landing.device.id = first_purchases.first_purchase_device_id
+    LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }}
+        ON pharmacy_landing.order.id = pharmacy_landing.order_parcel.order_id
+    LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_item') }}
+        ON pharmacy_landing.order_parcel.id = pharmacy_landing.order_parcel_item.order_parcel_id
+        AND pharmacy_landing.order_parcel_item.product_id IS NOT NULL
+    LEFT JOIN {{ ref('lndc_user_attribution') }}
+        ON onfy.lndc_user_attribution.user_email_hash = pharmacy_landing.order.user_email_hash
+    LEFT JOIN transactions_gmv
+        ON transactions_gmv.order_id = pharmacy_landing.order.id
 ),
 
 cohort_values AS (
@@ -155,17 +155,17 @@ SELECT
     cohort_month_orders,
     cohort_month_gmv,
     -- cohort values
-    SUM( IF(month_number = 0, cohort_value, 0)
+    SUM(IF(month_number = 0, cohort_value, 0)
     ) OVER (
         PARTITION BY platform_type, traffic_source, cohort_month
     ) AS cohort_size,
-    SUM( IF(month_number = 0, cohort_month_gmv, 0)
+    SUM(IF(month_number = 0, cohort_month_gmv, 0)
     ) OVER (
         PARTITION BY platform_type, traffic_source, cohort_month
     ) AS cohort_gmv,
-    SUM( IF(month_number = 0, cohort_month_orders, 0)
+    SUM(IF(month_number = 0, cohort_month_orders, 0)
     ) OVER (
         PARTITION BY platform_type, traffic_source, cohort_month
     ) AS cohort_orders
-FROM 
+FROM
     cohort_values
