@@ -34,6 +34,7 @@ onfy:
   dag-name: onfy
   alerts-channel: "#onfy-etl-monitoring"
   tags: ["onfy"]
+  slo-hour: 15
 pulse:
   dag-name: pulse
   dag-tags: ["joom_pulse"]
