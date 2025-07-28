@@ -21,7 +21,8 @@ WITH fact_deals AS (
     GROUP BY 1,2
 ),
 fact_issues AS (
-    SELECT *
+    SELECT
+        *
     FROM {{ ref('fact_issues') }}
     WHERE next_effective_ts_msk IS NULL
       AND coalesce(assignee_role, 'null') IN ('null', 'SourcingManager', 'MerchantSupport')
@@ -143,6 +144,7 @@ issues_ AS (
            fi.issue_id,
            fi.type AS issue_type,
            fi.status AS issue_status,
+           CASE WHEN ARRAY_CONTAINS(fi.tags, 'SmallBatch') THEN 1 ELSE 0 END AS is_small_batch_issue,
            fi.reject_reason AS issue_reject_reason,
            fi.created_time AS issue_created_time,
            fi.start_time AS issue_start_time,
