@@ -13,6 +13,7 @@
         'bigquery_load': 'true',
         'bigquery_partitioning_date_column': 'order_date_msk',
         'bigquery_upload_horizon_days': '230',
+        'bigquery_check_counts_max_diff_fraction': 0.0001,
         'priority_weight': '1000',
         'full_reload_on': '6',
     }
