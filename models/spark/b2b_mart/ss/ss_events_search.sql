@@ -37,6 +37,14 @@ fake_search AS (
     HAVING is_fake = TRUE
 ),
 
+real_search AS (
+    SELECT DISTINCT FROM_JSON(e.event_params, 'searchResultsUniqId STRING').searchResultsUniqId AS search_id
+    FROM
+        {{ source('b2b_mart', 'ss_events_by_session') }}
+        LATERAL VIEW EXPLODE(events_in_session) AS e
+    WHERE e.event_type != 'search'
+),
+
 search_events AS (
     SELECT
         de.`user`['userId'] AS user_id,
@@ -121,12 +129,14 @@ clicks AS (
 )
 
 SELECT
-    *,
-    
-    FIRST_VALUE(search_results_uniq_id) OVER (
-        PARTITION BY user_id, search_date, query, search_type
-        ORDER BY search_ts_msk
-    ) AS search_group_id
+    m.*,
+
+    FIRST_VALUE(m.search_results_uniq_id) OVER (
+        PARTITION BY m.user_id, m.search_date, m.query, m.search_type
+        ORDER BY m.search_ts_msk
+    ) AS search_group_id,
+
+    rs.search_id IS NOT NULL AS was_real_search
 FROM (
     SELECT
         search.user_id,
@@ -164,5 +174,6 @@ FROM (
     FROM search
     LEFT JOIN clicks ON search.searchResultsUniqId = clicks.searchResultsUniqId
 ) AS m
+LEFT JOIN real_search AS rs ON m.search_results_uniq_id = rs.search_id
 /* Оставляем первый поиск в сессии и события с кликами */
-WHERE is_first_search_by_session = 1 OR click_ts_msk IS NOT NULL
+WHERE m.is_first_search_by_session = 1 OR m.click_ts_msk IS NOT NULL
