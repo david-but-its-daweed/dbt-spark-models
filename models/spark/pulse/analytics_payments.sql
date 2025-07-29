@@ -62,7 +62,11 @@ SELECT
     COALESCE(payment.promocodeSnapshot.discount.fixed.amount, 0) AS discount_fixed,
     COALESCE(payment.promocodeSnapshot.discount.percentage.percentage, 0) AS discount_percentage,
     currency.rate,
-    payment.status
+    payment.status,
+    payment.refundPayhubId AS refund_payhub_id,
+    payment.refundStatus AS refund_status,
+    MILLIS_TO_TS(payment.refundTimeMs) AS refund_time,
+    payment.subscriptionId AS subscription_id
 FROM {{ source('mongo', 'b2b_core_analytics_payments_daily_snapshot') }} AS payment
 INNER JOIN currency ON TO_DATE(MILLIS_TO_TS(payment.createdTimeMs)) = currency.date
 -- WHERE COALESCE(payment.refundStatus, "") != "finished"
