@@ -1,8 +1,8 @@
-
- {{ config(
+{{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
@@ -107,7 +107,7 @@ order_data AS (
             ON numbered_purchases.order_id = pharmacy_landing.order.id
         LEFT JOIN {{ source('pharmacy_landing', 'device') }}
             ON pharmacy_landing.device.id = pharmacy_landing.order.device_id
-        LEFT JOIN {{ source('onfy', 'lndc_user_attribution') }}
+        LEFT JOIN {{ ref('lndc_user_attribution') }}
             ON onfy.lndc_user_attribution.user_email_hash = onfy_mart.transactions.user_email_hash
     GROUP BY 
         pharmacy_landing.order.id,
@@ -132,7 +132,7 @@ turnover_refunds AS (
         order_data
 ),
 
-psp_initial AS (   
+psp_initial AS (
     SELECT 
         'CHARGE_FEE' AS type,
         order_id,
@@ -150,7 +150,7 @@ psp_initial AS (
         order_created_time_cet AS transaction_date,
         psp_commission_fix + psp_commission_perc * turnover AS price,
         'EUR' AS currency
-    FROM 
+    FROM
         turnover_refunds
     where 1=1
         AND order_created_time_cet < '2023-07-21'
