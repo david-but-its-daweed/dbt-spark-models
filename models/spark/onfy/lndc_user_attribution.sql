@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
@@ -45,7 +46,7 @@ sources as (
         sources.*,
         order.user_email_hash
     from 
-        {{ source('onfy', 'sources') }} as sources
+        {{ ref('sources') }} AS sources
     left join {{ source('pharmacy_landing', 'order') }}
         on sources.device_id = order.device_id
 ),
