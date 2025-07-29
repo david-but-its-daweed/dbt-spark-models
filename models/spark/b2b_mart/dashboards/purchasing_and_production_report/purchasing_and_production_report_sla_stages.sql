@@ -183,7 +183,10 @@ WITH big_batch_raw AS (
         created_ts,
         '2.Payment to Merchant' AS stage,
         'day' AS sla_granularity,
-        1 AS sla_value,
+        CASE
+            WHEN DATE(sub_status_waiting_for_payment_ts) < '2025-07-01' THEN 1
+            WHEN DATE(sub_status_waiting_for_payment_ts) >= '2025-07-01' THEN 2
+        END AS sla_value,
         sub_status_waiting_for_payment_ts AS start_ts,
         sub_status_merchant_preparing_order_ts AS end_ts
     FROM small_batch_raw
