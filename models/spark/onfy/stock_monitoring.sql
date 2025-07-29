@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -10,14 +11,13 @@
     }
 ) }}
 
-with pzns_list as 
-(
-    select distinct 
-        explode(sequence(current_date(), date_add(current_date(), -366))) as report_date,
+WITH pzns_list AS (
+    SELECT DISTINCT
+        EXPLODE(SEQUENCE(CURRENT_DATE(), DATE_ADD(CURRENT_DATE(), -366))) AS report_date,
         product_id,
         pzn,
         product_name
-    from {{ source('onfy', 'orders_info') }}
+    FROM {{ ref('orders_info') }}
 ),
 
 stocks_raw as (
@@ -56,7 +56,7 @@ orders_daily as (
     from pzns_list
     join {{ source('pharmacy_landing', 'product') }} as pharmacy_landing_product
         on pharmacy_landing_product.id = pzns_list.product_id
-    left join {{ source('onfy', 'orders_info') }}
+    left join {{ ref('orders_info') }}
         on pzns_list.product_id = orders_info.product_id
         and pzns_list.report_date = date(orders_info.order_created_time_cet)
         and orders_info.order_created_time_cet >= current_date() - interval 366 days
