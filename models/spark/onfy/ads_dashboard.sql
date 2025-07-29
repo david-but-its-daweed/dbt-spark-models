@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
     meta = {
       'model_owner' : '@annzaychik',
@@ -46,7 +47,7 @@ corrected_sources as
             else 'onfy'
         end as partner,
         coalesce(next_source_dt, source_dt + interval 168 hours) as window_next_session
-    from {{ref('sources')}}
+    from {{ ref('sources') }}
     where 1=1
 
 ),
@@ -68,8 +69,8 @@ order_data as
         sum(if(type = 'DISCOUNT', transactions.price, 0)) as promocode_discount,
         sum(transactions.gmv_initial) as gmv_initial,
         sum(transactions.gross_profit_initial) as gross_profit_initial
-    from {{ref('transactions')}}
-    left join {{ref('promocodes_dash')}}
+    from {{ ref('transactions') }}
+    left join {{ ref('promocodes_dash') }}
         on promocodes_dash.order_id = transactions.order_id
     where 1=1
         and currency = 'EUR'
@@ -290,8 +291,8 @@ ads_spends as
         if(united_spends.source = 'facebook', medium, '') as medium,
         sum(spend) as spend,
         sum(clicks) as clicks
-    from {{ref('ads_spends')}} as united_spends
-    left join {{ref('spends_campaign_corrected')}} as spends_campaigns_corrected
+    from {{ ref('ads_spends') }} as united_spends
+    left join {{ ref('spends_campaign_corrected') }} as spends_campaigns_corrected
         on lower(united_spends.campaign_name) = lower(spends_campaigns_corrected.campaign_name)
         and lower(united_spends.source) = lower(spends_campaigns_corrected.source)
     group by 
