@@ -92,7 +92,7 @@ billiger_transactions as
         sum(if(type = 'DISCOUNT' and transaction_date >= current_date() - interval 90 days, price, 0)) as promocode_discount,
         sum(if(transaction_date >= current_date() - interval 90 days, gmv_initial, 0)) as gmv_initial,
         sum(if(transaction_date >= current_date() - interval 90 days, gross_profit_initial, 0)) as gross_profit_initial
-    from {{source('onfy', 'transactions')}}
+    from {{ ref('transactions') }}
     where 1=1
         and currency = 'EUR'
         and transaction_date >= current_date() - interval 91 days
@@ -163,7 +163,7 @@ idealo_transactions as
         sum(if(type = 'DISCOUNT' and transaction_date >= current_date() - interval 90 days, price, 0)) as promocode_discount,
         sum(if(transaction_date >= current_date() - interval 90 days, gmv_initial, 0)) as gmv_initial,
         sum(if(transaction_date >= current_date() - interval 90 days, gross_profit_initial, 0)) as gross_profit_initial
-    from {{source('onfy', 'transactions')}}
+    from {{ ref('transactions') }}
     where 1=1
         and currency = 'EUR'
         and transaction_date >= current_date() - interval 91 days
@@ -213,8 +213,8 @@ google_data as
         count(distinct order_id) as orders,
         sum(session_spend) as spend,
         count(sources.device_id) as sessions
-    from {{source('onfy', 'sources')}} as sources
-    join {{source('onfy', 'ads_dashboard')}} as ads_dashboard
+    from {{ ref('sources') }} as sources
+    join {{ ref('ads_dashboard') }} as ads_dashboard
         on sources.device_id = ads_dashboard.device_id
         and sources.source_dt = ads_dashboard.session_dt
     where 1=1
