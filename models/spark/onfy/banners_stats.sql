@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@helbuk',
       'team': 'onfy',
@@ -28,7 +29,7 @@ WITH views AS (
         event_id,
         IF(payload.pzn IS NOT NULL, payload.pzn, 'banner') AS promo_type,
         payload.blockName
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type IN ('producerBannerShown', 'producerBannerClicked')
@@ -40,7 +41,7 @@ clicks AS (
         event_ts_cet,
         event_id,
         payload.pzn
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productOpen'
@@ -79,7 +80,7 @@ ranked_orders AS (
         orders.quantity,
         ROW_NUMBER() OVER (PARTITION BY orders.order_id ORDER BY joined_clicks.clicks_event_ts_cet ASC) AS rn
     FROM joined_clicks
-    INNER JOIN onfy.orders_info AS orders
+    INNER JOIN {{ ref('orders_info') }} AS orders
         ON
             joined_clicks.device_id = orders.device_id
             AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet

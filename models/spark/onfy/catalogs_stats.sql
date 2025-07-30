@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@helbuk',
       'team': 'onfy',
@@ -27,7 +28,7 @@ WITH CatalogData AS (
         payload.categoryId,
         payload.categoryName,
         IF(LOWER(device.osType) LIKE '%web%' OR LOWER(device.osType) = 'desktop', 'web', 'app') AS app_device_type
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'catalogOpen'
@@ -50,7 +51,7 @@ views AS (
         payload.productName,
         payload.productId,
         payload.promoKey
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productPreview'
@@ -66,7 +67,7 @@ clicks AS (
         event_id,
         payload.pzn,
         payload.sourceScreen
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productOpen'
@@ -78,7 +79,7 @@ clicks AS (
         event_id,
         payload.pzn,
         payload.sourceScreen
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'addToCart'
@@ -164,7 +165,7 @@ ranked_orders AS (
         orders.quantity,
         ROW_NUMBER() OVER (PARTITION BY orders.order_id ORDER BY joined_clicks.clicks_event_ts_cet ASC) AS rn
     FROM joined_clicks
-    INNER JOIN onfy.orders_info AS orders
+    INNER JOIN {{ ref('orders_info') }} AS orders
         ON
             joined_clicks.device_id = orders.device_id
             AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet

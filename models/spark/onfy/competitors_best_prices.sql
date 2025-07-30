@@ -1,8 +1,9 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    partition_by=['effective_date'],
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
+    partition_by=['effective_date'],
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',

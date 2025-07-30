@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['order_day'],
     meta = {
       'model_owner' : '@annzaychik',
@@ -129,7 +130,7 @@ sold_products AS (
         SUM(products_price) AS products_price,
         SUM(quantity) AS quantity,
         COUNT(DISTINCT order_id) AS orders
-    FROM {{ source('onfy', 'orders_info') }}
+    FROM {{ ref('orders_info') }}
     GROUP BY
         DATE_TRUNC('day', order_created_time_cet),
         store_name,
@@ -158,7 +159,7 @@ products_info AS (
         ON product.manufacturer_id = manufacturer.id
     LEFT JOIN {{ source('pharmacy_landing', 'medicine') }} AS medicine
         ON product.id = medicine.id
-    LEFT JOIN {{ source('onfy', 'onfy_medicine_analogs') }} AS onfy_medicine_analogs
+    LEFT JOIN {{ ref('onfy_medicine_analogs') }} AS onfy_medicine_analogs
         ON medicine.country_local_id = onfy_medicine_analogs.pzn
 )
 

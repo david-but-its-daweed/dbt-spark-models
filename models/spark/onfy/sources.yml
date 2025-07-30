@@ -3,10 +3,8 @@ sources:
     tables:
       - name: orders_info
       - name: onfy_sessions
-      - name: onfy_medicine_analogs
       - name: conversion_funnel_new
       - name: ads_dashboard
-      - name: refunds
       - name: auto_discount_rules
       - name: search_serp_requests_i
       - name: search_serp_items_i
