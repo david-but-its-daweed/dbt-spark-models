@@ -3,8 +3,6 @@ sources:
     tables:
       - name: orders_info
       - name: onfy_sessions
-      - name: conversion_funnel_new
-      - name: ads_dashboard
       - name: search_serp_requests_i
       - name: search_serp_items_i
       - name: sources
@@ -33,4 +31,6 @@ sources:
       - name: adjust_report_cohort_insights
       - name: marketing_channel_price_fast_scd2
       - name: mindbox_events_v2
+      - name: feed_loaders_state
+      - name: product_store_fast_scd2
   

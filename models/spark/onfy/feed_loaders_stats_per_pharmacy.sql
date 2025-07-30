@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@helbuk',
       'team': 'onfy',
@@ -23,7 +24,7 @@ SELECT
     PERCENTILE(100.0 * (price_eur - discounted_price_eur) / price_eur, 0.5) AS median_discount_percent,
     PERCENTILE(100.0 * (price_eur - discounted_price_eur) / price_eur, 0.25) AS discount_percent_percent_percentile_25,
     PERCENTILE(100.0 * (price_eur - discounted_price_eur) / price_eur, 0.75) AS median_discount_percent_percentile_75
-FROM pharmacy.feed_loaders_state
+FROM {{ source('pharmacy', 'feed_loaders_state') }}
 GROUP BY
     date,
     channel,

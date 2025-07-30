@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@helbuk',
       'team': 'onfy',
@@ -20,7 +21,7 @@ WITH orders_precalc AS (
         SUM(before_products_price) AS before_products_price,
         SUM(quantity) AS quantity,
         COUNT(DISTINCT order_id) AS orders
-    FROM {{ source('onfy', 'orders_info') }}
+    FROM {{ ref('orders_info') }}
     WHERE partition_date >= CURRENT_DATE() - INTERVAL 366 DAY
     GROUP BY
         GROUPING SETS (
@@ -64,7 +65,7 @@ ads_dashboard_predata AS (
         session_spend,
         source,
         REGEXP_EXTRACT(landing_page, '/artikel/([^/?]+)', 1) AS medicine_id -- is there a better way ??
-    FROM {{ source('onfy', 'ads_dashboard') }} ad
+    FROM {{ ref('ads_dashboard') }} ad
     WHERE 
         source IN ('billiger', 'idealo', 'medizinfuchs')
         AND landing_page LIKE '/artikel/%'
@@ -106,7 +107,7 @@ base_data AS (
         effective_ts,
         pharmacy_name,
         product_price
-    FROM {{ source('pharmacy', 'marketing_channel_price_fast_scd2') }} 
+    FROM {{ source('pharmacy', 'marketing_channel_price_fast_scd2') }}
     WHERE
         effective_ts >= CURRENT_DATE() - INTERVAL 91 DAY
         AND effective_ts < CURRENT_DATE() - 1

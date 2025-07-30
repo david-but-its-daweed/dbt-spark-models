@@ -1,6 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['session_start_date'],
     meta = {
       'model_owner' : '@annzaychik',
@@ -22,7 +24,7 @@ WITH sessions AS (
         session_end,
         source,
         campaign
-    FROM {{ source('onfy', 'conversion_funnel_new') }}
+    FROM {{ ref('conversion_funnel_new') }}
     WHERE DATE(session_start) >= (CURRENT_DATE() - INTERVAL 3 MONTH)
 ),
 
@@ -132,7 +134,7 @@ orders AS (
         (order_created_time_cet + INTERVAL 5 MINUTE) AS order_ts,
         pzn,
         SUM(products_price) AS products_price
-    FROM {{ source('onfy', 'orders_info') }}
+    FROM {{ ref('orders_info') }}
     WHERE
         DATE(order_created_time_cet) >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND pzn IS NOT NULL

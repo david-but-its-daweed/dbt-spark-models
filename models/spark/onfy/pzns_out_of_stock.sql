@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@helbuk',
       'team': 'onfy',
@@ -34,7 +35,7 @@ filtered_orders AS (
         opi.price AS opi_price,
         pi.before_price,
         pi.after_price
-    FROM onfy.orders_info AS oi
+    FROM {{ ref('orders_info') }} AS oi
     INNER JOIN pharmacy_landing.order_parcel_item AS opi
         ON
             oi.product_id = opi.product_id
@@ -75,7 +76,7 @@ stocks AS (
         ps.effective_ts,
         ps.next_effective_ts,
         CASE WHEN ps.quantity > 0 THEN TRUE ELSE FALSE END AS in_stock
-    FROM pharmacy.product_store_fast_scd2 AS ps
+    FROM {{ source('pharmacy', 'product_store_fast_scd2') }} AS ps
     INNER JOIN (
         SELECT id AS store_id, name AS store_name
         FROM pharmacy_landing.store
@@ -154,8 +155,8 @@ pznTitle AS (
     SELECT 
         medicine.country_local_id AS pzn,
         product.name AS title
-    FROM pharmacy_landing.medicine AS medicine
-    INNER JOIN pharmacy_landing.product AS product
+    FROM {{ source('pharmacy_landing', 'medicine') }} AS medicine
+    INNER JOIN {{ source('pharmacy_landing', 'product') }} AS product
     ON 
         medicine.id = product.id
 ),

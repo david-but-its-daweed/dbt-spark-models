@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@helbuk',
       'team': 'onfy',
@@ -37,7 +38,7 @@ WITH views AS (
         payload.recommendationSlotName,
         payload.recommendationType,
         payload.promoKey
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productPreview' -- пред показ карточки
@@ -56,7 +57,7 @@ clicks AS (
         payload.recommendationType,
         payload.sourceScreen,
         payload.widgetType
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'productOpen'
@@ -71,7 +72,7 @@ clicks AS (
         payload.recommendationType,
         payload.sourceScreen,
         payload.widgetType
-    FROM onfy_mart.device_events
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= (CURRENT_DATE() - INTERVAL 3 MONTH)
         AND type = 'addToCart'
@@ -160,7 +161,7 @@ orders_info AS (
             orders.products_price,
             orders.quantity
         FROM joined_clicks
-        INNER JOIN onfy.orders_info AS orders
+        INNER JOIN {{ ref('orders_info') }} AS orders
             ON
                 joined_clicks.device_id = orders.device_id
                 AND joined_clicks.clicks_event_ts_cet <= orders.order_created_time_cet

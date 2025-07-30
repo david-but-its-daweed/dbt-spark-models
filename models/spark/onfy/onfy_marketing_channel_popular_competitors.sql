@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@helbuk',
       'team': 'onfy',
@@ -56,7 +57,7 @@ WITH orders_precalc AS (
         SUM(before_products_price) AS before_products_price,
         SUM(quantity) AS quantity,
         COUNT(DISTINCT order_id) AS orders
-    FROM {{ source('onfy', 'orders_info') }}
+    FROM {{ ref('orders_info') }}
     WHERE
         partition_date >= CURRENT_DATE() - INTERVAL 366 DAY
     GROUP BY
