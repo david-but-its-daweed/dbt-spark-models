@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy_mart',
     file_format='delta',
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -303,7 +304,7 @@ new_costs as
         join_date,
         sum(network_cost) as cost,
         0 as clicks
-    from {{source('pharmacy', 'adjust_raw_network_insights')}}
+    from {{ source('pharmacy', 'adjust_raw_network_insights') }}
     where 1=1
         and (
                 (lower(campaign_name) not like '%adcha%')
