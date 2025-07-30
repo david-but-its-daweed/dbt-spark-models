@@ -1,6 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['session_start_date'],
     meta = {
       'model_owner' : '@annzaychik',
@@ -53,7 +55,7 @@ WITH interaction_events AS (
         SUM(gmv_initial) AS gmv_initial,
         SUM(gross_profit_initial) AS gross_profit_initial,
         SUM(IF(type = 'DISCOUNT', price, 0)) AS promocode_discount
-    FROM {{ source('onfy', 'transactions') }}
+    FROM {{ ref('transactions') }}
     WHERE
         1 = 1
         AND currency = 'EUR'
@@ -76,7 +78,7 @@ source_change_events AS (
         source_corrected,
         campaign_corrected,
         utm_medium
-    FROM {{ source('onfy', 'sources') }}
+    FROM {{ ref('sources') }}
     WHERE 1 = 1
 ),
 
