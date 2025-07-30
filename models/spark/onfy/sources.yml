@@ -5,7 +5,6 @@ sources:
       - name: onfy_sessions
       - name: conversion_funnel_new
       - name: ads_dashboard
-      - name: auto_discount_rules
       - name: search_serp_requests_i
       - name: search_serp_items_i
       - name: sources

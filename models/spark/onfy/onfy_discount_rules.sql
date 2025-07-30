@@ -20,7 +20,7 @@ SELECT
     discount_percent,
     source,
     comment
-FROM {{ source('onfy', 'auto_discount_rules') }}
+FROM {{ ref('auto_discount_rules') }}
 UNION ALL
 SELECT *
 FROM {{ ref('onfy_discount_rules_manual') }}
