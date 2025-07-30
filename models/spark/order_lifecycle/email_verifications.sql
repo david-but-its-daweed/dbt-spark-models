@@ -7,7 +7,6 @@
     meta = {
        'team': 'analytics',
        'bigquery_load': 'true',
-       'bigquery_overwrite': 'true',
        'bigquery_partitioning_date_column': 'partition_date',
        'alerts_channel': "#support-etl-monitoring",
        'bigquery_fail_on_missing_partitions': 'false',
