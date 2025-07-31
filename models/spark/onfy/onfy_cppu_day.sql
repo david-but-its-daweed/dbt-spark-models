@@ -1,6 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -17,7 +19,7 @@ with promocodes as
         device_id,
         app_device_type,
         sum(price) as discount_sum
-    from onfy.transactions
+    from {{ ref('transactions') }}
     where 1=1
         and type = 'DISCOUNT'
         and currency = 'EUR'
@@ -53,15 +55,15 @@ sourced_promocodes as
         )) as campaign,
         sum(discount_sum) as discount_sum
     from promocodes
-    left join {{ source('onfy', 'sources') }} as paid_sources
+    left join {{ ref('sources') }} AS paid_sources
         on paid_sources.device_id = promocodes.device_id
         and paid_sources.source_dt <= promocodes.order_created_time_cet
         and lower(paid_sources.source_corrected) not in ('unknown', 'organic', 'unmarked_facebook_or_instagram', 'social', 'email', 'newsletter')
-    left join {{ source('onfy', 'sources') }} as organic_sources
+    left join {{ ref('sources') }} AS organic_sources
         on organic_sources.device_id = promocodes.device_id
         and organic_sources.source_dt <= promocodes.order_created_time_cet
         and lower(organic_sources.source_corrected) <> lower('Unknown')
-    left join {{ source('onfy', 'sources') }} as all_sources
+    left join {{ ref('sources') }} AS all_sources
         on all_sources.device_id = promocodes.device_id
         and all_sources.source_dt <= promocodes.order_created_time_cet
     group by 
@@ -76,7 +78,7 @@ numbered_purchases as
         rank() over (partition by order.user_email_hash order by order.created asc) as purchase_num,
         promocodes.discount_sum as discount_sum
     from 
-        {{ source('pharmacy_landing', 'order') }} as order
+        {{ source('pharmacy_landing', 'order') }} AS order
     left join promocodes
         on order.id = promocodes.order_id
 ),
@@ -135,7 +137,7 @@ sources as
         first_second_purchases.first_purchase_discount_sum,
         first_second_purchases.second_purchase_discount_sum
     from 
-        {{ source('onfy', 'lndc_user_attribution') }} as sources
+        {{ ref('lndc_user_attribution') }} AS sources
     join first_second_purchases 
         on first_second_purchases.user_email_hash = sources.user_email_hash
     left join {{ source('pharmacy_landing', 'device') }} as first_purchase_device
@@ -155,7 +157,7 @@ installs as
         cast(count(distinct if(source_event_type in ('adjustInstall', 'adjustReinstall'), combined_id, null)) as bigint) as installs,
         cast(count(distinct if (source_event_type in ('externalLink'), combined_id, null)) as bigint) as visits
     from 
-        {{ source('onfy', 'lndc_user_attribution') }} as sources
+        {{ ref('lndc_user_attribution') }} AS sources
     group by 
         lower(sources.source_corrected),
         lower(sources.campaign_corrected),
@@ -170,14 +172,14 @@ ads_spends_corrected as
         united_spends.campaign_date_utc as partition_date,
         lower(united_spends.campaign_platform) as campaign_platform,
         case 
-            when united_spends.partner = 'onfy' 
+            when united_spends.partner = 'onfy'
             then lower(coalesce(spends_campaigns_corrected.source, united_spends.source, 'Not_from_dict'))
             when lower(united_spends.partner) like 'ohm%' or lower(united_spends.source) like 'ohm%' then 'ohm'
             when united_spends.partner like '%adcha%' then 'adchampagne'
             else united_spends.partner
         end as source_corrected,
         case 
-            when united_spends.partner = 'onfy' 
+            when united_spends.partner = 'onfy'
             then coalesce (spends_campaigns_corrected.campaign_corrected, united_spends.campaign_name, 'Not_from_dict')
             when lower(united_spends.partner) like 'ohm%' or lower(united_spends.source) like 'ohm%' then 'ohm'
             when united_spends.partner like '%adcha%' then 'adchampagne'
@@ -187,8 +189,8 @@ ads_spends_corrected as
         sum(spend) as spend,
         sum(clicks) as clicks
     from 
-        {{ source('onfy_mart', 'ads_spends') }} as united_spends
-    left join {{ref("spends_campaign_corrected")}} as spends_campaigns_corrected
+        {{ ref('ads_spends') }} AS united_spends
+    left join {{ ref("spends_campaign_corrected") }} as spends_campaigns_corrected
         on lower(united_spends.campaign_name) = lower(spends_campaigns_corrected.campaign_name)
         and lower(united_spends.source) = lower(spends_campaigns_corrected.source)
     group by 
@@ -202,8 +204,7 @@ ads_spends_corrected as
         if(united_spends.source = 'facebook', medium, '')
 ),
 
-users_spends_campaigns as 
-(
+users_spends_campaigns AS (
     select distinct
         sources.user_email_hash,
         sources.first_purchase_date_ts_cet,
@@ -259,8 +260,7 @@ users_spends_campaigns as
         sources.second_purchase_discount_sum
 ),
 
-users_by_day as 
-(
+users_by_day AS (
     select 
         users_spends_campaigns.first_purchase_date as first_purchase_date,
         users_spends_campaigns.first_purchase_app_device_type,
@@ -286,8 +286,7 @@ users_by_day as
         users_spends_campaigns.first_purchase_app_device_type
 ),
 
-ads_spends_corrected_day as 
-(
+ads_spends_corrected_day AS (
     select 
         date_trunc('day', partition_date) as spend_day,
         campaign_platform,

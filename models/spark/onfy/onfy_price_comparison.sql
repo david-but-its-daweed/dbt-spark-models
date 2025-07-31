@@ -1,6 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -21,8 +23,8 @@ with products_day as
         avg(orders_info.item_price) as avg_product_price,
         sum(orders_info.quantity) as sum_quantity,
         avg(dim_product.price) as avg_price
-    from {{ source('onfy', 'orders_info') }}
-    join {{ source('onfy_mart', 'dim_product') }}
+    FROM {{ ref('orders_info') }}
+    INNER JOIN {{ source('onfy_mart', 'dim_product') }}
         on orders_info.product_id = dim_product.product_id
         and orders_info.store_id = dim_product.store_id
         and orders_info.order_created_time_cet between from_utc_timestamp(dim_product.effective_ts, 'Europe/Berlin') 

@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -14,9 +15,9 @@
 WITH product_ingredient AS (
     SELECT
         medicine.country_local_id AS pzn,
-        ingredient.name AS name,
-        medicine_ingredient.quantity AS quantity,
-        medicine_ingredient.unit AS unit,
+        ingredient.name,
+        medicine_ingredient.quantity,
+        medicine_ingredient.unit,
         medicine_ingredient.active AS is_active,
         dosage_form.short_name AS dosage_form_short_name,
         dosage_form.long_name AS dosage_form_long_name
@@ -62,7 +63,7 @@ actives AS (
 )
 
 SELECT
-    actives.pzn AS pzn,
+    actives.pzn,
     actives.name,
     actives.quantity,
     actives.unit,

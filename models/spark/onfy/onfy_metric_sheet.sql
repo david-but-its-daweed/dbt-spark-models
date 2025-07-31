@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -13,8 +14,7 @@
 
 
 
-with order_data as 
-(
+WITH order_data AS (
     select
         date_trunc('day', transaction_date) as transaction_date,
         date_trunc('month', transaction_date) as transaction_month,
@@ -32,7 +32,7 @@ with order_data as
         sum(if(type = 'MEDIA_REVENUE', price, 0)) as media_revenue,
         sum(if(type = 'SERVICE_FEE', price, 0)) as service_fee,
         sum(if(type = 'COMMISSION', price, 0)) - sum(if(type = 'COMMISSION_VAT', price, 0)) as commission_revenue
-    from {{source('onfy', 'transactions')}}
+    FROM {{ ref('transactions') }}
     where 1=1
         and currency = 'EUR'
         and date_trunc('day', transaction_date) < current_date() 
@@ -43,15 +43,14 @@ with order_data as
 ),
 
 
-ads_spends_data as 
-(
+ads_spends_data AS (
     select
         date_trunc('day', campaign_date_utc) as ads_spends_date,
         date_trunc('month', campaign_date_utc) as ads_spends_month,
         date_trunc('quarter', campaign_date_utc) as ads_spends_quarter,
         sum(spend) as spend,
         sum(clicks) as clicks
-    from {{source('onfy_mart', 'ads_spends')}}
+    from {{ ref('ads_spends') }}
     where 1=1
         and campaign_date_utc < current_date()
     group by 
@@ -60,13 +59,11 @@ ads_spends_data as
         date_trunc('quarter', campaign_date_utc)
 ),
 
-base as 
-(
+base AS (
     select 
         current_date() as date_updated,
         date_trunc('month', current_date()) = transaction_month as current_month,
         if(date_trunc('month', current_date()) = transaction_month, date_part('day', current_date() - interval 1 day), null) as max_date,
-
         coalesce(transaction_date, ads_spends_date) as date,
         coalesce(transaction_month, ads_spends_month) as month,
         coalesce(transaction_quarter, ads_spends_quarter) as quarter,
@@ -96,8 +93,7 @@ base as
         and order_data.transaction_quarter = ads_spends_data.ads_spends_quarter
 ),
 
-precalculation as 
-(
+precalculation AS (
     select 
         *,
         date between current_date() - interval 7 day and current_date() - interval 1 day as last_n_days,
@@ -117,8 +113,7 @@ precalculation as
     from base
 ),
 
-forecasting as 
-(
+forecasting AS (
     select 
         'month' as mode,
         true as is_predicted,
@@ -227,17 +222,17 @@ forecasting as
 )
 
 
-select 
-    'month' as mode,
-    false as is_predicted,
+SELECT
+    'month' AS mode,
+    false AS is_predicted,
     *
-from precalculation
-union all
-select 
-    'quarter' as mode,
-    false as is_predicted,
+FROM precalculation
+UNION ALL
+SELECT
+    'quarter' AS mode,
+    false AS is_predicted,
     *
-from precalculation
-union all
-select *
-from forecasting
+FROM precalculation
+UNION ALL
+SELECT *
+FROM forecasting

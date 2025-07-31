@@ -1,6 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='view',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -46,7 +48,7 @@ session_dates AS (
                 (session_minenv_dt + INTERVAL 7 DAYS)
             )
         ) AS max_session_event_dt
-    FROM {{ source('onfy', 'conversion_funnel') }}
+    FROM {{ ref('conversion_funnel') }}
     WHERE
         window_size = '7 days'
         AND DATE(session_minenv_dt) >= '2023-06-01'
@@ -168,7 +170,7 @@ funnel_cart AS (
         max_status.max_items,
         max_status.max_cart,
         max_status.had_optimal
-    FROM {{ source('onfy', 'conversion_funnel') }} AS funnel
+    FROM {{ ref('conversion_funnel') }} AS funnel
     LEFT JOIN cart_open AS first_cart
         ON
             funnel.device_id = first_cart.device_id

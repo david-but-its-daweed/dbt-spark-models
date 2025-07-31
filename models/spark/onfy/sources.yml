@@ -1,11 +1,9 @@
 sources:
   - name: onfy
     tables:
-      - name: orders_info
       - name: onfy_sessions
       - name: search_serp_requests_i
       - name: search_serp_items_i
-      - name: sources
   - name: pharmacy_landing
     tables:
       - name: product_category_flat
