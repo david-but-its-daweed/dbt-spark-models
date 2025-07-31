@@ -1,7 +1,7 @@
 {{ config(
     schema='onfy',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
     incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
@@ -12,8 +12,7 @@
 ) }}
 
 
-WITH order_parcels AS 
-(
+WITH order_parcels AS (
     SELECT DISTINCT 
         order_parcel.id AS order_parcel_id,
         order_parcel.tracking_number,
@@ -66,11 +65,11 @@ WITH order_parcels AS
         END AS five_days_after_planned_transfer_cet
 
     FROM
-        {{ source('pharmacy_landing', 'order_parcel') }} as order_parcel
-        LEFT JOIN {{ source('pharmacy_landing', 'order') }} as order
-            ON order_parcel.order_id = order.id
-        LEFT JOIN {{ source('pharmacy_landing', 'store') }} as store
-            ON store.id = order_parcel.store_id
+        {{ source('pharmacy_landing', 'order_parcel') }} AS order_parcel
+    LEFT JOIN {{ source('pharmacy_landing', 'order') }} AS order
+        ON order_parcel.order_id = order.id
+    LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS store
+        ON store.id = order_parcel.store_id
 )
 
 SELECT
@@ -90,17 +89,17 @@ SELECT
     from_utc_timestamp(MIN(status_info_received.checkpoint_time), 'Europe/Berlin') as info_received_datetime_cet,
     from_utc_timestamp(MIN(status_in_transit.checkpoint_time), 'Europe/Berlin') as in_transit_datetime_cet,
     from_utc_timestamp(MIN(status_delivered.checkpoint_time), 'Europe/Berlin') as delivered_datetime_cet
-FROM 
+FROM
     order_parcels
     LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_checkpoint') }} AS status_info_received
         ON order_parcels.order_parcel_id = status_info_received.order_parcel_id
         AND status_info_received.status = 'INFO_RECEIVED'
     LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_checkpoint') }} AS status_in_transit
         ON order_parcels.order_parcel_id = status_in_transit.order_parcel_id
-        AND status_in_transit.status = 'IN_TRANSIT'  
+        AND status_in_transit.status = 'IN_TRANSIT'
     LEFT JOIN {{ source('pharmacy_landing', 'order_parcel_checkpoint') }} AS status_delivered
         ON order_parcels.order_parcel_id = status_delivered.order_parcel_id
-        AND status_delivered.status in ('DELIVERED', 'AVAILABLE_FOR_PICKUP')
+        AND status_delivered.status IN ('DELIVERED', 'AVAILABLE_FOR_PICKUP')
 GROUP BY
     order_parcels.order_parcel_id,
     order_parcels.tracking_number,
@@ -110,4 +109,4 @@ GROUP BY
     order_parcels.planned_transfer_datetime_cet,
     order_parcels.one_day_after_planned_transfer_cet,
     order_parcels.three_days_after_planned_transfer_cet,
-    order_parcels.five_days_after_planned_transfer_cet 
+    order_parcels.five_days_after_planned_transfer_cet

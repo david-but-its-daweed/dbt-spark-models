@@ -1,6 +1,8 @@
 {{ config(
     schema='pharmacy',
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -43,7 +45,7 @@ transactions as
         sum(if(type = 'DISCOUNT', price, 0)) as promocode_discount,
         sum(gmv_initial) as gmv_initial,
         sum(gross_profit_initial) as gross_profit_initial
-    from {{ source('onfy', 'transactions') }}
+    from {{ ref('transactions') }}
     where 1=1
         and currency = 'EUR'
         and transaction_date >= current_date() - interval 91 days
