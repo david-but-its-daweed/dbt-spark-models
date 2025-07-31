@@ -22,6 +22,7 @@ WITH currency_rates_flat AS (
 pc AS (
     SELECT
         q._id AS quote_id,
+        DATE(MILLIS_TO_TS_MSK(q.createdTimeMs)) AS quote_created_date,
         q.dealId AS deal_id,
         q.dealFriendlyId AS deal_friendly_id,
         product.customerRequestID AS customer_request_id,
@@ -33,6 +34,17 @@ pc AS (
     LATERAL VIEW EXPLODE(products) AS product
     LATERAL VIEW EXPLODE(product.variants) AS variant
     LATERAL VIEW EXPLODE(MAP_ENTRIES(variant.priceComponents)) AS pc
+),
+
+currency_rate AS (
+    SELECT
+        effective_date AS dt,
+        currency_code,
+        MAX(rate) AS rate
+    FROM models.dim_pair_currency_rate
+    WHERE currency_code_to = 'USD'
+      AND effective_date >= '2023-01-01'
+    GROUP BY effective_date, currency_code
 )
 
 
@@ -49,12 +61,12 @@ SELECT
     END AS price_component_amount_brl,
     CASE
         WHEN price_component_ccy = 'USD' THEN 1
-        ELSE cr_usd.exch_rate
+        ELSE coalesce(cr_usd.exch_rate, cr_usd_2.rate)
     END AS exch_rate_to_usd,
     CASE
         WHEN price_component_ccy = 'USD'
             THEN price_component_amount
-        ELSE price_component_amount * cr_usd.exch_rate
+        ELSE price_component_amount * coalesce(cr_usd.exch_rate, cr_usd_2.rate)
     END AS price_component_amount_usd
 FROM pc AS p
 LEFT JOIN currency_rates_flat AS cr
@@ -63,3 +75,6 @@ LEFT JOIN currency_rates_flat AS cr
 LEFT JOIN currency_rates_flat AS cr_usd
     ON p.quote_id = cr_usd._id
    AND CONCAT(p.price_component_ccy, '-USD') = cr_usd.currency_pair
+LEFT JOIN currency_rate AS cr_usd_2
+    ON p.quote_created_date = cr_usd_2.dt
+    AND p.price_component_ccy = cr_usd_2.currency_code
