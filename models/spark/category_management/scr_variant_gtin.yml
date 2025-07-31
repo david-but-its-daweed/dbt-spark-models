@@ -1,0 +1,89 @@
+version: 1
+
+models:
+  - name: variant_gtin
+    description: "Table containing info about variants' GTIN"
+    columns:
+      - name: partition_date
+        description: "Date of data in this row"
+        data_type: "DATE"
+
+      - name: variant_id
+        description: "Id of variant of product"
+        data_type: "STRING"
+
+      - name: product_id
+        description: "Id of product"
+        data_type: "STRING"
+
+      - name: merchant_id
+        description: "Id of merchant"
+        data_type: "STRING"
+
+      - name: variant_gtin
+        description: "GTIN of variant"
+        data_type: "STRING"
+
+      - name: brand_class
+        description: "Brand class of product"
+        data_type: "STRING"
+
+      - name: brand_name
+        description: "Brand name of product"
+        data_type: "STRING"
+
+      - name: is_product_public
+        description: "Is public product"
+        data_type: "BOOLEAN"
+
+      - name: is_product_archived
+        description: "Is product archived" 
+        data_type: "BOOLEAN"
+
+      - name: is_product_removed
+        description: "Is product removed" 
+        data_type: "BOOLEAN"
+
+      - name: product_gtin
+        description: "GTIN of product" 
+        data_type: "STRING"
+
+      - name: l1_merchant_category_id
+        description: "ID of the 1st-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: l1_merchant_category_name
+        description: "Name of the 1st-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: l2_merchant_category_id
+        description: "ID of the 2nd-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: l2_merchant_category_name
+        description: "Name of the 2nd-level merchant category of the product"
+        data_type: "STRING"
+
+      - name: business_line
+        description: "business line"
+        data_type: "STRING"
+
+      - name: origin_name
+        description: "Origin of the merchant, where the products are shipped from" 
+        data_type: "STRING"
+
+      - name: kam_email
+        description: "Key account manager of the merchant" 
+        data_type: "STRING"
+
+      - name: gmv_initial_sum
+        description: "How much the users paid in USD" 
+        data_type: "double"
+
+      - name: gp_final_estimated_sum
+        description: "Profit from a specific order" 
+        data_type: "double"
+
+      - name: has_active_ear
+        description: "This product has active EAR document" 
+        data_type: "BOOLEAN"
