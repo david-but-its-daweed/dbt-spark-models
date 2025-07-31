@@ -25,7 +25,7 @@ WITH sessions AS (
         source,
         campaign,
         channel_type
-    FROM {{ source('onfy', 'onfy_sessions')}} as sessions
+    FROM {{ ref('onfy_sessions') }} as sessions
 ),
 
 devices_mart AS (
@@ -49,9 +49,9 @@ SELECT
         END AS app_device_type,
     MIN(from_utc_timestamp(order.created, 'Europe/Berlin')) AS min_order_dt
 FROM sessions
-INNER JOIN {{ source('pharmacy_landing', 'device')}}
+INNER JOIN {{ source('pharmacy_landing', 'device') }}
     ON device.id = sessions.device_id
-LEFT JOIN {{ source('pharmacy_landing', 'order')}}
+LEFT JOIN {{ source('pharmacy_landing', 'order') }}
     ON device.id = order.device_id 
 WHERE DATE(session_start) >= '2022-07-01'
 GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
@@ -74,7 +74,7 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
         WHEN type = 'productPreview' AND payload.sourceScreen = 'productPageLanding' THEN 'products_list'
         ELSE null
         END AS minenv_type
-    FROM {{ source('onfy_mart', 'device_events')}}
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type IN ('search', 'productOpen', 'catalogOpen', 'homeOpen', 'productPreview')
         AND DATE(event_ts_cet) >= '2022-07-01'
 )
@@ -89,7 +89,7 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     SELECT
       device_id,
       event_ts_cet AS add_to_cart_dt
-    FROM {{ source('onfy_mart', 'device_events')}}
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type = 'addToCart'
         AND DATE(event_ts_cet) >= '2022-07-01'
 )
@@ -98,7 +98,7 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     SELECT
       device_id,
       event_ts_cet AS cart_open_dt
-    FROM {{ source('onfy_mart', 'device_events')}}
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type = 'cartOpen' 
       AND payload.productIds IS NOT null
       AND DATE(event_ts_cet) >= '2022-07-01'
@@ -108,7 +108,7 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     SELECT
       device_id,
       event_ts_cet AS checkout_dt
-    FROM {{ source('onfy_mart', 'device_events')}}
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type = 'checkoutConfirmOpen'
         AND DATE(event_ts_cet) >= '2022-07-01'
 )
@@ -117,7 +117,7 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
     SELECT
       device_id,
       event_ts_cet AS payment_start_dt
-    FROM {{ source('onfy_mart', 'device_events')}}
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type = 'paymentStart'
         AND DATE(event_ts_cet) >= '2022-07-01'
 )
@@ -128,7 +128,7 @@ GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10
       device_id,
       event_ts_cet AS payment_dt,
       (event_ts_cet - INTERVAL 2 MINUTE) AS payment_dt_2 
-    FROM {{ source('onfy_mart', 'device_events')}}
+    FROM {{ source('onfy_mart', 'device_events') }}
     WHERE type = 'paymentCompleteServer'
         AND DATE(event_ts_cet) >= '2022-07-01'
 )

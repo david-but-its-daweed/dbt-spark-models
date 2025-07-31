@@ -1,6 +1,8 @@
 {{ config(
     schema='onfy',
-    materialized='table',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@annzaychik',
       'team': 'onfy',
@@ -16,7 +18,7 @@ with source as (
         (source_dt + INTERVAL 30 days) as source_dt_30d,
         (source_dt + INTERVAL 7 days) as source_dt_7d,
         (source_dt + INTERVAL 24 hours) as source_dt_24h
-    from {{ source('onfy', 'sources')}}
+    from {{ ref('sources') }}
 
 )
 
@@ -25,7 +27,7 @@ with source as (
       device_id,
       app_device_type,
       min(min_purchase_date) as min_purchase_date
-    from {{ source('onfy_mart', 'devices_mart')}}
+    from {{ source('onfy_mart', 'devices_mart') }}
     where not is_bot
     group by 1, 2
 )
@@ -38,7 +40,7 @@ with source as (
   select distinct
     device_id,
     event_ts_cet
-  from {{ source('onfy_mart', 'device_events')}}
+  from {{ source('onfy_mart', 'device_events') }}
   where type in ('sessionConfigured', 'homeOpen')
 )
 
@@ -65,7 +67,7 @@ with source as (
         when type = 'productPreview' and payload.sourceScreen = 'productPageLanding' then 'products_list'
         else null 
         end as type
-    from {{ source('onfy_mart', 'device_events')}}
+    from {{ source('onfy_mart', 'device_events') }}
     where type in ('search', 'searchServer', 'productOpen', 'catalogOpen', 'homeOpen', 'productPreview')
 )
 
@@ -79,7 +81,7 @@ with source as (
     select
       device_id,
       event_ts_cet as add_to_cart_dt
-    from {{ source('onfy_mart', 'device_events')}}
+    from {{ source('onfy_mart', 'device_events') }}
     where type = 'addToCart'
 )
 
@@ -87,7 +89,7 @@ with source as (
     select
       device_id,
       event_ts_cet as cart_open_dt
-    from {{ source('onfy_mart', 'device_events')}}
+    from {{ source('onfy_mart', 'device_events') }}
     where type = 'cartOpen'
       and payload.productIds is not null
 )
@@ -96,7 +98,7 @@ with source as (
     select
       device_id,
       event_ts_cet as checkout_dt
-    from {{ source('onfy_mart', 'device_events')}}
+    from {{ source('onfy_mart', 'device_events') }}
     where type = 'checkoutConfirmOpen'
 )
 
@@ -104,7 +106,7 @@ with source as (
     select
       device_id,
       event_ts_cet as payment_start_dt
-    from {{ source('onfy_mart', 'device_events')}}
+    from {{ source('onfy_mart', 'device_events') }}
     where type = 'paymentStart'
 )
 
@@ -113,7 +115,7 @@ with source as (
       device_id,
       event_ts_cet as payment_dt,
       (event_ts_cet + INTERVAL 10 minutes) as payment_dt_10 --this is an only server event here so datetime of the event can be a little earlier
-    from {{ source('onfy_mart', 'device_events')}}
+    from {{ source('onfy_mart', 'device_events') }}
     where type = 'paymentCompleteServer'
 )
 
