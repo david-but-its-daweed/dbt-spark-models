@@ -12,7 +12,7 @@
 
 SELECT
     event_id,
-    event_ts_msk,
+    TIMESTAMP(event_ts_msk) AS event_ts_msk,
     type,
     payload.userId AS user_id,
     payload.contactId AS contact_id,
