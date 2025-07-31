@@ -1,6 +1,8 @@
 {{ config(
     schema='b2b_mart',
-    materialized='view',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@abadoyan',
       'bigquery_load': 'true'
@@ -44,8 +46,20 @@ SELECT
         WHEN price_component_ccy = 'BRL'
             THEN price_component_amount
         ELSE price_component_amount * cr.exch_rate
-    END AS price_component_amount_brl
+    END AS price_component_amount_brl,
+    CASE
+        WHEN price_component_ccy = 'USD' THEN 1
+        ELSE cr_usd.exch_rate
+    END AS exch_rate_to_usd,
+    CASE
+        WHEN price_component_ccy = 'USD'
+            THEN price_component_amount
+        ELSE price_component_amount * cr_usd.exch_rate
+    END AS price_component_amount_usd
 FROM pc AS p
 LEFT JOIN currency_rates_flat AS cr
     ON p.quote_id = cr._id
    AND CONCAT(p.price_component_ccy, '-BRL') = cr.currency_pair
+LEFT JOIN currency_rates_flat AS cr_usd
+    ON p.quote_id = cr_usd._id
+   AND CONCAT(p.price_component_ccy, '-USD') = cr_usd.currency_pair
