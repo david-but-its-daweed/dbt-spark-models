@@ -39,8 +39,9 @@ pulse:
   dag-name: pulse
   dag-tags: ["joom_pulse"]
   crontab: 0 9 * * *
-  alerts-channel: "#jpa-monitoring"
+  alerts-channel: "#pulse-data-monitoring"
   tags: ["pulse"]
+  slo-hour: 15
 gold:
   dag-name: gold
   profile-name: gold
