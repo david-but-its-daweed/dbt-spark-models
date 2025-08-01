@@ -12,8 +12,7 @@
 
 SELECT
     event_id,
-    TIMESTAMP(event_ts_msk) AS event_ts_msk,
-    type,
+    MILLIS_TO_TS_MSK(payload.timestamp) AS message_sent_ts_msk,
     payload.userId AS user_id,
     payload.contactId AS contact_id,
     payload.messageText AS message,
@@ -23,8 +22,7 @@ SELECT
     payload.status,
     payload.dealId AS deal_id,
     payload.stopReason AS stop_reason,
-    payload.attachments,
-    MILLIS_TO_TS_MSK(payload.timestamp) AS message_sent_ts_msk
+    payload.attachments
 FROM {{ source('b2b_mart', 'operational_events') }}
 WHERE
     partition_date >= '2025-07-28'
