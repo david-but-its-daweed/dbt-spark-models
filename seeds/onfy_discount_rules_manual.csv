@@ -1,18 +1,18 @@
 product_id,store_id,channel,weight,pessimization_type,discount_percent,source,comment
 ,,,0,,0,manual,no default discount
-,,apomio,10,,18,manual,apomio
-,,medizinfuchs,10,,18,manual,medizinfuchs
-,,idealo,10,,18,manual,idealo
-,,billiger,10,,18,manual,billiger
+,,apomio,10,,19,manual,apomio
+,,medizinfuchs,10,,19,manual,medizinfuchs
+,,idealo,10,,19,manual,idealo
+,,billiger,10,,19,manual,billiger
 ,,mindbox,10000,,0,manual,mindbox
-,7631548fbb5649f28a9523f661a8dac3,,11,,15,manual,fliegende-pillen
-,7c0538da9fe5425d8ad61f96b0aff6f1,,11,,17,manual,arzneiDoc
-,c4191b579b634b2592b64bf0cf174bf4,,11,,15,manual,disapo
-,f6d85f9f5ca847c89d030f1b9e506d76,,11,,16,manual,welapo
-,42d0e7c3c8754984b302831006f2143c,,11,,14,manual,st. bernward apotheke
+,7631548fbb5649f28a9523f661a8dac3,,11,,16,manual,fliegende-pillen
+,7c0538da9fe5425d8ad61f96b0aff6f1,,11,,18,manual,arzneiDoc
+,c4191b579b634b2592b64bf0cf174bf4,,11,,16,manual,disapo
+,f6d85f9f5ca847c89d030f1b9e506d76,,11,,17,manual,welapo
+,42d0e7c3c8754984b302831006f2143c,,11,,15,manual,st. bernward apotheke
 ,f818f7e2da64439890e406b3fe87e35e,,11,,0,manual,weitling
-,0957abe85f5d42cebb7dc813788068de,,11,,12.5,manual,petersberg
-,b03df824cbe343648077f75fb0b42a12,,11,,14,manual,schiller apotheke
+,0957abe85f5d42cebb7dc813788068de,,11,,13.5,manual,petersberg
+,b03df824cbe343648077f75fb0b42a12,,11,,15,manual,schiller apotheke
 ,50158c211af044cfa3c073c239e7b07d,idealo,21,filter_out,,manual,parfumgroup idealo
 ,50158c211af044cfa3c073c239e7b07d,billiger,21,filter_out,,manual,parfumgroup billiger
 ,50158c211af044cfa3c073c239e7b07d,medizinfuchs,21,filter_out,,manual,parfumgroup medizinfuchs
