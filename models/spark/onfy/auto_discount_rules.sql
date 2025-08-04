@@ -170,9 +170,7 @@ SELECT
     blacklist_rules.pessimization_type,
     0.0 AS discount_percent,
     blacklist_rules.source,
-    blacklist_rules.comment,
-    roas,
-    cr
+    blacklist_rules.comment
 FROM (
     SELECT 
         product_id,
