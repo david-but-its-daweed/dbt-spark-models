@@ -11,281 +11,250 @@
     }
 ) }}
     
-with price_history as 
-(
-    select 
+WITH price_history AS (
+    SELECT 
+        date_value,
         effective_ts,
         product_id,
         pzn,
         manufacturer_name,
-        min(price) as min_price
-    from {{source('onfy_mart', 'dim_product')}}
-    where 1=1
-        and store_state = 'DEFAULT'
-        and is_current
-        and coalesce(stock_quantity, 0) > 0
-        and effective_ts >= current_date() - interval 4 days
-    group by 
-        effective_ts,
+        MIN(price) AS min_price
+    FROM (
+        SELECT EXPLODE(
+            SEQUENCE(
+                DATE_SUB(CURRENT_DATE(), 3),  
+                CURRENT_DATE(),               
+                INTERVAL 1 DAY             
+            )
+        ) AS date_value
+    ) d
+    LEFT JOIN {{source('onfy_mart', 'dim_product')}}
+        ON d.date_value BETWEEN dim_product.effective_ts AND dim_product.next_effective_ts
+    WHERE store_state = 'DEFAULT'
+        AND next_effective_ts >= CURRENT_TIMESTAMP() - INTERVAL 3 DAY
+    GROUP BY 
+        effective_ts, 
+        product_id, 
+        pzn, 
+        manufacturer_name, 
+        date_value
+        
+),
+
+min_per_date AS
+(
+    SELECT
+        date_value,
+        product_id,
+        pzn,
+        manufacturer_name,
+        MIN(min_price) AS min_price
+    FROM price_history
+    WHERE 1=1
+        AND date_value >= CURRENT_TIMESTAMP() - INTERVAL 3 DAY
+    GROUP BY 
+        date_value,
         product_id,
         pzn,
         manufacturer_name
 ),
 
-price_change as 
+price_change AS
 (
-    select
-        effective_ts,
+    SELECT
+        date_value,
         product_id,
         pzn,
-        if(lag(min_price) over (partition by product_id order by effective_ts) > min_price, 1, 0) as price_change
-    from price_history
+        min_price,
+        IF(LAG(min_price) OVER (PARTITION BY product_id ORDER BY date_value) > min_price, 1, 0) AS price_change
+    FROM min_per_date
+    WHERE 1=1
 ),
 
-latest_price as 
+pzn_dict AS
 (
-    select 
-        max(effective_ts) as max_effective_ts,
+    SELECT DISTINCT 
+        product_id,
+        pzn
+    FROM price_history
+),
+
+latest_price_changes AS 
+(
+    SELECT 
         product_id,
         pzn,
-        max_by(price_change, effective_ts) as latest_price_decrease
-    from price_change
-    group by 
+        MAX(price_change) AS latest_price_decrease
+    FROM price_change
+    GROUP BY
         product_id,
         pzn
 ),
 
-manufacturers_products as 
+medice_products AS 
 (
-    select distinct 
+    SELECT DISTINCT 
         product_id
-    from price_history
-    where 1=1
-        and manufacturer_name = 'MEDICE Arzneimittel Pütter GmbH&Co.KG'
+    FROM price_history
+    WHERE 
+        manufacturer_name = 'MEDICE Arzneimittel Pütter GmbH&Co.KG'
 ),
 
-billiger_sessions as 
+sessions AS 
 (
-    select distinct
-        device_events.payload.params.utm_source as utm_source,
-        coalesce(if(split(device_events.payload.link, '/')[2] like '%?utm%', left(split(device_events.payload.link, '/')[2], 8), split(device_events.payload.link, '/')[2]), 
-        device_events.payload.link) as pzn,
+    SELECT 
+        source AS utm_source,
+        attributed_landing_pzn AS product_id,
         device_id,
-        event_ts_cet as session_ts_cet,
-        event_id as event_id,
-        if(event_ts_cet >= current_date() - interval 90 days, event_id, null) as window_event_id,
-        lead(event_ts_cet) over (partition by device_id order by event_ts_cet) as next_session_ts_cet
-    from 
-        {{source('onfy_mart', 'device_events')}} as device_events
-     where 1=1
-        and device_events.partition_date_cet >= current_date() - interval 97 days
-        and device_events.payload.params.utm_source like '%billiger%'
-        and device_events.payload.link is not null
+        attributed_session_dt AS session_ts_cet,
+        CASE 
+            WHEN source = 'google' AND (campaign LIKE 'shopping%' OR campaign LIKE 'ohm%') THEN 'google'
+            WHEN source = 'idealo' THEN 'idealo'
+            WHEN source = 'billiger' THEN 'billiger'
+            WHEN source = 'medizinfuchs' THEN 'medizinfuchs'
+        END AS source,
+        order_id,
+        order_dt,
+        promocode_discount,
+        gross_profit_initial,
+        gmv_initial,
+        session_spend
+    FROM {{ ref('ads_dashboard') }}
+    WHERE 1=1
+        AND session_dt >= CURRENT_DATE() - INTERVAL 1 MONTH
+        AND ((source = 'google' AND (campaign LIKE 'shopping%' OR campaign LIKE 'ohm%')) 
+            OR source IN ('idealo', 'billiger', 'medizinfuchs'))
+        AND attributed_landing_pzn IS NOT NULL
+        AND attributed_landing_pzn <> ''
 ),
 
-billiger_transactions as 
-(
-    select 
-        order_id,
-        device_id,
-        transaction_date,
-        sum(if(type = 'DISCOUNT' and transaction_date >= current_date() - interval 90 days, price, 0)) as promocode_discount,
-        sum(if(transaction_date >= current_date() - interval 90 days, gmv_initial, 0)) as gmv_initial,
-        sum(if(transaction_date >= current_date() - interval 90 days, gross_profit_initial, 0)) as gross_profit_initial
-    from {{ ref('transactions') }}
-    where 1=1
-        and currency = 'EUR'
-        and transaction_date >= current_date() - interval 91 days
-    group by 
-        order_id,
-        transaction_date,
-        device_id
-),
-
-billiger_data as 
-(
-    select
-        utm_source,
-        billiger_sessions.pzn,
-        count(distinct billiger_sessions.event_id) as clicks,
-        count(distinct billiger_transactions.order_id) as payments,
-        if(
-            count(distinct billiger_transactions.order_id) = 0 or 
-            sum(gross_profit_initial + promocode_discount) / (count(distinct billiger_sessions.window_event_id) * 0.28 + sum(promocode_discount)) <= 0.3, 0, 
-            count(distinct billiger_transactions.order_id) / count(distinct billiger_sessions.event_id)
-        ) as cr,
-        latest_price.latest_price_decrease,
-        count(distinct billiger_sessions.event_id) * 0.28 as cost,
-        sum(cast(promocode_discount as float)) as promocode_discount,
-        sum(gmv_initial) as gmv_initial,
-        sum(gross_profit_initial) as gross_profit_initial,
-        sum(gross_profit_initial + promocode_discount) / (count(distinct billiger_sessions.window_event_id) * 0.28 + sum(promocode_discount)) as roas
-
-    from 
-        billiger_sessions
-    left join billiger_transactions
-        on billiger_sessions.device_id = billiger_transactions.device_id
-        and billiger_transactions.transaction_date between billiger_sessions.session_ts_cet and coalesce(billiger_sessions.next_session_ts_cet, current_timestamp())
-        and to_unix_timestamp(billiger_transactions.transaction_date) - to_unix_timestamp(billiger_sessions.session_ts_cet) <= 86400
-    left join latest_price
-        on latest_price.pzn = billiger_sessions.pzn
-    group by 
-        utm_source,
-        billiger_sessions.pzn,
+calculations AS (
+    SELECT
+        source,
+        pzn_dict.product_id as product_id,
+        pzn_dict.pzn,
+        COUNT(DISTINCT CONCAT(device_id, session_ts_cet)) AS sessions,
+        COUNT(DISTINCT order_id) AS orders,
+        latest_price_decrease,
+        SUM(CAST(promocode_discount AS FLOAT)) AS promocode_discount,
+        SUM(gmv_initial) AS gmv_initial,
+        SUM(gross_profit_initial) AS gross_profit_initial,
+        CASE source 
+            WHEN 'billiger' THEN SUM(gross_profit_initial + COALESCE(promocode_discount, 0)) / 
+                (SUM(session_spend) + SUM(COALESCE(promocode_discount, 0)))
+            WHEN 'idealo' THEN SUM(gross_profit_initial + COALESCE(promocode_discount, 0)) / 
+                (SUM(session_spend) + SUM(COALESCE(promocode_discount, 0)))
+            ELSE 1
+        END AS roas,
+        COUNT(DISTINCT order_id) / COUNT(DISTINCT CONCAT(device_id, session_ts_cet)) AS cr
+    FROM sessions
+    LEFT JOIN pzn_dict
+        ON sessions.product_id = pzn_dict.product_id
+        OR sessions.product_id = pzn_dict.pzn
+    LEFT JOIN latest_price_changes
+        ON latest_price_changes.product_id = sessions.product_id
+    GROUP BY 
+        source,
+        sessions.product_id,
+        pzn_dict.product_id,
+        pzn_dict.pzn,
         latest_price_decrease
-),
-
-idealo_sessions as 
-(
-    select distinct
-        device_events.payload.params.utm_source as utm_source,
-        coalesce(if(split(device_events.payload.link, '/')[2] like '%?utm%', left(split(device_events.payload.link, '/')[2], 8), split(device_events.payload.link, '/')[2]), 
-        device_events.payload.link) as pzn,
-        device_id,
-        event_ts_cet as session_ts_cet,
-        event_id as event_id,
-        if(event_ts_cet >= current_date() - interval 90 days, event_id, null) as window_event_id,
-        lead(event_ts_cet) over (partition by device_id order by event_ts_cet) as next_session_ts_cet
-    from 
-        {{source('onfy_mart', 'device_events')}} as device_events
-     where 1=1
-        and device_events.partition_date_cet >= current_date() - interval 97 days
-        and device_events.payload.params.utm_source like '%idealo%'
-        and device_events.payload.link is not null
-),
-
-idealo_transactions as 
-(
-    select 
-        order_id,
-        device_id,
-        transaction_date,
-        sum(if(type = 'DISCOUNT' and transaction_date >= current_date() - interval 90 days, price, 0)) as promocode_discount,
-        sum(if(transaction_date >= current_date() - interval 90 days, gmv_initial, 0)) as gmv_initial,
-        sum(if(transaction_date >= current_date() - interval 90 days, gross_profit_initial, 0)) as gross_profit_initial
-    from {{ ref('transactions') }}
-    where 1=1
-        and currency = 'EUR'
-        and transaction_date >= current_date() - interval 91 days
-    group by 
-        order_id,
-        transaction_date,
-        device_id
-),
-
-idealo_data as 
-(
-    select
-        utm_source,
-        idealo_sessions.pzn,
-        count(distinct idealo_sessions.event_id) as clicks,
-        count(distinct idealo_transactions.order_id) as payments,
-        if(
-            count(distinct idealo_transactions.order_id) = 0 or 
-            sum(gross_profit_initial + promocode_discount) / (count(distinct idealo_sessions.window_event_id) * 0.44 + sum(promocode_discount)) <= 0.5, 0, 
-            count(distinct idealo_transactions.order_id) / count(distinct idealo_sessions.event_id)
-        ) as cr,
-        latest_price.latest_price_decrease,
-        count(distinct idealo_sessions.event_id) * 0.44 as cost,
-        sum(cast(promocode_discount as float)) as promocode_discount,
-        sum(gmv_initial) as gmv_initial,
-        sum(gross_profit_initial) as gross_profit_initial,
-        sum(gross_profit_initial + promocode_discount) / (count(distinct idealo_sessions.window_event_id) * 0.44 + sum(promocode_discount)) as roas
-
-    from 
-        idealo_sessions
-    left join idealo_transactions
-        on idealo_sessions.device_id = idealo_transactions.device_id
-        and idealo_transactions.transaction_date between idealo_sessions.session_ts_cet and coalesce(next_session_ts_cet, current_timestamp())
-        and to_unix_timestamp(idealo_transactions.transaction_date) - to_unix_timestamp(idealo_sessions.session_ts_cet) <= 86400
-    left join latest_price
-        on latest_price.pzn = idealo_sessions.pzn
-    group by 
-        utm_source,
-        idealo_sessions.pzn,
-        latest_price_decrease
-),
-
-google_data as 
-(    
-    select
-        if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2]) as landing_pzn,
-        count(distinct order_id) as orders,
-        sum(session_spend) as spend,
-        count(sources.device_id) as sessions
-    from {{ ref('sources') }} as sources
-    join {{ ref('ads_dashboard') }} as ads_dashboard
-        on sources.device_id = ads_dashboard.device_id
-        and sources.source_dt = ads_dashboard.session_dt
-    where 1=1
-        and session_dt >= current_date() - interval 3 month
-        and source = 'google'
-        and campaign like 'shopping%'
-        and if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2]) is not null
-        and len(if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2])) = 8
-    group by 
-        if(split(sources.landing_page, '/')[2] like '%?utm%', left(split(sources.landing_page, '/')[2], 8), split(sources.landing_page, '/')[2])
-    having orders = 0
-),
-
-precalculation as 
-(
-    select 
-        m.id as product_id, -- убираем store_id, если вся колонка null
-        'google' as channel, 
-        31 as weight, 
-        'filter_out' as pessimization_type, 
-        0.0 as discount_percent, 
-        'blacklist' as source, 
-        'Google Shopping low performing blacklist' as comment
-    from google_data cr
-    join {{source('pharmacy_landing', 'medicine')}} m 
-        on m.country_local_id = cr.landing_pzn
-    where orders < 1
-    union all
-    select 
-        m.id as product_id, 
-        'ohm' as channel, 
-        31 as weight, 
-        'filter_out' as pessimization_type, 
-        0.0 as discount_percent, 
-        'blacklist' as source, 
-        'OHM Google Shopping low performing blacklist' as comment
-    from google_data cr
-    join {{source('pharmacy_landing', 'medicine')}} m 
-        on m.country_local_id = cr.landing_pzn
-    where orders < 1
-    union all
-    select 
-        m.id as product_id, 
-        'idealo' as channel, 
-        31 as weight, 
-        'use_max_price' as pessimization_type, 
-        0.0 as discount_percent, 
-        'low_performing' as source, 
-        'Idealo low performing blacklist' as comment
-    from idealo_data as cr
-    join {{source('pharmacy_landing', 'medicine')}} m 
-        on m.country_local_id = cr.pzn
-    where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
-    union all
-    select 
-        m.id as product_id, 
-        'billiger' as channel, 
-        31 as weight, 
-        'use_max_price' as pessimization_type, 
-        0.0 as discount_percent, 
-        'low_performing' as source, 
-        'Billiger low performing blacklist' as comment
-    from billiger_data cr 
-    join {{source('pharmacy_landing', 'medicine')}} m 
-        on m.country_local_id = cr.pzn
-    where (cr.cr <= 0.001 and cr.latest_price_decrease <> 1)
 )
 
-select * 
-from precalculation 
-where 1=1
-    and product_id not in (select distinct product_id from manufacturers_products)
 
 
+SELECT 
+    product_id,
+    blacklist_rules.channel,
+    31 AS weight,
+    blacklist_rules.pessimization_type,
+    0.0 AS discount_percent,
+    blacklist_rules.source,
+    blacklist_rules.comment,
+    roas,
+    cr
+FROM (
+    SELECT 
+        product_id,
+        source AS channel,
+        'use_max_price' AS pessimization_type,
+        'low_performing' AS source,
+        'Billiger low performing blacklist' AS comment,
+        roas,
+        cr,
+        sessions,
+        CEILING(AVG(sessions) OVER ()) AS average
+    FROM calculations 
+    WHERE source = 'billiger'
+        AND (cr <= 0.001 OR roas <= 0.3)
+        AND latest_price_decrease <> 1
+    
+    UNION ALL
+    
+    SELECT 
+        product_id,
+        source AS channel,
+        'use_max_price' AS pessimization_type,
+        'low_performing' AS source,
+        'Idealo low performing blacklist' AS comment,
+        roas,
+        cr,
+        sessions,
+        CEILING(AVG(sessions) OVER ()) AS average
+    FROM calculations
+    WHERE source = 'idealo'
+        AND (cr <= 0.001 OR roas <= 0.5)
+        AND latest_price_decrease <> 1
+    
+    UNION ALL
+    
+    SELECT 
+        product_id,
+        source AS channel,
+        'use_max_price' AS pessimization_type,
+        'low_performing' AS source,
+        'Medizinfuchs low performing blacklist' AS comment,
+        roas,
+        cr,
+        sessions,
+        CEILING(AVG(sessions) OVER ()) AS average
+    FROM calculations 
+    WHERE source = 'medizinfuchs'
+        AND (cr <= 0.001 OR roas <= 0.3)
+        AND latest_price_decrease <> 1
+    
+    UNION ALL
+    
+    -- Google Shopping blacklist (both google and ohm channels)
+    SELECT 
+        product_id,
+        'google' as channel,
+        'filter_out' AS pessimization_type,
+        'blacklist' AS source,
+        'Google Shopping low performing blacklist' AS comment,
+        roas,
+        cr,
+        sessions,
+        CEILING(AVG(sessions) OVER ()) AS average
+    FROM calculations
+    WHERE source = 'google'
+        AND cr <= 0.001
+    
+    UNION ALL
+    
+    SELECT 
+        product_id,
+        'ohm' as channel,
+        'filter_out' AS pessimization_type,
+        'blacklist' AS source,
+        'OHM low performing blacklist' AS comment,
+        roas,
+        cr,
+        sessions,
+        CEILING(AVG(sessions) OVER ()) AS average
+    FROM calculations
+    WHERE source = 'google'
+        AND cr <= 0.001  
+) blacklist_rules
+WHERE product_id NOT IN (SELECT product_id FROM medice_products)
+    AND sessions > average
