@@ -20,6 +20,10 @@ models:
         description: "Id of merchant"
         data_type: "STRING"
 
+      - name: merchant_name
+        description: "Name of merchant"
+        data_type: "STRING"
+
       - name: variant_gtin
         description: "GTIN of variant"
         data_type: "STRING"
@@ -78,11 +82,19 @@ models:
 
       - name: gmv_initial_sum
         description: "How much the users paid in USD" 
-        data_type: "double"
+        data_type: "DOUBLE"
 
       - name: gp_final_estimated_sum
         description: "Profit from a specific order" 
-        data_type: "double"
+        data_type: "DOUBLE"
+
+      - name: gmv_initial_sum30
+        description: "How much the users paid in USD for previous 30 days" 
+        data_type: "DOUBLE"
+
+      - name: gp_final_estimated_sum30
+        description: "Profit from a specific variant for previous 30 days" 
+        data_type: "DOUBLE"
 
       - name: has_active_ear
         description: "This product has active EAR document" 

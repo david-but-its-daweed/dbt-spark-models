@@ -20,6 +20,7 @@ WITH base AS (
         pv.variant_id,
         pv.product_id,
         pv.merchant_id,
+        pv.merchant_name,
         pv.gtin AS variant_gtin,
         pc.brand_class,
         pc.brand_name,
@@ -32,10 +33,23 @@ WITH base AS (
         gp.l2_merchant_category_id,
         gp.l2_merchant_category_name,
         gp.business_line,
-        gm.origin_name,
-        mkm.kam_email,
-        COALESCE(SUM(go.gmv_initial), 0) AS gmv_initial_sum,
-        COALESCE(SUM(go.order_gross_profit_final_estimated), 0) AS gp_final_estimated_sum
+        pv.merchant_origin_name AS origin_name,
+        CASE
+            WHEN pv.merchant_origin_name = 'Japanese' THEN 'a.titova@joom.com'
+            WHEN pv.merchant_origin_name = 'Korean' THEN 'ozerova@joom.com'
+            WHEN pv.merchant_origin_name = 'Indian' THEN 'vladimir.reznichenko@joom.com'
+            WHEN pv.merchant_origin_name IN (
+                'Irish', 'British', 'Spanish', 'Romanian', 'Lithuanian', 'Bulgarian',
+                'Latvian', 'Polish', 'Italian', 'French', 'Estonian', 'Greek', 'Czech',
+                'Ukrainian', 'Austrian', 'German', 'Portuguese', 'Luxembourgish', 'Slovakian',
+                'Dutch', 'Slovenian', 'Swedish', 'Danish', 'Cypriot', 'Hungarian', 'Croatian', 'Belgian'
+            ) THEN 'kostenkova@joom.com'
+            ELSE mkm.kam_email
+        END AS kam_email,
+        COALESCE(SUM(IF(DATE(go.order_datetime_utc) = dd.id, go.gmv_initial, 0))) AS gmv_initial_sum,
+        COALESCE(SUM(IF(DATE(go.order_datetime_utc) = dd.id, go.order_gross_profit_final_estimated, 0))) AS gp_final_estimated_sum,
+        COALESCE(SUM(go.gmv_initial), 0) AS gmv_initial_sum30,
+        COALESCE(SUM(go.order_gross_profit_final_estimated), 0) AS gp_final_estimated_sum30
     FROM {{ source('mart','dim_date') }} AS dd -- mart.dim_date as dd
     INNER JOIN {{ source('mart','dim_published_variant_with_merchant') }} AS pv -- mart.dim_published_variant_with_merchant as pv
         ON
@@ -50,10 +64,6 @@ WITH base AS (
         ON
             1 = 1
             AND pc.product_id = gp.product_id
-    INNER JOIN {{ ref('gold_merchants') }} AS gm -- gold.merchants as gm
-        ON
-            1 = 1
-            AND pv.merchant_id = gm.merchant_id
     LEFT JOIN {{ source('category_management', 'merchant_kam_materialized') }} AS mkm --category_management.merchant_kam_materialized as mkm
         ON
             1 = 1
@@ -63,7 +73,7 @@ WITH base AS (
         ON
             1 = 1
             AND pv.variant_id = go.product_variant_id
-            AND DATE(go.order_datetime_utc) = dd.id
+            AND DATE(go.order_datetime_utc) BETWEEN (dd.id - 29) AND dd.id
     WHERE
         1 = 1
         --and dd.id between '2025-06-01' and (current_date - 1)
@@ -77,6 +87,7 @@ WITH base AS (
         pv.variant_id,
         pv.product_id,
         pv.merchant_id,
+        pv.merchant_name,
         pv.gtin,
         pc.brand_class,
         pc.brand_name,
@@ -89,7 +100,7 @@ WITH base AS (
         gp.l2_merchant_category_id,
         gp.l2_merchant_category_name,
         gp.business_line,
-        gm.origin_name,
+        pv.merchant_origin_name,
         mkm.kam_email
 ),
 
@@ -127,6 +138,7 @@ SELECT
     b.variant_id,
     b.product_id,
     b.merchant_id,
+    b.merchant_name,
     b.variant_gtin,
     b.brand_class,
     b.brand_name,
@@ -143,6 +155,8 @@ SELECT
     b.kam_email,
     b.gmv_initial_sum,
     b.gp_final_estimated_sum,
+    b.gmv_initial_sum30,
+    b.gp_final_estimated_sum30,
     d.has_active_document AS has_active_ear
 FROM base AS b
 LEFT JOIN docs AS d
