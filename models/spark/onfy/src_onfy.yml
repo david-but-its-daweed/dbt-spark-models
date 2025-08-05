@@ -1,6 +1,6 @@
 models:
   - name: onfy_search_conversion
-    description: aggregated dataset on user search to card open, adding to cart or order conversion
+    description: owner - andrewocean, aggregated dataset on user search to card open, adding to cart or order conversion
     columns:
       - name: search_event_dt
         description: the date of the users searches
@@ -44,7 +44,7 @@ models:
         description: sum of product price (price * quantity)
 
   - name: onfy_source_campaign_funnels
-    description: aggregated dataset of sources previews, product openings, addings to cart and orders
+    description: owner - andrewocean, aggregated dataset of sources previews, product openings, addings to cart and orders
     columns:
       - name: event_dt
         description: the date of the users searches
@@ -76,3 +76,55 @@ models:
         description: sum of gmv in this order for this product (there are may be 2+ packages with diff quantity of a product for diff price)
       - name: order_quantity
         description: number of packs bought in this order for this product
+        
+  - name: onfy_product_analogues
+    description: owner - andrewocean, the table has a list of not prescribed current products from active pharmacies with their analogues; product analogues calculates based on medicine_ingredient table – the same quantity, unit and dosage form
+    columns:
+      - name: product_id
+        description: main product id
+      - name: product_pzn
+        description: main product pzn
+      - name: product_name
+        description: main product name
+      - name: product_package_size
+        description: main product package size as quantity and units
+      - name: product_manufacturer
+        description: main product manufacturer as short name
+      - name: product_min_price
+        description: main product price as minimal price at onfy at the moment
+      - name: analogue_id
+        description: analogue product id
+      - name: analogue_pzn
+        description: analogue product pzn
+      - name: analogue_name
+        description: analogue product name
+      - name: analogue_package_size
+        description: analogue product package size as quantity and units
+      - name: analogue_manufacturer
+        description: analogue product manufacturer as short name
+      - name: analogue_min_price
+        description: analogue product price as minimal price at onfy at the moment
+
+  - name: onfy_products_daily_visits_orders
+    description: owner - andrewocean, the table has a list of not prescribed current products with the number of visits and orders by date for the last 730 days
+    columns:
+      - name: product_id
+        description: product id
+      - name: pzn
+        description: pzn
+      - name: product_name
+        description: product name
+      - name: package_size
+        description: product package size as quantity and units
+      - name: manufacturer
+        description: product manufacturer as short name
+      - name: dt
+        description: the date of numbers based on order_created_time_cet for orders and event_ts_cet for events
+      - name: visits
+        description: productOpen events number from device_events mart 
+      - name: orders
+        description: number of unique order_id from orders_info mart
+      - name: ordered_items
+        description: sum of quantity of ordered product from orders_info mart
+      - name: before_products_price
+        description: sum of GMV based on before_products_price of ordered products from orders_info mart
