@@ -77,5 +77,6 @@ WHERE partition_date >= '2024-04-01'
         'checkoutDocumentLoaded',
         'checkoutCustomizationButtonClick',
         'requestQuoteNowCreateSuccess',
-        'requestQuoteNowClick'
+        'requestQuoteNowClick',
+        'checkoutCreate'
   )
