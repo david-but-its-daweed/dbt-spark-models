@@ -72,6 +72,20 @@ product_states AS (
         {{ ref('scd2_mongo_product_state') }}
     WHERE
         dbt_valid_to IS NULL
+),
+
+certification AS (
+    SELECT
+        product_id,
+        has_certification,
+        certification_reason,
+        has_registration,
+        registration_reason
+    FROM
+        {{ ref('scd2_mongo_product_certification_states') }}
+    WHERE
+        dbt_valid_to IS NULL
+
 )
 
 SELECT
@@ -97,6 +111,11 @@ SELECT
     ps.reject_reason,
     pp.dangerousKind AS dangerous_kind,
 
+    c.has_certification,
+    c.certification_reason,
+    c.has_registration,
+    c.registration_reason,
+
     pp.merchantId AS merchant_id,
 
     pp.origDescription AS orig_description,
@@ -119,5 +138,5 @@ LEFT JOIN {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
 LEFT JOIN product_states AS ps ON pp._id = ps.product_id
 LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
 LEFT JOIN matching AS m ON pp._id = m.product_id
-WHERE
-    pp.dbt_valid_to IS NULL
+LEFT JOIN certification AS c ON pp._id = c.product_id
+WHERE pp.dbt_valid_to IS NULL
