@@ -71,6 +71,7 @@ SELECT
     t1.order_id,
     t1.count_customer_requests AS customer_requests,
     t1.ddp,
+    t1.ddp_usd,
     t1.order_created_date,
     t1.order_friendly_id,
     t1.order_current_status,
