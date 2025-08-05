@@ -9,7 +9,7 @@
     unique_key='product_id',
 
     strategy='timestamp',
-    updated_at='update_ts_msk',
+    updated_at='updated_ts_msk',
     file_format='delta'
     )
 }}
