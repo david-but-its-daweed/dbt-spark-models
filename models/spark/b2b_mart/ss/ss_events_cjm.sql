@@ -65,6 +65,7 @@ WHERE partition_date >= '2024-04-01'
         'translateImage',
         'contactUsClick',
         'userProfileClick',
+        'dealCreateSuccess',
         'removeOneFromCart',
         'sampleCheckoutOpen',
         'checkoutStartClick',
@@ -73,6 +74,7 @@ WHERE partition_date >= '2024-04-01'
         'deliveryChannelChange',
         'contactUsRequestSubmit',
         'productVariantsPricesOpen',
+        'checkoutDocumentLoaded',
         'checkoutCustomizationButtonClick',
         'requestQuoteNowCreateSuccess',
         'requestQuoteNowClick'
