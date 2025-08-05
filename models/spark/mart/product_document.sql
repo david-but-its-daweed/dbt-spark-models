@@ -1,33 +1,37 @@
 {{ config(
     schema='mart',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@aplotnikov',
       'bigquery_load': 'true'
     }
 ) }}
-with product_docs as (
-    select
-        _id as product_id,
-        explode(docIds) as doc_id
-    from {{ source('mongo', 'product_merchant_document_product_links_daily_snapshot') }} 
+
+WITH product_docs AS (
+    SELECT
+        _id AS product_id,
+        EXPLODE(docIds) AS doc_id
+    FROM {{ source('mongo', 'product_merchant_document_product_links_daily_snapshot') }}
 ),
-documetns as (
-    select
-        _id as doc_id,
-        millis_to_ts(createdTimeMs) created_time,
-        millis_to_ts(updatedTimeMs) updated_time,
+
+documents AS (
+    SELECT
+        _id AS doc_id,
+        MILLIS_TO_TS(createdTimeMs) AS created_time,
+        MILLIS_TO_TS(updatedTimeMs) AS updated_time,
         status,
         type
-    from {{ source('mongo', 'core_merchant_documents_daily_snapshot') }}
+    FROM {{ source('mongo', 'core_merchant_documents_daily_snapshot') }}
 )
 
-select doc_id,
-       product_id,
-       created_time,
-       updated_time,
-       status,
-       type
-from documetns
-         left join product_docs using (doc_id)
+SELECT
+    documents.doc_id,
+    product_docs.product_id,
+    documents.created_time,
+    documents.updated_time,
+    documents.status,
+    documents.type
+FROM documents
+LEFT JOIN product_docs USING (doc_id);
