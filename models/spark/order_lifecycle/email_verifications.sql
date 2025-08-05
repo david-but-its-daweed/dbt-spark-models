@@ -36,5 +36,5 @@ final AS (
 
 SELECT
     t.*,
-    CURRENT_DATE() AS partition_date
+    DATE_SUB(CURRENT_DATE(), 1) AS partition_date
 FROM final AS t
