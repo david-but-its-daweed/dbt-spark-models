@@ -23,50 +23,56 @@ WITH currency AS (
         ) AS date
     FROM {{ source('mart','dim_currency_rate') }}
     WHERE currency_code = "BRL"
-)
+),
 
+payments AS (
+    SELECT
+        payment._id AS payment_id,
+        payment.payhubPaymentIntentId AS payhub_payment_intent_id,
+        payment.usedId AS user_id,
+        MILLIS_TO_TS(payment.createdTimeMs) AS payment_created_time,
+        payment.packageSnapshot._id AS package_id,
+        CASE WHEN payment.packageSnapshot._id LIKE "%diamond%" THEN "Diamond" ELSE "Premium" END AS package_type,
+        payment.packageSnapshot.duration.unit AS package_duration_unit,
+        CASE
+            WHEN payment.packageSnapshot.duration.unit = "year" THEN payment.packageSnapshot.duration.value * 12
+            ELSE payment.packageSnapshot.duration.value
+        END AS package_duration,
+        payment.packageSnapshot.price.amount / 1000000 AS package_price,
+        payment.packageSnapshot.price.ccy AS package_price_ccy,
+        COALESCE(MILLIS_TO_TS(
+            CASE WHEN payment.paidTimeMs > 0 
+                AND DATE_DIFF(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs)) <= 1
+                AND MILLIS_TO_TS(payment.createdTimeMs) >= '2025-07-01'
+                AND MILLIS_TO_TS(payment.createdTimeMs) <= '2025-07-28'
+                THEN Payment.paidTimeMs
+            END
+            ), MILLIS_TO_TS(payment.createdTimeMs)) AS paid_time,
+        TO_DATE(COALESCE(MILLIS_TO_TS(
+            CASE WHEN payment.paidTimeMs > 0 
+                AND DATE_DIFF(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs)) <= 1
+                AND MILLIS_TO_TS(payment.createdTimeMs) >= '2025-07-01'
+                AND MILLIS_TO_TS(payment.createdTimeMs) <= '2025-07-28'
+                THEN Payment.paidTimeMs
+            END
+            ), MILLIS_TO_TS(payment.createdTimeMs))) AS paid_date,
+        payment.price.amount / 1000000 AS price,
+        payment.price.ccy AS currency,
+        payment.promocodeSnapshot._id AS promocode_id,
+        payment.promocodeSnapshot.code AS promocode,
+        COALESCE(payment.promocodeSnapshot.discount.fixed.amount, 0) AS discount_fixed,
+        COALESCE(payment.promocodeSnapshot.discount.percentage.percentage, 0) AS discount_percentage,
+        currency.rate,
+        payment.status,
+        payment.refundPayhubId AS refund_payhub_id,
+        payment.refundStatus AS refund_status,
+        MILLIS_TO_TS(payment.refundTimeMs) AS refund_time,
+        payment.subscriptionId AS subscription_id
+    FROM {{ source('mongo', 'b2b_core_analytics_payments_daily_snapshot') }} AS payment
+    INNER JOIN currency ON TO_DATE(MILLIS_TO_TS(payment.createdTimeMs)) = currency.date
+)
+    
 SELECT
-    payment._id AS payment_id,
-    payment.payhubPaymentIntentId AS payhub_payment_intent_id,
-    payment.usedId AS user_id,
-    MILLIS_TO_TS(payment.createdTimeMs) AS payment_created_time,
-    payment.packageSnapshot._id AS package_id,
-    CASE WHEN payment.packageSnapshot._id LIKE "%diamond%" THEN "Diamond" ELSE "Premium" END AS package_type,
-    payment.packageSnapshot.duration.unit AS package_duration_unit,
-    CASE
-        WHEN payment.packageSnapshot.duration.unit = "year" THEN payment.packageSnapshot.duration.value * 12
-        ELSE payment.packageSnapshot.duration.value
-    END AS package_duration,
-    payment.packageSnapshot.price.amount / 1000000 AS package_price,
-    payment.packageSnapshot.price.ccy AS package_price_ccy,
-    COALESCE(MILLIS_TO_TS(
-        CASE WHEN payment.paidTimeMs > 0 
-            AND DATE_DIFF(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs)) <= 1
-            AND MILLIS_TO_TS(payment.createdTimeMs) >= '2025-07-01'
-            AND MILLIS_TO_TS(payment.createdTimeMs) <= '2025-07-28'
-            THEN Payment.paidTimeMs
-        END
-        ), MILLIS_TO_TS(payment.createdTimeMs)) AS paid_time,
-    TO_DATE(COALESCE(MILLIS_TO_TS(
-        CASE WHEN payment.paidTimeMs > 0 
-            AND DATE_DIFF(MILLIS_TO_TS(CASE WHEN payment.paidTimeMs > 0 THEN Payment.paidTimeMs END), MILLIS_TO_TS(payment.createdTimeMs)) <= 1
-            AND MILLIS_TO_TS(payment.createdTimeMs) >= '2025-07-01'
-            AND MILLIS_TO_TS(payment.createdTimeMs) <= '2025-07-28'
-            THEN Payment.paidTimeMs
-        END
-        ), MILLIS_TO_TS(payment.createdTimeMs))) AS paid_date,
-    payment.price.amount / 1000000 AS price,
-    payment.price.ccy AS currency,
-    payment.promocodeSnapshot._id AS promocode_id,
-    payment.promocodeSnapshot.code AS promocode,
-    COALESCE(payment.promocodeSnapshot.discount.fixed.amount, 0) AS discount_fixed,
-    COALESCE(payment.promocodeSnapshot.discount.percentage.percentage, 0) AS discount_percentage,
-    currency.rate,
-    payment.status,
-    payment.refundPayhubId AS refund_payhub_id,
-    payment.refundStatus AS refund_status,
-    MILLIS_TO_TS(payment.refundTimeMs) AS refund_time,
-    payment.subscriptionId AS subscription_id
-FROM {{ source('mongo', 'b2b_core_analytics_payments_daily_snapshot') }} AS payment
-INNER JOIN currency ON TO_DATE(MILLIS_TO_TS(payment.createdTimeMs)) = currency.date
--- WHERE COALESCE(payment.refundStatus, "") != "finished"
+    *, 
+    ROW_NUMBER() OVER (PARTITION BY user_id, package_id, paid_date ORDER BY refund_status IS NOT NULL, paid_time) AS payment_valid
+FROM payments
