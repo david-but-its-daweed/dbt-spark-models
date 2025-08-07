@@ -57,7 +57,7 @@ dau AS (
         event_msk_date,
         CASE
             WHEN d.day_f_device IN ('android', 'ios', 'tizen', 'harmonyos') THEN 'mobile'
-            WHEN d.day_f_device IN ('ubuntu', 'linux', 'mac os', ' windows', 'chromium os') THEN 'desktop'
+            WHEN d.day_f_device IN ('ubuntu', 'linux', 'mac os', 'windows', 'chromium os') THEN 'desktop'
             ELSE 'other'
         END AS device_type,
         MAX(startsession.utm_source) AS utm_source,
