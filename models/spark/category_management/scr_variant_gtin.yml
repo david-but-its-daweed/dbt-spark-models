@@ -96,6 +96,14 @@ models:
         description: "Profit from a specific variant for previous 30 days" 
         data_type: "DOUBLE"
 
+      - name: gmv_initial_eu_sum30
+        description: "How much the users paid in USD for previous 30 days, only EU orders" 
+        data_type: "DOUBLE"
+
+      - name: gp_final_estimated_eu_sum30
+        description: "Profit from a specific variant for previous 30 days, only EU orders" 
+        data_type: "DOUBLE"
+
       - name: has_active_ear
         description: "This product has active EAR document" 
         data_type: "BOOLEAN"

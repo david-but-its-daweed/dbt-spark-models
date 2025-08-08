@@ -49,7 +49,30 @@ WITH base AS (
         COALESCE(SUM(IF(DATE(go.order_datetime_utc) = dd.id, go.gmv_initial, 0))) AS gmv_initial_sum,
         COALESCE(SUM(IF(DATE(go.order_datetime_utc) = dd.id, go.order_gross_profit_final_estimated, 0))) AS gp_final_estimated_sum,
         COALESCE(SUM(go.gmv_initial), 0) AS gmv_initial_sum30,
-        COALESCE(SUM(go.order_gross_profit_final_estimated), 0) AS gp_final_estimated_sum30
+        COALESCE(SUM(go.order_gross_profit_final_estimated), 0) AS gp_final_estimated_sum30,
+        COALESCE(
+            SUM(
+                IF(
+                    go.country_code IN (
+                        'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK'
+                    ),
+                    go.gmv_initial,
+                    0
+                )
+            ),
+            0
+        ) AS gmv_initial_eu_sum30,
+        COALESCE(
+            SUM(
+                IF(
+                    go.country_code IN (
+                        'AT', 'BE', 'BG', 'CY', 'CZ', 'DE', 'DK', 'EE', 'ES', 'FI', 'FR', 'GR', 'HR', 'HU', 'IE', 'IT', 'LT', 'LU', 'LV', 'MT', 'NL', 'PL', 'PT', 'RO', 'SE', 'SI', 'SK'
+                    ), go.order_gross_profit_final_estimated,
+                    0
+                )
+            ),
+            0
+        ) AS gp_final_estimated_eu_sum30
     FROM {{ source('mart','dim_date') }} AS dd -- mart.dim_date as dd
     INNER JOIN {{ source('mart','dim_published_variant_with_merchant') }} AS pv -- mart.dim_published_variant_with_merchant as pv
         ON
@@ -157,6 +180,8 @@ SELECT
     b.gp_final_estimated_sum,
     b.gmv_initial_sum30,
     b.gp_final_estimated_sum30,
+    b.gmv_initial_eu_sum30,
+    b.gp_final_estimated_eu_sum30,
     d.has_active_document AS has_active_ear
 FROM base AS b
 LEFT JOIN docs AS d
