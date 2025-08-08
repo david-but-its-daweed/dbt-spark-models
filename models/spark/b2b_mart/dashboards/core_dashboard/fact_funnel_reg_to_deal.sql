@@ -29,20 +29,21 @@ aut_data AS (
     GROUP BY user_id
 ),
 
-cart_and_deal AS (
+cart AS (
     SELECT
         user_id,
-        MAX(CASE WHEN actionType = 'add_to_cart' THEN 1 ELSE 0 END) AS once_add_to_cart,
-        MAX(CASE WHEN actionType = 'move_to_deal' THEN 1 ELSE 0 END) AS once_made_deal
+        MAX(CASE WHEN actionType = 'add_to_cart' THEN 1 ELSE 0 END) AS once_add_to_cart
     FROM {{ ref('ss_events_cart') }}
     GROUP BY 1
 ),
 
-paid_deals AS (
-    SELECT DISTINCT
+deals AS (
+    SELECT
         user_id,
-        1 AS once_made_paid_deal
-    FROM {{ ref('gmv_by_sources') }}
+        1 AS once_made_deal,
+        MAX(CASE WHEN achived_payment = 1 THEN 1 ELSE 0 END) AS once_made_paid_deal
+    FROM {{ ref('marketing_deals_with_orders') }}
+    GROUP BY 1
 ),
 
 search AS (
@@ -82,8 +83,8 @@ SELECT
     a.sign_in_ts,
     a.registration_ts,
     c.once_add_to_cart,
-    c.once_made_deal,
-    p.once_made_paid_deal,
+    d.once_made_deal,
+    d.once_made_paid_deal,
     s.once_had_search,
     s.once_had_search_by_image,
     pr.once_had_product_click,
@@ -94,8 +95,8 @@ SELECT
     ABS(UNIX_TIMESTAMP(a.registration_ts) - UNIX_TIMESTAMP(a.sign_in_ts)) / 60 AS minutes_to_registration_from_sign
 FROM base
 LEFT JOIN aut_data AS a USING (user_id)
-LEFT JOIN cart_and_deal AS c USING (user_id)
-LEFT JOIN paid_deals AS p USING (user_id)
+LEFT JOIN cart AS c USING (user_id)
+LEFT JOIN deals AS d USING (user_id)
 LEFT JOIN search AS s USING (user_id)
 LEFT JOIN products AS pr USING (user_id)
 LEFT JOIN product_views AS prv USING (user_id)
