@@ -72,7 +72,9 @@ WITH base AS (
                 )
             ),
             0
-        ) AS gp_final_estimated_eu_sum30
+        ) AS gp_final_estimated_eu_sum30,
+        COALESCE(SUM(IF(go.country_code IN ('RU'), go.gmv_initial, 0)), 0) AS gmv_initial_ru_sum30,
+        COALESCE(SUM(IF(go.country_code IN ('RU'), go.gmv_initial, 0)), 0) AS gp_final_estimated_ru_sum30
     FROM {{ source('mart','dim_date') }} AS dd -- mart.dim_date as dd
     INNER JOIN {{ source('mart','dim_published_variant_with_merchant') }} AS pv -- mart.dim_published_variant_with_merchant as pv
         ON
@@ -182,6 +184,8 @@ SELECT
     b.gp_final_estimated_sum30,
     b.gmv_initial_eu_sum30,
     b.gp_final_estimated_eu_sum30,
+    b.gmv_initial_ru_sum30,
+    b.gp_final_estimated_ru_sum30,
     d.has_active_document AS has_active_ear
 FROM base AS b
 LEFT JOIN docs AS d
