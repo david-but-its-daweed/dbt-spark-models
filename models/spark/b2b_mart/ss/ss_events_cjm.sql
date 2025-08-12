@@ -55,6 +55,7 @@ WHERE partition_date >= '2024-04-01'
         'addToCart',
         'popupOpen',
         'pageLeave',
+        'pageView',
         'orderOpen',
         'ordersOpen',
         'productClick',
