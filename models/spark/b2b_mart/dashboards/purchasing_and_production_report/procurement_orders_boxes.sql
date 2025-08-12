@@ -71,7 +71,7 @@ merchant AS (
         LATERAL VIEW explode(variants) AS v_key, v_value
     ) AS m
     /* Оставляем только подтвержденные варианты */
-    WHERE original_qty > 0
+    WHERE qty > 0
     GROUP BY procurement_order_id
 ),
 
@@ -162,9 +162,9 @@ SELECT
     m.item_weight_netto,
     m.number_of_boxes AS merchant_number_of_boxes,
     m.brutto_kg AS merchant_weight,
-    m.brutto_kg / IF(m.original_qty = 0, NULL, m.original_qty) AS merchant_weight_per_piece,
+    m.brutto_kg / IF(m.qty = 0, NULL, m.qty) AS merchant_weight_per_piece,
     m.volume AS merchant_volume,
-    m.volume / IF(m.original_qty = 0, NULL, m.original_qty) AS merchant_volume_per_piece,
+    m.volume / IF(m.qty = 0, NULL, m.qty) AS merchant_volume_per_piece,
 
     -- Warehouse data
     w.number_of_boxes AS warehouse_number_of_boxes,
@@ -182,14 +182,14 @@ SELECT
         ELSE 0
     END AS is_for_merchant_comparison,
 
-    (w.pickup_box_brutto_kg / IF(m.qty = 0, NULL, m.qty) - m.brutto_kg / IF(m.original_qty = 0, NULL, m.original_qty))
-        / (m.brutto_kg / IF(m.original_qty = 0, NULL, m.original_qty)) AS weight_diff_per_piece_pct,
+    (w.pickup_box_brutto_kg / IF(m.qty = 0, NULL, m.qty) - m.brutto_kg / IF(m.qty = 0, NULL, m.qty))
+        / (m.brutto_kg / IF(m.qty = 0, NULL, m.qty)) AS weight_diff_per_piece_pct,
 
     (w.pickup_box_brutto_kg - m.brutto_kg) / m.brutto_kg AS weight_diff_pct,
     (w.pickup_box_volume - m.volume) / m.volume AS volume_diff_pct,
 
-    (w.pickup_box_volume / IF(m.qty = 0, NULL, m.qty) - m.volume / IF(m.original_qty = 0, NULL, m.original_qty))
-        / (m.volume / IF(m.original_qty = 0, NULL, m.original_qty)) AS volume_diff_per_piece_pct,
+    (w.pickup_box_volume / IF(m.qty = 0, NULL, m.qty) - m.volume / IF(m.qty = 0, NULL, m.qty))
+        / (m.volume / IF(m.qty = 0, NULL, m.qty)) AS volume_diff_per_piece_pct,
 
     -- Comparison 2
     CASE
