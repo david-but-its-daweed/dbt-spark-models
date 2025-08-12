@@ -226,6 +226,7 @@ sources:
       - name: categories_with_ce_requirements
       - name: merchant_kam_materialized
       - name: joom_select_variant_target_prices
+      - name: assortment_coverage_metrics
 
   - name: merchant
     tables:
