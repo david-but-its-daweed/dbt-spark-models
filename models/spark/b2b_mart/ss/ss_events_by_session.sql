@@ -63,7 +63,7 @@ raw_events AS (
 fake_search AS (
     SELECT
         `user`.userId AS user_id,
-        COUNT(DISTINCT type) = 1 AND MAX(type) = 'search' AS is_fake
+        (COUNT(DISTINCT type) = 1 AND MIN(type) = 'search') OR (COUNT(DISTINCT type) = 2 AND MIN(type) = 'deviceCreate' AND MAX(type) = 'search') AS is_fake
     FROM
         {{ source('b2b_mart', 'device_events') }}
     WHERE
