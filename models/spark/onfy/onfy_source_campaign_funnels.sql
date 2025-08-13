@@ -21,11 +21,13 @@
 --------------------------------------------------------------------------------------------------------------------------
 WITH dim_product_dict AS (
     SELECT
+        product_id,
         pzn,
         manufacturer_short_name AS manufacturer
     FROM onfy_mart.dim_product
     WHERE pzn IS NOT NULL
     GROUP BY
+        product_id,
         pzn,
         manufacturer_short_name
 ),
@@ -377,7 +379,7 @@ preview_to_cart_addings AS (
 
 --------------------------------------------------------------------------------------------------------------------------
 -- preparing modular CTEs with funnel steps for initial steps - SOURCES:
--- PREVIEW -> OPENING,  PREVIEW -> CART_ADDING,  PREVIEW -> OPENING -> CART_ADDING
+-- OPENING -> PREVIEW,  PREVIEW -> OPENING,  PREVIEW -> CART_ADDING,  PREVIEW -> OPENING -> CART_ADDING
 --------------------------------------------------------------------------------------------------------------------------
 product_previews_from_recomendations AS (
     SELECT
@@ -387,6 +389,30 @@ product_previews_from_recomendations AS (
         LEAD(event_ts_cet) OVER (PARTITION BY device_id, product_id ORDER BY event_ts_cet) AS next_event_ts_cet
     FROM aggregated_session_events
     WHERE event_type = 'preview' AND widget_type IN ('recommendations', 'recommendation')
+),
+
+-- Product Opens → Product Previews from Recommendations (within 30 min)
+initial_product_opening_to_product_previews AS (
+    SELECT
+        po.event_id AS opening_event_id,
+        po.event_ts_cet AS opening_event_dttm,
+        po.pzn,
+        po.product_id,
+        po.product_name,
+
+        -- product previews data
+        pp.event_id AS preview_event_id,
+        pp.event_dt,
+        pp.device_id,
+        pp.source_screen,
+        pp.recommendation_type
+    FROM product_opens AS po
+    INNER JOIN product_previews_from_recomendations AS pp
+        ON
+            po.device_id = pp.device_id
+            AND po.source_screen = 'product'
+            AND po.event_ts_cet <= pp.event_ts_cet
+            AND COALESCE(po.next_event_ts_cet, po.event_ts_cet + INTERVAL 30 MINUTE) > pp.event_ts_cet
 ),
 
 -- Product Previews from Recommendations → Product Opens (within 30 min)
@@ -763,6 +789,7 @@ pre_final_flat_table AS (
         ps.event_type AS source,
         ps.event_type AS first_page,
         COALESCE(ps.search_query, ps.category_name) AS placement,
+        NULL AS initial_pzn,
         ps.sponsored_key AS campaign_name,
         COALESCE(p2a.adding_event_dttm, p2o.opening_event_dttm, ps.preview_event_dttm) AS source_event_ts_cet,
 
@@ -818,6 +845,7 @@ pre_final_flat_table AS (
         'recommendation' AS source,
         pr.source_screen AS first_page,
         pr.recommendation_type AS placement,
+        ip.pzn AS initial_pzn,
         pr.promo_key AS campaign_name,
         COALESCE(r2a.adding_event_dttm, p2o.opening_event_dttm, pr.preview_event_dttm) AS source_event_ts_cet,
 
@@ -834,6 +862,10 @@ pre_final_flat_table AS (
 
 
     FROM product_previews_from_recomendations AS pr
+
+    -- join preview ← initial product opening CTE
+    LEFT JOIN initial_product_opening_to_product_previews AS ip
+        ON pr.preview_event_id = ip.preview_event_id
 
     -- join preview → product openings CTE
     LEFT JOIN recom_product_previews_to_openings AS p2o
@@ -852,6 +884,7 @@ pre_final_flat_table AS (
         pr.event_dt,
         pr.source_screen,
         pr.recommendation_type,
+        ip.pzn,
         pr.promo_key,
         COALESCE(r2a.adding_event_dttm, p2o.opening_event_dttm, pr.preview_event_dttm),
 
@@ -874,6 +907,7 @@ pre_final_flat_table AS (
         'banner' AS source,
         bs.source_screen AS first_page,
         NULL AS placement,
+        NULL AS initial_pzn,
         bs.block_name AS campaign_name,
         COALESCE(o2a.adding_event_dttm, b2o.opening_event_dttm, bs.preview_event_dttm) AS source_event_ts_cet,
 
@@ -926,7 +960,8 @@ pre_final_flat_table AS (
         e2o.event_dt,
         'email' AS source,
         e2o.event_type AS first_page,
-        COALESCE(a2o.pzn, o2a.pzn, e2o.pzn) AS placement,
+        'email' AS placement,
+        COALESCE(a2o.pzn, o2a.pzn, e2o.pzn) AS initial_pzn,
         e2o.utm_campaign AS campaign_name,
         COALESCE(o2a.adding_event_dttm, e2o.opening_event_dttm, e2o.preview_event_dttm) AS source_event_ts_cet,
 
@@ -976,7 +1011,8 @@ pre_final_flat_table AS (
         pp.event_dt,
         'popup' AS source,
         pp.event_type AS first_page,
-        pp.product_id AS placement,
+        'popup' AS placement,
+        pd.pzn AS initial_pzn,
         NULL AS campaign_name,
         COALESCE(p2a.adding_event_dttm, pp.opening_event_dttm) AS source_event_ts_cet,
 
@@ -993,6 +1029,10 @@ pre_final_flat_table AS (
 
     FROM popups AS pp
 
+    -- adding pzn of initial product
+    LEFT JOIN dim_product_dict AS pd
+        ON pp.product_id = pd.product_id
+
     -- join popup → adding CTE
     LEFT JOIN popup_shows_to_addings AS p2a
         ON pp.opening_event_id = p2a.opening_event_id
@@ -1004,7 +1044,7 @@ pre_final_flat_table AS (
     GROUP BY
         pp.event_dt,
         pp.event_type,
-        pp.product_id,
+        pd.pzn,
         COALESCE(p2a.adding_event_dttm, pp.opening_event_dttm),
 
         COALESCE(a2o.product_id, p2a.product_id, pp.alternative_product_id),
@@ -1029,6 +1069,7 @@ pre_final_agg_table AS (
         MAX_BY(ft.source, ft.source_event_ts_cet) AS source,
         MAX_BY(ft.first_page, ft.source_event_ts_cet) AS first_page,
         MAX_BY(ft.placement, ft.source_event_ts_cet) AS placement,
+        MAX_BY(ft.initial_pzn, ft.source_event_ts_cet) AS placement_pzn,
         MAX_BY(ft.campaign_name, ft.source_event_ts_cet) AS campaign_name,
         ft.product_id,
         ft.product_name,
@@ -1061,6 +1102,7 @@ SELECT
     source,
     first_page,
     placement,
+    placement_pzn,
     campaign_name,
     product_id,
     product_name,
@@ -1083,6 +1125,7 @@ GROUP BY
     source,
     first_page,
     placement,
+    placement_pzn,
     campaign_name,
     product_id,
     product_name,

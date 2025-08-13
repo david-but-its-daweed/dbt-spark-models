@@ -56,6 +56,8 @@ models:
         description: source screen or page where preview was loaded
       - name: placement
         description: search query or category name, recommendation_type for recommendations, pzn for email, product_id for popup
+      - name: placement_pzn
+        description: pzn, where recommendation was placed at, email led to, and popup was open at
       - name: campaign_name
         description: promo_key from product preview event, block_name from banner, utm_campaign from campaign
       - name: product_id
