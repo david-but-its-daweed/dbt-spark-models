@@ -64,6 +64,8 @@ models:
         description: name of a touched (previewed, opened, added, ordered) product
       - name: pzn
         description: pzn of a touched (previewed, opened, added, ordered) product
+      - name: manufacturer
+        description: manufacturer of a touched (previewed, opened, added, ordered) product
       - name: previews
         description: number of product previews of specific product within the mentioned sources
       - name: openings

@@ -15,10 +15,26 @@
 
 
 
+
+--------------------------------------------------------------------------------------------------------------------------
+-- adding dicts for enriching the data
+--------------------------------------------------------------------------------------------------------------------------
+WITH dim_product_dict AS (
+    SELECT
+        pzn,
+        manufacturer_short_name AS manufacturer
+    FROM onfy_mart.dim_product
+    WHERE pzn IS NOT NULL
+    GROUP BY
+        pzn,
+        manufacturer_short_name
+),
+
+
 --------------------------------------------------------------------------------------------------------------------------
 -- selecting raw data for orders
 --------------------------------------------------------------------------------------------------------------------------
-WITH orders_info AS (
+orders_info AS (
     SELECT
         order_id,
         device_id,
@@ -1009,29 +1025,33 @@ pre_final_flat_table AS (
 --------------------------------------------------------------------------------------------------------------------------
 pre_final_agg_table AS (
     SELECT
-        MAX(event_dt) AS event_dt,
-        MAX_BY(source, source_event_ts_cet) AS source,
-        MAX_BY(first_page, source_event_ts_cet) AS first_page,
-        MAX_BY(placement, source_event_ts_cet) AS placement,
-        MAX_BY(campaign_name, source_event_ts_cet) AS campaign_name,
-        product_id,
-        product_name,
-        pzn,
-        preview_event_id,
-        COUNT(DISTINCT opening_event_id) AS openings,
-        COUNT(DISTINCT adding_event_id) AS addings,
-        order_id,
-        order_products_price,
-        order_quantity
-    FROM pre_final_flat_table
+        MAX(ft.event_dt) AS event_dt,
+        MAX_BY(ft.source, ft.source_event_ts_cet) AS source,
+        MAX_BY(ft.first_page, ft.source_event_ts_cet) AS first_page,
+        MAX_BY(ft.placement, ft.source_event_ts_cet) AS placement,
+        MAX_BY(ft.campaign_name, ft.source_event_ts_cet) AS campaign_name,
+        ft.product_id,
+        ft.product_name,
+        ft.pzn,
+        pd.manufacturer,
+        ft.preview_event_id,
+        COUNT(DISTINCT ft.opening_event_id) AS openings,
+        COUNT(DISTINCT ft.adding_event_id) AS addings,
+        ft.order_id,
+        ft.order_products_price,
+        ft.order_quantity
+    FROM pre_final_flat_table AS ft
+    LEFT JOIN dim_product_dict AS pd
+        ON ft.pzn = pd.pzn
     GROUP BY
-        product_id,
-        product_name,
-        pzn,
-        preview_event_id,
-        order_id,
-        order_products_price,
-        order_quantity
+        ft.product_id,
+        ft.product_name,
+        ft.pzn,
+        pd.manufacturer,
+        ft.preview_event_id,
+        ft.order_id,
+        ft.order_products_price,
+        ft.order_quantity
 )
 
 
@@ -1045,6 +1065,7 @@ SELECT
     product_id,
     product_name,
     pzn,
+    manufacturer,
     COUNT(DISTINCT preview_event_id) AS previews,
     SUM(openings) AS openings,
     SUM(addings) AS addings,
@@ -1066,6 +1087,7 @@ GROUP BY
     product_id,
     product_name,
     pzn,
+    manufacturer,
     order_id,
     order_products_price,
     order_quantity
