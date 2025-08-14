@@ -14,6 +14,7 @@ sources:
       - name: dosage_form
       - name: order_parcel_delivery
       - name: price_applier_applied_for_object
+      - name: store_delivery_price
   - name: pharmacy
     tables:
       - name: bing_partner_insights

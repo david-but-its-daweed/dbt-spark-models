@@ -59,6 +59,8 @@ SELECT
     order_parcel_delivery.status AS parcel_delivery_status,
     order_parcel.store_id,
     store.name AS store_name,
+    store_delivery_price.delivery_price AS current_delivery_price,
+    store_delivery_price.free_threshold_price AS current_free_threshold_price,
     store_delivery.express,
     manufacturer.name AS manufacturer_name,
     manufacturer.short_name AS manufacturer_short_name,
@@ -90,6 +92,9 @@ LEFT JOIN {{ source('pharmacy_landing', 'manufacturer') }} AS manufacturer
 LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS store
     ON
         store.id = order_parcel.store_id
+LEFT JOIN {{ source('pharmacy_landing', 'store_delivery_price') }} AS store_delivery_price
+    ON
+        store.id = store_delivery_price.store_id
 INNER JOIN {{ source('pharmacy_landing', 'store_delivery') }} AS store_delivery
     ON
         store.id = store_delivery.store_id
