@@ -389,7 +389,7 @@ product_previews_from_recomendations AS (
         event_ts_cet AS preview_event_dttm,
         LEAD(event_ts_cet) OVER (PARTITION BY device_id, product_id ORDER BY event_ts_cet) AS next_event_ts_cet
     FROM aggregated_session_events
-    WHERE event_type = 'preview' AND widget_type IN ('recommendations', 'recommendation')
+    WHERE event_type = 'preview' AND widget_type IN ('recommendations', 'recommendation', 'previouslyBought')
 ),
 
 -- Product Opens → Product Previews from Recommendations (within 30 min)
