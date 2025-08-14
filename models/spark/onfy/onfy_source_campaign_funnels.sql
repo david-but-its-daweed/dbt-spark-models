@@ -25,7 +25,7 @@ WITH dim_product_dict AS (
         product_id,
         pzn,
         manufacturer_short_name AS manufacturer
-    FROM { source('onfy_mart', 'dim_product') }} 
+    FROM {{ source('onfy_mart', 'dim_product') }}
     WHERE pzn IS NOT NULL
     GROUP BY
         product_id,
