@@ -12,25 +12,36 @@
      }
  ) }}
 
-WITH creations_marketplace AS (
+WITH support_mart_tickets AS (
     SELECT
-        payload.ticketId AS ticket_id,
+        ticket_id,
+        language,
+        country,
+        created_time_utc,
+        resolved_time_utc,
+        queues_list,
+        last_queue_name,
+        is_hidden,
+        communication_channel,
+        tags,
+        subjects,
+        subject_categories
+    FROM
+        {{ source('support_mart', 'tickets') }}
+    WHERE
+        created_time_utc >= CURRENT_DATE - INTERVAL '2' YEAR
+),
+
+creations_marketplace AS (
+    SELECT
+        ticket_id,
         'marketplace' AS business_unit,
         'creation' AS event,
-        payload.lang AS language,
-        payload.country,
-        MIN(event_ts_msk) AS `timestamp`
+        language,
+        country,
+        created_time_utc AS `timestamp`
     FROM
-        {{ source('mart', 'babylone_events') }}
-    WHERE
-        `type` IN ('ticketCreateJoom', 'ticketCreate')
-        AND event_ts_msk IS NOT NULL
-    GROUP BY
-        1,
-        2,
-        3,
-        4,
-        5
+        support_mart_tickets
 ),
 
 transfer_to_bot AS (
@@ -43,6 +54,7 @@ transfer_to_bot AS (
         {{ source('mart', 'babylone_events') }}
     WHERE
         `type` = 'ticketChangeJoom'
+        AND partition_date >= DATE '2024-01-01'
         AND payload.stateOwner = 'Automation'
     GROUP BY
         1,
@@ -60,6 +72,7 @@ transfer_to_queue AS (
         {{ source('mart', 'babylone_events') }}
     WHERE
         `type` = 'ticketChangeJoom'
+        AND partition_date >= DATE '2024-01-01'
         AND payload.stateOwner = 'Queue'
     GROUP BY
         1,
@@ -77,6 +90,7 @@ transfer_to_agent AS (
         {{ source('mart', 'babylone_events') }}
     WHERE
         `type` = 'ticketChangeJoom'
+        AND partition_date >= DATE '2024-01-01'
         AND payload.stateOwner = 'Agent'
     GROUP BY
         1,
@@ -127,6 +141,7 @@ ticket_entry_add AS (
                 {{ source('mart', 'babylone_events') }} AS t
             WHERE
                 NOT t.payload.isAnnouncement
+                AND t.partition_date >= DATE '2024-01-01'
                 AND t.`type` = 'ticketEntryAddJoom'
         )
 ),
@@ -178,19 +193,14 @@ messages_first_replies AS (
 
 closing_marketplace AS (
     SELECT
-        payload.ticketId AS ticket_id,
+        ticket_id,
         'marketplace' AS business_unit,
         'closing' AS event,
-        MIN(event_ts_msk) AS `timestamp`
+        resolved_time_utc AS `timestamp`
     FROM
-        {{ source('mart', 'babylone_events') }}
+        support_mart_tickets
     WHERE
-        `type` = 'ticketChangeJoom'
-        AND payload.stateOwner IN ('Rejected', 'Resolved')
-    GROUP BY
-        1,
-        2,
-        3
+        resolved_time_utc IS NOT NULL
 ),
 
 messages_last_replies AS (
@@ -211,72 +221,44 @@ messages_last_replies AS (
 ),
 
 all_queues AS (
-    WITH t AS (
-        SELECT DISTINCT
-            t.payload.ticketId AS ticket_id,
-            a.name AS queue
-        FROM
-            {{ source('mart', 'babylone_events') }} AS t
-        INNER JOIN mongo.babylone_joom_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
-        WHERE
-            t.`type` = 'ticketChangeJoom'
-            AND t.payload.stateQueueId IS NOT NULL
-    )
-
     SELECT
-        t.ticket_id,
-        COLLECT_LIST(DISTINCT t.queue) AS queues
+        ticket_id,
+        queues_list AS queues
     FROM
-        t AS t
-    GROUP BY
-        1
+        support_mart_tickets
 ),
 
 current_queue AS (
-    SELECT DISTINCT
-        t.payload.ticketId AS ticket_id,
-        LAST_VALUE(a.name) OVER (
-            PARTITION BY t.payload.ticketId
-            ORDER BY
-                t.event_ts_msk ASC
-            ROWS BETWEEN UNBOUNDED PRECEDING
-            AND UNBOUNDED FOLLOWING
-        ) AS current_queue
+    SELECT
+        ticket_id,
+        last_queue_name AS current_queue
     FROM
-        {{ source('mart', 'babylone_events') }} AS t
-    INNER JOIN mongo.babylone_joom_queues_daily_snapshot AS a ON t.payload.stateQueueId = a._id
-    WHERE
-        t.`type` = 'ticketChangeJoom'
-        AND t.payload.stateQueueId IS NOT NULL
+        support_mart_tickets
 ),
 
 hidden_tickets AS (
-    SELECT DISTINCT t.payload.ticketId AS ticket_id
+    SELECT ticket_id
     FROM
-        {{ source('mart', 'babylone_events') }} AS t
+        support_mart_tickets
     WHERE
-        t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
-        AND t.payload.isHidden IS FALSE
+        NOT is_hidden
 ),
 
 all_tags AS (
-    WITH t AS (
-        SELECT
-            t.payload.ticketId AS ticket_id,
-            EXPLODE(t.payload.tagIds) AS tag
-        FROM
-            {{ source('mart', 'babylone_events') }} AS t
-        WHERE
-            t.payload.tagIds IS NOT NULL
-            AND t.`type` IN ('ticketCreateJoom', 'ticketChangeJoom')
-    )
-
     SELECT
-        t.ticket_id,
-        a.name AS tag
+        ticket_id,
+        -- в исходном коде не была различия между тегами/сабджектами/категориями, поэтому сохраняю эту же логику
+        EXPLODE(
+            ARRAY_DISTINCT(
+                CONCAT(
+                    COALESCE(tags, ARRAY()),
+                    COALESCE(subjects, ARRAY()),
+                    COALESCE(subject_categories, ARRAY())
+                )
+            )
+        ) AS tag
     FROM
-        t
-    INNER JOIN mongo.babylone_joom_tags_daily_snapshot AS a ON t.tag = a._id
+        support_mart_tickets
 ),
 
 all_markers AS (
@@ -288,18 +270,15 @@ all_markers AS (
     WHERE
         t.payload.quickReplyMarkers IS NOT NULL
         AND t.`type` = 'ticketEntryAddJoom'
+        AND t.partition_date >= DATE '2024-01-01'
 ),
 
 channel AS (
     SELECT
-        t.payload.ticketId AS ticket_id,
-        MIN(t.payload.channel) AS channel
+        ticket_id,
+        communication_channel AS channel
     FROM
-        {{ source('mart', 'babylone_events') }} AS t
-    WHERE
-        t.`type` = 'ticketCreateJoom'
-    GROUP BY
-        1
+        support_mart_tickets
 ),
 
 bot_result AS (
@@ -319,6 +298,7 @@ scenario AS (
         {{ source('mart', 'babylone_events') }}
     WHERE
         `type` = 'botReaction'
+        AND partition_date >= DATE '2024-01-01'
 ),
 
 base AS (
@@ -362,6 +342,7 @@ csat_prebase AS (
     FROM {{ source('mart', 'babylone_events') }} AS t
     WHERE
         t.`type` = 'babyloneWidgetAction'
+        AND t.partition_date >= DATE '2024-01-01'
         AND t.payload.widgetType = 'did_we_help'
         AND t.payload.selectedOptionsIds[0] IS NOT NULL
 ),
@@ -379,48 +360,42 @@ csat_was_triggered AS (
     FROM {{ source('mart', 'babylone_events') }} AS t
     WHERE
         t.`type` = 'babyloneWidgetAction'
+        AND t.partition_date >= DATE '2024-01-01'
         AND t.payload.widgetType = 'did_we_help'
         AND t.payload.selectedOptionsIds[0] IS NULL
-),
-
-final AS (
-    SELECT DISTINCT
-        t.ticket_id,
-        t.business_unit,
-        t.event,
-        i.country,
-        i.language,
-        CAST(t.`timestamp` AS TIMESTAMP) AS `timestamp`,
-        DATE(t.`timestamp`) AS partition_date,
-        CASE WHEN a.queues[0] == 'Limbo' THEN a.queues[1] ELSE a.queues[0] END AS first_queue,
-        CASE WHEN b.current_queue == 'Limbo' THEN (
-            CASE WHEN a.queues[0] == 'Limbo' THEN a.queues[1] ELSE a.queues[0] END
-        ) ELSE b.current_queue END AS current_queue,
-        CASE WHEN c.ticket_id IS NOT NULL THEN 'no' ELSE 'yes' END AS is_hidden,
-        d.tag,
-        e.marker AS marker_from_quickreply,
-        f.channel,
-        g.was_escalated,
-        h.reaction_state,
-        CASE WHEN l.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
-        k.csat
-    FROM
-        base AS t
-    LEFT JOIN all_queues AS a ON t.ticket_id = a.ticket_id
-    LEFT JOIN current_queue AS b ON t.ticket_id = b.ticket_id
-    LEFT JOIN hidden_tickets AS c ON t.ticket_id = c.ticket_id
-    LEFT JOIN all_tags AS d ON t.ticket_id = d.ticket_id
-    LEFT JOIN all_markers AS e ON t.ticket_id = e.ticket_id
-    LEFT JOIN channel AS f ON t.ticket_id = f.ticket_id
-    LEFT JOIN bot_result AS g ON t.ticket_id = g.ticket_id
-    LEFT JOIN scenario AS h ON t.ticket_id = h.ticket_id
-    LEFT JOIN creations_marketplace AS i ON t.ticket_id = i.ticket_id
-    LEFT JOIN csat AS k ON t.ticket_id = k.ticket_id
-    LEFT JOIN csat_was_triggered AS l ON t.ticket_id = l.ticket_id
-    WHERE t.`timestamp` IS NOT NULL
 )
 
-SELECT *
+SELECT DISTINCT
+    t.ticket_id,
+    t.business_unit,
+    t.event,
+    i.country,
+    i.language,
+    CAST(t.`timestamp` AS TIMESTAMP) AS `timestamp`,
+    DATE(t.`timestamp`) AS partition_date,
+    CASE WHEN a.queues[0] == 'Limbo' THEN a.queues[1] ELSE a.queues[0] END AS first_queue,
+    CASE WHEN b.current_queue == 'Limbo' THEN (
+        CASE WHEN a.queues[0] == 'Limbo' THEN a.queues[1] ELSE a.queues[0] END
+    ) ELSE b.current_queue END AS current_queue,
+    CASE WHEN c.ticket_id IS NOT NULL THEN 'no' ELSE 'yes' END AS is_hidden,
+    d.tag,
+    e.marker AS marker_from_quickreply,
+    f.channel,
+    g.was_escalated,
+    h.reaction_state,
+    CASE WHEN l.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
+    k.csat
 FROM
-    final
-WHERE partition_date IS NOT NULL
+    base AS t
+LEFT JOIN all_queues AS a ON t.ticket_id = a.ticket_id
+LEFT JOIN current_queue AS b ON t.ticket_id = b.ticket_id
+LEFT JOIN hidden_tickets AS c ON t.ticket_id = c.ticket_id
+LEFT JOIN all_tags AS d ON t.ticket_id = d.ticket_id
+LEFT JOIN all_markers AS e ON t.ticket_id = e.ticket_id
+LEFT JOIN channel AS f ON t.ticket_id = f.ticket_id
+LEFT JOIN bot_result AS g ON t.ticket_id = g.ticket_id
+LEFT JOIN scenario AS h ON t.ticket_id = h.ticket_id
+LEFT JOIN creations_marketplace AS i ON t.ticket_id = i.ticket_id
+LEFT JOIN csat AS k ON t.ticket_id = k.ticket_id
+LEFT JOIN csat_was_triggered AS l ON t.ticket_id = l.ticket_id
+WHERE t.`timestamp` IS NOT NULL
