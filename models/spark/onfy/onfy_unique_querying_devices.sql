@@ -1,12 +1,15 @@
 {{ config(
     schema='onfy',
-    materialized='incremental',
     file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@aplotnikov',
+      'alerts_channel': '#onfy-etl-monitoring',
       'team': 'onfy'
     }
 ) }}
+
 WITH human_devices AS (
   SELECT device_id
   FROM {{ source('onfy_mart', 'auth_proxy_devices_without_bots') }}

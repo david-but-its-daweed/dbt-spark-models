@@ -1,7 +1,6 @@
 sources:
   - name: onfy
     tables:
-      - name: onfy_sessions
       - name: search_serp_requests_i
       - name: search_serp_items_i
   - name: pharmacy_landing
@@ -31,4 +30,5 @@ sources:
       - name: mindbox_events_v2
       - name: feed_loaders_state
       - name: product_store_fast_scd2
+      - name: checkout_promocode
   
