@@ -496,8 +496,6 @@ recom_product_preview_to_product_open_to_cart_addings AS (
         ON
             po.device_id = ca.device_id
             AND po.product_id = ca.product_id
-            AND po.source_screen = ca.source_screen
-            AND po.widget_type = ca.widget_type
             AND po.event_ts_cet <= ca.event_ts_cet
             AND COALESCE(po.next_event_ts_cet, po.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
 ),
