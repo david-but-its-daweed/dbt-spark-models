@@ -351,7 +351,7 @@ preview_to_openings AS (
             AND pp.product_id = po.product_id
             AND pp.event_ts_cet <= po.event_ts_cet
             AND COALESCE(pp.next_event_ts_cet, pp.event_ts_cet + INTERVAL 30 MINUTE) > po.event_ts_cet
-    WHERE po.widget_type IN ('searchProduct', 'searchCarousel', '')
+    WHERE COALESCE(po.widget_type, '') IN ('searchProduct', 'searchCarousel', '')
 ),
 
 -- Product Previews → Cart Addings not from Recommendations (within 30 min)
@@ -374,7 +374,7 @@ preview_to_cart_addings AS (
             AND pp.product_id = ca.product_id
             AND pp.event_ts_cet <= ca.event_ts_cet
             AND COALESCE(pp.next_event_ts_cet, pp.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
-    WHERE ca.widget_type NOT IN ('recommendations', 'recommendation', 'previouslyBought', 'alternativesPopup')
+    WHERE COALESCE(ca.widget_type, '') NOT IN ('recommendations', 'recommendation', 'previouslyBought', 'alternativesPopup')
 ),
 
 
@@ -872,7 +872,7 @@ pre_final_flat_table AS (
 
     -- join preview → cart addings CTE
     LEFT JOIN recommendations_to_cart_addings AS r2a
-        ON p2o.preview_event_id = r2a.preview_event_id
+        ON pr.preview_event_id = r2a.preview_event_id
 
     -- join cart → order CTE
     LEFT JOIN cart_addings_to_orders AS a2o
