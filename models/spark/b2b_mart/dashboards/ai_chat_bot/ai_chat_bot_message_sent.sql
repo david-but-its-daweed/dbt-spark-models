@@ -50,19 +50,31 @@ with_lag AS (
 sessionized AS (
     SELECT
         *,
-        SUM(
-            CASE
-                WHEN sender_type = 'user'
-                 AND hours_since_prev >= 8
-                 AND prev_sender_type != 'user'
-                THEN 1
-                ELSE 0
-            END
-        ) OVER (PARTITION BY contact_id ORDER BY message_sent_ts_msk) AS session_id
+        CONCAT(
+            contact_id, '_', SUM(
+                CASE
+                    WHEN sender_type = 'user'
+                     AND hours_since_prev >= 8
+                     AND prev_sender_type != 'user'
+                    THEN 1
+                    ELSE 0
+                END
+            ) OVER (PARTITION BY contact_id ORDER BY message_sent_ts_msk)
+        ) AS session_id
     FROM with_lag
+),
+
+window AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY message_sent_ts_msk) AS row_n_in_session,
+        ROW_NUMBER() OVER (PARTITION BY session_id, sender_type ORDER BY message_sent_ts_msk) AS row_n_in_session_by_sender,
+        MAX(CASE WHEN sender_type = 'bot' THEN 1 ELSE 0 END) OVER (PARTITION BY session_id) AS is_session_has_bot_response,
+        MAX(CASE WHEN sender_type = 'operator' THEN 1 ELSE 0 END) OVER (PARTITION BY session_id) AS is_session_has_operator_response
+    FROM sessionized
 )
 
-
+    
 SELECT
     event_id,
     contact_id,
@@ -76,5 +88,24 @@ SELECT
     status,
     deal_id,
     stop_reason,
-    attachments
-FROM sessionized
+    attachments,
+    row_n_in_session,
+    row_n_in_session_by_sender,
+    is_session_has_bot_response,
+    is_session_has_operator_response,
+    CASE
+        WHEN is_session_has_bot_response = 1
+         AND is_session_has_operator_response = 0
+         THEN 'Only Bot'
+        WHEN is_session_has_bot_response = 0
+         AND is_session_has_operator_response = 1
+         THEN 'Only Operator'
+        WHEN is_session_has_bot_response = 1
+         AND is_session_has_operator_response = 1
+         THEN 'Bot & Operator'
+        WHEN is_session_has_bot_response = 0
+         AND is_session_has_operator_response = 0
+         THEN 'Without our response'
+        ELSE 'Unknown'
+    END AS session_type
+FROM window
