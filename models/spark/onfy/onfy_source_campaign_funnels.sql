@@ -1,8 +1,7 @@
 {{ config(
     schema='onfy',
     file_format='delta',
-    materialized='incremental',
-    incremental_strategy='insert_overwrite',
+    materialized='table',
     partition_by=['event_date'],
     meta = {
       'model_owner' : '@andrewocean',
@@ -1124,7 +1123,6 @@ SELECT
     SUM(addings) AS addings,
     order_id,
     order_before_products_price,
-    order_products_price,
     order_quantity
 FROM pre_final_agg_table
 WHERE
@@ -1145,7 +1143,6 @@ GROUP BY
     manufacturer,
     order_id,
     order_before_products_price,
-    order_products_price,
     order_quantity
 
 DISTRIBUTE BY event_date
