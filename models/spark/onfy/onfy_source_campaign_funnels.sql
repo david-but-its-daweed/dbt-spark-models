@@ -1,7 +1,8 @@
 {{ config(
     schema='onfy',
     file_format='delta',
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by=['event_date'],
     meta = {
       'model_owner' : '@andrewocean',
