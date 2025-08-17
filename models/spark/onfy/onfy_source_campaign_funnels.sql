@@ -1123,6 +1123,7 @@ SELECT
     SUM(addings) AS addings,
     order_id,
     order_before_products_price,
+    order_products_price,
     order_quantity
 FROM pre_final_agg_table
 WHERE
@@ -1143,6 +1144,7 @@ GROUP BY
     manufacturer,
     order_id,
     order_before_products_price,
+    order_products_price,
     order_quantity
 
 DISTRIBUTE BY event_date
