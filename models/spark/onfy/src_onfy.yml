@@ -77,7 +77,9 @@ models:
       - name: order_id
         description: id of an order with specific product included (needed for recalculations within different filter set)
       - name: order_products_price
-        description: sum of gmv in this order for this product (there are may be 2+ packages with diff quantity of a product for diff price)
+        description: sum of products price in this order for this product (there are may be 2+ packages with diff quantity of a product for diff price)
+      - name: order_before_products_price
+        description: sum of gmv (before products price) in this order for this product (there are may be 2+ packages with diff quantity of a product for diff price)
       - name: order_quantity
         description: number of packs bought in this order for this product
         
