@@ -801,6 +801,7 @@ pre_final_flat_table AS (
         p2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     FROM previews_to_source AS ps
@@ -834,6 +835,7 @@ pre_final_flat_table AS (
         p2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     UNION ALL
@@ -857,6 +859,7 @@ pre_final_flat_table AS (
         r2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
 
@@ -896,6 +899,7 @@ pre_final_flat_table AS (
         r2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     UNION ALL
@@ -919,6 +923,7 @@ pre_final_flat_table AS (
         o2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     FROM banner_shows_to_source_screen AS bs
@@ -950,6 +955,7 @@ pre_final_flat_table AS (
         o2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     UNION ALL
@@ -973,6 +979,7 @@ pre_final_flat_table AS (
         o2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     FROM email_click_to_openings AS e2o
@@ -1001,6 +1008,7 @@ pre_final_flat_table AS (
         o2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     UNION ALL
@@ -1024,6 +1032,7 @@ pre_final_flat_table AS (
         p2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 
     FROM popups AS pp
@@ -1055,6 +1064,7 @@ pre_final_flat_table AS (
         p2a.adding_event_id,
         a2o.order_id,
         a2o.order_before_products_price,
+        a2o.order_products_price,
         a2o.order_quantity
 ),
 
@@ -1079,6 +1089,7 @@ pre_final_agg_table AS (
         COUNT(DISTINCT ft.adding_event_id) AS addings,
         ft.order_id,
         ft.order_before_products_price,
+        ft.order_products_price,
         ft.order_quantity
     FROM pre_final_flat_table AS ft
     LEFT JOIN dim_product_dict AS pd
@@ -1091,6 +1102,7 @@ pre_final_agg_table AS (
         ft.preview_event_id,
         ft.order_id,
         ft.order_before_products_price,
+        ft.order_products_price,
         ft.order_quantity
 )
 
@@ -1112,6 +1124,7 @@ SELECT
     SUM(addings) AS addings,
     order_id,
     order_before_products_price,
+    order_products_price,
     order_quantity
 FROM pre_final_agg_table
 WHERE
@@ -1132,6 +1145,7 @@ GROUP BY
     manufacturer,
     order_id,
     order_before_products_price,
+    order_products_price,
     order_quantity
 
 DISTRIBUTE BY event_date
