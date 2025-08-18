@@ -1,0 +1,53 @@
+version: 1
+
+models:
+  - name: merchant_charges
+    description: "Table containing info about merchant's charges for merchant's cancellation and quality refund"
+    columns:
+      - name: invoice_id
+        description: "ID of invoice"
+        data_type: "STRING"
+
+      - name: created_at
+        description: "Invoice created at"
+        data_type: "TIMESTAMP"
+
+      - name: merchant_id_corrected
+        description: "Id of merchant"
+        data_type: "STRING"
+
+      - name: beneficiary_corrected
+        description: "Name of beneficiary"
+        data_type: "STRING"
+
+      - name: invoice_amount_corrected
+        description: "Amount of money in invoice in currency with fixed sign"
+        data_type: "DOUBLE"
+
+      - name: invoice_ccy
+        description: "Currency of invoice"
+        data_type: "STRING"
+
+      - name: inv_type
+        description: "Type code of invoice"
+        data_type: "LONG"
+
+      - name: inv_type_text
+        description: "Type of invoice"
+        data_type: "STRING"
+
+      - name: invoice_status
+        description: "Status of invoice" 
+        data_type: "STRING"
+
+      - name: period_begin_dt
+        description: "Begin of invoice" 
+        data_type: "DATE"
+
+      - name: period_end_dt
+        description: "End of invoice" 
+        data_type: "DATE"
+
+      - name: invoice_amount_usd
+        description: "Amount of money in invoice in USD with fixed sign"
+        data_type: "DOUBLE"
