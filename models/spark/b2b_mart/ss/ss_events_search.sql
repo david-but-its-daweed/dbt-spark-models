@@ -26,23 +26,14 @@ WITH bots AS (
 
 fake_search AS (
     SELECT
-        s.user_id,
-        COUNT(DISTINCT e.event_type) = 1 AND MAX(e.event_type) = 'search' AS is_fake
+        `user`.userId AS user_id,
+        (COUNT(DISTINCT type) = 1 AND MIN(type) = 'search') OR (COUNT(DISTINCT type) = 2 AND MIN(type) = 'deviceCreate' AND MAX(type) = 'search') AS is_fake
     FROM
-        {{ source('b2b_mart', 'ss_events_by_session') }} AS s
-        LATERAL VIEW EXPLODE(events_in_session) AS e
+        {{ source('b2b_mart', 'device_events') }}
     WHERE
-        DATE(s.session_start) >= '2024-07-01'
+        DATE(event_ts_msk) >= '2024-04-01'
     GROUP BY 1
     HAVING is_fake = TRUE
-),
-
-real_search AS (
-    SELECT DISTINCT FROM_JSON(e.event_params, 'searchResultsUniqId STRING').searchResultsUniqId AS search_id
-    FROM
-        {{ source('b2b_mart', 'ss_events_by_session') }}
-        LATERAL VIEW EXPLODE(events_in_session) AS e
-    WHERE e.event_type != 'search'
 ),
 
 search_events AS (
@@ -134,9 +125,7 @@ SELECT
     FIRST_VALUE(m.search_results_uniq_id) OVER (
         PARTITION BY m.user_id, m.search_date, m.query, m.search_type
         ORDER BY m.search_ts_msk
-    ) AS search_group_id,
-
-    rs.search_id IS NOT NULL AS was_real_search
+    ) AS search_group_id
 FROM (
     SELECT
         search.user_id,
@@ -174,6 +163,5 @@ FROM (
     FROM search
     LEFT JOIN clicks ON search.searchResultsUniqId = clicks.searchResultsUniqId
 ) AS m
-LEFT JOIN real_search AS rs ON m.search_results_uniq_id = rs.search_id
 /* Оставляем первый поиск в сессии и события с кликами */
 WHERE m.is_first_search_by_session = 1 OR m.click_ts_msk IS NOT NULL
