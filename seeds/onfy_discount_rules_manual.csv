@@ -19,8 +19,6 @@ product_id,store_id,channel,weight,pessimization_type,discount_percent,source,co
 ,50158c211af044cfa3c073c239e7b07d,apomio,21,filter_out,,manual,parfumgroup apomio
 2836f66a8e484eb7bd0efc161331f1d7,,,45,,25,manual,07424884 boost
 9a88f18aacb747d3af54fa28393b04a9,,,45,,25,manual,12444127 boost
-229c3507b3e54ef59a6404c88fc61c6d,,,45,,25,manual,04796852 boost (medice)
-dd22e836cf9f4fb4b379c6a7bf9dfdf8,,,45,,25,manual,07567371 boost (medice)
 f95d1438064f4d2491c891865aeb3c1d,,,45,,25,manual,05852222 boost
 4e7b831734f2400c8f9adaf9cb21140d,,,45,,25,manual,06465237 boost
 4b480207003346d1aea36ec535615a7d,,,45,,25,manual,18661400 boost
@@ -30,12 +28,25 @@ f95d1438064f4d2491c891865aeb3c1d,,,45,,25,manual,05852222 boost
 e451639b161240ce8338e4be5ed6a049,,,45,,25,manual,06552226 boost
 3a6c72c6f45c4f438d5de35aa0bb9b65,,,45,,25,manual,19432989 boost
 df346f517df14df4ba3f9f4c075c7682,,,45,,25,manual,19433032 boost
-6b180e480a5d4808b35696de5d3f9b26,,,45,,25,manual,04796869 boost (medice)
-257f2be5ed024483be005d920a3a0bdd,,,45,,25,manual,04508959 boost (medice)
-b6d3ac1f7916411fab5fdd19d20213c7,,,45,,25,manual,10993278 boost (medice)
-d5dbd9b2618b44baa5f7218b1f984e5b,,,45,,25,manual,10993232 boost (medice)
 58113ef3741b4cdd9a72485f0347fdac,,,45,,25,manual,04796875 boost (medice)
+03500ec58a3340d1bcdb3ae35122dfde,,,45,,25,manual,07114824 boost (medice)
 e12419c0e46346b0834aa5fffa7c43e4,,,45,,25,manual,10993261 boost (medice)
+609cb34dd79c4a2d86c5137f002d4cd7,,,45,,25,manual,02372214 boost (medice)
+4fc08c78ffc047d5bb0a64deba3d6e9c,,,45,,25,manual,10714350 boost (medice)
+b1864ad639e0409fa32824db43120650,,,45,,25,manual,10714367 boost (medice)
+d5dbd9b2618b44baa5f7218b1f984e5b,,,45,,25,manual,10993232 boost (medice)
+e5629ec8b3f24b68bd87bd85f935949d,,,45,,25,manual,10192727 boost (medice)
+257f2be5ed024483be005d920a3a0bdd,,,45,,25,manual,04508959 boost (medice)
+de1e9dec905049bfb002a43601f71a21,,,45,,25,manual,14287904 boost (medice)
+45f5d743efa2441bbe06b9b6c0aab16f,,,45,,25,manual,18495551 boost (medice)
+ba41e8b0dedf4d5e842a6bb816b3255d,,,45,,25,manual,04540259 boost (medice)
+638f8718c3c24a21b25fd2e255f7b925,,,45,,25,manual,10192710 boost (medice)
+76b81cca631b4be095207a674be1ec18,,,45,,25,manual,18495568 boost (medice)
+dd22e836cf9f4fb4b379c6a7bf9dfdf8,,,45,,25,manual,07567371 boost (medice)
+6b180e480a5d4808b35696de5d3f9b26,,,45,,25,manual,04796869 boost (medice)
+b66890a93338471d8e519044ba603c3e,,,45,,25,manual,07126744 boost (medice)
+b6d3ac1f7916411fab5fdd19d20213c7,,,45,,25,manual,10993278 boost (medice)
+229c3507b3e54ef59a6404c88fc61c6d,,,45,,25,manual,04796852 boost (medice)
 8d2cf27ac3ef452fbd3134662f160987,,,45,,25,manual,16606176 boost (Denk)
 3af96fcf34f3409f8ed3d9d55b6dc5d3,,,45,,32,manual,12532446 boost (Cooper)
 1d221d6841174226929555b51fff367c,,,45,,32,manual,00565096 boost (Cooper)
