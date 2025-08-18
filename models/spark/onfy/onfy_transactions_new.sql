@@ -218,36 +218,76 @@ psp_refund AS (
 
 
 transactions_psp AS (
-    SELECT DISTINCT
-        UPPER(onfy_mart.transactions.type) AS type,
-        onfy_mart.transactions.order_id,
-        order_data.purchase_num,
-        order_data.device_id,
-        order_data.app_device_type,
-        order_data.platform_type,
-        onfy_mart.transactions.order_parcel_id,
-        pharmacy_landing.store.name AS store_name,
-        order_data.payment_method,
-        onfy_mart.transactions.user_email_hash,
-        order_data.source_corrected AS source,
-        order_data.campaign_corrected AS campaign,
-        order_data.order_created_time_cet,
-        from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') AS transaction_date,
-        onfy_mart.transactions.price,
-        onfy_mart.transactions.currency
-    FROM
-        {{ source('onfy_mart', 'transactions') }}
-        LEFT JOIN order_data
-            ON order_data.order_id = onfy_mart.transactions.order_id
-        LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }}
-            ON onfy_mart.transactions.order_parcel_id = pharmacy_landing.order_parcel.id
-        LEFT JOIN {{ source('pharmacy_landing', 'store') }}
-            ON pharmacy_landing.store.id = pharmacy_landing.order_parcel.store_id
-    WHERE 1=1
-        AND NOT (lower(type) in ('charge_fee', 'refund_fee') AND from_utc_timestamp(onfy_mart.transactions.date, 'Europe/Berlin') < '2023-07-21')
-        UNION
+
+    -- 1) all raw transactions except PSP-fee 
+    SELECT
+        UPPER(t.type) AS type,
+        t.order_id,
+        od.purchase_num,
+        od.device_id,
+        od.app_device_type,
+        od.platform_type,
+        t.order_parcel_id,
+        st.name AS store_name,
+        od.payment_method,
+        t.user_email_hash,
+        od.source_corrected AS source,
+        od.campaign_corrected AS campaign,
+        od.order_created_time_cet,
+        from_utc_timestamp(t.date, 'Europe/Berlin') AS transaction_date,
+        t.price,
+        t.currency
+    FROM {{ source('onfy_mart', 'transactions') }} AS t
+    LEFT JOIN order_data AS od
+        ON od.order_id = t.order_id
+    LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }} AS op
+        ON t.order_parcel_id = op.id
+    LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS st
+        ON st.id = op.store_id
+    WHERE NOT lower(t.type) IN ('charge_fee','refund_fee')
+
+    UNION ALL
+
+    -- 2) Split only PSP-fee rows AFTER cutoff which have no parcel_id
+    SELECT
+        UPPER(t.type) AS type,
+        t.order_id,
+        od.purchase_num,
+        od.device_id,
+        od.app_device_type,
+        od.platform_type,
+        p.order_parcel_id,
+        st.name AS store_name,
+        od.payment_method,
+        t.user_email_hash,
+        od.source_corrected AS source,
+        od.campaign_corrected AS campaign,
+        od.order_created_time_cet,
+        from_utc_timestamp(t.date, 'Europe/Berlin') AS transaction_date,
+        t.price * (p.gmv / og.gmv_total) AS price,
+        t.currency
+    FROM {{ source('onfy_mart', 'transactions') }} AS t
+    JOIN parcel_gmv AS p
+         ON t.order_id = p.order_id
+    JOIN order_gmv AS og
+         ON og.order_id = t.order_id
+    LEFT JOIN order_data AS od
+         ON od.order_id = t.order_id
+    LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }} AS op
+         ON p.order_parcel_id = op.id
+    LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS st
+         ON st.id = op.store_id
+    WHERE
+        t.order_parcel_id IS NULL
+        AND lower(t.type) IN ('charge_fee', 'refund_fee')
+        AND from_utc_timestamp(t.date,'Europe/Berlin') >= '2023-07-21'
+
+    -- 3) Before cutoff '2023-07-21'
+
+    UNION ALL
+
     SELECT * FROM psp_initial
-        UNION
+    UNION ALL
     SELECT * FROM psp_refund
 ),
 
