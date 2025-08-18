@@ -91,15 +91,6 @@ latest_price_changes AS
         pzn
 ),
 
-medice_products AS 
-(
-    SELECT DISTINCT 
-        product_id
-    FROM price_history
-    WHERE 
-        manufacturer_name = 'MEDICE Arzneimittel Pütter GmbH&Co.KG'
-),
-
 sessions AS 
 (
     SELECT 
@@ -254,5 +245,5 @@ FROM (
     WHERE source = 'google'
         AND cr <= 0.001  
 ) blacklist_rules
-WHERE product_id NOT IN (SELECT product_id FROM medice_products)
+WHERE 1=1
     AND sessions > average
