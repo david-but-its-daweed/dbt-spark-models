@@ -28,6 +28,7 @@ select
     END AS product_id,
     country,
     desc,
+    1688ProductLink as ProductLink_1688, 
     customizationDescription AS customization_description,
     expectedQuantity as expected_quantity,
     link,
