@@ -142,6 +142,7 @@ parcel_gmv AS (
                     ELSE 0 END
         ) AS gmv
     FROM {{ source('onfy_mart', 'transactions') }}
+    WHERE order_parcel_id IS NOT NULL
     GROUP BY order_id, order_parcel_id
 ),
 
@@ -278,7 +279,7 @@ transactions_psp AS (
     LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS st
          ON st.id = op.store_id
     WHERE
-        t.order_parcel_id IS NULL
+        p.order_parcel_id IS NOT NULL
         AND lower(t.type) IN ('charge_fee', 'refund_fee')
         AND from_utc_timestamp(t.date,'Europe/Berlin') >= '2023-07-21'
 
