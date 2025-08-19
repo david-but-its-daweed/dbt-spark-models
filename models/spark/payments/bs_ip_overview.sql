@@ -120,13 +120,11 @@ nonzeropsp_refunds_by_refund_dt AS (
         pmt_provider,
         payment_type,
         pmt_ccy,
-        SUM(cnt_refunds) AS nonzeropsp_cnt_refunds,
-        SUM(ref_amount) AS nonzeropsp_ref_amount,
-        SUM(ref_amount_usd) AS nonzeropsp_ref_amount_usd
+        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, cnt_refunds)) AS nonzeropsp_cnt_refunds,
+        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, ref_amount)) AS nonzeropsp_ref_amount,
+        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, ref_amount_usd)) AS nonzeropsp_ref_amount_usd
     FROM pmt_fee_ref_data_by_order_group
-    WHERE
-        psp_usd_from_costs_final != 0
-        AND ref_time_bank IS NOT null
+    WHERE ref_time_bank IS NOT null
     GROUP BY 1, 2, 3, 4
 ),
 
@@ -142,9 +140,9 @@ pmt_agg_data AS (
         SUM(psp_from_cost_final) AS psp_final,
         SUM(psp_usd_from_costs_final) AS psp_final_usd,
 
-        SUM(IF(psp_usd_from_costs_final != 0, cnt_pmts, 0)) AS nonzeropsp_cnt_pmts,
-        SUM(IF(psp_usd_from_costs_final != 0, pmt_amount, 0)) AS nonzeropsp_pmt_amount,
-        SUM(IF(psp_usd_from_costs_final != 0, pmt_amount_usd, 0)) AS nonzeropsp_pmt_amount_usd
+        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, cnt_pmts)) AS nonzeropsp_cnt_pmts,
+        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, pmt_amount)) AS nonzeropsp_pmt_amount,
+        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, pmt_amount_usd)) AS nonzeropsp_pmt_amount_usd
     FROM pmt_fee_ref_data_by_order_group
     GROUP BY 1, 2, 3, 4
 )
