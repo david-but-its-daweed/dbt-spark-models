@@ -23,7 +23,9 @@ WITH base AS (
         payload.status,
         payload.dealId AS deal_id,
         payload.stopReason AS stop_reason,
-        payload.attachments
+        payload.attachments,
+        -- Убираем дубли
+        ROW_NUMBER() OVER (PARTITION BY payload.contactId, payload.timestamp, payload.messageText ORDER BY event_id) AS row_n
     FROM {{ source('b2b_mart', 'operational_events') }}
     WHERE
         partition_date >= '2025-07-28'
@@ -41,6 +43,7 @@ with_lag AS (
             )
         ) / 3600 AS hours_since_prev
     FROM base
+    WHERE row_n = 1
 ),
 
 -- Обозначаем начало новой сессии:
