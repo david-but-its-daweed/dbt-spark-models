@@ -35,8 +35,8 @@ with_lag AS (
         *,
         LAG(sender_type) OVER (PARTITION BY contact_id ORDER BY message_sent_ts_msk) AS prev_sender_type,
         (
-            unix_timestamp(message_sent_ts_msk) -
-            unix_timestamp(
+            UNIX_TIMESTAMP(message_sent_ts_msk)
+            - UNIX_TIMESTAMP(
                 LAG(message_sent_ts_msk) OVER (PARTITION BY contact_id ORDER BY message_sent_ts_msk)
             )
         ) / 3600 AS hours_since_prev
@@ -44,19 +44,20 @@ with_lag AS (
 ),
 
 -- Обозначаем начало новой сессии:
-    -- сообщение от клиента
-    -- прошло 8+ часов с прошлого сообщения
-    -- и между ними был наш ответ
+-- сообщение от клиента
+-- прошло 8+ часов с прошлого сообщения
+-- и между ними был наш ответ
 sessionized AS (
     SELECT
         *,
         CONCAT(
             contact_id, '_', SUM(
                 CASE
-                    WHEN sender_type = 'user'
-                     AND hours_since_prev >= 8
-                     AND prev_sender_type != 'user'
-                    THEN 1
+                    WHEN
+                        sender_type = 'user'
+                        AND hours_since_prev >= 8
+                        AND prev_sender_type != 'user'
+                        THEN 1
                     ELSE 0
                 END
             ) OVER (PARTITION BY contact_id ORDER BY message_sent_ts_msk)
@@ -64,48 +65,65 @@ sessionized AS (
     FROM with_lag
 ),
 
-window AS (
+windowed AS (
     SELECT
         *,
         ROW_NUMBER() OVER (PARTITION BY session_id ORDER BY message_sent_ts_msk) AS row_n_in_session,
         ROW_NUMBER() OVER (PARTITION BY session_id, sender_type ORDER BY message_sent_ts_msk) AS row_n_in_session_by_sender,
-        MAX(CASE WHEN sender_type = 'bot' THEN 1 ELSE 0 END) OVER (PARTITION BY session_id) AS is_session_has_bot_response,
-        MAX(CASE WHEN sender_type = 'operator' THEN 1 ELSE 0 END) OVER (PARTITION BY session_id) AS is_session_has_operator_response
+        CASE
+            WHEN
+                LAG(sender_type) OVER (PARTITION BY session_id ORDER BY message_sent_ts_msk) IS NULL
+                OR LAG(sender_type) OVER (PARTITION BY session_id ORDER BY message_sent_ts_msk) != sender_type
+                THEN 1
+            ELSE 0
+        END AS start_of_block
     FROM sessionized
+),
+
+with_blocks AS (
+    SELECT
+        *,
+        -- глобальный порядковый номер блока в сессии
+        SUM(start_of_block) OVER (
+            PARTITION BY session_id ORDER BY message_sent_ts_msk
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS block_id,
+        -- порядковый номер блока ДЛЯ КОНКРЕТНОГО sender_type в рамках сессии
+        SUM(
+            CASE WHEN start_of_block = 1 THEN 1 ELSE 0 END
+        ) OVER (
+            PARTITION BY session_id, sender_type ORDER BY message_sent_ts_msk
+            ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+        ) AS block_id_by_sender
+    FROM windowed
+),
+
+-- Порядковый номер сообщения внутри блока (удобно для выборки начала/конца блока)
+final AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (PARTITION BY session_id, block_id ORDER BY message_sent_ts_msk) AS block_row_n
+    FROM with_blocks
 )
 
-    
+
 SELECT
     event_id,
     contact_id,
     user_id,
     thread_id,
     session_id,
-    message,
-    message_sent_ts_msk,
-    message_type,
+    block_id,
+    block_id_by_sender,
+    block_row_n,
     sender_type,
+    message_sent_ts_msk,
+    message,
+    message_type,
     status,
     deal_id,
     stop_reason,
     attachments,
     row_n_in_session,
-    row_n_in_session_by_sender,
-    is_session_has_bot_response,
-    is_session_has_operator_response,
-    CASE
-        WHEN is_session_has_bot_response = 1
-         AND is_session_has_operator_response = 0
-         THEN 'Only Bot'
-        WHEN is_session_has_bot_response = 0
-         AND is_session_has_operator_response = 1
-         THEN 'Only Operator'
-        WHEN is_session_has_bot_response = 1
-         AND is_session_has_operator_response = 1
-         THEN 'Bot & Operator'
-        WHEN is_session_has_bot_response = 0
-         AND is_session_has_operator_response = 0
-         THEN 'Without our response'
-        ELSE 'Unknown'
-    END AS session_type
-FROM window
+    row_n_in_session_by_sender
+FROM final
