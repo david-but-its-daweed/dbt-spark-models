@@ -10,78 +10,86 @@
 ) }}
 
 
-with 
-    old_approach as (
-select user_id, min(interaction_create_time) as registration_start
-    from {{ ref('fact_attribution_interaction') }}
-    where type = 'Web' AND source = 'selfService' AND interaction_type = 10
-    group by user_id ),
-    new_approach as (
-  select user_id,min(event_ts_msk) as registration_start
-from {{ ref('ss_events_authentication') }}
-group by 1
+WITH old_approach AS (
+    SELECT 
+        user_id, 
+        MIN(interaction_create_time) AS registration_start
+    FROM {{ ref('fact_attribution_interaction') }}
+    WHERE type = 'Web' AND source = 'selfService' AND interaction_type = 10
+    GROUP BY user_id
 ),
- interactions as (
-select
-user_id, min(registration_start) as registration_start
-from (
-select 
-user_id, registration_start 
-from old_approach 
-union  all 
-select 
-user_id,  registration_start
-from new_approach 
-) 
-group by 1 ),
-phone_numbers as (
-        select distinct uid as user_id, _id as phone_number
-        from {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
-    ),
 
-users_info as (
-        select distinct 
-        _id as user_id,
-        fn as user_name,
-        email as user_email,
-        roleOtherValue as user_company_role_other_value,
-        landingId as landing_id, 
-        contactId as contact_id 
-        from {{ source('mongo', 'b2b_core_users_daily_snapshot') }}
-        
-    ),
+new_approach AS (
+    SELECT
+        user_id,
+        MIN(event_ts_msk) AS registration_start
+    FROM {{ ref('ss_events_authentication') }}
+    GROUP BY 1
+),
     
-company_info as (
-        select distinct 
-        _id as user_id,
-        companyName as company_name,
-        companyWebsite as company_website,
-        companyOpFields as company_op_fields,
-        companyEmployeesNumber as company_employees_number,
-        hasProductImport as has_product_import,
-        catIds as product_categories,
-        categoryOtherValues as category_other_values,
-        companyAnnualTurnoverRange as company_annual_turnover_range, 
-        cnpj as cnpj,
-        gradeInfo.grade as grade
-        from {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
-    ),
-utm_labels as (
-    SELECT DISTINCT
-        first_value(utm_source) over (partition by user_id order by event_ts_msk) as utm_source,
-        first_value(utm_medium) over (partition by user_id order by event_ts_msk) as utm_medium,
-        first_value(utm_campaign) over (partition by user_id order by event_ts_msk) as utm_campaign,
-        user_id
-    from   {{ ref('ss_events_startsession') }}   
-    where type = 'sessionStart'
+interactions as (
+    SELECT user_id, MIN(registration_start) AS registration_start
+    FROM (
+        SELECT user_id, registration_start 
+        FROM old_approach 
+        UNION ALL 
+        SELECT user_id, registration_start
+        FROM new_approach 
+    ) 
+    GROUP BY 1
+),
+    
+phone_numbers AS (
+    SELECT DISTINCT 
+        uid AS user_id, 
+        _id AS phone_number
+    FROM {{ source('mongo', 'b2b_core_phone_credentials_daily_snapshot') }}
 ),
 
-joompro_users_table as (
-select * from interactions
-left join phone_numbers using (user_id)
-left join users_info using (user_id)
-left join company_info using (user_id)
-left join utm_labels using (user_id)
+users_info AS (
+    SELECT DISTINCT 
+        _id AS user_id,
+        fn AS user_name,
+        email AS user_email,
+        roleOtherValue AS user_company_role_other_value,
+        landingId AS landing_id, 
+        contactId AS contact_id 
+    FROM {{ source('mongo', 'b2b_core_users_daily_snapshot') }}
+),
+    
+company_info AS (
+    SELECT DISTINCT 
+        _id AS user_id,
+        companyName AS company_name,
+        companyWebsite AS company_website,
+        companyOpFields AS company_op_fields,
+        companyEmployeesNumber AS company_employees_number,
+        hasProductImport AS has_product_import,
+        catIds AS product_categories,
+        categoryOtherValues AS category_other_values,
+        companyAnnualTurnoverRange AS company_annual_turnover_range, 
+        cnpj AS cnpj,
+        gradeInfo.grade AS grade
+    FROM {{ source('mongo', 'b2b_core_customers_daily_snapshot') }}
+),
+    
+utm_labels AS (
+    SELECT DISTINCT
+        FIRST_VALUE(utm_source) OVER (PARTITION BY user_id ORDER BY event_ts_msk) AS utm_source,
+        FIRST_VALUE(utm_medium) OVER (PARTITION BY user_id ORDER BY event_ts_msk) AS utm_medium,
+        FIRST_VALUE(utm_campaign) OVER (PARTITION BY user_id ORDER BY event_ts_msk) AS utm_campaign,
+        user_id
+    FROM {{ ref('ss_events_startsession') }}   
+    WHERE type = 'sessionStart'
+),
+
+joompro_users_table AS (
+    SELECT * 
+    FROM interactions
+    LEFT JOIN phone_numbers USING(user_id)
+    LEFT JOIN users_info USING(user_id)
+    LEFT JOIN company_info USING(user_id)
+    LEFT JOIN utm_labels USING(user_id)
 ),
 
 users_info_1 AS (
@@ -161,7 +169,7 @@ users_info_2 AS (
     FROM (SELECT *, EXPLODE_OUTER(product_categories) AS product_category FROM users_info_1) AS main
     LEFT JOIN {{ ref('gold_merchant_categories') }} AS cat
         ON cat.merchant_category_id = main.product_category
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21
 ), 
 
 categories AS (
@@ -172,7 +180,7 @@ categories AS (
         SELECT
             merchant_category_name,
             user['userId'] AS user_id
-        FROM {{ source('b2b_mart', 'device_events') }}        AS main
+        FROM {{ source('b2b_mart', 'device_events') }} AS main
         LEFT JOIN {{ ref('gold_merchant_categories') }} AS cat
             ON main.payload['categoryId'] = cat.merchant_category_id
         WHERE type = 'categoryOpen'
@@ -213,15 +221,15 @@ order_clicks AS (
 deals as (
     SELECT DISTINCT
         user_id, 
-        ARRAY_JOIN(COLLECT_LIST(CONCAT('https://admin.joompro.io/users/', user_id, '/deal/', deal_id)), '; ')         AS deals,
-        SUM(gmv) as gmv
+        ARRAY_JOIN(COLLECT_LIST(CONCAT('https://admin.joompro.io/users/', user_id, '/deal/', deal_id)), '; ') AS deals,
+        SUM(gmv) AS gmv
     FROM {{ ref('fact_deals') }}
     LEFT JOIN (
-        select sum(planned_offer_cost/1000000) as gmv, deal_id
-            from {{ ref('fact_customer_requests') }}
-        group by deal_id
+        SELECT sum(planned_offer_cost / 1000000) AS gmv, deal_id
+            FROM {{ ref('fact_customer_requests') }}
+        GROUP BY deal_id
     ) USING (deal_id)
-    WHERE next_effective_ts_msk IS NULL AND deal_id is not null
+    WHERE next_effective_ts_msk IS NULL AND deal_id IS NOT NULL
     GROUP BY user_id
 ),
 
@@ -276,48 +284,51 @@ main AS (
     LEFT JOIN order_clicks USING(user_id)
     LEFT JOIN deals        USING(user_id)
     WHERE phone_number IS NOT NULL
-    GROUP BY 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26
+    GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26
 ),
- cart_activation as (
- select user_id,
-     min(event_msk_date) as mql_msk_date,
-     max(1) user_MQL
-  from {{ ref('ss_events_cart') }} 
- where actionType  = 'add_to_cart'
- group by 1 
+    
+cart_activation AS (
+    SELECT 
+        user_id,
+        MIN(event_msk_date) AS mql_msk_date,
+        MAX(1) AS user_MQL
+    FROM {{ ref('ss_events_cart') }} 
+    WHERE actionType  = 'add_to_cart'
+    GROUP BY 1 
  ),
- deal_activation as (
-  select 
-user_id,
-        min(case when deal_type = 'Sample' then  deal_created_date end) as mql_msk_date, 
-        min(case when deal_type != 'Sample' then  deal_created_date end) as sql_msk_date, 
-        max(case when deal_type != 'Sample' then 1 else 0 end) as user_SQL,
-        max(case when deal_type = 'Sample' then 1 else 0 end) as user_MQL
-  from  {{ ref('fact_deals_with_requests') }}
-  where deal_status not in ('Test')
-  group by 1
+    
+deal_activation AS (
+    SELECT
+        user_id,
+        MIN(CASE WHEN deal_type = 'Sample' THEN deal_created_date END) AS mql_msk_date, 
+        MIN(CASE WHEN deal_type != 'Sample' THEN deal_created_date END) AS sql_msk_date, 
+        MAX(CASE WHEN deal_type != 'Sample' THEN 1 ELSE 0 END) AS user_SQL,
+        MAX(CASE WHEN deal_type = 'Sample' THEN 1 ELSE 0 END) AS user_MQL
+    FROM {{ ref('fact_deals_with_requests') }}
+    WHERE deal_status NOT IN ('Test')
+    GROUP BY 1
  )
 
-SELECT main.*,
-    coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) as user_MQL, 
-    coalesce(cart_activation.mql_msk_date,deal_activation.mql_msk_date ) as mql_msk_date,
+SELECT 
+    main.*,
+    COALESCE(cart_activation.user_MQL, deal_activation.user_MQL, 0) AS user_MQL, 
+    COALESCE(cart_activation.mql_msk_date, deal_activation.mql_msk_date) AS mql_msk_date,
     sql_msk_date,
-    coalesce(user_SQL,0) user_SQL,
-    case when user_SQL = 1 then 'SQL'
-         when  coalesce(cart_activation.user_MQL,deal_activation.user_MQL,0 ) = 1 then 'MQL'
-         when  cnpj is not null or company_annual_turnover_range is not null then 'Lead'
-         else 'PreLead'
-    end as Marketing_Lead_Type,
-    case
-     when company_annual_turnover_range  in ('XL','XXL' ) then 'A'
-     when company_annual_turnover_range  in ('M','L' ) then 'B'
-     when company_annual_turnover_range  in ('S' ) then 'C'
-     when company_annual_turnover_range  in ('XS','XXS' ) then 'D'
-     when  cnpj is not null then 'D'
-     end as questionnaire_grade
-    
-    
-    FROM main
-    left join cart_activation using(user_id)
-    left join deal_activation using(user_id)
-where phone_number not like '79%'
+    COALESCE(user_SQL, 0) AS user_SQL,
+    CASE 
+        WHEN user_SQL = 1 THEN 'SQL'
+        WHEN COALESCE(cart_activation.user_MQL, deal_activation.user_MQL, 0) = 1 THEN 'MQL'
+        WHEN cnpj IS NOT NULL OR company_annual_turnover_range IS NOT NULL THEN 'Lead'
+        ELSE 'PreLead'
+    END AS Marketing_Lead_Type,
+    CASE
+        WHEN company_annual_turnover_range IN ('XL','XXL') THEN 'A'
+        WHEN company_annual_turnover_range IN ('M','L') THEN 'B'
+        WHEN company_annual_turnover_range IN ('S') THEN 'C'
+        WHEN company_annual_turnover_range IN ('XS','XXS') THEN 'D'
+        WHEN cnpj IS NOT NULL THEN 'D'
+    END AS questionnaire_grade
+FROM main
+    LEFT JOIN cart_activation USING(user_id)
+    LEFT JOIN deal_activation USING(user_id)
+WHERE phone_number NOT LIKE '79%'
