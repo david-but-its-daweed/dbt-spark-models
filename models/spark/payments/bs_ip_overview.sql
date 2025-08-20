@@ -35,7 +35,7 @@ WITH pmts_and_refunds AS (
         ON pmt.payment_id = ref.payment_id
     WHERE
         pmt.date >= DATE '2024-01-01'
-        AND pmt.provider IN ("paygine_bs", "raifpay_bs", "idbank", "yandexpay_bs")
+        AND pmt.provider IN ("paygine_bs", "paygine_ip", "raifpay_bs", "raifpay_ip", "idbank", "yandexpay_bs")
         AND pmt.payment_type IN ("card", "sbp", "yandexPay", "yandexSplit")
         AND pmt.order_group_id IS NOT null
 ),
@@ -106,7 +106,8 @@ pmt_fee_ref_data_by_order_group AS (
         t3.ref_amount,
         t3.ref_amount_usd,
         t3.ref_provider,
-        t3.cnt_refunds
+        t3.cnt_refunds,
+        (t2.psp_usd_from_costs_final = 0 AND t1.payment_type = "card" AND t1.pmt_provider != "idbank") AS zero_psp_card_ru_flag
     FROM pmt_data_by_order_group AS t1
     LEFT JOIN fee_data_by_order_group AS t2
         ON t1.order_group_id = t2.orderGroupId
@@ -120,9 +121,9 @@ nonzeropsp_refunds_by_refund_dt AS (
         pmt_provider,
         payment_type,
         pmt_ccy,
-        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, cnt_refunds)) AS nonzeropsp_cnt_refunds,
-        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, ref_amount)) AS nonzeropsp_ref_amount,
-        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, ref_amount_usd)) AS nonzeropsp_ref_amount_usd
+        SUM(IF(zero_psp_card_ru_flag, 0, cnt_refunds)) AS nonzeropsp_cnt_refunds,
+        SUM(IF(zero_psp_card_ru_flag, 0, ref_amount)) AS nonzeropsp_ref_amount,
+        SUM(IF(zero_psp_card_ru_flag, 0, ref_amount_usd)) AS nonzeropsp_ref_amount_usd
     FROM pmt_fee_ref_data_by_order_group
     WHERE ref_time_bank IS NOT null
     GROUP BY 1, 2, 3, 4
@@ -140,9 +141,9 @@ pmt_agg_data AS (
         SUM(psp_from_cost_final) AS psp_final,
         SUM(psp_usd_from_costs_final) AS psp_final_usd,
 
-        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, cnt_pmts)) AS nonzeropsp_cnt_pmts,
-        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, pmt_amount)) AS nonzeropsp_pmt_amount,
-        SUM(IF(psp_usd_from_costs_final = 0 AND payment_type = "card", 0, pmt_amount_usd)) AS nonzeropsp_pmt_amount_usd
+        SUM(IF(zero_psp_card_ru_flag, 0, cnt_pmts)) AS nonzeropsp_cnt_pmts,
+        SUM(IF(zero_psp_card_ru_flag, 0, pmt_amount)) AS nonzeropsp_pmt_amount,
+        SUM(IF(zero_psp_card_ru_flag, 0, pmt_amount_usd)) AS nonzeropsp_pmt_amount_usd
     FROM pmt_fee_ref_data_by_order_group
     GROUP BY 1, 2, 3, 4
 )
