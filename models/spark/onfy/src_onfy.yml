@@ -134,3 +134,51 @@ models:
         description: sum of quantity of ordered product from orders_info mart
       - name: before_products_price
         description: sum of GMV based on before_products_price of ordered products from orders_info mart
+
+  - name: onfy_marketing_channel_products_onfy_stats
+    description: owner - helbuk, the table is used mainly for Price Comparison Dashboard (PhAn-1029). Grain 1 row per - product_id  x date x channel. Only for products with more than 100 orders in the past year. In general, data is gathered for the past 90 days.
+    columns: 
+      - name: product_id
+        description: primary key
+      - name: channel
+        description: primary key. Same as in pharmacy.marketing_channel_price_fast_scd2
+      - name: date
+        description: primary key. Date comes from the effective_ts timestamp in the pharmacy.marketing_channel_price_fast_scd2
+      - name: day_of_week
+        description: Name of the weekday (e.g. "Tuesday")
+      - name: month_name
+        description: Name of the month (e.g. "August")
+      - name: product_name
+        description: Product name as in pharmacy_landing.product.name
+      - name: num_total_orders
+        description: Total Onfy orders for product historically (CURRENT_DATE() - INTERVAL 366 DAY)
+      - name: mean_onfy_price
+        description:  Onfy competitive price. Grain - product_id, channel, effective_ts (Min per grain)
+      - name: mean_onfy_rank
+        description:  Onfy competitive position. Grain - product_id, channel, effective_ts (normalized to the start of the hour as in marketing_channel_price_fast_scd2). Higher rank - lower price at Price Comparison Website.  
+      - name: min_competitors_price_of_the_day
+        description: Min Competitors' Price that day
+      - name: mean_competitors_price
+        description: Mean Competitors' Price that day
+      - name: mean_competitors_price_25_percentile
+        description: Mean Competitors' Price of the 25th Percentile
+      - name: mean_competitors_price_median
+        description: Mean Competitors' Price of the Median 
+      - name: mean_competitors_price_75_percentile
+        description: Mean Competitors' Price of the 75th Percentile 
+      - name: mean_first_rank_price
+        description: Mean Competitors' Price of the First Rank
+      - name: mean_second_rank_price
+        description: Mean Competitors' Price of the Second Rank
+      - name: mean_third_rank_price
+        description: Mean Competitors' Price of the Third Rank
+      - name: pharmacy_name_set
+        description: Set of competitors' names that day
+      - name: sum_gross_profit_initial_onfy
+        description: GP initial based on visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
+      - name: visits_from_pa 
+        description: Visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
+      - name: orders
+        description: Orders based on visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
+      - name: num_competitors
+        description: Count of distinct competitors that day
