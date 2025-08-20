@@ -182,3 +182,26 @@ models:
         description: Orders based on visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
       - name: num_competitors
         description: Count of distinct competitors that day
+    
+  - name: banners_stats
+    description: owner - helbuk, For the Dashboard "Promo Campaign Statistics" (PhAn-968). Collect shows, clicks, orders, gmv and number of purchased packages produced by banners (different SourceScreens). Grain - partition_date_cet, sourceScreen, promo_type, blockName. Data is gathered for the past 3 months. 
+    columns: 
+      - name: partition_date_cet
+        description: Day of event - partition_date_cet from onfy_mart.device_events
+      - name: sourceScreen
+        description:  creen where banner was displayed (home, search, product, etc)
+      - name: promo_type
+        description: Here it is always 'banner'
+      - name: blockName
+        description: Banner identificator (banner_catalog_dermasense, banner_home_00565096 etc)
+      - name: impressions
+        description: Number of times banner was shown
+      - name: clicks
+        description: Number of banner-clicks
+      - name: orders
+        description: Number of placed (attributed) orders
+      - name: gmv
+        description: Gross merchandise value of attributed orders - SUM(products_price)
+      - name: packs_sold
+        description: Number of packs purchased in attributed orders
+
