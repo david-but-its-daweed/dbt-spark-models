@@ -31,7 +31,6 @@ WITH procurement_orders AS (
            merchOrdId AS merchant_order_id,
            jpcPayment AS jpc_payment,
            payment,
-           nullIf(size(payment.paymentScheme), 0) AS payment_count_plan,
            prices,
            productRoles AS product_roles,
            currency,
@@ -41,7 +40,7 @@ WITH procurement_orders AS (
            millis_to_ts_msk(utms) AS updated_ts
     FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} AS op
     WHERE isDeleted IS NOT TRUE
-      AND country IN ('BR', 'KZ')
+      AND country NOT IN ('RU')
 ),
 
      filtered_payments AS (
@@ -54,6 +53,13 @@ WITH procurement_orders AS (
         LEFT JOIN mongo.billing_pro_invoices_v3_daily_snapshot AS t3 ON t2.invoiceId = t3._id
         LEFT JOIN mongo.billing_pro_payouts_daily_snapshot AS t4 ON t3.pId = t4._id
         */
+    ),
+    
+    payment_method AS (
+        SELECT
+            _id,
+            type AS payment_method
+        FROM mongo.b2b_core_merchant_payment_methods_daily_snapshot
     )
 
 
@@ -74,6 +80,7 @@ WITH procurement_orders AS (
             'paymentScheme', paymentScheme,
             'paymentType', paymentType,
             'pmId', pmId,
+            'payment_method', payment_method,
             'workScheme', workScheme
         ) AS payment
     FROM (
@@ -93,6 +100,7 @@ WITH procurement_orders AS (
         LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
     ) AS p
     LEFT JOIN billing_info AS bi ON p.id = bi.payment_id
+    LEFT JOIN payment_method AS pm ON p.pmId = pm._id
     WHERE COALESCE(bi.is_payment_cancelled, False) IS NOT TRUE
     GROUP BY
         procurement_order_id,
@@ -101,30 +109,8 @@ WITH procurement_orders AS (
         paymentScheme,
         paymentType,
         pmId,
+        payment_method,
         workScheme
-),
-
-     payments_history AS (
-    SELECT procurement_order_id,
-           COUNT(p.payment_id) AS payment_count_fact,
-           COUNT(CASE WHEN payment_received_ts_msk IS NOT NULL THEN p.payment_id END) AS received_payment_count,
-           COUNT(CASE WHEN sla_fact > sla_plan THEN p.payment_id END) AS overdue_payment_count,
-           SUM(CASE WHEN payment_price_ccy = 'USD' THEN payment_price_amount ELSE 0 END) AS payment_sum_usd,
-           SUM(CASE WHEN payment_price_ccy = 'CNH' THEN payment_price_amount ELSE 0 END) AS payment_sum_cnh,
-           SUM(CASE WHEN payment_price_ccy NOT IN('USD', 'CNH') THEN payment_price_amount ELSE 0 END) AS payment_sum_other
-    FROM (
-        SELECT po.procurement_order_id,
-               ph.id AS payment_id,
-               ph.price.amount / 1000000 AS payment_price_amount,
-               ph.price.ccy AS payment_price_ccy,
-               millis_to_ts_msk(ph.ctms) AS payment_requested_ts_msk,
-               millis_to_ts_msk(ph.utms) AS payment_received_ts_msk,
-               DATEDIFF(millis_to_ts_msk(ph.utms), millis_to_ts_msk(ph.ctms)) AS sla_fact,
-               4 AS sla_plan
-        FROM filtered_payments AS po
-        LATERAL VIEW EXPLODE(po.payment.paymentHistory) AS ph
-    ) AS p
-    GROUP BY 1
 ),
 
      procurement_orders_last_assignee AS (
@@ -423,7 +409,6 @@ WITH procurement_orders AS (
            t1.merchant_order_id,
            t1.jpc_payment,
            t1.payment,
-           t1.payment_count_plan,
            t1.prices,
            t1.product_roles,
            CASE WHEN t1.core_empty = TRUE THEN t2.currency ELSE t1.currency END AS currency,
@@ -519,13 +504,6 @@ SELECT
     po.prices,
     po.jpc_payment,
     fa.payment,
-    po.payment_count_plan,
-    pah.payment_count_fact,
-    pah.received_payment_count,
-    pah.overdue_payment_count,
-    pah.payment_sum_usd,
-    pah.payment_sum_cnh,
-    pah.payment_sum_other,
     po.packaging,
     po.currency,
     po.variants,
@@ -678,7 +656,6 @@ SELECT
     END AS is_for_purchasing_and_production_report
 FROM core_product AS po
 LEFT JOIN filtered_payments AS fa ON po.procurement_order_id = fa.procurement_order_id
-LEFT JOIN payments_history AS pah ON po.procurement_order_id = pah.procurement_order_id
 LEFT JOIN procurement_orders_last_assignee AS pola ON po.procurement_order_id = pola.procurement_order_id
 LEFT JOIN merchant_orders AS mo ON po.merchant_order_id = mo.merchant_order_id
 LEFT JOIN offer_products AS op ON po.procurement_order_id = op.procurement_order_id
