@@ -45,6 +45,75 @@ users AS (
         user_id,
         questionnaire_grade
     FROM {{ ref('ss_users_table') }}
+),
+
+device_types_ AS (
+    SELECT
+        user_id,
+        event_msk_date,
+        CASE
+            WHEN osType IN ('android', 'ios', 'tizen', 'harmonyos') THEN 'mobile'
+            WHEN osType IN ('ubuntu', 'linux', 'mac os', 'windows', 'chromium os') THEN 'desktop'
+            ELSE 'other'
+        END AS device_type,
+        event_ts_msk,
+        ROW_NUMBER() OVER (PARTITION BY user_id, event_msk_date ORDER BY event_ts_msk DESC) AS rn
+    FROM {{ ref('ss_events_startsession') }}
+    WHERE
+        event_msk_date >= '2024-04-06'
+        AND osType IS NOT NULL
+),
+
+-- device_types AS (
+--     SELECT
+--         user_id,
+--         event_msk_date,
+--         event_ts_msk,
+--         device_type
+--     FROM device_types_
+--     WHERE rn = 1
+-- ),
+
+candidates AS (
+    SELECT
+        d.deal_id,
+        d.user_id,
+        d.deal_created_ts,
+        d.deal_created_date,
+        t.event_ts_msk,
+        t.event_msk_date,
+        t.device_type,
+        (UNIX_TIMESTAMP(d.deal_created_ts) - UNIX_TIMESTAMP(t.event_ts_msk)) AS diff_sec
+    FROM {{ ref("fact_deals_with_requests") }} AS d
+    LEFT JOIN device_types_ AS t
+        ON
+            d.user_id = t.user_id
+            AND t.event_ts_msk <= d.deal_created_ts
+),
+
+ranked AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY deal_id, user_id
+            ORDER BY
+                CASE WHEN event_ts_msk IS NULL THEN 1 ELSE 0 END ASC,
+                diff_sec ASC,
+                event_ts_msk DESC
+        ) AS rn
+    FROM candidates
+),
+
+deals_with_types AS (
+    SELECT
+        deal_id,
+        user_id,
+        deal_created_ts,
+        event_ts_msk,
+        device_type,
+        diff_sec
+    FROM ranked
+    WHERE rn = 1
 )
 
 SELECT
@@ -52,6 +121,7 @@ SELECT
     t1.deal_friendly_id,
     t1.user_id,
     us.questionnaire_grade,
+    dt.device_type,
     t1.country,
     t1.deal_name,
     t1.payment_method,
@@ -139,4 +209,8 @@ LEFT JOIN first_deals AS fd USING (user_id)
 LEFT JOIN statuses AS st USING (deal_id)
 LEFT JOIN previous_deals AS pr USING (deal_id)
 LEFT JOIN users AS us USING (user_id)
+LEFT JOIN deals_with_types AS dt
+    ON
+        t1.user_id = dt.user_id AND t1.deal_id = dt.deal_id
+        -- AND (t1.deal_created_date = dt.event_msk_date OR ABS(TO_UNIX_TIMESTAMP(dt.event_ts_msk) - TO_UNIX_TIMESTAMP(t1.deal_created_ts)) <= 72 * 3600)
 WHERE t1.deal_status NOT IN ('Test')
