@@ -3,7 +3,7 @@
     materialized='incremental',
     on_schema_change='sync_all_columns',
     alias='js2_1688_price_index',
-    file_format='parquet',
+    file_format='delta',
     schema='category_management',
     incremental_strategy='insert_overwrite',
     partition_by=['partition_date'],
@@ -82,7 +82,7 @@ calendar AS (
     {% if is_incremental() %}
         FROM (SELECT EXPLODE(SEQUENCE(DATE('{{ var("start_date_ymd") }}') - 90, DATE('{{ var("start_date_ymd") }}'), INTERVAL 1 DAY)) AS partition_date) AS t
     {% else %}
-        FROM (SELECT EXPLODE(SEQUENCE(date('2025-03-20') - 90,  DATE('{{ var("start_date_ymd") }}'), INTERVAL 1 DAY)) AS partition_date) AS t
+        FROM (SELECT EXPLODE(SEQUENCE(DATE('2025-03-20') - 90, DATE('{{ var("start_date_ymd") }}'), INTERVAL 1 DAY)) AS partition_date) AS t
     {% endif %}
     CROSS JOIN pi_products AS p
 ),
@@ -108,7 +108,7 @@ labels AS (
         WHERE partition_date = DATE('{{ var("start_date_ymd") }}')
         {% else %}
         WHERE partition_date >= '2025-03-20'
-    {% endif %}
+        {% endif %}
         AND product_id IN (SELECT DISTINCT p.product_id FROM price_index AS p)
         AND label IN ('joom_select', 'fbj_more_1d_stock')
     GROUP BY 1, 2

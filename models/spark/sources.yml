@@ -234,6 +234,7 @@ sources:
     tables:
       - name: order_data
       - name: kam
+      - name: product_variant_prices_prepared_for_cassandra
 
   - name: price
     tables:
