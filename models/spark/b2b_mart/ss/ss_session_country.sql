@@ -29,7 +29,7 @@ final AS (
         user_id,
         session_id,
         landing,
-        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY cnt DESC, landing ASC) AS rn
+        ROW_NUMBER() OVER (PARTITION BY user_id, session_id ORDER BY cnt DESC, landing ASC) AS rn
     FROM session_landings
     WHERE landing IS NOT NULL
 )
