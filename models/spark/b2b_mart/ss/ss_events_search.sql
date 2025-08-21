@@ -163,5 +163,5 @@ FROM (
     FROM search
     LEFT JOIN clicks ON search.searchResultsUniqId = clicks.searchResultsUniqId
 ) AS m
-/* Оставляем первый поиск в сессии и события с кликами */
-WHERE m.is_first_search_by_session = 1 OR m.click_ts_msk IS NOT NULL
+-- /* Оставляем первый поиск в сессии и события с кликами */
+-- WHERE m.is_first_search_by_session = 1 OR m.click_ts_msk IS NOT NULL
