@@ -1,11 +1,11 @@
 {{ config(
     schema='b2b_mart',
-    materialized='view',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
       'model_owner' : '@abadoyan',
-      'team': 'general_analytics',
-      'bigquery_load': 'true',
-      'priority_weight': '150'
+      'bigquery_load': 'true'
     }
 ) }}
 
