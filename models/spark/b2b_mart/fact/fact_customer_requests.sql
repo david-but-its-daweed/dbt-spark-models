@@ -1,9 +1,10 @@
 {{ config(
     schema='b2b_mart',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
-      'model_owner' : '@amitiushkina',
+      'model_owner' : '@kirill_melnikov',
       'bigquery_load': 'true'
     }
 ) }}
