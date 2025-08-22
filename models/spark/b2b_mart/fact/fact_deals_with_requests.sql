@@ -218,7 +218,8 @@ select
     order_id,
     gmv_initial,
     initial_gross_profit,
-    final_gross_profit
+    final_gross_profit,
+    t as t_gmv
     from {{ ref('gmv_by_sources') }}
 )
 
@@ -283,6 +284,7 @@ SELECT
     ff.gmv_initial,
     ff.initial_gross_profit,
     ff.final_gross_profit,
+    ff.t_gmv, 
     utm_campaign,
     utm_source,
     utm_medium,
