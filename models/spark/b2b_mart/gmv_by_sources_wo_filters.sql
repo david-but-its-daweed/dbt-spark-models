@@ -111,22 +111,7 @@ after_second_qrt_new_order AS (
     LEFT JOIN admin AS a ON o.owner_moderator_id = a.admin_id
     WHERE p.order_id NOT IN ('6294f3dd4c428b23cd6f2547', '64466aad3519d01068153f0b')
     GROUP BY
-        o.manufactured_date,
-        p.order_id,
-        s.utm_campaign,
-        s.utm_source,
-        s.utm_medium,
-        s.source,
-        s.type,
-        s.campaign,
-        COALESCE(NOT(s.min_date_payed IS NULL OR DATE(s.min_date_payed) >= o.created_ts_msk), TRUE),
-        CASE
-            WHEN o.min_manufactured_date < o.manufactured_date THEN 'first order'
-            ELSE 'repeated order'
-        END,
-        o.user_id,
-        a.email,
-        a.owner_role
+        ALL
 ),
 
 country AS (
