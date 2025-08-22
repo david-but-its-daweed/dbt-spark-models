@@ -32,8 +32,9 @@ statuses AS (
 
 base AS (
     SELECT *
-    FROM {{ ref('fact_deals_with_requests') }}
-    INNER JOIN statuses USING (deal_id)
+   -- FROM {{ ref('fact_deals_with_requests') }}
+    FROM {{ ref('marketing_deals_with_orders') }}
+    ---INNER JOIN statuses USING (deal_id)
     WHERE
         achieved_paid_date IS NOT null
         AND deal_type
