@@ -59,7 +59,7 @@ payments AS (
         payment.price.amount / 1000000 AS price,
         payment.price.ccy AS currency,
         payment.promocodeSnapshot._id AS promocode_id,
-        payment.promocodeSnapshot.code AS promocode,
+        COALESCE(payment.promocodeSnapshot.code, payment.coupon) AS promocode,
         COALESCE(payment.promocodeSnapshot.discount.fixed.amount, 0) AS discount_fixed,
         COALESCE(payment.promocodeSnapshot.discount.percentage.percentage, 0) AS discount_percentage,
         currency.rate,
