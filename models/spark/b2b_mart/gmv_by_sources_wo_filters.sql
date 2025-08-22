@@ -86,7 +86,7 @@ source AS (
 
 after_second_qrt_new_order AS (
     SELECT
-        o.manufactured_date AS t,
+        coalesce(o.manufactured_date,created_ts_msk) AS t,
         p.order_id,
         SUM(p.total_confirmed_price) AS gmv_initial,
         SUM(p.initial_gross_profit) AS initial_gross_profit,
