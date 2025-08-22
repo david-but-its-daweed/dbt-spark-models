@@ -200,6 +200,7 @@ SELECT
         WHEN pr.day_after_previous_deal > 90 THEN 'g.Four_Month_and_more'
     END AS previous_deal_days_group,
     COALESCE(st.achieved_paid, 0) AS achived_payment,
+    t_gmv,
     st.achieved_paid_date,
     t1.promo_code,
     t1.promo_code_discount,
