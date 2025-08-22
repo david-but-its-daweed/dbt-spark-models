@@ -199,9 +199,9 @@ SELECT
         WHEN pr.day_after_previous_deal <= 90 THEN 'f.Three_Month'
         WHEN pr.day_after_previous_deal > 90 THEN 'g.Four_Month_and_more'
     END AS previous_deal_days_group,
-    COALESCE(st.achieved_paid, 0) AS achived_payment,
+    COALESCE(st.achieved_paid,case when t_gmv is not null then 1 else 0 end , 0) AS achived_payment,
     t_gmv,
-    st.achieved_paid_date,
+    coalesce(st.achieved_paid_date,t_gmv) as achieved_paid_date,
     t1.promo_code,
     t1.promo_code_discount,
     t1.promo_code_type
