@@ -134,7 +134,7 @@ SELECT
 
     IF(pp.merchantId = '66054380c33acc34a54a56d0', TRUE, FALSE) AS is_ali1688_product,
     CASE
-        WHEN pp.merchant_id = '66054380c33acc34a54a56d0' THEN 'external'
+        WHEN pp.merchantId = '66054380c33acc34a54a56d0' THEN 'external'
         WHEN mp.merchant_id IS NOT NULL THEN 'internal'
         ELSE 'other'
     END AS merchant_type,
@@ -148,5 +148,5 @@ LEFT JOIN product_states AS ps ON pp._id = ps.product_id
 LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
 LEFT JOIN matching AS m ON pp._id = m.product_id
 LEFT JOIN certification AS c ON pp._id = c.product_id
-LEFT JOIN merchant_products AS mp ON pp._id = mp.merchant_id
+LEFT JOIN merchant_products AS mp ON pp.merchantId = mp.merchant_id
 WHERE pp.dbt_valid_to IS NULL
