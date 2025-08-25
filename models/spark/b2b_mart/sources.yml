@@ -63,6 +63,7 @@ sources:
       - name: device_events
       - name: operational_events
       - name: dim_merchant
+      - name: merchants
       - name: merchant_products
       - name: ss_assortment_products
       - name: fact_customer_requests

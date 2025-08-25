@@ -88,9 +88,10 @@ certification AS (
 
 ),
 
-merchant_products AS (
+internal_merchants AS (
     SELECT DISTINCT merchant_id
-    FROM {{ source('b2b_mart', 'merchant_products') }}
+    FROM {{ source('b2b_mart', 'merchants') }}
+    WHERE is_internal = TRUE
 )
 
 SELECT
@@ -135,7 +136,7 @@ SELECT
     IF(pp.merchantId = '66054380c33acc34a54a56d0', TRUE, FALSE) AS is_ali1688_product,
     CASE
         WHEN pp.merchantId = '66054380c33acc34a54a56d0' THEN 'external'
-        WHEN mp.merchant_id IS NOT NULL THEN 'internal'
+        WHEN im.merchant_id IS NOT NULL THEN 'internal'
         ELSE 'other'
     END AS merchant_type,
     MILLIS_TO_TS_MSK(pp.updatedTimeMs) AS update_ts_msk,
@@ -148,5 +149,5 @@ LEFT JOIN product_states AS ps ON pp._id = ps.product_id
 LEFT JOIN categories AS cat ON pp.categoryId = cat.category_id
 LEFT JOIN matching AS m ON pp._id = m.product_id
 LEFT JOIN certification AS c ON pp._id = c.product_id
-LEFT JOIN merchant_products AS mp ON pp.merchantId = mp.merchant_id
+LEFT JOIN internal_merchants AS im ON pp.merchantId = im.merchant_id
 WHERE pp.dbt_valid_to IS NULL
