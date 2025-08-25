@@ -19,7 +19,22 @@ WITH base_deal AS (
         country,
         CASE WHEN self_service THEN 1 ELSE 0 END AS self_service,
         CASE WHEN ss_customer THEN 1 ELSE 0 END AS ss_customer,
-        status,
+        case when user_id in (
+        '65f8a3b040640e6f0b103c62',
+        '62a9feec98d5f1bcd5f8f651',
+        '64dfe85752e94057726ce7e3',
+        '654a36ca194414a2aa015942',
+        '6571e7a767653caa48078a8b',
+        '6050ddece1fffe0006ee7d80',
+        '625441434c41263737ad2ca4',
+        '65e8783880017584d8a361f6',
+        '65ba98813b6d7111865f2f91',
+        '661425270c35c69b50009cb0'.
+        '64ccc5272c4171a23e16a2ec',
+        '64dfe85752e94057726ce7e3',
+        '62b2d105290b5fa689febd0f',
+        '63922e9d6d893ada5e7ef2df'
+    ) then 'Test' else  status end status,
         CAST(status_int AS INT) AS status_int,
         reject_reason,
         CASE
