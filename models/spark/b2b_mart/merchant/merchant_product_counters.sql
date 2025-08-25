@@ -19,24 +19,28 @@ WITH products AS (
 
 raw_events AS (
     SELECT
-        DATE(e.event_time) AS partition_date,
-        user_id,
-        FROM_JSON(e.event_params, 'product_id STRING').product_id AS product_id,
-        e.event_type AS event_type,
-    
+        cjm.event_msk_date AS partition_date,
+        cjm.user_id,
+
+        p.merchant_id,
+        p.merchant_name,
+        p.product_id,
+        p.product_name,
+
+        cjm.type AS event_type,
+
         CASE
             WHEN
-                e.event_type = 'addToCart' AND LAG(e.event_type) OVER (PARTITION BY user_id, FROM_JSON(e.event_params, 'product_id STRING').product_id ORDER BY e.event_time) != 'addToCart'
+                cjm.type = 'addToCart' AND LAG(cjm.type) OVER (PARTITION BY cjm.user_id, cjm.product_id ORDER BY cjm.event_ts_msk) != 'addToCart'
                 THEN
-                    LAG(FROM_JSON(e.event_params, 'pageUrl STRING').pageUrl) OVER (PARTITION BY user_id, FROM_JSON(e.event_params, 'product_id STRING').product_id ORDER BY e.event_time)
-            ELSE FROM_JSON(e.event_params, 'pageUrl STRING').pageUrl
+                    LAG(cjm.pageUrl) OVER (PARTITION BY cjm.user_id, cjm.product_id ORDER BY cjm.event_ts_msk)
+            ELSE cjm.pageUrl
         END AS page_url
-    FROM 
-        b2b_mart.ss_events_by_session
-        LATERAL VIEW EXPLODE(events_in_session) AS e
+    FROM {{ source('b2b_mart', 'ss_events_customer_journey') }} AS cjm
+    INNER JOIN products AS p ON cjm.product_id = p.product_id
     WHERE
-        e.event_type IN ('productPreview', 'productClick', 'addToCart')
-        AND DATE(e.event_time) >= '2025-03-01'
+        cjm.type IN ('productPreview', 'productClick', 'addToCart')
+        AND cjm.event_msk_date >= '2025-03-01'
 ),
 
 events AS (
@@ -46,7 +50,7 @@ events AS (
 
         merchant_id,
         merchant_name,
-        p.product_id,
+        product_id,
         product_name,
 
         event_type,
@@ -60,7 +64,6 @@ events AS (
             ELSE 'other'
         END AS event_info
     FROM raw_events AS re
-    INNER JOIN products AS p ON re.product_id = p.product_id 
 ),
 
 deals AS (
