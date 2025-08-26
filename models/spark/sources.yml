@@ -99,6 +99,10 @@ sources:
       - name: product_product_clusters_daily_snapshot
       - name: b2b_product_product_certification_states_daily_snapshot
       - name: finance_invoices_v3_daily_snapshot
+      - name: cashflow_invoices_daily_snapshot
+      - name: cashflow_daily_operations_daily_snapshot
+      - name: cashflow_operations_daily_snapshot
+
   - name: default
     tables:
       - name: sat_store_performance

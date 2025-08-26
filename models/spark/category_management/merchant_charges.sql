@@ -14,7 +14,16 @@
   )
 }}
 
-WITH data_1 AS (
+WITH quality_orders AS (
+    SELECT order_id
+    FROM {{ ref('gold_orders') }} --gold.orders 
+    WHERE
+        1 = 1
+        AND (refund_reason = 'quality' OR is_quality_refund)
+        AND DATE(order_datetime_utc) > '2025-01-01'
+),
+
+data_1 AS (
     SELECT
         DATE(inv.ct) AS partition_date,
         `inv`.`_id` AS invoice_id,
@@ -27,7 +36,8 @@ WITH data_1 AS (
         ELEMENT_AT(inv.sh, 1) AS inv_sh_0, --достаем нулевой элемент аналогично inv.sh[0]
         `inv`.`p`.`b` AS inv_p_b,
         `inv`.`p`.`e` AS inv_p_e,
-        inv.ct
+        inv.ct,
+        inv.baseId
     FROM {{ source('mongo','finance_invoices_v3_daily_snapshot') }} AS inv --mongo.finance_invoices_v3_daily_snapshot AS inv
     WHERE
         1 = 1
@@ -38,7 +48,8 @@ WITH data_1 AS (
         )
         AND DATE(inv.ct) >= DATE('2025-01-01')
 )
-SELECT
+
+SELECT DISTINCT
     inv.partition_date,
     inv.invoice_id,
     inv.created_at,
@@ -81,3 +92,27 @@ LEFT JOIN {{ ref('dim_pair_currency_rate') }} AS cr --models.dim_pair_currency_r
         AND inv.inv_s_tp_ccy = cr.currency_code
         AND DATE(inv.ct) = cr.effective_date
         AND cr.currency_code_to = 'USD'
+LEFT JOIN {{ source('mongo','cashflow_invoices_daily_snapshot') }} AS cashflowInv --mongo.cashflow_invoices_daily_snapshot AS cashflowInv 
+    ON
+        1 = 1
+        AND (
+            CASE
+                WHEN inv.baseId IS NOT NULL AND inv.baseId != '' THEN inv.baseId
+                ELSE inv.invoice_id
+            END
+        ) = cashflowInv.clientInvoiceId
+LEFT JOIN {{ source('mongo','cashflow_daily_operations_daily_snapshot') }} AS dailyOps -- mongo.cashflow_daily_operations_daily_snapshot as dailyOps 
+    ON
+        1 = 1
+        AND cashflowInv._id = dailyOps.invoice
+LEFT JOIN {{ source('mongo','cashflow_operations_daily_snapshot') }} AS ops --mongo.cashflow_operations_daily_snapshot as ops 
+    ON
+        1 = 1
+        AND dailyOps._id = ops.daily
+WHERE
+    1 = 1
+    AND (
+        (inv.t = 2 AND ops.ref.id IN (SELECT qo.order_id FROM quality_orders AS qo))
+        OR
+        inv.t = 58
+    )
