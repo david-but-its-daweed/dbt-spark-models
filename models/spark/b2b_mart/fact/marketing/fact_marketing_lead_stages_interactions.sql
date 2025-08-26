@@ -78,7 +78,7 @@ cast(mql_ts_ms as Date) as stage_date,
 mql_ts_ms as allocation_ts_ms
 from 
 user_stages 
-where sql_ts_ms is not null 
+where mql_ts_ms is not null 
 
 
 union all
