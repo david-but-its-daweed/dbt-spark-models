@@ -184,12 +184,12 @@ models:
         description: Count of distinct competitors that day
     
   - name: banners_stats
-    description: owner - helbuk, For the Dashboard "Promo Campaign Statistics" (PhAn-968). Collect shows, clicks, orders, gmv and number of purchased packages produced by banners (different SourceScreens). Grain - partition_date_cet, sourceScreen, promo_type, blockName. Data is gathered for the past 3 months. 
+    description: owner - helbuk, For the Dashboard "Promo Campaign Statistics" (PhAn-968). Collects shows, clicks, orders, gmv and number of purchased packages produced by banners (different SourceScreens). Grain - partition_date_cet, sourceScreen, promo_type, blockName. Data is gathered for the past 3 months. 
     columns: 
       - name: partition_date_cet
         description: Day of event - partition_date_cet from onfy_mart.device_events
       - name: sourceScreen
-        description:  creen where banner was displayed (home, search, product, etc)
+        description:  Screen where banner was displayed (home, search, product, etc)
       - name: promo_type
         description: Here it is always 'banner'
       - name: blockName
@@ -205,3 +205,52 @@ models:
       - name: packs_sold
         description: Number of packs purchased in attributed orders
 
+  - name: catalogs_stats
+    description: owner - helbuk, For the Dashboard "Promo Campaign Statistics" (PhAn-968). This model measures sponsored product performance inside catalogs. Collects shows, clicks, orders, gmv and number of purchased packages. Grain - partition_date_cet, promoKey, pzn, categoryId, categoryName. Data is gathered for the past 3 months. 
+    columns: 
+      - name: partition_date_cet
+        description: Day of event - partition_date_cet from onfy_mart.device_events
+      - name: promoKey
+        description:  Internal key identifying sponsored campaign (e.g. 'hager', 'cooper' etc)
+      - name: pzn
+        description: Product code (identifier of promoted product)
+      - name: categoryId
+        description: E.g 'd89eae8ccd99454296b6a38a100f49be'
+      - name: categoryName
+        description: E.g. 'Arzneimittel'
+      - name: impressions
+        description: Product previews inside catalog (sponsored slots with promoKey)
+      - name: clicks
+        description: Number of clicks to sponsored products
+      - name: orders
+        description: Number of placed (attributed) orders
+      - name: gmv
+        description: Gross merchandise value of attributed orders - SUM(products_price)
+      - name: packs_sold
+        description: Number of packs purchased in attributed orders
+
+  - name: recommendations_stats
+    description: owner - helbuk, For the Dashboard "Promo Campaign Statistics" (PhAn-968). This model measures the performance of sponsored products shown in recommendation widgets across different source screens. Collects shows, clicks, orders, gmv and number of purchased packages. Grain - partition_date_cet, promoKey, pzn, categoryId, categoryName. Data is gathered for the past 3 months. 
+    columns: 
+      - name: partition_date_cet
+        description: Day of event - partition_date_cet from onfy_mart.device_events
+      - name: promoKey
+        description:  Internal key identifying sponsored campaign (e.g. 'pharmasgp' etc)
+      - name: sourceScreen
+        description: Screen, where recommendation was displayed (home, product, etc)
+      - name: pzn
+        description: Product code (identifier of promoted product)
+      - name: recommendationType
+        description: E.g 'pr_also_bought_type'
+      - name: recommendationSlotName
+        description: E.g. 'slot4'
+      - name: impressions
+        description: Sponsored Product previews inside recommendations 
+      - name: clicks
+        description: Number of clicks to sponsored products
+      - name: orders
+        description: Number of placed (attributed) orders
+      - name: gmv
+        description: Gross merchandise value of attributed orders - SUM(products_price)
+      - name: packs_sold
+        description: Number of packs purchased in attributed orders
