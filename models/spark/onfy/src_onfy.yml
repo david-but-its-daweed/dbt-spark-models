@@ -254,3 +254,65 @@ models:
         description: Gross merchandise value of attributed orders - SUM(products_price)
       - name: packs_sold
         description: Number of packs purchased in attributed orders
+
+  - name: feed_loaders_stats_per_pharmacy
+    description: PB-8552 - there is ticket to check issues with root table, might not be safe to use
+
+  - name: onfy_marketing_channel_popular_competitors
+    description: owner - helbuk, the table is used mainly for Price Comparison Dashboard (PhAn-1029). Grain - channel x pharmacy_name. Summarizes competitor pharmacies’ price positioning on price-comparison channels over the last ~90 days. product_id must be in Onfy’s set with ≥ 100 orders in the last 366 days (all stores combined)
+    columns: 
+      - name: channel
+        description: Price comparison channel (e.g., idealo, billiger, medizinfuchs-api) as in pharmacy.marketing_channel_price_fast_scd2
+      - name: pharmacy_name
+        description:  Competitor pharmacy name  as in pharmacy.marketing_channel_price_fast_scd2
+      - name: num_products
+        description: Distinct product_id with non-null price for this pharmacy on this channel.
+      - name: num_products_onfy_intersections
+        description: Distinct products where both this pharmacy and Onfy were ranked in top-N (usually top-3) 
+      - name: onfy_price_comparison
+        description: Mean relative gap to Onfy across intersections -  AVG((competitor − Onfy) / Onfy).
+      - name: mean_rank
+        description: Average DENSE_RANK of the pharmacy per product_id x channel x date (1=cheapest).
+      - name: mean_price
+        description: Basic price level stats across all daily observations.
+      - name: min_price
+        description: Basic price level stats across all daily observations.
+      - name: max_price
+        description: Basic price level stats across all daily observations.
+      - name: percentile_25_price
+        description: Price distribution percentiles.
+      - name: percentile_75_price
+        description: Price distribution percentiles.
+      - name: median_price
+        description: Price distribution percentiles.
+      - name: std_price
+        description: Standard deviation of prices (volatility).
+      - name: num_dates_stats
+        description: Number of unique date values contributing to the stats (how many distinct days pharmacy had offers).
+
+  - name: pzns_out_of_stock
+    description: owner - helbuk (PhAn-933). Grain -  store_name x pzn. StatWindow = 90 days — performance baseline window. It estimates how many days a product was unavailable, current OOS status, GMV lost on OOS days (last 30d), and the product’s expected GMV per active day to project weekly/monthly impact.
+    columns: 
+      - name: store_name
+        description: as in pharmacy_landing.store
+      - name: pzn
+        description: Product code (country_local_id).
+      - name: title
+        description: Product name as in pharmacy_landing.product.name 
+      - name: days_not_active_total
+        description: Total OOS days in the last 30d (duration sum).
+      - name: days_not_active_now
+        description: OOS days in last 30d accumulated for the most recent OOS state (indicates currently OOS).
+      - name: gmv_per_active_day
+        description: Expected GMV per day when the item is in stock (computed from 90d baseline).
+      - name: avg_item_price
+        description: Average item price across baseline orders (uses before_price if present).
+      - name: lost_gmv_total
+        description: Sum of realized daily GMV on days that were OOS in last 30d (proxy for unmet demand).
+      - name: lost_gmv_avg_per_day
+        description: lost_gmv_total / days_not_active_total.
+      - name: gmv_per_active_week
+        description: 7 x gmv_per_active_day projection.
+      - name: gmv_per_active_month
+        description: 30 x gmv_per_active_day projection.
+
