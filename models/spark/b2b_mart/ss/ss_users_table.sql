@@ -289,7 +289,7 @@ main AS (
 data_for_mql as (
 select 
 user_id, 
-event_msk_date,
+event_msk_date
 from  {{ ref('ss_events_cart') }} 
 where actionType  = 'add_to_cart'
 
@@ -298,7 +298,6 @@ union all
 select 
 user_id, 
 event_msk_date
-
 from {{ ref('ss_events_cjm') }} 
 where type = 'requestQuoteNowClick'
 ),
