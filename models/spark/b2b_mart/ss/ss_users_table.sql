@@ -285,15 +285,31 @@ main AS (
     LEFT JOIN deals        USING(user_id)
     WHERE phone_number IS NOT NULL
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26
+), 
+data_for_mql as (
+select 
+user_id, 
+event_msk_date,
+from  {{ ref('ss_events_cart') }} 
+where actionType  = 'add_to_cart'
+
+union all 
+
+select 
+user_id, 
+event_msk_date
+
+from {{ ref('ss_events_cjm') }} 
+where type = 'requestQuoteNowClick'
 ),
-    
+
 cart_activation AS (
     SELECT 
         user_id,
         MIN(event_msk_date) AS mql_msk_date,
         MAX(1) AS user_MQL
-    FROM {{ ref('ss_events_cart') }} 
-    WHERE actionType  = 'add_to_cart'
+    FROM  data_for_mql 
+    
     GROUP BY 1 
  ),
     
