@@ -65,7 +65,7 @@ SELECT
     main.user_id,
     main.points_type,
     main.points_redemption_type,
-    mapping.points_group,
+    COALESCE(mapping.points_group, 'Other') AS points_group,
     main.points_redeemed_usd
 FROM main
 LEFT JOIN {{ ref('seed_points_groups_mapping') }} AS mapping USING (points_type)

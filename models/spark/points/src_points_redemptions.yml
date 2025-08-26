@@ -1,12 +1,18 @@
+version: 1
+
 models:
-- name: points_redemptions
-  description: Daily realized points (redemptions) by user and redemption type. One row per `user_id` × `date_msk` × `points_type`. Primary key — `user_id`, `date_msk`, `points_type`. Money fields are in USD and rounded to 3 decimals. :contentReference[oaicite:0]{index=0}
-  columns:
-    - name: date_msk
-      description: Date of points redemption in UTC+3
-    - name: user_id
-      description: User ID (in case of app reinstallation, a new `user_id` is assigned until reauthorization)
-    - name: points_type
-      description: Type of redeemed points (enum, e.g., `cashback`, `initial`, `socialSignIn`)
-    - name: points_redeemed_usd
-      description: Total redeemed points converted to USD on `date_msk` for the given `user_id` and `points_type` (sum over transactions). Computed as `(amountUSD / 1_000_000) * mult`; rounded to 3 decimals
+  - name: points_redemptions
+    description: "Daily realized points (redemptions) by user and redemption type. One row per `user_id` × `date_msk` × `points_type`. Primary key — `user_id`, `date_msk`, `points_type`. Money fields are in USD and rounded to 3 decimals."
+    columns:
+      - name: date_msk
+        description: "Date of points redemption in UTC+3"
+      - name: user_id
+        description: "User ID (in case of app reinstallation, a new `user_id` is assigned until reauthorization)"
+      - name: points_redemption_type
+        description: "Source transaction type that triggered the redemption. Possible values: `purchase` (user used points while purchasing) or `cashout` (user converted points into another value, e.g. payout)."
+      - name: points_group
+        description: "Logical group to which the `points_type` belongs (e.g., `Marketing`, `Compensation`, `Refund`, `Technical`). Groups are defined in the seed file `seed_points_type_to_group` and allow higher-level aggregation of point redemptions."
+      - name: points_type
+        description: "Type of redeemed points (enum, e.g., `cashback`, `initial`, `socialSignIn`)"
+      - name: points_redeemed_usd
+        description: "Total redeemed points converted to USD on `date_msk` for the given `user_id` and `points_type` (sum over transactions). Computed as `(amountUSD / 1_000_000)`; rounded to 3 decimals."
