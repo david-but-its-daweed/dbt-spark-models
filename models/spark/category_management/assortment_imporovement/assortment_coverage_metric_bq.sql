@@ -11,5 +11,8 @@
   )
 }}
 
-SELECT *
+SELECT
+    *,
+    MAX(partition_date) OVER () AS last_partition_date,
+    DATE_TRUNC("week", partition_date) AS partition_week
 FROM {{ source( 'category_management', 'assortment_coverage_metrics') }}
