@@ -1,6 +1,7 @@
 {{
   config(
     file_format='delta',
+    on_schema_change='sync_all_columns',
     materialized='incremental',
     incremental_strategy='insert_overwrite',
     schema='category_management',
