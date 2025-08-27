@@ -182,6 +182,120 @@ models:
         description: Orders based on visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
       - name: num_competitors
         description: Count of distinct competitors that day
+
+  - name: onfy_marketing_channel_products_onfy_stats_new
+    description: owner - helbuk, THE MODEL WITH UPDATED SOURCE marketing_channel_price_fast_v2_scd2 V2-VERSION. the table is used mainly for Price Comparison Dashboard (PhAn-1029). Grain 1 row per - product_id  x date x channel. Only for products with more than 100 orders in the past year. In general, data is gathered for the past 90 days.
+    columns: 
+      - name: product_id
+        description: primary key
+      - name: channel
+        description: primary key. Same as in pharmacy.marketing_channel_price_fast_v2_scd2
+      - name: date
+        description: primary key. Date comes from the effective_ts timestamp in the pharmacy.marketing_channel_price_fast_v2_scd2
+      - name: day_of_week
+        description: Name of the weekday (e.g. "Tuesday")
+      - name: month_name
+        description: Name of the month (e.g. "August")
+      - name: product_name
+        description: Product name as in pharmacy_landing.product.name
+      - name: num_total_orders
+        description: Total Onfy orders for product historically (CURRENT_DATE() - INTERVAL 366 DAY)
+      - name: mean_onfy_price
+        description:  Onfy competitive price. Grain - product_id, channel, effective_ts (Min per grain)
+      - name: mean_onfy_rank
+        description:  Onfy competitive position. Grain - product_id, channel, effective_ts (normalized to the start of the hour as in marketing_channel_price_fast_v2_scd2). Higher rank - lower price at Price Comparison Website.  
+      - name: min_competitors_price_of_the_day
+        description: Min Competitors' Price that day
+      - name: mean_competitors_price
+        description: Mean Competitors' Price that day
+      - name: mean_competitors_price_25_percentile
+        description: Mean Competitors' Price of the 25th Percentile
+      - name: mean_competitors_price_median
+        description: Mean Competitors' Price of the Median 
+      - name: mean_competitors_price_75_percentile
+        description: Mean Competitors' Price of the 75th Percentile 
+      - name: mean_first_rank_price
+        description: Mean Competitors' Price of the First Rank
+      - name: mean_second_rank_price
+        description: Mean Competitors' Price of the Second Rank
+      - name: mean_third_rank_price
+        description: Mean Competitors' Price of the Third Rank
+      - name: pharmacy_name_set
+        description: Set of competitors' names that day
+      - name: sum_gross_profit_initial_onfy
+        description: GP initial based on visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
+      - name: visits_from_pa 
+        description: Visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
+      - name: orders
+        description: Orders based on visits from price aggregators (from ads_dashboard, source IN ('billiger', 'idealo', 'medizinfuchs'))
+      - name: num_competitors
+        description: Count of distinct competitors that day
+
+  
+  - name: onfy_marketing_channel_popular_competitors
+    description: owner - helbuk, the table is used mainly for Price Comparison Dashboard (PhAn-1029). Grain - channel x pharmacy_name. Summarizes competitor pharmacies’ price positioning on price-comparison channels over the last ~90 days. product_id must be in Onfy’s set with ≥ 100 orders in the last 366 days (all stores combined)
+    columns: 
+      - name: channel
+        description: Price comparison channel (e.g., idealo, billiger, medizinfuchs-api) as in pharmacy.marketing_channel_price_fast_scd2
+      - name: pharmacy_name
+        description:  Competitor pharmacy name  as in pharmacy.marketing_channel_price_fast_scd2
+      - name: num_products
+        description: Distinct product_id with non-null price for this pharmacy on this channel.
+      - name: num_products_onfy_intersections
+        description: Distinct products where both this pharmacy and Onfy were ranked in top-N (usually top-3) 
+      - name: onfy_price_comparison
+        description: Mean relative gap to Onfy across intersections -  AVG((competitor − Onfy) / Onfy).
+      - name: mean_rank
+        description: Average DENSE_RANK of the pharmacy per product_id x channel x date (1=cheapest).
+      - name: mean_price
+        description: Basic price level stats across all daily observations.
+      - name: min_price
+        description: Basic price level stats across all daily observations.
+      - name: max_price
+        description: Basic price level stats across all daily observations.
+      - name: percentile_25_price
+        description: Price distribution percentiles.
+      - name: percentile_75_price
+        description: Price distribution percentiles.
+      - name: median_price
+        description: Price distribution percentiles.
+      - name: std_price
+        description: Standard deviation of prices (volatility).
+      - name: num_dates_stats
+        description: Number of unique date values contributing to the stats (how many distinct days pharmacy had offers).
+  
+
+  - name: onfy_marketing_channel_popular_competitors_new
+    description: owner - helbuk, THE MODEL WITH UPDATED SOURCE marketing_channel_price_fast_v2_scd2 V2-VERSION. The table is used mainly for Price Comparison Dashboard (PhAn-1029). Grain - channel x pharmacy_name. Summarizes competitor pharmacies’ price positioning on price-comparison channels over the last ~90 days. product_id must be in Onfy’s set with ≥ 100 orders in the last 366 days (all stores combined)
+    columns: 
+      - name: channel
+        description: Price comparison channel (e.g., idealo, billiger, medizinfuchs-api) as in pharmacy.marketing_channel_price_fast_v2_scd2
+      - name: pharmacy_name
+        description:  Competitor pharmacy name  as in pharmacy.marketing_channel_price_fast_v2_scd2
+      - name: num_products
+        description: Distinct product_id with non-null price for this pharmacy on this channel.
+      - name: num_products_onfy_intersections
+        description: Distinct products where both this pharmacy and Onfy were ranked in top-N (usually top-3) 
+      - name: onfy_price_comparison
+        description: Mean relative gap to Onfy across intersections -  AVG((competitor − Onfy) / Onfy).
+      - name: mean_rank
+        description: Average DENSE_RANK of the pharmacy per product_id x channel x date (1=cheapest).
+      - name: mean_price
+        description: Basic price level stats across all daily observations.
+      - name: min_price
+        description: Basic price level stats across all daily observations.
+      - name: max_price
+        description: Basic price level stats across all daily observations.
+      - name: percentile_25_price
+        description: Price distribution percentiles.
+      - name: percentile_75_price
+        description: Price distribution percentiles.
+      - name: median_price
+        description: Price distribution percentiles.
+      - name: std_price
+        description: Standard deviation of prices (volatility).
+      - name: num_dates_stats
+        description: Number of unique date values contributing to the stats (how many distinct days pharmacy had offers).
     
   - name: banners_stats
     description: owner - helbuk, For the Dashboard "Promo Campaign Statistics" (PhAn-968). Collects shows, clicks, orders, gmv and number of purchased packages produced by banners (different SourceScreens). Grain - partition_date_cet, sourceScreen, promo_type, blockName. Data is gathered for the past 3 months. 
@@ -257,38 +371,6 @@ models:
 
   - name: feed_loaders_stats_per_pharmacy
     description: PB-8552 - there is ticket to check issues with root table, might not be safe to use
-
-  - name: onfy_marketing_channel_popular_competitors
-    description: owner - helbuk, the table is used mainly for Price Comparison Dashboard (PhAn-1029). Grain - channel x pharmacy_name. Summarizes competitor pharmacies’ price positioning on price-comparison channels over the last ~90 days. product_id must be in Onfy’s set with ≥ 100 orders in the last 366 days (all stores combined)
-    columns: 
-      - name: channel
-        description: Price comparison channel (e.g., idealo, billiger, medizinfuchs-api) as in pharmacy.marketing_channel_price_fast_scd2
-      - name: pharmacy_name
-        description:  Competitor pharmacy name  as in pharmacy.marketing_channel_price_fast_scd2
-      - name: num_products
-        description: Distinct product_id with non-null price for this pharmacy on this channel.
-      - name: num_products_onfy_intersections
-        description: Distinct products where both this pharmacy and Onfy were ranked in top-N (usually top-3) 
-      - name: onfy_price_comparison
-        description: Mean relative gap to Onfy across intersections -  AVG((competitor − Onfy) / Onfy).
-      - name: mean_rank
-        description: Average DENSE_RANK of the pharmacy per product_id x channel x date (1=cheapest).
-      - name: mean_price
-        description: Basic price level stats across all daily observations.
-      - name: min_price
-        description: Basic price level stats across all daily observations.
-      - name: max_price
-        description: Basic price level stats across all daily observations.
-      - name: percentile_25_price
-        description: Price distribution percentiles.
-      - name: percentile_75_price
-        description: Price distribution percentiles.
-      - name: median_price
-        description: Price distribution percentiles.
-      - name: std_price
-        description: Standard deviation of prices (volatility).
-      - name: num_dates_stats
-        description: Number of unique date values contributing to the stats (how many distinct days pharmacy had offers).
 
   - name: pzns_out_of_stock
     description: owner - helbuk (PhAn-933). Grain -  store_name x pzn. StatWindow = 90 days — performance baseline window. It estimates how many days a product was unavailable, current OOS status, GMV lost on OOS days (last 30d), and the product’s expected GMV per active day to project weekly/monthly impact.
