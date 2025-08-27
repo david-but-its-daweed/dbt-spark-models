@@ -43,6 +43,7 @@ sources:
     tables:
       - name: time_orders_additional_cube_2_days
       - name: profit
+
   - name: mongo
     tables:
       - name: core_categories_daily_snapshot
@@ -109,11 +110,13 @@ sources:
       - name: productsGroups_louvain
       - name: link_device_user
       - name: link_device_real_user
+
   - name: logistics_mart
     tables:
       - name: fact_order
       - name: tariffs
       - name: jl_fact_order
+
   - name: payments
     tables:
       - name: card_bins_snapshot
@@ -153,6 +156,7 @@ sources:
       - name: table_dependencies_v2
       - name: table_producers
       - name: manual_tables_bq_seed
+
   - name: onfy_mart
     tables:
       - name: device_events
@@ -161,6 +165,7 @@ sources:
       - name: auth_proxy_devices_without_bots
       - name: transactions
       - name: dim_product
+
   - name: pharmacy_landing
     tables:
       - name: order
@@ -178,19 +183,23 @@ sources:
       - name: product
       - name: promocode
       - name: admin_user
+
   - name: threat
     tables:
       - name: bot_factors_onfy
       - name: bot_factors_joompro
+
   - name: push
     tables:
       - name: sale_dates_v1
       - name: user_campaign_relevance
-      - name: mail_user_events     
+      - name: mail_user_events
+
   - name: experiments
     tables:
       - name: experiments_setup
       - name: rollout_group_2
+
   - name: mi_analytics
     tables:
       - name: aliexpress_logistics_prices
@@ -224,6 +233,7 @@ sources:
       - name: mercadolibre_categories_cube_js_monthly
       - name: ods_mlb_mobile_api_product_previews
       - name: product_tracker_items
+      - name: sat_product_creation_date
 
   - name: category_management
     tables:
