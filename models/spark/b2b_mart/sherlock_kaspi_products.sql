@@ -31,8 +31,12 @@ joompro_products AS (
         m1688.sherlockhistory[0].taskid AS task_id
     FROM {{ source('mongo', 'b2b_product_product_appendixes_daily_snapshot') }}
     WHERE
+<<<<<<< HEAD
         m1688.sherlockhistory[0].poolid IS NOT NULL 
         AND m1688.sherlockhistory[0].taskid IS NOT NULL
+=======
+        m1688.sherlockhistory[0].poolid IS NOT NULL AND m1688.sherlockhistory[0].taskid IS NOT NULL
+>>>>>>> Creating kaspi products table
 )
 
 SELECT DISTINCT
