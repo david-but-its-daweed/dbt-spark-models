@@ -3,7 +3,6 @@
     materialized='incremental',
     file_format='delta',
     incremental_strategy='insert_overwrite',
-    partition_by=['date_msk'],
     on_schema_change='ignore',
     meta = {
         'model_owner' : '@general-analytics',
