@@ -43,6 +43,7 @@ filtered AS (
     WHERE
         points_redemption_type IN ('purchase', 'cashout')
         AND date_msk >= '2024-01-01' -- до этого distribution NULL
+        AND date_msk < '{{ var("end_date_ymd") }}' -- исходные данные льются в UTC, заезжают лишние строки
         AND distribution.isDistributed = TRUE
 ),
 

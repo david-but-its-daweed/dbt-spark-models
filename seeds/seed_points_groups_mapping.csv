@@ -1,4 +1,5 @@
 "points_group","points_type"
+"Compensation","adminCompensation"
 "Compensation","staffEnrollment"
 "Marketing","cashback"
 "Marketing","favoriteCategoryCashback"
@@ -17,7 +18,6 @@
 "Marketing","dailyLogin"
 "Marketing","initial"
 "Marketing","crowdSource"
-"Marketing","adminCompensation"
 "Marketing","adminRefund"
 "Marketing","freeOrder"
 "Marketing","adminOther"
