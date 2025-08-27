@@ -4,10 +4,12 @@
     file_format='delta',
     incremental_strategy='insert_overwrite',
     on_schema_change='ignore',
+    partition_by=['date_msk'],
     meta = {
         'model_owner' : '@general-analytics',
         'bigquery_load': 'true',
         'bigquery_partitioning_date_column': 'date_msk',
+        'bigquery_overwrite': 'true'
     }
   )
 }}
