@@ -1,4 +1,4 @@
-{{ config(
+ {{ config(
     schema='b2b_mart',
     materialized='view',
     partition_by={
@@ -36,6 +36,7 @@ SELECT
     event_ts_msk,
     CAST(event_ts_msk AS DATE) AS event_msk_date,
     payload.pageUrl,
+    payload.searchResultsUniqId,
     payload.pageName,
     payload.source,
     payload.isRegistrationCompleted,
