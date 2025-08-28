@@ -25,7 +25,9 @@ WITH support_mart_tickets AS (
         communication_channel,
         tags,
         subjects,
-        subject_categories
+        subject_categories,
+        is_csat_triggered,
+        csat
     FROM
         {{ source('support_mart', 'tickets') }}
     WHERE
@@ -335,35 +337,13 @@ base AS (
         messages_last_replies
 ),
 
-csat_prebase AS (
-    SELECT
-        t.payload.ticketId AS ticket_id,
-        LAST_VALUE(t.payload.selectedOptionsIds[0]) OVER (PARTITION BY t.payload.ticketId ORDER BY t.event_ts_msk ASC) AS csat
-    FROM {{ source('mart', 'babylone_events') }} AS t
-    WHERE
-        t.`type` = 'babyloneWidgetAction'
-        AND t.partition_date >= DATE '2024-01-01'
-        AND t.payload.widgetType = 'did_we_help'
-        AND t.payload.selectedOptionsIds[0] IS NOT NULL
-),
-
 csat AS (
     SELECT
-        t.ticket_id,
-        MIN(t.csat) AS csat
-    FROM csat_prebase AS t
-    GROUP BY 1
+        ticket_id,
+        csat,
+        is_csat_triggered
+    FROM support_mart_tickets
 ),
-
-csat_was_triggered AS (
-    SELECT DISTINCT t.payload.ticketId AS ticket_id
-    FROM {{ source('mart', 'babylone_events') }} AS t
-    WHERE
-        t.`type` = 'babyloneWidgetAction'
-        AND t.partition_date >= DATE '2024-01-01'
-        AND t.payload.widgetType = 'did_we_help'
-        AND t.payload.selectedOptionsIds[0] IS NULL
-)
 
 SELECT DISTINCT
     t.ticket_id,
@@ -383,7 +363,7 @@ SELECT DISTINCT
     f.channel,
     g.was_escalated,
     h.reaction_state,
-    CASE WHEN l.ticket_id IS NULL THEN 'no' ELSE 'yes' END AS csat_was_triggered,
+    IF(k.is_csat_triggered, 'yes', 'no') AS csat_was_triggered,
     k.csat
 FROM
     base AS t
@@ -397,5 +377,4 @@ LEFT JOIN bot_result AS g ON t.ticket_id = g.ticket_id
 LEFT JOIN scenario AS h ON t.ticket_id = h.ticket_id
 LEFT JOIN creations_marketplace AS i ON t.ticket_id = i.ticket_id
 LEFT JOIN csat AS k ON t.ticket_id = k.ticket_id
-LEFT JOIN csat_was_triggered AS l ON t.ticket_id = l.ticket_id
 WHERE t.`timestamp` IS NOT NULL
