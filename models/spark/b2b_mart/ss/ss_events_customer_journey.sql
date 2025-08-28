@@ -39,6 +39,7 @@ SELECT
     payload.searchResultsUniqId,
     payload.pageName,
     payload.source,
+    payload.index,
     payload.isRegistrationCompleted,
     payload.productId AS product_id,
     payload.position,
