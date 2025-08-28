@@ -48,6 +48,7 @@ sources:
     tables:
       - name: core_categories_daily_snapshot
       - name: core_experiments_daily_snapshot
+      - name: core_entity_labels_entries_daily_snapshot
       - name: core_stores_daily_snapshot
       - name: events_ad_spent_internal_daily_snapshot
       - name: events_ad_partners_daily_snapshot
@@ -55,6 +56,7 @@ sources:
       - name: core_merchants_daily_snapshot
       - name: product_merchant_document_product_links_daily_snapshot
       - name: product_product_document_links_daily_snapshot
+      - name: product_products_daily_snapshot
       - name: core_merchant_documents_daily_snapshot
       - name: core_store_specializations_daily_snapshot
       - name: core_merchant_payment_channels_daily_snapshot
