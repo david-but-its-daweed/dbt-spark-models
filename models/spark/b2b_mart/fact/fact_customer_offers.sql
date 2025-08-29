@@ -1,9 +1,10 @@
 {{ config(
     schema='b2b_mart',
-    materialized='table',
-    file_format='parquet',
+    file_format='delta',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     meta = {
-      'model_owner' : '@amitiushkina',
+      'model_owner' : '@abadoyan',
       'bigquery_load': 'true'
     }
 ) }}
@@ -20,6 +21,7 @@ SELECT
     orderid AS order_id,
     ko.status,
     userid AS user_id,
+    co.originId AS origin_offer_id,
     moderatorId AS moderator_id,
     brokerprops.link AS broker_link,
     millis_to_ts_msk(ctms) AS created_time,
