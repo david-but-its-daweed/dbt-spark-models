@@ -37,7 +37,7 @@ statuses AS (
         MIN(CAST(event_ts_msk AS DATE)) AS achieved_paid_date
     FROM {{ ref('fact_deals_status_history') }}
     WHERE status_name_small_deal LIKE '%ProcurementConfirmation' OR status_name LIKE '%PaymentToMerchant' 
-            or status_name  LIKE '%ProcurementConfirmation' or 
+            or status_name  LIKE '%ProcurementConfirmation' or status_name_small_deal LIKE '%PaymentToMerchant' 
     GROUP BY 1
 ),
 
