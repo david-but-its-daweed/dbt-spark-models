@@ -250,7 +250,13 @@ orders_ext0 AS (
                 AND DATEDIFF(ord.refund_time_utc, ord.created_time_utc) <= 80
             ),
             FALSE
-        ) AS is_negative_feedback
+        ) AS is_negative_feedback,
+
+        CASE
+            WHEN app_entity_group = 'shopy' THEN shopy_partner_payout_final
+            WHEN app_entity = 'uzum' THEN wl_commission_initial
+        ELSE 0
+        END AS partner_payout
 
     FROM {{ source('mart', 'star_order_2020') }} AS ord
     LEFT JOIN pickup_fault_cancelled_orders AS c USING (order_id)
@@ -386,6 +392,7 @@ orders_ext2 AS (
         review_image_count,
         number_of_reviews,
         is_negative_feedback,
+        partner_payout,
 
         IF(number_of_reviews > 0, ROUND(total_product_rating / number_of_reviews, 1), NULL) AS product_rating, -- рейтинг товара на момент покупки
         product_orders_number, -- номер покупки товара
@@ -526,6 +533,7 @@ orders_ext5 AS (
         a.is_new_device,
         a.device_lifetime,
         a.blogger_type,
+        a.partner_payout,
 
         IF(b.tracking_delivered_datetime_utc IS NOT NULL, TRUE, a.is_finalized) AS is_finalized,
 
@@ -681,6 +689,7 @@ SELECT
     number_of_reviews,
     product_rating,
     is_negative_feedback,
+    partner_payout,
     TRUNC(order_date_msk, 'MM') AS order_month_msk
 
 FROM orders_ext7

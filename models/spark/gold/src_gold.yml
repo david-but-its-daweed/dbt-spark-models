@@ -734,6 +734,8 @@ models:
       description: Commited Fullfillment Time (in days), merchant's estimation of time from order approve to passing order to pickup by merchant. CFT is attributed to product variant, but can be changed by merchant.
     - name: order_month_msk
       description: Order payment month in UTC+3 (based on `order_date_msk`). We don't use the order creation date because it gives us less information. The platform creates an order only after payment, the order is accepted into work only after payment. The order is accepted into work only after payment. Usually the difference between order creation and order payment does not exceed 3 minutes..
+    - name: partner_payout
+      description: The amount of commission paid to the partner (e.g., Shopy blogger, Uzum, etc) at the moment of the initial transaction
 
 - name: gold_order_groups
   description: Information about purchased shopping carts. The row in the table is true for `order_group_id`.

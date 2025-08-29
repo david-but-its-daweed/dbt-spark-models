@@ -163,7 +163,6 @@ sources:
     tables:
       - name: device_events
       - name: devices_mart
-      - name: ads_spends
       - name: auth_proxy_devices_without_bots
       - name: transactions
       - name: dim_product
