@@ -106,6 +106,7 @@ sources:
       - name: cashflow_daily_operations_daily_snapshot
       - name: cashflow_operations_daily_snapshot
       - name: order_jms_orders_daily_snapshot
+      - name: logistics_orders_daily_snapshot
 
   - name: default
     tables:
@@ -119,6 +120,10 @@ sources:
       - name: fact_order
       - name: tariffs
       - name: jl_fact_order
+  
+  - name: logistics
+    tables:
+      - name: jl_order_cost_base
 
   - name: payments
     tables:

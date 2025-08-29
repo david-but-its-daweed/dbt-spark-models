@@ -35,3 +35,4 @@ pharmacy.partners_insights
 pharmacy.product_store_fast_scd2
 pharmacy.feed_loaders_state
 pharmacy.checkout_promocode
+logistics.jl_order_cost_base
