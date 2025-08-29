@@ -343,7 +343,7 @@ csat AS (
         csat,
         is_csat_triggered
     FROM support_mart_tickets
-),
+)
 
 SELECT DISTINCT
     t.ticket_id,
