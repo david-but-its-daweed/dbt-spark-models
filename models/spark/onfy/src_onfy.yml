@@ -397,4 +397,58 @@ models:
         description: 7 x gmv_per_active_day projection.
       - name: gmv_per_active_month
         description: 30 x gmv_per_active_day projection.
-
+        
+  - name: transactions
+    description: |
+      owner - annzaychik, enriched parcel-level transactions with PSP fees and currency expansion (EUR + USD). Grain — 1 row per transaction type × parcel_id × currency.
+      Includes GMV and Gross Profit in initial and final variants.
+      Pre–2023-07-21 PSP fees are synthesized; USD values are converted via mart.dim_currency_rate.
+      Final output is a UNION of EUR and USD records and distributed by partition_date.
+    columns:
+      - name: type
+        description: "normalized transaction type (e.g., PAYMENT, ORDER_SHIPMENT, DISCOUNT, COMMISSION, CHARGE_FEE, REFUND_FEE, *_REVERSAL, *_VAT)"
+      - name: order_id
+        description: "unique order identifier"
+      - name: purchase_num
+        description: "sequential purchase index per user_email_hash (1 = first purchase)"
+      - name: device_id
+        description: "device identifier from pharmacy_landing.order"
+      - name: app_device_type
+        description: "device category (WEB_DESKTOP / WEB_MOBILE / IOS / ANDROID / Other)"
+      - name: platform_type
+        description: "WEB / APP / Other derived from app_type"
+      - name: order_parcel_id
+        description: "parcel identifier for shipment-related transactions (nullable)"
+      - name: store_name
+        description: "pharmacy/store name linked via order_parcel (nullable)"
+      - name: payment_method
+        description: "payment method used on the order (e.g., PAY_PAL, CARD, APPLE_PAY, GIROPAY, SOFORT, KLARNA)"
+      - name: user_email_hash
+        description: "hashed user email for attribution and purchase_num derivation"
+      - name: source
+        description: "last-touch marketing source from lndc_user_attribution"
+      - name: campaign
+        description: "last-touch marketing campaign from lndc_user_attribution"
+      - name: order_created_time_cet
+        description: "order created timestamp converted to Europe/Berlin (from pharmacy_landing.order)"
+      - name: transaction_date
+        description: "transaction timestamp in CET (Europe/Berlin); for synthesized PSP rows equals order_created_time_cet"
+      - name: partition_date
+        description: "DATE(transaction_date) used for partitioning"
+      - name: price
+        description: |
+          signed transaction amount in the given currency (see currency).
+          PSP fees before 2023-07-21 are calculated per payment_method using fixed + % of turnover for charges,
+          and fixed + % of refund for refunds, then inserted as CHARGE_FEE/REFUND_FEE.
+      - name: currency
+        description: |
+          currency code of the row (EUR or USD).
+          USD rows are produced by multiplying EUR amounts by (EUR rate / USD rate) from mart.dim_currency_rate on transaction_date.
+      - name: gmv_initial
+        description: "raw positive GMV components only (PAYMENT, SERVICE_FEE, ORDER_SHIPMENT, DELIVERY_SURCHARGE)"
+      - name: gmv_final
+        description: "net GMV including reversals (positive for charges, negative for *_REVERSAL)"
+      - name: gross_profit_initial
+        description: "initial GP components (COMMISSION, SERVICE_FEE, DELIVERY_SURCHARGE, MEDIA_REVENUE) minus VAT/DISCOUNT/CHARGE_FEE components"
+      - name: gross_profit_final
+        description: "net GP after reversals and refund fees (adds *_REVERSAL_* and REFUND_FEE, subtracts *_VAT, DISCOUNT, CHARGE_FEE)"
