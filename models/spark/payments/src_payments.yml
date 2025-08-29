@@ -32,3 +32,52 @@ models:
         description: total amount of refunds in currency with non-zero psp final
       - name: nonzeropsp_ref_amount_usd
         description: total amount of refunds in USD with non-zero psp final
+  - name: bs_ip_overview_raw_data
+    description: Table with not_aggregated data for reconciliation with providers. Ticket https://joom-team.atlassian.net/browse/OPAN-1027
+    columns:
+      - name: order_group_id
+        description: tbd
+      - name: pmt_time_bank
+        description: tbd
+      - name: pmt_ccy
+        description: tbd
+      - name: pmt_amount
+        description: tbd
+      - name: pmt_amount_usd
+        description: tbd
+      - name: pmt_provider
+        description: tbd
+      - name: payment_type
+        description: tbd
+      - name: cnt_pmts
+        description: tbd
+      - name: payment_id_list
+        description: tbd
+      - name: psp_from_cost_initial
+        description: tbd
+      - name: psp_ccy_from_costs_initial
+        description: tbd
+      - name: psp_usd_from_costs_initial
+        description: tbd
+      - name: psp_from_cost_final
+        description: tbd
+      - name: psp_ccy_from_costs_final
+        description: tbd
+      - name: psp_usd_from_costs_final
+        description: tbd
+      - name: ref_time_bank
+        description: tbd
+      - name: ref_ccy
+        description: tbd
+      - name: ref_amount
+        description: tbd
+      - name: ref_amount_usd
+        description: tbd
+      - name: ref_provider
+        description: tbd
+      - name: cnt_refunds
+        description: tbd
+      - name: refund_id_list
+        description: tbd
+      - name: zero_psp_card_ru_flag
+        description: tbd
