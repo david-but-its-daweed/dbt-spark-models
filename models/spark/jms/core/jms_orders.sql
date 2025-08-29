@@ -5,6 +5,7 @@
     materialized='incremental',
     incremental_strategy='insert_overwrite',
     partition_by=['order_date_utc'],
+    on_schema_change='sync_all_columns',
     meta = {
         'model_owner' : '@leonid.enov',
         'bigquery_load': 'true',
