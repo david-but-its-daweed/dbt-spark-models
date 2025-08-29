@@ -453,8 +453,7 @@ models:
       - name: gross_profit_final
         description: "net GP after reversals and refund fees (adds *_REVERSAL_* and REFUND_FEE, subtracts *_VAT, DISCOUNT, CHARGE_FEE)"
 
-
-  - name: order_parcel_items_enriched
+  - name: orders_info
     description: |
       owner - annzaychik. Enriched line-item (parcel item) facts per order with device, store, manufacturer, and pricing fields.
       Grain — 1 row per order_parcel_item (product_id + parcel_id).
@@ -527,3 +526,146 @@ models:
         description: "per-unit discount = before_item_price − after_price (0 if none)"
       - name: products_discount
         description: "extended discount = item_discount × quantity"
+
+  - name: ads_dashboard
+    description: |
+      owner - annzaychik. Session-level marketing attribution with joined ad spends and distributed cost metrics.
+      Grain — 1 row per device_id × session_dt (one row per detected session; may be null for pure spend rows when joined by date).
+      Timezone — CET. Partitioned by report_date.
+    columns:
+      - name: session_dt
+        description: "timestamp of the session start"
+      - name: attributed_session_dt
+        description: "timestamp of the attributed session under 7-day window logic"
+      - name: report_month
+        description: "month extracted from coalesced session/spend date, for reporting"
+      - name: report_date
+        description: "coalesced reporting date (session_date or spend partition date)"
+      - name: partition_date
+        description: "DATE(report_date) used for partitioning"
+      - name: source
+        description: "attributed source under 7-day window hierarchy"
+      - name: source_significant
+        description: "flag of significant source for the session (1/0)"
+      - name: session_source
+        description: "session source before attribution hierarchy (source_corrected)"
+      - name: campaign
+        description: "attributed campaign under 7-day window hierarchy"
+      - name: campaign_significant
+        description: "flag of significant campaign for the session (1/0)"
+      - name: session_campaign
+        description: "session campaign before attribution hierarchy"
+      - name: medium
+        description: "attributed medium under 7-day window hierarchy"
+      - name: medium_significant
+        description: "flag of significant medium for the session (1/0)"
+      - name: session_medium
+        description: "session medium before attribution hierarchy (utm_medium)"
+      - name: source_1d
+        description: "attributed source under 1-day window"
+      - name: medium_1d
+        description: "attributed medium under 1-day window"
+      - name: campaign_1d
+        description: "attributed campaign under 1-day window"
+      - name: ultimate_window
+        description: "7-day session partition id used to group sequences for attribution"
+      - name: significant_source_window
+        description: "running group id that increments on significant source change"
+      - name: ads_source
+        description: "source from onfy_mart.ads_spends"
+      - name: ads_campaign
+        description: "campaign from onfy_mart.ads_spends"
+      - name: ads_medium
+        description: "medium from onfy_mart.ads_spends"
+      - name: campaign_platform
+        description: "platform from ad spend (web/android/ios etc.)"
+      - name: report_source
+        description: "final reporting source (coalesce of session, significant, spend)"
+      - name: report_campaign
+        description: "final reporting campaign (coalesce of session, significant, spend)"
+      - name: report_medium
+        description: "final reporting medium (coalesce of session, significant, spend)"
+      - name: timeout_source_window
+        description: "running group id that increments on inactivity timeouts"
+      - name: device_id
+        description: "device identifier of the session"
+      - name: combined_id
+        description: "user_email_hash when available else device_id"
+      - name: order_user_email_hash
+        description: "user_email_hash tied to session or order context"
+      - name: first_user_source
+        description: "first attributed source observed for this user_email_hash"
+      - name: first_user_campaign
+        description: "first attributed campaign observed for this user_email_hash"
+      - name: first_user_medium
+        description: "first attributed medium observed for this user_email_hash"
+      - name: first_user_session_dt
+        description: "timestamp of the user’s first observed session"
+      - name: first_order_dt
+        description: "timestamp of the user’s first observed order"
+      - name: promocode_discount
+        description: "total discount amount on the order, price applier + promocode (EUR)"
+      - name: promocode_name
+        description: "promocode name if present"
+      - name: promocode_id
+        description: "promocode id if present"
+      - name: order_id
+        description: "order identifier attributed to the session (nullable)"
+      - name: gmv_initial
+        description: "GMV initial of the order"
+      - name: gross_profit_initial
+        description: "Gross Profit initial of the order"
+      - name: session_num
+        description: "sequential session index per device_id"
+      - name: purchase_num
+        description: "sequential purchase index per user_email_hash (1 = first)"
+      - name: order_dt
+        description: "order timestamp in CET (nullable if no order)"
+      - name: order_date
+        description: "DATE(order_dt) in CET (nullable if no order)"
+      - name: app_device_type
+        description: "normalized device category (web_desktop, web_mobile, android, ios, or fallback)"
+      - name: total_spend
+        description: "ad spend on the session_date for matched source/campaign/platform"
+      - name: attributed_spend
+        description: "ad spend on the attributed_session_date for matched source/campaign/platform"
+      - name: report_app_type
+        description: "final app type for reporting (from session app_type or spend platform)"
+      - name: campaign_sessions
+        description: "count of sessions on session_date for session campaign/source/medium"
+      - name: campaign_purchases
+        description: "count of orders on order_date for session campaign/source/medium"
+      - name: attributed_campaign_sessions
+        description: "count of sessions on attributed_session_date for attributed campaign/source/medium"
+      - name: attributed_campaign_purchases
+        description: "count of orders on attributed_session_date for attributed campaign/source/medium"
+      - name: attributed_campaign_sessions_1d
+        description: "count of sessions on 1-day attributed date for campaign/source/medium"
+      - name: attributed_campaign_purchases_1d
+        description: "count of orders on 1-day attributed date for campaign/source/medium"
+      - name: session_spend
+        description: "distributed session cost = total_spend divided by campaign_sessions"
+      - name: order_session_spend
+        description: "distributed order cost on session view = total_spend divided by campaign_purchases (zero when no order)"
+      - name: attributed_session_spend
+        description: "distributed session cost on attributed view = attributed_spend divided by attributed_campaign_sessions"
+      - name: attributed_order_spend
+        description: "distributed order cost on attributed view = attributed_spend divided by attributed_campaign_purchases (zero when no order)"
+      - name: attributed_first_order_spend
+        description: "distributed cost for first purchases only on attributed view"
+      - name: attributed_session_spend_1d
+        description: "distributed session cost under 1-day window = attributed_spend_1d divided by attributed_campaign_sessions_1d"
+      - name: attributed_order_spend_1d
+        description: "distributed order cost under 1-day window = attributed_spend_1d divided by attributed_campaign_purchases_1d (zero when no order)"
+      - name: attributed_gclid
+        description: "gclid captured from the attributed landing page (7-day window)"
+      - name: landing_page
+        description: "raw landing page url of the session"
+      - name: attributed_landing_page
+        description: "landing page url from the attributed session"
+      - name: gclid
+        description: "gclid captured on the raw session"
+      - name: landing_pzn
+        description: "PZN or product id parsed from the raw landing page"
+      - name: attributed_landing_pzn
+        description: "PZN or product id parsed from the attributed landing page"
