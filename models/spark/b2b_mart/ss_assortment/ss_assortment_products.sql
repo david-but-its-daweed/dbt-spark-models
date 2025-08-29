@@ -110,6 +110,7 @@ SELECT
     cat.level_2_category_id,
     cat.level_3_category_id,
 
+    pa.brand,
     MILLIS_TO_TS_MSK(pp.createdTimeMs) AS created_ts_msk,
     DATE(MILLIS_TO_TS_MSK(pp.createdTimeMs)) AS created_date,
 
