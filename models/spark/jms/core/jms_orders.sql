@@ -4,9 +4,11 @@
     file_format='delta',
     materialized='incremental',
     incremental_strategy='insert_overwrite',
+    partition_by=['order_date_utc'],
     meta = {
         'model_owner' : '@leonid.enov',
         'bigquery_load': 'true',
+        'bigquery_partitioning_date_column': 'order_date_utc',
         'bigquery_overwrite': 'true'
     }
   )
@@ -18,16 +20,25 @@ WITH currency_rate AS (
         rate,
         effective_date,
         next_effective_date
-    FROM mart.dim_pair_currency_rate
+    FROM {{ source('mart', 'dim_pair_currency_rate') }}
     WHERE currency_code_to = 'USD'
 ),
 
 raw AS (
     SELECT
         -- Main order info
-        ci.t AS order_datetime_utc,
-        DATE(ci.t) AS order_date_utc,
+        a.ci.t AS order_datetime_utc,
+        DATE(a.ci.t) AS order_date_utc,
         a._id AS jms_order_id,
+        CASE
+            WHEN a.st.st.s[0] = 0 THEN 'created'
+            WHEN a.st.st.s[0] = 1 THEN 'fulfilledOnline'
+            WHEN a.st.st.s[0] = 2 THEN 'shipped'
+            WHEN a.st.st.s[0] = 3 THEN 'cancelledByMerchant'
+            WHEN a.st.st.s[0] = 4 THEN 'refunded'
+            WHEN a.st.st.s[0] = 5 THEN 'cancelledByJL'
+            ELSE 'unknown'
+        END AS order_status,
         a.aId AS jms_account_id,
         a.fId AS friendly_order_id,
         a.ogId AS order_group_id,
@@ -91,8 +102,8 @@ raw AS (
         a.mi.m.r * 1e-6 AS merchant_revenue, -- merchant revenue after take rate
 
         -- Logistics Info
-        a.mi.l.p.amount * 1e-6 AS logistics_money_price_amount, -- Check!
-        a.mi.l.p.ccy AS logistics_money_price_currency, -- Check!
+        a.mi.l.p.amount * 1e-6 AS logistics_revenue_amount,
+        a.mi.l.p.ccy AS logistics_revenue_currency,
 
         -- Take rate
         a.mi.tr.j / 100 AS take_rate_joom_share,
@@ -169,7 +180,7 @@ raw AS (
             ELSE 'other'
         END AS detailed_refund_reason,
         a.st.ref.cb AS refund_created_by
-    FROM mongo.order_jms_orders_daily_snapshot AS a
+    FROM {{ source('mongo', 'order_jms_orders_daily_snapshot') }} AS a
     LEFT JOIN currency_rate AS cr ON
         a.mi.cp.c = cr.currency_code
         AND a.ci.t > cr.effective_date

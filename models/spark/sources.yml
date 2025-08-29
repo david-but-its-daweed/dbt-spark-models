@@ -105,6 +105,7 @@ sources:
       - name: cashflow_invoices_daily_snapshot
       - name: cashflow_daily_operations_daily_snapshot
       - name: cashflow_operations_daily_snapshot
+      - name: order_jms_orders_daily_snapshot
 
   - name: default
     tables:
