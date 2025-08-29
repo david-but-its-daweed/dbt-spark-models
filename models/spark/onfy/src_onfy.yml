@@ -452,3 +452,78 @@ models:
         description: "initial GP components (COMMISSION, SERVICE_FEE, DELIVERY_SURCHARGE, MEDIA_REVENUE) minus VAT/DISCOUNT/CHARGE_FEE components"
       - name: gross_profit_final
         description: "net GP after reversals and refund fees (adds *_REVERSAL_* and REFUND_FEE, subtracts *_VAT, DISCOUNT, CHARGE_FEE)"
+
+
+  - name: order_parcel_items_enriched
+    description: |
+      owner - annzaychik. Enriched line-item (parcel item) facts per order with device, store, manufacturer, and pricing fields.
+      Grain — 1 row per order_parcel_item (product_id + parcel_id).
+      Buyer flag is computed vs the device’s earliest purchase timestamp.
+      Timestamps are converted to Europe/Berlin. Output is distributed by partition_date.
+    columns:
+      - name: user_id
+        description: "user identifier from pharmacy_landing.order"
+      - name: device_id
+        description: "device identifier tied to the order"
+      - name: user_email_hash
+        description: "hashed user email used for purchase sequencing and user matching"
+      - name: app_device_type
+        description: "normalized device category: web_desktop, web_mobile, android, ios"
+      - name: is_buyer
+        description: "flag indicating whether the order was placed after the device’s first recorded purchase (1/0)"
+      - name: purchase_num
+        description: "sequential purchase index per user_email_hash (1 = first purchase)"
+      - name: order_id
+        description: "unique order identifier"
+      - name: order_created_time_cet
+        description: "order created timestamp converted to Europe/Berlin"
+      - name: partition_date
+        description: "DATE(order_created_time_cet) used for partitioning"
+      - name: city
+        description: "order city provided at checkout"
+      - name: payment_method
+        description: "payment method used on the order"
+      - name: parcel_id
+        description: "order parcel id"
+      - name: parcel_status
+        description: "status of the parcel from order_parcel"
+      - name: parcel_delivery_status
+        description: "delivery status from order_parcel_delivery"
+      - name: store_id
+        description: "store identifier associated with the parcel"
+      - name: store_name
+        description: "store name as in pharmacy_landing.store"
+      - name: current_delivery_price
+        description: "delivery price from store_delivery_price at join time (not time-versioned)"
+      - name: current_free_threshold_price
+        description: "free shipping threshold from store_delivery_price (not time-versioned)"
+      - name: express
+        description: "flag indicating express delivery capability from store_delivery"
+      - name: manufacturer_name
+        description: "full manufacturer name of the product"
+      - name: manufacturer_short_name
+        description: "short manufacturer name of the product"
+      - name: is_packetshop
+        description: "flag indicating pickup via Paketshop for the order (TRUE/FALSE)"
+      - name: parcel_delivery_price
+        description: "delivery price recorded on the parcel"
+      - name: product_id
+        description: "product identifier from order_parcel_item"
+      - name: pzn
+        description: "country_local_id (PZN) from medicine for the product (null for non-PZN)"
+      - name: product_name
+        description: "product name from dim_product"
+      - name: quantity
+        description: "number of packs purchased for this line item"
+      - name: item_price
+        description: "unit price per item (after discount), cast to DOUBLE"
+      - name: products_price
+        description: "extended price = item_price × quantity, cast to DOUBLE"
+      - name: before_item_price
+        description: "pre-discount unit price; equals to item_price if no discount record"
+      - name: before_products_price
+        description: "pre-discount extended price = before_item_price × quantity"
+      - name: item_discount
+        description: "per-unit discount = before_item_price − after_price (0 if none)"
+      - name: products_discount
+        description: "extended discount = item_discount × quantity"
