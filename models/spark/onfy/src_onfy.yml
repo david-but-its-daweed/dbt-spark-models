@@ -669,3 +669,83 @@ models:
         description: "PZN or product id parsed from the raw landing page"
       - name: attributed_landing_pzn
         description: "PZN or product id parsed from the attributed landing page"
+
+  - name: b2b_categories_dash
+    description: |
+      owner - annzaychik. Category-level sales facts for B2B dashboards and business development. 
+      Grain - one row per order_day × store_id × product_id × product_category. If a product belongs to multiple categories, it appears once per category (no de-duplication).
+    columns:
+      - name: order_day
+        description: "order date (CET), day-granular — CAST(DATE_TRUNC('day', order_created_time_cet) AS DATE)"
+      - name: store_name
+        description: "store name of the order"
+      - name: store_id
+        description: "store identifier"
+      - name: pzn
+        description: "country_local_id (PZN) of the product if present"
+      - name: product_id
+        description: "internal product identifier"
+      - name: product_name
+        description: "product name as captured in orders"
+      - name: before_products_price
+        description: "pre-discounted sum of products price (before item price x quantity). Will be duplicated if summed without division to categories_number"
+      - name: products_price
+        description: "post-discounted sum of products price (item price x quantity)"
+      - name: quantity
+        description: "total quantity (packs) sold over the day. Will be duplicated if summed without division to categories_number"
+      - name: orders
+        description: "distinct orders that contained this product on the day. Will be duplicated if summed without division to categories_number"
+      - name: manufacturer_id
+        description: "manufacturer identifier"
+      - name: manufacturer_name
+        description: "full manufacturer name"
+      - name: medicine_quantity
+        description: "package size numeric quantity"
+      - name: medicine_unit
+        description: "package size unit"
+      - name: product_slug
+        description: "SEO slug of the product (used to build url)"
+      - name: product_category
+        description: "maximum caterory id directly assigned to the product in product_category_flat"
+      - name: category_id_level_1
+        description: "top-level category id for the product's category path (nullable)"
+      - name: category_id_level_2
+        description: "2nd-level category id on the path (nullable)"
+      - name: category_id_level_3
+        description: "3rd-level category id on the path (nullable)"
+      - name: category_id_level_4
+        description: "4th-level category id on the path (nullable)"
+      - name: category_id_level_5
+        description: "5th-level category id on the path (nullable)"
+      - name: category_name_level_1
+        description: "top-level category name; COALESCE'd to 'NO CATEGORY' when missing"
+      - name: category_name_level_2
+        description: "2nd-level category name (nullable)"
+      - name: category_name_level_3
+        description: "3rd-level category name (nullable)"
+      - name: category_name_level_4
+        description: "4th-level category name (nullable)"
+      - name: category_name_level_5
+        description: "5th-level category name (nullable)"
+      - name: category_slug_level_1
+        description: "top-level category slug; COALESCE'd to 'NO CATEGORY' when missing"
+      - name: category_slug_level_2
+        description: "2nd-level category slug (nullable)"
+      - name: category_slug_level_3
+        description: "3rd-level category slug (nullable)"
+      - name: category_slug_level_4
+        description: "4th-level category slug (nullable)"
+      - name: category_slug_level_5
+        description: "5th-level category slug (nullable)"
+      - name: catalog_url
+        description: "URL for the product's assigned category (uses product_category + product_category_slug)"
+      - name: product_url
+        description: "product page URL (uses pzn + product_slug)"
+      - name: categories_number
+        description: "number of category rows for this (order_day, pzn, manufacturer_id, store_id) — indicates multi-category assignment"
+      - name: actives_list
+        description: "list of active ingredients (from onfy_medicine_analogs)"
+      - name: analog_pzns
+        description: "comma-separated PZNs of analogue products (from onfy_medicine_analogs)"
+      - name: analogs_count
+        description: "count of analogue products (from onfy_medicine_analogs)"
