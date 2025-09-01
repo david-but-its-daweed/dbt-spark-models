@@ -181,7 +181,7 @@ SELECT
     b.sum_users_with_success,
     b.success_rate_by_user,
 
-    DATEDIFF(CURRENT_DATE(), CAST(d.search_date AS DATE)) <= 13 AS is_incomplete_data,
+    DATEDIFF(CURRENT_DATE(), CAST(b.search_date AS DATE)) <= 13 AS is_incomplete_data,
     b.pi_low,
     b.pi_high,
     CASE
