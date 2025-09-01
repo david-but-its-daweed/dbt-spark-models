@@ -36,14 +36,16 @@ statuses AS (
         MAX(1) AS achieved_paid,
         MIN(CAST(event_ts_msk AS DATE)) AS achieved_paid_date
     FROM {{ ref('fact_deals_status_history') }}
-    WHERE status_name_small_deal LIKE '%ProcurementConfirmation' OR status_name LIKE '%PaymentToMerchant' 
-            or status_name  LIKE '%ProcurementConfirmation' or status_name_small_deal LIKE '%PaymentToMerchant' 
+    WHERE
+        status_name_small_deal LIKE '%ProcurementConfirmation' OR status_name LIKE '%PaymentToMerchant'
+        OR status_name LIKE '%ProcurementConfirmation' OR status_name_small_deal LIKE '%PaymentToMerchant'
     GROUP BY 1
 ),
 
 users AS (
     SELECT
         user_id,
+        cnpj,
         questionnaire_grade
     FROM {{ ref('ss_users_table') }}
 ),
@@ -64,16 +66,6 @@ device_types_ AS (
         event_msk_date >= '2024-04-06'
         AND osType IS NOT NULL
 ),
-
--- device_types AS (
---     SELECT
---         user_id,
---         event_msk_date,
---         event_ts_msk,
---         device_type
---     FROM device_types_
---     WHERE rn = 1
--- ),
 
 candidates AS (
     SELECT
@@ -121,6 +113,7 @@ SELECT
     t1.deal_id,
     t1.deal_friendly_id,
     t1.user_id,
+    us.cnpj,
     us.questionnaire_grade,
     dt.device_type,
     t1.country,
@@ -200,9 +193,9 @@ SELECT
         WHEN pr.day_after_previous_deal <= 90 THEN 'f.Three_Month'
         WHEN pr.day_after_previous_deal > 90 THEN 'g.Four_Month_and_more'
     END AS previous_deal_days_group,
-    COALESCE(st.achieved_paid,case when t_gmv is not null then 1 else 0 end , 0) AS achived_payment,
-    t_gmv,
-    coalesce(st.achieved_paid_date,t_gmv) as achieved_paid_date,
+    COALESCE(st.achieved_paid, CASE WHEN t1.t_gmv IS NOT NULL THEN 1 ELSE 0 END, 0) AS achived_payment,
+    t1.t_gmv,
+    COALESCE(st.achieved_paid_date, t1.t_gmv) AS achieved_paid_date,
     t1.promo_code,
     t1.promo_code_discount,
     t1.promo_code_type
@@ -214,5 +207,4 @@ LEFT JOIN users AS us USING (user_id)
 LEFT JOIN deals_with_types AS dt
     ON
         t1.user_id = dt.user_id AND t1.deal_id = dt.deal_id
-        -- AND (t1.deal_created_date = dt.event_msk_date OR ABS(TO_UNIX_TIMESTAMP(dt.event_ts_msk) - TO_UNIX_TIMESTAMP(t1.deal_created_ts)) <= 72 * 3600)
 WHERE t1.deal_status NOT IN ('Test')
