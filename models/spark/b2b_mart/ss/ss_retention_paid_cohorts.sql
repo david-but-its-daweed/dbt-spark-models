@@ -51,7 +51,8 @@ cohort AS (
         DATE_TRUNC('MONTH', MIN(achieved_paid_date)) AS cohort_month,
         DATE_TRUNC('QUARTER', MIN(achieved_paid_date)) AS cohort_quarter,
         FLOOR(DATEDIFF(DATE_TRUNC('WEEK', CURRENT_DATE()), DATE_TRUNC('WEEK', MIN(achieved_paid_date))) / 7) AS max_week_number,
-        FLOOR(DATEDIFF(DATE_TRUNC('QUARTER', CURRENT_DATE()), DATE_TRUNC('QUARTER', MIN(achieved_paid_date))) / 92) AS max_quarter_number,
+       --- FLOOR(DATEDIFF(DATE_TRUNC('QUARTER', CURRENT_DATE()), DATE_TRUNC('QUARTER', MIN(achieved_paid_date))) / 92) AS max_quarter_number,
+        FLOOR(MONTHS_BETWEEN(DATE_TRUNC('MONTH', CURRENT_DATE()), DATE_TRUNC('QUARTER', MIN(achieved_paid_date))) / 3) AS max_quarter_number,
         CAST(MONTHS_BETWEEN(DATE_TRUNC('MONTH', CURRENT_DATE()), DATE_TRUNC('MONTH', MIN(achieved_paid_date))) AS INT) AS max_month_number
     FROM base
     GROUP BY 1, 2
@@ -72,7 +73,8 @@ base_s AS (
     SELECT
         *,
         CAST(MONTHS_BETWEEN(DATE_TRUNC('MONTH', achieved_paid_date), cohort_month) AS INT) AS month_number,
-        FLOOR(DATEDIFF(DATE_TRUNC('QUARTER', achieved_paid_date), cohort_quarter) / 92) AS quarter_number,
+      --  FLOOR(DATEDIFF(DATE_TRUNC('QUARTER', achieved_paid_date), cohort_quarter) / 92) AS quarter_number,
+        FLOOR(  MONTHS_BETWEEN( DATE_TRUNC('MONTH', achieved_paid_date), cohort_quarter) / 3) AS quarter_number,
         FLOOR(DATEDIFF(DATE_TRUNC('WEEK', achieved_paid_date), cohort_week) / 7) AS week_number
     FROM cohort
     INNER JOIN deals USING (user_id)
