@@ -152,6 +152,12 @@ WITH procurement_orders AS (
                WHEN 4 THEN 'ProductOutOfStock'
                WHEN 5 THEN 'NoResponseFromSeller'
                WHEN 6 THEN 'NoSupportOfSmallQuantityOrders'
+               WHEN 7 THEN 'ProhibitedTnved'
+               WHEN 8 THEN 'LeadTimeTooLong'
+               WHEN 9 THEN 'NoLogisticsSafetyCertificates'
+               WHEN 10 THEN 'NoCertificatesRequiredForExport'
+               WHEN 11 THEN 'BrandAuthorizationNeeded'
+               WHEN 12 THEN 'MisleadingProductPage'
                ELSE 'Unknown'
            END AS reject_reason_name,
            MAX(CASE WHEN procurement_status_name = 'cancelled' THEN rejectReasonDescription END) AS reject_reason_description,
