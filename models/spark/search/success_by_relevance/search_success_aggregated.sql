@@ -2,7 +2,7 @@
     schema = 'search',
     materialized = 'table',
     file_format = 'parquet',
-    partition_by = ['partition_date'],
+    partition_by = ['search_date'],
     meta = {
         'model_owner': '@itangaev',
         'team': 'search',
