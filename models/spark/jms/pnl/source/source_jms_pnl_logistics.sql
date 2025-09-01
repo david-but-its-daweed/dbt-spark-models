@@ -1,6 +1,5 @@
 {{
   config(
-    schema='mart',
     file_format='delta',
     materialized='incremental',
     incremental_strategy='insert_overwrite',
@@ -53,8 +52,8 @@ add_join AS (
         jloc.total_cost / et.order_count_in_jl_order AS total_cost_raw,
         a.friendly_order_id,
         et.order_count_in_jl_order,
-        COALESCE(IF(a.order_status IN ('cancelledByJL', 'cancelledByMerchant', 'refunded'), 0, a.logistics_revenue_amount * cr.rate / 1e6), 0) AS jms_logistics_revenue_final,
-        a.logistics_revenue_amount * cr.rate / 1e6 AS jms_logistics_revenue_initial
+        COALESCE(IF(a.order_status IN ('cancelledByJL', 'cancelledByMerchant', 'refunded'), 0, a.logistics_revenue_amount * cr.rate), 0) AS jms_logistics_revenue_final,
+        a.logistics_revenue_amount * cr.rate AS jms_logistics_revenue_initial
     FROM {{ ref('jms_orders') }} AS a
     LEFT JOIN logistics_exploded_items AS et
         ON a.friendly_order_id = et.friendly_order_id
