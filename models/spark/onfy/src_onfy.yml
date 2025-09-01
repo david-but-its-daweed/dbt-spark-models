@@ -399,11 +399,7 @@ models:
         description: 30 x gmv_per_active_day projection.
         
   - name: transactions
-    description: |
-      owner - annzaychik, enriched parcel-level transactions with PSP fees and currency expansion (EUR + USD). Grain — 1 row per transaction type × parcel_id × currency.
-      Includes GMV and Gross Profit in initial and final variants.
-      Pre–2023-07-21 PSP fees are synthesized; USD values are converted via mart.dim_currency_rate.
-      Final output is a UNION of EUR and USD records and distributed by partition_date.
+    description: owner - annzaychik, enriched parcel-level transactions with PSP fees and currency expansion (EUR + USD). Grain — 1 row per transaction type × parcel_id × currency. Includes GMV and Gross Profit in initial and final variants. Pre–2023-07-21 PSP fees are synthesized; USD values are converted via mart.dim_currency_rate. Final output is a UNION of EUR and USD records and distributed by partition_date.
     columns:
       - name: type
         description: "normalized transaction type (e.g., PAYMENT, ORDER_SHIPMENT, DISCOUNT, COMMISSION, CHARGE_FEE, REFUND_FEE, *_REVERSAL, *_VAT)"
@@ -454,11 +450,7 @@ models:
         description: "net GP after reversals and refund fees (adds *_REVERSAL_* and REFUND_FEE, subtracts *_VAT, DISCOUNT, CHARGE_FEE)"
 
   - name: orders_info
-    description: |
-      owner - annzaychik. Enriched line-item (parcel item) facts per order with device, store, manufacturer, and pricing fields.
-      Grain — 1 row per order_parcel_item (product_id + parcel_id).
-      Buyer flag is computed vs the device’s earliest purchase timestamp.
-      Timestamps are converted to Europe/Berlin. Output is distributed by partition_date.
+    description: owner - annzaychik. Enriched line-item (parcel item) facts per order with device, store, manufacturer, and pricing fields. Grain — 1 row per order_parcel_item (product_id + parcel_id). Buyer flag is computed vs the device’s earliest purchase timestamp. Timestamps are CET. Output is distributed by partition_date.
     columns:
       - name: user_id
         description: "user identifier from pharmacy_landing.order"
@@ -528,10 +520,7 @@ models:
         description: "extended discount = item_discount × quantity"
 
   - name: ads_dashboard
-    description: |
-      owner - annzaychik. Session-level marketing attribution with joined ad spends and distributed cost metrics.
-      Grain — 1 row per device_id × session_dt (one row per detected session; may be null for pure spend rows when joined by date).
-      Timezone — CET. Partitioned by report_date.
+    description: owner - annzaychik. Session-level marketing attribution with joined ad spends and distributed cost metrics. Grain — 1 row per device_id × session_dt (one row per detected session; may be null for pure spend rows when joined by date). Timezone — CET. Partitioned by report_date.
     columns:
       - name: session_dt
         description: "timestamp of the session start"
@@ -671,9 +660,7 @@ models:
         description: "PZN or product id parsed from the attributed landing page"
 
   - name: b2b_categories_dash
-    description: |
-      owner - annzaychik. Category-level sales facts for B2B dashboards and business development. 
-      Grain - one row per order_day × store_id × product_id × product_category. If a product belongs to multiple categories, it appears once per category (no de-duplication).
+    description: owner - annzaychik. Category-level sales facts for B2B dashboards and business development. Grain - one row per order_day × store_id × product_id × product_category. If a product belongs to multiple categories, it appears once per category (no de-duplication).
     columns:
       - name: order_day
         description: "order date (CET), day-granular — CAST(DATE_TRUNC('day', order_created_time_cet) AS DATE)"
@@ -749,3 +736,135 @@ models:
         description: "comma-separated PZNs of analogue products (from onfy_medicine_analogs)"
       - name: analogs_count
         description: "count of analogue products (from onfy_medicine_analogs)"
+
+  - name: onfy_metric_sheet
+    description: owner - annzaychik. Aggregated daily/monthly/quarterly KPIs for EUR transactions and spends. Provides both actuals and linearly forecasted values for the metrics.
+    columns:
+      - name: mode
+        description: "reporting scope: 'month' or 'quarter'"
+      - name: is_predicted
+        description: "true for projected rows within the current month/quarter, false for actuals"
+      - name: date_updated
+        description: "date when the dataset was built (current_date())"
+      - name: current_month
+        description: "flag indicating if the row belongs to the current month"
+      - name: max_date
+        description: "yesterday’s day-of-month for current month rows"
+      - name: date
+        description: "day of the metric (historical or projected)"
+      - name: month
+        description: "month from date"
+      - name: quarter
+        description: "quarter from date"
+      - name: gmv_initial
+        description: "GMV initial from transactions"
+      - name: gross_profit_final
+        description: "Gross Profit final from transactions"
+      - name: promocode_discount
+        description: "discount initial amount (promocodes and price appliers)"
+      - name: orders
+        description: "number of distinct orders"
+      - name: first_orders
+        description: "number of distinct first orders (purchase_num = 1)"
+      - name: first_gmv_initial
+        description: "GMV initial from first orders only"
+      - name: first_gross_profit_final
+        description: "gross profit final from first orders only"
+      - name: first_promocode_discount
+        description: "discount initial from first orders only"
+      - name: average_check
+        description: "average GMV initial per order"
+      - name: first_average_check
+        description: "average GMV initial per first order"
+      - name: media_revenue
+        description: "sum of media revenue (Kairion)"
+      - name: service_fee
+        description: "service fee from transactions"
+      - name: commission_revenue
+        description: "commission revenue net of VAT"
+      - name: spend
+        description: "ad spend amount from ads_spends"
+      - name: clicks
+        description: "number of ad clicks"
+      - name: general_cpo
+        description: "cost per order (spend / orders)"
+      - name: general_cppu
+        description: "cost per first purchase user (spend / first orders)"
+      - name: last_n_days
+        description: "flag if row used in n days forecast calculation"
+      - name: forecast_base
+        description: "forecasting window used ('7 days', '3 days', 'month')"
+
+  - name: promocodes_dash
+    description: owner - annzaychik. Captures orders where a promocode was applied and joins promocode metadata with order and parcel-level details. Grain — one row per order × promocode applied. Shows orders only with promocode discounts.
+    columns:
+      - name: order_id
+        description: "unique order identifier"
+      - name: checkout_id
+        description: "checkout identifier linked to the promocode"
+      - name: order_created_cet
+        description: "order creation timestamp in CET"
+      - name: promocode_id
+        description: "unique promocode identifier"
+      - name: promocode_type
+        description: "type of promocode (SHARED / UNIQUE)"
+      - name: promocode_name
+        description: "promocode name as stored in pharmacy_landing.promocode"
+      - name: discount_value_price
+        description: "absolute discount value (EUR) if applicable"
+      - name: minimal_order_sum_price
+        description: "minimum order sum required for promocode to apply"
+      - name: promocode_valid_until_date_cet
+        description: "valid until date of promocode in CET"
+      - name: promocode_created_date_cet
+        description: "creation date of promocode in CET"
+      - name: promocode_updated_date_cet
+        description: "last updated date of promocode in CET"
+      - name: is_referral
+        description: "flag if the promocode is a referral"
+      - name: discount_type
+        description: "discount type (FIXED or PERCENT)"
+      - name: percent_discount_value
+        description: "percentage discount value if applicable"
+      - name: email
+        description: "admin user email who created the promocode"
+      - name: user_email_hash
+        description: "hashed email of the order’s user"
+      - name: device_id
+        description: "device identifier for the order"
+      - name: parcels_in_order
+        description: "count of parcels in the order"
+      - name: total_order_discount
+        description: "sum of discounts applied across all parcels/items in the order"
+      - name: products_price_sum
+        description: "sum of products’ original prices after discount in the order"
+
+  - name: stock_monitoring
+    description: owner - annzaychik. Daily monitoring of product stock, sales, and popularity. Combines orders with stock snapshots and pricing to support inventory tracking.
+    columns:
+      - name: event_date
+        description: "reporting date (day)"
+      - name: product_id
+        description: "internal product identifier"
+      - name: pzn
+        description: "country-local product code (PZN)"
+      - name: product_name
+        description: "product name"
+      - name: items_quantity
+        description: "number of units sold on the event_date overall for Onfy"
+      - name: 30d_items_quantity
+        description: "30-day rolling sum of units sold for the product"
+      - name: popularity_rank
+        description: "rank of product popularity by 30-day sales volume on the event_date"
+      - name: ean
+        description: "EAN code of the product from pharmacy_landing.product"
+      - name: manufacturer_name
+        description: "manufacturer name (long)"
+      - name: store_name
+        description: "pharmacy name of the stock"
+      - name: stock_quantity
+        description: "available stock quantity on the event_date at a pharmacy"
+      - name: item_price
+        description: "minimum observed item price on the event_date at a pharmacy"
+      - name: is_non_pzn
+        description: "flag: 1 if product has no PZN, 0 otherwise"
