@@ -10,21 +10,29 @@
 ) }}
 
 with 
- statuses AS (
-    SELECT
-        deal_id,
-        MAX(1) AS achieved_paid,
-        min(cast(event_ts_msk as date)) as achieved_paid_date
-    FROM {{ ref('fact_deals_status_history') }}
-    WHERE status_name_small_deal LIKE '%ProcurementConfirmation' OR status_name LIKE '%PaymentToMerchant'
-    GROUP BY 1
+data_for_mql as (
+select 
+user_id, 
+event_msk_date,
+event_ts_msk
+from  {{ ref('ss_events_cart') }} 
+where actionType  = 'add_to_cart'
+
+union all 
+
+select 
+user_id, 
+event_msk_date,
+event_ts_msk
+from {{ ref('ss_events_cjm') }} 
+where type = 'requestQuoteNowClick'
 ),
  cart_activation as (
  select user_id,
      min(timestamp(event_ts_msk)) as mql_ts_ms,
      max(1) user_MQL
-  from b2b_mart.ss_events_cart 
- where actionType  = 'add_to_cart'
+  from  data_for_mql
+--- where actionType  = 'add_to_cart'
  group by 1 
  ),
  deal_activation as (
@@ -38,16 +46,13 @@ with
         min(case when deal_type != 'Sample' and achieved_paid_date is not null  then achieved_paid_date end ) as customer_msk_date,
         min(case when deal_type != 'Sample' and achieved_paid_date is not null  then deal_created_ts  end ) as customer_msk_date_allocation
 
-  from  {{ ref('fact_deals_with_requests') }} 
-  left join statuses using(deal_id) 
-  where deal_status not in ('Test')
+  from  {{ ref('marketing_deals_with_orders') }} 
   group by 1
  ),
  user_stages as (
 
  select user_id,
         timestamp(registration_start)  as lead_ts_ms, 
-
         coalesce(cart_activation.mql_ts_ms,deal_activation.mql_ts_ms, deal_activation.sql_ts_ms ) as mql_ts_ms,
         deal_activation.sql_ts_ms,
         customer_msk_date,
