@@ -62,6 +62,8 @@ sources:
       - name: b2b_sherlock_sherlock_tasks_daily_snapshot
       - name: b2b_core_shipment_deals_daily_snapshot
       - name: b2b_core_shipment_orders_daily_snapshot
+      - name: b2b_core_analytic_order_product_prices_daily_snapshot
+      - name: b2b_core_analytic_deal_prices_daily_snapshot
   - name: b2b_mart
     tables:
       - name: device_events
