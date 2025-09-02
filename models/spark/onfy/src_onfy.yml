@@ -50,6 +50,8 @@ models:
         description: the date of the users searches
       - name: event_date
         description: tech date field for partitioning
+      - name: platform
+        description: platform of the initial source event (desktop as desktop & tabletWeb, mobile as mobileWeb, apps as ios & android)
       - name: source
         description: type of channel from the latest interaction in the user experience funnel based on the time (search, catalog, recommendation widget, banner, email, popup)
       - name: first_page

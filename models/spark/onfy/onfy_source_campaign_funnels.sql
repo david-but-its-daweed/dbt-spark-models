@@ -23,14 +23,31 @@
 WITH dim_product_dict AS (
     SELECT
         product_id,
+        medicine_group_id,
         pzn,
-        manufacturer_short_name AS manufacturer
+        product_name,
+        manufacturer_short_name AS manufacturer,
+        quantity,
+        unit
     FROM {{ source('onfy_mart', 'dim_product') }}
     WHERE pzn IS NOT NULL
     GROUP BY
         product_id,
+        medicine_group_id,
         pzn,
-        manufacturer_short_name
+        product_name,
+        manufacturer_short_name,
+        quantity,
+        unit
+),
+
+medicine_group_products AS (
+    SELECT
+        dpd1.product_id AS initial_product_id,
+        dpd2.product_id AS medicine_group_product_id
+    FROM dim_product_dict AS dpd1
+    INNER JOIN dim_product_dict AS dpd2
+        ON dpd1.medicine_group_id = dpd2.medicine_group_id
 ),
 
 
@@ -66,6 +83,12 @@ orders_info AS (
 raw_events AS (
     SELECT
         device_id,
+        CASE
+            WHEN device.osType IN ('desktop', 'tabletWeb') THEN 'desktop'
+            WHEN device.osType = 'mobileWeb' THEN 'mobile'
+            WHEN device.osType IN ('android', 'ios') THEN 'apps'
+            ELSE 'unknown'
+        END AS platform,
         event_id,
         event_ts_cet,
         partition_date_cet AS event_dt,
@@ -85,14 +108,16 @@ raw_events AS (
         payload.params.utm_campaign,
         payload.params.utm_medium,
         payload.params.utm_source,
-        payload.alternativeProductId AS alternative_product_id
+        payload.alternativeProductId AS alternative_product_id,
+        payload.alternativeProductIdList AS alternative_product_id_list
 
     FROM {{ source('onfy_mart', 'device_events') }}
     WHERE
         partition_date_cet >= CURRENT_DATE() - INTERVAL 120 DAYS
         AND type IN (
             'productPreview', 'homeOpen', 'productOpen', 'cartOpen', 'addToCart',
-            'producerBannerShown', 'producerBannerClicked', 'externalLink', 'productAlternativePopupShown'
+            'producerBannerShown', 'producerBannerClicked', 'externalLink',
+            'productAlternativePopupShown', 'productAlternativeTableShown'
         )
 ),
 
@@ -131,6 +156,7 @@ sessionized_events AS (
 aggregated_session_events AS (
     SELECT
         device_id,
+        platform,
         CASE
             WHEN event_type = 'productPreview' THEN 'preview'
             WHEN event_type = 'homeOpen' THEN 'home'
@@ -141,6 +167,7 @@ aggregated_session_events AS (
             WHEN event_type = 'producerBannerClicked' THEN 'banner_click'
             WHEN event_type = 'externalLink' THEN 'crm_email'
             WHEN event_type = 'productAlternativePopupShown' THEN 'popup'
+            WHEN event_type = 'productAlternativeTableShown' THEN 'table'
         END AS event_type,
         session_number,
 
@@ -164,11 +191,13 @@ aggregated_session_events AS (
         utm_campaign,
         utm_medium,
         utm_source,
-        alternative_product_id
+        alternative_product_id,
+        alternative_product_id_list
 
     FROM sessionized_events
     GROUP BY
         device_id,
+        platform,
         CASE
             WHEN event_type = 'productPreview' THEN 'preview'
             WHEN event_type = 'homeOpen' THEN 'home'
@@ -179,6 +208,7 @@ aggregated_session_events AS (
             WHEN event_type = 'producerBannerClicked' THEN 'banner_click'
             WHEN event_type = 'externalLink' THEN 'crm_email'
             WHEN event_type = 'productAlternativePopupShown' THEN 'popup'
+            WHEN event_type = 'productAlternativeTableShown' THEN 'table'
         END,
         session_number,
 
@@ -195,7 +225,8 @@ aggregated_session_events AS (
         utm_campaign,
         utm_medium,
         utm_source,
-        alternative_product_id
+        alternative_product_id,
+        alternative_product_id_list
 ),
 
 
@@ -302,6 +333,7 @@ previews_to_source AS (
         pp.event_dt,
         pp.event_id AS preview_event_id,
         pp.event_ts_cet AS preview_event_dttm,
+        pp.platform,
         pp.pzn,
         pp.product_id,
         pp.product_name,
@@ -326,6 +358,7 @@ previews_to_source AS (
         pp.event_dt,
         pp.event_id,
         pp.event_ts_cet,
+        pp.platform,
         pp.pzn,
         pp.product_id,
         pp.product_name
@@ -368,13 +401,15 @@ preview_to_cart_addings AS (
         ca.product_id,
         ca.product_name
     FROM product_previews AS pp
+    INNER JOIN medicine_group_products AS mg
+        ON pp.product_id = mg.initial_product_id
     INNER JOIN cart_addings AS ca
         ON
             pp.device_id = ca.device_id
-            AND pp.product_id = ca.product_id
+            AND mg.medicine_group_product_id = ca.product_id
             AND pp.event_ts_cet <= ca.event_ts_cet
             AND COALESCE(pp.next_event_ts_cet, pp.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
-    WHERE COALESCE(ca.widget_type, '') NOT IN ('recommendations', 'recommendation', 'previouslyBought', 'alternativesPopup')
+    WHERE COALESCE(ca.widget_type, '') NOT IN ('recommendations', 'recommendation', 'previouslyBought', 'alternativesPopup', 'tableWithAlternative')
 ),
 
 
@@ -443,7 +478,7 @@ recom_product_previews_to_openings AS (
             AND COALESCE(pp.next_event_ts_cet, pp.event_ts_cet + INTERVAL 30 MINUTE) > po.event_ts_cet
 ),
 
--- Product Previews from Recommendations → Cart Addings (within 30 min)
+-- Product Previews from Recommendations → Cart Addings (DIRECT) (within 30 min)
 recom_product_previews_to_cart_addings AS (
     SELECT
         pp.event_id AS preview_event_id,
@@ -467,6 +502,7 @@ recom_product_previews_to_cart_addings AS (
             AND COALESCE(pp.next_event_ts_cet, pp.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
 ),
 
+-- Product Previews from Recommendations → Product Opens → Cart Addings (INDIRECT) (within 30 min)
 recom_product_preview_to_product_open_to_cart_addings AS (
     SELECT
         pp.event_id AS preview_event_id,
@@ -492,10 +528,12 @@ recom_product_preview_to_product_open_to_cart_addings AS (
             AND pp.widget_type = po.widget_type
             AND pp.event_ts_cet <= po.event_ts_cet
             AND COALESCE(pp.next_event_ts_cet, pp.event_ts_cet + INTERVAL 30 MINUTE) > po.event_ts_cet
+    INNER JOIN medicine_group_products AS mg
+        ON po.product_id = mg.initial_product_id
     INNER JOIN cart_addings AS ca
         ON
             po.device_id = ca.device_id
-            AND po.product_id = ca.product_id
+            AND mg.medicine_group_product_id = ca.product_id
             AND po.event_ts_cet <= ca.event_ts_cet
             AND COALESCE(po.next_event_ts_cet, po.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
 ),
@@ -597,6 +635,7 @@ banner_shows_to_source_screen AS (
         bs.event_dt,
         bs.event_id AS preview_event_id,
         bs.event_ts_cet AS preview_event_dttm,
+        bs.platform,
         bs.block_name,
 
         -- banner source by pre event
@@ -607,7 +646,7 @@ banner_shows_to_source_screen AS (
             bs.device_id = be.device_id
             AND bs.event_ts_cet >= be.event_ts_cet
             AND bs.event_ts_cet < COALESCE(be.next_event_ts_cet, be.event_ts_cet + INTERVAL 5 MINUTE)
-    GROUP BY 1, 2, 3, 4
+    GROUP BY 1, 2, 3, 4, 5
 ),
 
 -- Banner Shows → Banner Clicks → Product Opens (within 30 min)
@@ -621,12 +660,12 @@ banner_shows_to_openings AS (
         bs.block_name,
 
         -- banner clicks events data
-        bc.event_id AS click_event_id,
-        bc.event_ts_cet AS click_event_dttm,
+        bc.event_id AS opening_event_id,
+        bc.event_ts_cet AS opening_event_dttm,
 
         -- product openings events data
-        po.event_id AS opening_event_id,
-        po.event_ts_cet AS opening_event_dttm,
+        po.event_id AS product_opening_event_id,
+        po.event_ts_cet AS product_opening_event_dttm,
         po.pzn,
         po.product_id,
         po.product_name
@@ -666,6 +705,7 @@ email_click_to_openings AS (
         ce.event_dt,
         ce.event_ts_cet AS preview_event_dttm,
         ce.event_id AS preview_event_id,
+        ce.platform,
         ce.utm_campaign,
 
         -- product openings events data
@@ -724,6 +764,145 @@ popup_shows_to_addings AS (
 
 
 --------------------------------------------------------------------------------------------------------------------------
+-- preparing modular CTEs with funnel steps for initial steps - SOURCES:
+-- TABLE_SHOWS -> PRODUCT_OPENS -> CART_ADDINGS        TABLE_SHOWS -> CART_ADDINGS
+--------------------------------------------------------------------------------------------------------------------------
+table_shows AS (
+    SELECT
+        *,
+        event_id AS table_event_id,
+        event_ts_cet AS table_event_dttm,
+        LEAD(event_ts_cet) OVER (PARTITION BY device_id, product_id ORDER BY event_ts_cet) AS next_event_ts_cet
+    FROM aggregated_session_events
+    WHERE event_type = 'table'
+),
+
+table_product_explode AS (
+    SELECT
+        *,
+        event_id AS table_event_id,
+        EXPLODE(alternative_product_id_list) AS table_alternative_product_id
+    FROM aggregated_session_events
+    WHERE event_type = 'table'
+),
+
+table_product_previews AS (
+    SELECT
+        *,
+        LEAD(event_ts_cet) OVER (PARTITION BY device_id, product_id, table_alternative_product_id ORDER BY event_ts_cet) AS next_event_ts_cet
+    FROM table_product_explode
+),
+
+-- Product Previews from Alternative Table → Product Opens (within 30 min)
+table_product_previews_to_openings AS (
+    SELECT
+        ts.device_id,
+        ts.event_dt,
+        ts.event_id AS table_event_id,
+        ts.event_ts_cet,
+
+        -- product addings events data
+        po.event_id AS opening_event_id,
+        po.event_ts_cet AS opening_event_dttm,
+        po.pzn,
+        po.product_id,
+        po.product_name
+    FROM table_product_previews AS ts
+    INNER JOIN product_opens AS po
+        ON
+            ts.device_id = po.device_id
+            AND ts.table_alternative_product_id = po.product_id
+            AND ts.event_ts_cet <= po.event_ts_cet
+            AND COALESCE(ts.next_event_ts_cet, ts.event_ts_cet + INTERVAL 30 MINUTE) > po.event_ts_cet
+            AND po.widget_type = 'tableWithAlternative'
+),
+
+-- Table Shows → Product Opens → Addings to Cart (INDIRECT) (within 30 min)
+table_product_previews_to_openings_to_cart_addings AS (
+    SELECT
+        tp.event_id AS table_event_id,
+        tp.event_ts_cet,
+
+        -- product openings events data
+        po.event_id AS opening_event_id,
+        po.event_ts_cet AS opening_event_dttm,
+
+        -- cart addings events data
+        ca.event_id AS adding_event_id,
+        ca.event_ts_cet AS adding_event_dttm,
+        ca.pzn,
+        ca.product_id,
+        ca.product_name
+
+    FROM table_product_previews AS tp
+    INNER JOIN product_opens AS po
+        ON
+            tp.device_id = po.device_id
+            AND tp.table_alternative_product_id = po.product_id
+            AND tp.event_ts_cet <= po.event_ts_cet
+            AND COALESCE(tp.next_event_ts_cet, tp.event_ts_cet + INTERVAL 30 MINUTE) > po.event_ts_cet
+            AND po.widget_type = 'tableWithAlternative'
+    INNER JOIN medicine_group_products AS mg
+        ON po.product_id = mg.initial_product_id
+    INNER JOIN cart_addings AS ca
+        ON
+            po.device_id = ca.device_id
+            AND mg.medicine_group_product_id = ca.product_id
+            -- AND po.product_id = ca.product_id
+            AND po.event_ts_cet <= ca.event_ts_cet
+            AND COALESCE(po.next_event_ts_cet, po.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
+            AND COALESCE(ca.widget_type, '') NOT IN ('recommendations', 'recommendation', 'previouslyBought', 'alternativesPopup')
+),
+
+-- Product Previews from Alternative Table → Product Addings (DIRECT) (within 30 min)
+table_product_previews_to_addings AS (
+    SELECT
+        ts.device_id,
+        ts.event_id AS table_event_id,
+        ts.event_ts_cet,
+
+        -- product addings events data
+        ca.event_id AS adding_event_id,
+        ca.event_ts_cet AS adding_event_dttm,
+        ca.pzn,
+        ca.product_id,
+        ca.product_name
+    FROM table_product_previews AS ts
+    INNER JOIN cart_addings AS ca
+        ON
+            ts.device_id = ca.device_id
+            AND ts.table_alternative_product_id = ca.product_id
+            AND ts.event_ts_cet <= ca.event_ts_cet
+            AND COALESCE(ts.next_event_ts_cet, ts.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
+            AND ca.widget_type = 'tableWithAlternative'
+),
+
+-- Table Shows → Cart Addings (UNION)
+alt_table_to_cart_addings AS (
+    SELECT
+        table_event_id,
+        adding_event_id,
+        adding_event_dttm,
+        pzn,
+        product_id,
+        product_name
+    FROM table_product_previews_to_openings_to_cart_addings
+
+    UNION ALL
+
+    SELECT
+        table_event_id,
+        adding_event_id,
+        adding_event_dttm,
+        pzn,
+        product_id,
+        product_name
+    FROM table_product_previews_to_addings
+
+    GROUP BY 1, 2, 3, 4, 5, 6
+),
+
+--------------------------------------------------------------------------------------------------------------------------
 -- preparing modular CTEs with funnel steps for initial steps:
 -- PRODUCT_OPENS -> CART_ADDINGS        CART_ADDINGS -> ORDERS
 --------------------------------------------------------------------------------------------------------------------------
@@ -742,13 +921,15 @@ openings_to_cart_addings AS (
         ca.product_id,
         ca.product_name
     FROM product_opens AS po
+    INNER JOIN medicine_group_products AS mg
+        ON po.product_id = mg.initial_product_id
     INNER JOIN cart_addings AS ca
         ON
             po.device_id = ca.device_id
-            AND po.product_id = ca.product_id
+            AND mg.medicine_group_product_id = ca.product_id
             AND po.event_ts_cet <= ca.event_ts_cet
             AND COALESCE(po.next_event_ts_cet, po.event_ts_cet + INTERVAL 30 MINUTE) > ca.event_ts_cet
-    WHERE ca.widget_type NOT IN ('recommendations', 'recommendation') -- without recommendations addings
+    WHERE COALESCE(ca.widget_type, '') NOT IN ('recommendations', 'recommendation', 'previouslyBought', 'alternativesPopup', 'tableWithAlternative')
 ),
 
 -- Cart Addings → Orders (within 36 hours)
@@ -787,6 +968,7 @@ pre_final_flat_table AS (
         ps.event_dt,
         ps.event_type AS source,
         ps.event_type AS first_page,
+        ps.platform,
         COALESCE(ps.search_query, ps.category_name) AS placement,
         NULL AS initial_pzn,
         ps.sponsored_key AS campaign_name,
@@ -822,6 +1004,7 @@ pre_final_flat_table AS (
         ps.event_dt,
         ps.event_type,
         ps.event_type,
+        ps.platform,
         COALESCE(ps.search_query, ps.category_name),
         ps.sponsored_key,
         COALESCE(p2a.adding_event_dttm, p2o.opening_event_dttm, ps.preview_event_dttm),
@@ -845,6 +1028,7 @@ pre_final_flat_table AS (
         pr.event_dt,
         'recommendation' AS source,
         pr.source_screen AS first_page,
+        pr.platform,
         pr.recommendation_type AS placement,
         ip.pzn AS initial_pzn,
         pr.promo_key AS campaign_name,
@@ -885,6 +1069,7 @@ pre_final_flat_table AS (
 
         pr.event_dt,
         pr.source_screen,
+        pr.platform,
         pr.recommendation_type,
         ip.pzn,
         pr.promo_key,
@@ -909,6 +1094,7 @@ pre_final_flat_table AS (
         bs.event_dt,
         'banner' AS source,
         bs.source_screen AS first_page,
+        bs.platform,
         NULL AS placement,
         NULL AS initial_pzn,
         bs.block_name AS campaign_name,
@@ -934,7 +1120,7 @@ pre_final_flat_table AS (
 
     -- join opening → cart addings CTE
     LEFT JOIN openings_to_cart_addings AS o2a
-        ON b2o.opening_event_id = o2a.opening_event_id
+        ON b2o.product_opening_event_id = o2a.opening_event_id
 
     -- join cart → order CTE
     LEFT JOIN cart_addings_to_orders AS a2o
@@ -943,6 +1129,7 @@ pre_final_flat_table AS (
     GROUP BY
         bs.event_dt,
         bs.source_screen,
+        bs.platform,
         bs.block_name,
         COALESCE(o2a.adding_event_dttm, b2o.opening_event_dttm, bs.preview_event_dttm),
 
@@ -965,6 +1152,7 @@ pre_final_flat_table AS (
         e2o.event_dt,
         'email' AS source,
         e2o.event_type AS first_page,
+        e2o.platform,
         'email' AS placement,
         COALESCE(a2o.pzn, o2a.pzn, e2o.pzn) AS initial_pzn,
         e2o.utm_campaign AS campaign_name,
@@ -995,6 +1183,7 @@ pre_final_flat_table AS (
     GROUP BY
         e2o.event_dt,
         e2o.event_type,
+        e2o.platform,
         COALESCE(a2o.pzn, o2a.pzn, e2o.pzn),
         e2o.utm_campaign,
         COALESCE(o2a.adding_event_dttm, e2o.opening_event_dttm, e2o.preview_event_dttm),
@@ -1018,6 +1207,7 @@ pre_final_flat_table AS (
         pp.event_dt,
         'popup' AS source,
         pp.event_type AS first_page,
+        pp.platform,
         'popup' AS placement,
         pd.pzn AS initial_pzn,
         NULL AS campaign_name,
@@ -1052,6 +1242,7 @@ pre_final_flat_table AS (
     GROUP BY
         pp.event_dt,
         pp.event_type,
+        pp.platform,
         pd.pzn,
         COALESCE(p2a.adding_event_dttm, pp.opening_event_dttm),
 
@@ -1066,6 +1257,67 @@ pre_final_flat_table AS (
         a2o.order_before_products_price,
         a2o.order_products_price,
         a2o.order_quantity
+
+    UNION ALL
+
+    -- flat table for table with alternatives events
+    SELECT
+        ts.event_dt,
+        'table_w_alternatives' AS source,
+        'product' AS first_page,
+        ts.platform,
+        'table_w_alternatives' AS placement,
+        pd.pzn AS initial_pzn,
+        NULL AS campaign_name,
+        COALESCE(t2a.adding_event_dttm, t2o.opening_event_dttm, ts.table_event_dttm) AS source_event_ts_cet,
+
+        COALESCE(t2a.product_id, t2o.product_id, ts.product_id) AS product_id,
+        COALESCE(a2o.product_name, t2a.product_name, t2o.product_name) AS product_name,
+        COALESCE(a2o.pzn, t2a.pzn, t2o.pzn) AS pzn,
+
+        ts.table_event_id AS preview_event_id,
+        t2o.opening_event_id,
+        t2a.adding_event_id,
+        a2o.order_id,
+        a2o.order_before_products_price,
+        a2o.order_products_price,
+        a2o.order_quantity
+
+    FROM table_shows AS ts
+
+    -- adding pzn of initial product
+    LEFT JOIN dim_product_dict AS pd
+        ON ts.product_id = pd.product_id
+
+    -- join table → opening CTE
+    LEFT JOIN table_product_previews_to_openings AS t2o
+        ON ts.table_event_id = t2o.table_event_id
+
+    -- join table → adding CTE
+    LEFT JOIN alt_table_to_cart_addings AS t2a
+        ON ts.table_event_id = t2a.table_event_id
+
+    -- join cart adding → order CTE
+    LEFT JOIN cart_addings_to_orders AS a2o
+        ON t2a.adding_event_id = a2o.adding_event_id
+
+    GROUP BY
+        ts.event_dt,
+        ts.platform,
+        pd.pzn,
+        COALESCE(t2a.adding_event_dttm, t2o.opening_event_dttm, ts.table_event_dttm),
+
+        COALESCE(t2a.product_id, t2o.product_id, ts.product_id),
+        COALESCE(a2o.product_name, t2a.product_name, t2o.product_name),
+        COALESCE(a2o.pzn, t2a.pzn, t2o.pzn),
+
+        ts.table_event_id,
+        t2o.opening_event_id,
+        t2a.adding_event_id,
+        a2o.order_id,
+        a2o.order_before_products_price,
+        a2o.order_products_price,
+        a2o.order_quantity
 ),
 
 
@@ -1075,6 +1327,7 @@ pre_final_flat_table AS (
 pre_final_agg_table AS (
     SELECT
         MAX(ft.event_dt) AS event_dt,
+        MIN_BY(ft.platform, ft.source_event_ts_cet) AS platform,
         MAX_BY(ft.source, ft.source_event_ts_cet) AS source,
         MAX_BY(ft.first_page, ft.source_event_ts_cet) AS first_page,
         MAX_BY(ft.placement, ft.source_event_ts_cet) AS placement,
@@ -1110,6 +1363,7 @@ pre_final_agg_table AS (
 SELECT
     event_dt,
     CAST(DATE_TRUNC('day', event_dt) AS DATE) AS event_date,
+    platform,
     source,
     first_page,
     placement,
@@ -1129,11 +1383,13 @@ SELECT
 FROM pre_final_agg_table
 WHERE
     TRUE
+    AND source IS NOT NULL
     AND event_dt IS NOT NULL
     AND DATE(event_dt) < CURRENT_DATE()
 GROUP BY
     event_dt,
     CAST(DATE_TRUNC('day', event_dt) AS DATE),
+    platform,
     source,
     first_page,
     placement,
