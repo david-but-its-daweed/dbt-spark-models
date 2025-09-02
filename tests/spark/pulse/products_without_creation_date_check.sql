@@ -1,6 +1,6 @@
 WITH products_sat AS (
     SELECT spcd.product_id
-    FROM {{ source('joompro_analytics', 'sat_product_creation_date') }} AS spcd
+    FROM {{ source('joompro_analytics', 'dim_product_creation_date') }} AS spcd
 )
 
 SELECT products_snapshot.product_id

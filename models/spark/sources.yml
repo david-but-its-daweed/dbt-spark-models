@@ -240,7 +240,7 @@ sources:
       - name: mercadolibre_categories_cube_js_monthly
       - name: ods_mlb_mobile_api_product_previews
       - name: product_tracker_items
-      - name: sat_product_creation_date
+      - name: dim_product_creation_date
 
   - name: category_management
     tables:
