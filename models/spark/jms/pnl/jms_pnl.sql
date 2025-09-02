@@ -92,8 +92,8 @@ final_stats AS (
         SUM(a.gmv_final) - SUM(b.merchant_revenue_final) - SUM(a.jms_logistics_revenue_final) AS commission_revenue,
         SUM(a.gmv_final) - SUM(b.merchant_revenue_final) - SUM(a.jms_logistics_revenue_final) + SUM(a.jms_logistics_revenue_final) AS total_jms_revenue,
         SUM(a.money_take_rate_partner) + SUM(a.jl_cost_logistics) AS total_costs_commission_revenue,
-        SUM(a.gmv_final) - SUM(b.merchant_revenue_final) - SUM(a.jms_logistics_revenue_final)
-        + SUM(a.jms_logistics_revenue_final) - SUM(a.money_take_rate_partner) + SUM(a.jl_cost_logistics) AS gross_profit
+        ((SUM(a.gmv_final) - SUM(b.merchant_revenue_final) - SUM(a.jms_logistics_revenue_final)) + SUM(a.jms_logistics_revenue_final))
+        - (SUM(a.money_take_rate_partner) + SUM(a.jl_cost_logistics)) AS gross_profit
     FROM gmv_and_logistics AS a
     LEFT JOIN merchant_data AS b USING (order_date_utc, marketplace_name)
     WHERE a.order_date_utc >= '2025-01-01'
