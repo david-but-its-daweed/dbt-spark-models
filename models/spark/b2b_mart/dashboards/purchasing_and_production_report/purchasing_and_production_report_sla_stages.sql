@@ -249,7 +249,10 @@ WITH big_batch_raw AS (
         created_ts,
         '6.Shipped' AS stage,
         'day' AS sla_granularity,
-        1 AS sla_value,
+        CASE
+            WHEN DATE(sub_status_shipped_by_3pl_ts) < '2025-08-01' THEN 1
+            WHEN DATE(sub_status_shipped_by_3pl_ts) >= '2025-08-01' THEN 7
+        END AS sla_value,
         sub_status_ready_for_shipment_ts AS start_ts,
         sub_status_shipped_by_3pl_ts AS end_ts
     FROM small_batch_raw

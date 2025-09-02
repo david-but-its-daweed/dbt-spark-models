@@ -622,7 +622,11 @@ SELECT
     pio.status_suspended_ts AS pickup_order_status_suspended_ts,
     CASE
         /* Не учитываем PO исполнителем которых является a.pushkareva@joom.com, redbird@joom.com (разработчик), asoboleva@joom.com (тестировщик) */
-        WHEN pola.assignee_email IN ('a.pushkareva@joom.com', 'redbird@joom.com', 'asoboleva@joom.com', 'erichm@joom.com') THEN 0
+        WHEN pola.assignee_email IN (
+            'a.pushkareva@joom.com', 'redbird@joom.com',
+            'asoboleva@joom.com', 'erichm@joom.com',
+            'anisimov_d@joom.com'
+        ) THEN 0
         /* Для крупного опта в Бразилии */
         WHEN po.country = 'BR' AND po.is_small_batch = 0 THEN
             CASE
