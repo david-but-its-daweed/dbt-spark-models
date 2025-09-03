@@ -185,7 +185,7 @@ WITH big_batch_raw AS (
         'day' AS sla_granularity,
         CASE
             WHEN DATE(sub_status_waiting_for_payment_ts) < '2025-07-01' THEN 1
-            WHEN DATE(sub_status_waiting_for_payment_ts) >= '2025-07-01' THEN 2
+            ELSE 2
         END AS sla_value,
         sub_status_waiting_for_payment_ts AS start_ts,
         sub_status_merchant_preparing_order_ts AS end_ts
@@ -251,7 +251,7 @@ WITH big_batch_raw AS (
         'day' AS sla_granularity,
         CASE
             WHEN DATE(sub_status_shipped_by_3pl_ts) < '2025-08-01' THEN 1
-            WHEN DATE(sub_status_shipped_by_3pl_ts) >= '2025-08-01' THEN 7
+            ELSE 7
         END AS sla_value,
         sub_status_ready_for_shipment_ts AS start_ts,
         sub_status_shipped_by_3pl_ts AS end_ts
