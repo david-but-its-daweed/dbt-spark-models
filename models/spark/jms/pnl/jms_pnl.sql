@@ -77,6 +77,7 @@ final_stats AS (
     SELECT
         a.order_date_utc,
         a.marketplace_name,
+        a.origin_name,
         SUM(a.gmv_w_vat) AS gmv_w_vat,
         SUM(a.gmv_wo_vat) AS gmv_wo_vat,
         SUM(a.vat) AS vat,
