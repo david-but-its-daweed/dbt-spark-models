@@ -236,3 +236,4 @@ raw AS (
 
 SELECT *
 FROM raw
+DISTRIBUTE BY order_date_utc
