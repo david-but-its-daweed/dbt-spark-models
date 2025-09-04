@@ -25,6 +25,40 @@ WITH currency_rate AS (
     WHERE currency_code_to = 'USD'
 ),
 
+product_data AS (
+    SELECT
+        a.product_id,
+        b.business_line,
+        b.l1_merchant_category_name,
+        b.l2_merchant_category_name,
+        b.l3_merchant_category_name,
+        b.l4_merchant_category_name,
+        b.l5_merchant_category_name,
+        c.merchant_name,
+        c.origin_name,
+        CASE
+            WHEN c.origin_name IS NULL OR c.origin_name IN ('Chinese', 'USChinese') THEN 'China'
+            WHEN c.origin_name IN ('Australian', 'Korean', 'USKorean', 'Indian', 'Japanese', 'Singaporean', 'Thai', 'Turkish') THEN 'Alternative Asia'
+            WHEN c.origin_name IN (
+                'Austrian', 'Belgian', 'Bulgarian', 'Croatian', 'Cypriot', 'Czech', 'Danish',
+                'Dutch', 'Estonian', 'Finnish', 'French', 'German', 'Greek', 'Hungarian', 'Irish',
+                'Italian', 'Latvian', 'Lithuanian', 'Luxembourgish', 'Maltese', 'Polish', 'Portuguese',
+                'Romanian', 'Slovakian', 'Slovenian', 'Spanish', 'Swiss', 'Swedish'
+            ) THEN 'Europe'
+            WHEN c.origin_name = 'British' THEN 'GB'
+            WHEN c.origin_name = 'American' THEN 'US'
+            WHEN c.origin_name = 'Russian' THEN 'RU'
+            WHEN c.origin_name = 'Ukrainian' THEN 'UA'
+            WHEN c.origin_name = 'Moldovan' THEN 'MD'
+            ELSE 'Other'
+        END AS origin_group
+    FROM {{ source('mart', 'published_products_current') }} AS a
+    LEFT JOIN {{ ref('gold_merchant_categories') }} AS b
+        ON a.category_id = b.merchant_category_id
+    LEFT JOIN {{ ref('gold_merchants') }} AS c
+        ON a.merchant_id = c.merchant_id
+),
+
 raw AS (
     SELECT
         -- Main order info
@@ -44,7 +78,10 @@ raw AS (
         a.fId AS friendly_order_id,
         a.ogId AS order_group_id,
         a.mId AS merchant_id,
+        pd.merchant_name,
         a.sId AS store_id,
+        pd.origin_name,
+        pd.origin_group,
 
         -- Marketplace info
         COALESCE(a.src.spd.spMp, a.src.mp) AS marketplace_name,
@@ -56,6 +93,12 @@ raw AS (
         a.ci.a.ct AS customer_city,
 
         -- Product Info
+        pd.business_line,
+        pd.l1_merchant_category_name,
+        pd.l2_merchant_category_name,
+        pd.l3_merchant_category_name,
+        pd.l4_merchant_category_name,
+        pd.l5_merchant_category_name,
         a.pi.p AS product_id,
         a.pi.v AS variant_id,
         a.pi.q AS product_quantity,
@@ -182,10 +225,13 @@ raw AS (
         END AS detailed_refund_reason,
         a.st.ref.cb AS refund_created_by
     FROM {{ source('mongo', 'order_jms_orders_daily_snapshot') }} AS a
-    LEFT JOIN currency_rate AS cr ON
-        a.mi.cp.c = cr.currency_code
-        AND a.ci.t > cr.effective_date
-        AND a.ci.t <= cr.next_effective_date
+    LEFT JOIN currency_rate AS cr
+        ON
+            a.mi.cp.c = cr.currency_code
+            AND a.ci.t > cr.effective_date
+            AND a.ci.t <= cr.next_effective_date
+    LEFT JOIN product_data AS pd ON
+        a.pi.p = pd.product_id
 )
 
 SELECT *
