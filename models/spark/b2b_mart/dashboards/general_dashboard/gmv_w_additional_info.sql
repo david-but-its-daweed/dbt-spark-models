@@ -53,6 +53,8 @@ SELECT
 FROM {{ ref('purchasing_and_production_report') }} AS gmv_kz
 LEFT JOIN {{ ref('fact_deals_with_requests') }} AS dl USING (deal_id)
 WHERE
-    gmv_kz.is_small_batch = 1
-    AND gmv_kz.country = 'KZ'
-    AND gmv_kz.sub_status_waiting_for_payment_ts IS NOT NULL
+    gmv_kz.country = 'KZ'
+    AND (
+        (gmv_kz.is_small_batch = 1 AND gmv_kz.sub_status_waiting_for_payment_ts IS NOT NULL)
+        OR (gmv_kz.is_small_batch = 0 AND COALESCE(gmv_kz.sub_status_client_payment_received_ts, gmv_kz.sub_status_manufacturing_ts) IS NOT NULL)
+    )
