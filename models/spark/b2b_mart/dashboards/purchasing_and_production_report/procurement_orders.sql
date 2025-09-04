@@ -11,33 +11,35 @@
 
 
 WITH procurement_orders AS (
-    SELECT _id AS procurement_order_id,
-           friendlyId AS procurement_order_friendly_id,
-           dealId AS deal_id,
-           dealType AS deal_type,
-           country,
-           CASE WHEN isSmallBatch IS TRUE THEN 1 ELSE 0 END AS is_small_batch,
-           coreEmpty AS core_empty,
-           id AS product_id,
-           link AS product_link,
-           name AS product_name,
-           procurementStatuses AS procurement_statuses,
-           psiStatusID AS current_psi_status_id_long,
-           manufacturerId AS manufacturer_id,
-           CASE WHEN manDaysFilled IS TRUE THEN manDays END AS manufacturing_days,
-           productionRange AS production_range,
-           warehouse,
-           TO_DATE(SUBSTR(minPickupDate, 1, 8), 'yyyyMMdd') AS min_pickup_date,
-           merchOrdId AS merchant_order_id,
-           jpcPayment AS jpc_payment,
-           payment,
-           prices,
-           productRoles AS product_roles,
-           currency,
-           variants AS procurement_order_variants,
-           packaging,
-           millis_to_ts_msk(ctms) AS created_ts,
-           millis_to_ts_msk(utms) AS updated_ts
+    SELECT
+        _id AS procurement_order_id,
+        friendlyId AS procurement_order_friendly_id,
+        dealId AS deal_id,
+        dealType AS deal_type,
+        country,
+        CASE WHEN isSmallBatch IS TRUE THEN 1 ELSE 0 END AS is_small_batch,
+        coreEmpty AS core_empty,
+        id AS product_id,
+        link AS product_link,
+        name AS product_name,
+        procurementStatuses AS procurement_statuses,
+        psiStatusID AS current_psi_status_id_long,
+        manufacturerId AS manufacturer_id,
+        CASE WHEN manDaysFilled IS TRUE THEN manDays END AS manufacturing_days,
+        productionRange AS production_range,
+        warehouse,
+        TO_DATE(SUBSTR(minPickupDate, 1, 8), 'yyyyMMdd') AS min_pickup_date,
+        merchOrdId AS merchant_order_id,
+        jpcPayment AS jpc_payment,
+        payment,
+        prices,
+        productRoles AS product_roles,
+        currency,
+        variants AS procurement_order_variants,
+        packaging,
+        -- invoiceType AS invoice_type,
+        millis_to_ts_msk(ctms) AS created_ts,
+        millis_to_ts_msk(utms) AS updated_ts
     FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }} AS op
     WHERE isDeleted IS NOT TRUE
       AND country NOT IN ('RU')
@@ -45,8 +47,9 @@ WITH procurement_orders AS (
 
      filtered_payments AS (
     WITH billing_info AS (
-        SELECT t1._id AS payment_id,
-               t1.isCancelled AS is_payment_cancelled
+        SELECT
+            t1._id AS payment_id,
+            t1.isCancelled AS is_payment_cancelled
         FROM mongo.billing_pro_invoice_requests_daily_snapshot AS t1
         /*
         LEFT JOIN mongo.billing_pro_invoice_request_operations_daily_snapshot AS t2 ON t1._id = t2.requestId
@@ -115,21 +118,23 @@ WITH procurement_orders AS (
 
      procurement_orders_last_assignee AS (
     WITH assignee_history AS (
-        SELECT _id AS procurement_order_id,
-               role_key AS role,
-               role_value.type AS role_type,
-               role_value.moderatorId AS assignee_id,
-               millis_to_ts_msk(role_value.updatedTime) AS assignee_ts,
-               ROW_NUMBER() OVER (PARTITION BY _id ORDER BY role_value.updatedTime DESC) AS assignee_row_n_desc
+        SELECT
+            _id AS procurement_order_id,
+            role_key AS role,
+            role_value.type AS role_type,
+            role_value.moderatorId AS assignee_id,
+            millis_to_ts_msk(role_value.updatedTime) AS assignee_ts,
+            ROW_NUMBER() OVER (PARTITION BY _id ORDER BY role_value.updatedTime DESC) AS assignee_row_n_desc
         FROM {{ source('mongo', 'b2b_core_order_products_daily_snapshot') }}
         LATERAL VIEW EXPLODE(productRoles.roles) exploded_roles AS role_key, role_value
     )
 
-    SELECT ah.procurement_order_id,
-           ah.role AS assignee_role,
-           ah.assignee_id,
-           au.email AS assignee_email,
-           ah.assignee_ts
+    SELECT
+        ah.procurement_order_id,
+        ah.role AS assignee_role,
+        ah.assignee_id,
+        au.email AS assignee_email,
+        ah.assignee_ts
     FROM assignee_history AS ah
     LEFT JOIN {{ source('mongo', 'b2b_core_admin_users_daily_snapshot') }} AS au ON ah.assignee_id = au._id
     WHERE assignee_row_n_desc = 1
