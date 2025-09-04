@@ -27,7 +27,7 @@ initial_components AS (
         variant.value.opVId AS variant_id,
         component.key AS component,
         component.value.ccy AS currency,
-        component.value.amount AS initial_amount,
+        component.value.amount / 1000000 AS initial_amount,
         0 AS final_amount
     FROM mongo.b2b_core_analytic_order_product_prices_daily_snapshot
     LATERAL VIEW EXPLODE(MAP_ENTRIES(initPrices.variants)) AS variant
@@ -41,7 +41,7 @@ final_components AS (
         component.key AS component,
         component.value.ccy AS currency,
         0 AS initial_amount,
-        component.value.amount AS final_amount
+        component.value.amount / 1000000 AS final_amount
     FROM mongo.b2b_core_analytic_order_product_prices_daily_snapshot
     LATERAL VIEW EXPLODE(MAP_ENTRIES(finalPrices.variants)) AS variant
     LATERAL VIEW EXPLODE(MAP_ENTRIES(variant.value.perItemComponents)) AS component   
