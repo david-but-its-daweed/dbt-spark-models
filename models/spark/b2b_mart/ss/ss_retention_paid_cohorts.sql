@@ -63,9 +63,12 @@ deals AS (
         achieved_paid_date,
         deal_id,
         user_id,
-        deal_type,
-        COALESCE(final_gmv, 0)    AS final_gmv,
-        COALESCE(gmv_initial, 0)  AS gmv_initial
+        CASE
+            WHEN deal_type IN ('VIP', 'Big Deal') THEN 'Big Deal'
+            ELSE 'Small Deal'
+        END AS deal_type,
+        COALESCE(final_gmv, 0) AS final_gmv,
+        COALESCE(gmv_initial, 0) AS gmv_initial
     FROM base
 ),
 
