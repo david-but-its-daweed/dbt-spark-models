@@ -87,6 +87,10 @@ deals AS (
         deal_created_date,
         deal_id,
         user_id,
+        CASE
+            WHEN deal_type IN ('VIP', 'Big Deal') THEN 'Big Deal'
+            ELSE 'Small Deal'
+        END AS deal_type,
         COALESCE(final_gmv, 0) AS final_gmv,
         COALESCE(gmv_initial, 0) AS gmv_initial
     FROM {{ ref('fact_deals_with_requests') }}
@@ -108,82 +112,120 @@ agg_week AS (
     SELECT
         user_id,
         week_number,
+        deal_type,
         COUNT(deal_id) AS deals,
         SUM(gmv_initial) AS gmv,
         SUM(final_gmv) AS final_gmv
     FROM base_s
     WHERE week_number IS NOT NULL
-    GROUP BY user_id, week_number
+    GROUP BY user_id, week_number, deal_type
 ),
 
 agg_quarter AS (
     SELECT
         user_id,
         quarter_number,
+        deal_type,
         COUNT(deal_id) AS deals,
         SUM(gmv_initial) AS gmv,
         SUM(final_gmv) AS final_gmv
     FROM base_s
     WHERE quarter_number IS NOT NULL
-    GROUP BY user_id, quarter_number
+    GROUP BY user_id, quarter_number, deal_type
 ),
 
 agg_month AS (
     SELECT
         user_id,
         month_number,
+        deal_type,
         COUNT(deal_id) AS deals,
         SUM(gmv_initial) AS gmv,
         SUM(final_gmv) AS final_gmv
     FROM base_s
     WHERE month_number IS NOT NULL
-    GROUP BY user_id, month_number
+    GROUP BY user_id, month_number, deal_type
 ),
 
 counter AS (
     SELECT POSEXPLODE(SEQUENCE(0, 500)) AS (x, dummy)  -- sequence от 0 до 500
 ),
 
+deal_types AS (
+    SELECT
+        c.user_id,
+        d.deal_type
+    FROM cohort c
+    LEFT JOIN (SELECT DISTINCT user_id, deal_type FROM deals) d USING (user_id)
+),
+
 week_retention AS (
     SELECT
         'week' AS retention_detalization,
         cohort.*,
+        dt.deal_type,
         x AS period_number,
         COALESCE(is_active, 0) AS is_active,
-        COALESCE(deals, 0) AS deals,
-        COALESCE(gmv, 0) AS gmv
+        COALESCE(agg_week.deals, 0) AS deals,
+        COALESCE(agg_week.gmv, 0) AS gmv
     FROM cohort
     INNER JOIN counter ON x <= max_week_number
-    LEFT JOIN agg_week ON cohort.user_id = agg_week.user_id AND agg_week.week_number = x
-    LEFT JOIN activity_week ON cohort.user_id = activity_week.user_id AND activity_week.week_number = x
+    LEFT JOIN deal_types AS dt ON cohort.user_id = dt.user_id
+    LEFT JOIN agg_week
+        ON
+            cohort.user_id = agg_week.user_id
+            AND agg_week.week_number = x
+            AND agg_week.deal_type <=> dt.deal_type
+    LEFT JOIN activity_week
+        ON
+            cohort.user_id = activity_week.user_id
+            AND activity_week.week_number = x
 ),
 
 quarter_retention AS (
     SELECT
         'quarter' AS retention_detalization,
         cohort.*,
+        dt.deal_type,
         x AS period_number,
         COALESCE(is_active, 0) AS is_active,
-        COALESCE(deals, 0) AS deals,
-        COALESCE(gmv, 0) AS gmv
+        COALESCE(agg_quarter.deals, 0) AS deals,
+        COALESCE(agg_quarter.gmv, 0) AS gmv
     FROM cohort
     INNER JOIN counter ON x <= max_quarter_number
-    LEFT JOIN agg_quarter ON cohort.user_id = agg_quarter.user_id AND agg_quarter.quarter_number = x
-    LEFT JOIN activity_quarter ON cohort.user_id = activity_quarter.user_id AND activity_quarter.quarter_number = x
+    LEFT JOIN deal_types dt ON cohort.user_id = dt.user_id
+    LEFT JOIN agg_quarter
+        ON
+            cohort.user_id = agg_quarter.user_id
+            AND agg_quarter.quarter_number = x
+            AND agg_quarter.deal_type <=> dt.deal_type
+    LEFT JOIN activity_quarter
+        ON
+            cohort.user_id = activity_quarter.user_id
+            AND activity_quarter.quarter_number = x
 ),
 
 month_retention AS (
     SELECT
         'month' AS retention_detalization,
         cohort.*,
+        dt.deal_type,
         x AS period_number,
         COALESCE(is_active, 0) AS is_active,
-        COALESCE(deals, 0) AS deals,
-        COALESCE(gmv, 0) AS gmv
+        COALESCE(agg_month.deals, 0) AS deals,
+        COALESCE(agg_month.gmv, 0) AS gmv
     FROM cohort
     INNER JOIN counter ON x <= max_month_number
-    LEFT JOIN agg_month ON cohort.user_id = agg_month.user_id AND agg_month.month_number = x
-    LEFT JOIN activity_month ON cohort.user_id = activity_month.user_id AND activity_month.month_number = x
+    LEFT JOIN deal_types dt ON cohort.user_id = dt.user_id
+    LEFT JOIN agg_month
+        ON
+            cohort.user_id = agg_month.user_id
+            AND agg_month.month_number = x
+            AND agg_month.deal_type <=> dt.deal_type
+    LEFT JOIN activity_month
+        ON
+            cohort.user_id = activity_month.user_id
+            AND activity_month.month_number = x
 ),
 
 data_ AS (
