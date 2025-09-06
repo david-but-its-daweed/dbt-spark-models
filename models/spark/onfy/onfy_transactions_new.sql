@@ -11,23 +11,9 @@
       'alerts_channel': '#onfy-etl-monitoring',
       'priority_weight': '150',
       'bigquery_partitioning_date_column': 'partition_date',
-      'bigquery_known_gaps': [
-          '2022-11-04', '2022-11-22', '2022-12-01', '2022-11-14', 
-          '2022-11-09', '2022-11-24', '2022-11-03', '2022-11-20', 
-          '2022-11-07', '2022-11-06', '2022-11-27', '2022-11-13', 
-          '2022-12-22', '2022-11-28', '2022-11-08', '2022-11-15', 
-          '2022-11-25', '2022-11-23', '2022-11-21', '2022-11-19', 
-          '2022-11-16', '2022-11-18', '2022-11-05', '2022-11-17', 
-          '2022-11-10', '2022-11-11', '2022-12-31', '2022-12-26',
-          '2022-12-20', '2022-12-17', '2022-12-21', '2022-12-24', 
-          '2022-12-25', '2022-12-29', '2022-12-30', '2022-12-15', 
-          '2022-12-16', '2022-12-28', '2022-12-19', 
-          '2022-12-18', '2022-12-27', '2022-12-23'
-      ],
       'bigquery_overwrite': 'true'
     }
 ) }}
-
 
 
 WITH numbered_purchases AS (
@@ -138,95 +124,57 @@ turnover_refunds AS (
         order_data
 ),
 
-parcel_gmv AS (
-    SELECT
-        order_id,
-        order_parcel_id,
-        SUM(
-            CASE WHEN type IN ('PAYMENT','SERVICE_FEE','ORDER_SHIPMENT','DELIVERY_SURCHARGE') THEN price
-                    WHEN type IN ('ORDER_REVERSAL','SERVICE_FEE_REVERSAL','ORDER_SHIPMENT_REV','DELIVERY_SURCHARGE_REVERSAL') THEN -price
-                    ELSE 0 END
-        ) AS gmv
-    FROM {{ source('onfy_mart', 'transactions') }}
-    WHERE order_parcel_id IS NOT NULL
-    GROUP BY order_id, order_parcel_id
-),
-
-order_gmv AS (
-    SELECT
-        order_id,
-        SUM(gmv) AS gmv_total
-    FROM parcel_gmv
-    GROUP BY order_id
-),
-
 psp_initial AS (
     SELECT
         'CHARGE_FEE' AS type,
-        t.order_id,
-        t.purchase_num,
-        t.device_id,
-        t.app_device_type,
-        t.platform_type,
-        p.order_parcel_id,
-        st.name AS store_name,
-        t.payment_method,
-        t.user_email_hash,
-        t.source_corrected,
-        t.campaign_corrected,
-        t.order_created_time_cet,
-        t.order_created_time_cet AS transaction_date,
-        (psp_commission_fix + psp_commission_perc * turnover) * (p.gmv / og.gmv_total) AS price,
+        order_id,
+        purchase_num,
+        device_id,
+        app_device_type,
+        platform_type,
+        null AS order_parcel_id,
+        null AS store_name,
+        payment_method,
+        user_email_hash,
+        source_corrected,
+        campaign_corrected,
+        order_created_time_cet,
+        order_created_time_cet AS transaction_date,
+        psp_commission_fix + psp_commission_perc * turnover AS price,
         'EUR' AS currency
     FROM
-        turnover_refunds t
-        JOIN parcel_gmv p ON t.order_id = p.order_id
-        JOIN order_gmv og ON og.order_id = t.order_id
-        LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }} op
-            ON t.order_id = op.order_id AND p.order_parcel_id = op.id
-        LEFT JOIN {{ source('pharmacy_landing', 'store') }} st
-            ON st.id = op.store_id
-    WHERE
-        t.order_created_time_cet < '2023-07-21'
+        turnover_refunds
+    where 1=1
+        AND order_created_time_cet < '2023-07-21'
 ),
+
 
 psp_refund AS (
     SELECT
         'REFUND_FEE' AS type,
-        t.order_id,
-        t.purchase_num,
-        t.device_id,
-        t.app_device_type,
-        t.platform_type,
-        p.order_parcel_id,
-        st.name AS store_name,
-        t.payment_method,
-        t.user_email_hash,
-        t.source_corrected,
-        t.campaign_corrected,
-        t.order_created_time_cet,
-        t.order_created_time_cet AS transaction_date,
-        (psp_commission_refund_fix + psp_commission_refund_perc * refund) * (p.gmv / og.gmv_total) AS price,
+        order_id,
+        purchase_num,
+        device_id,
+        app_device_type,
+        platform_type,
+        null AS order_parcel_id,
+        null AS store_name,
+        payment_method,
+        user_email_hash,
+        source_corrected,
+        campaign_corrected,
+        order_created_time_cet,
+        order_created_time_cet AS transaction_date,
+        psp_commission_refund_fix + psp_commission_refund_perc * refund AS price,
         'EUR' AS currency
     FROM
-        turnover_refunds t
-        JOIN parcel_gmv p
-            ON t.order_id = p.order_id
-        JOIN order_gmv og
-            ON og.order_id = t.order_id
-        LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }} op
-            ON t.order_id = op.order_id AND p.order_parcel_id = op.id
-        LEFT JOIN {{ source('pharmacy_landing', 'store') }} st
-            ON st.id = op.store_id
-    WHERE
-        t.refund > 0
-        AND t.order_created_time_cet < '2023-07-21'
+        turnover_refunds
+    WHERE 1=1
+        AND refund > 0
+        AND order_created_time_cet < '2023-07-21'
 ),
 
-
-transactions_psp AS (
-
-    -- 1) all raw transactions except PSP-fee 
+transactions_no_psp_fee AS (
     SELECT
         UPPER(t.type) AS type,
         t.order_id,
@@ -251,7 +199,51 @@ transactions_psp AS (
         ON t.order_parcel_id = op.id
     LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS st
         ON st.id = op.store_id
-    WHERE NOT lower(t.type) IN ('charge_fee','refund_fee')
+    WHERE LOWER(t.type) NOT IN ('charge_fee','refund_fee')
+),
+
+parcel_gmv AS (
+    SELECT
+        t.order_id,
+        t.order_parcel_id,
+        SUM(CASE
+                WHEN t.type IN ('PAYMENT','SERVICE_FEE','ORDER_SHIPMENT','DELIVERY_SURCHARGE')
+                THEN COALESCE(t.price, 0)
+                ELSE 0
+            END) AS gmv_initial_parcel
+    FROM transactions_no_psp_fee AS t
+    WHERE
+        t.order_id IS NOT NULL
+        AND t.order_parcel_id IS NOT NULL
+    GROUP BY t.order_id, t.order_parcel_id
+),
+
+parcel_with_order AS (
+    SELECT
+        order_id,
+        order_parcel_id,
+        gmv_initial_parcel,
+        SUM(gmv_initial_parcel) OVER (PARTITION BY order_id) AS gmv_initial_order
+    FROM parcel_gmv
+),
+
+parcel_share AS (
+    SELECT
+        order_id,
+        order_parcel_id,
+        gmv_initial_parcel,
+        gmv_initial_order,
+        CASE WHEN gmv_initial_order <> 0
+            THEN (gmv_initial_parcel / gmv_initial_order)
+            ELSE NULL
+        END AS parcel_share_of_order
+    FROM parcel_with_order
+),
+
+transactions_psp AS (
+
+    -- 1) all raw transactions except PSP-fee
+    SELECT * FROM transactions_no_psp_fee
 
     UNION ALL
 
@@ -263,7 +255,7 @@ transactions_psp AS (
         od.device_id,
         od.app_device_type,
         od.platform_type,
-        p.order_parcel_id,
+        ps.order_parcel_id,
         st.name AS store_name,
         od.payment_method,
         t.user_email_hash,
@@ -271,31 +263,75 @@ transactions_psp AS (
         od.campaign_corrected AS campaign,
         od.order_created_time_cet,
         from_utc_timestamp(t.date, 'Europe/Berlin') AS transaction_date,
-        t.price * (p.gmv / og.gmv_total) AS price,
+        t.price * ps.parcel_share_of_order AS price,
         t.currency
     FROM {{ source('onfy_mart', 'transactions') }} AS t
-    JOIN parcel_gmv AS p
-         ON t.order_id = p.order_id
-    JOIN order_gmv AS og
-         ON og.order_id = t.order_id
+    INNER JOIN parcel_share AS ps
+            ON t.order_id = ps.order_id
     LEFT JOIN order_data AS od
-         ON od.order_id = t.order_id
+            ON od.order_id = t.order_id
     LEFT JOIN {{ source('pharmacy_landing', 'order_parcel') }} AS op
-         ON p.order_parcel_id = op.id
+            ON ps.order_parcel_id = op.id
     LEFT JOIN {{ source('pharmacy_landing', 'store') }} AS st
-         ON st.id = op.store_id
+            ON st.id = op.store_id
     WHERE
-        p.order_parcel_id IS NOT NULL
-        AND lower(t.type) IN ('charge_fee', 'refund_fee')
+        lower(t.type) IN ('charge_fee', 'refund_fee')
         AND from_utc_timestamp(t.date,'Europe/Berlin') >= '2023-07-21'
 
+    UNION ALL
+
     -- 3) Before cutoff '2023-07-21'
+    SELECT
+        t.type,
+        t.order_id,
+        t.purchase_num,
+        t.device_id,
+        t.app_device_type,
+        t.platform_type,
+        ps.order_parcel_id,
+        st.name AS store_name,
+        t.payment_method,
+        t.user_email_hash,
+        t.source_corrected AS source,
+        t.campaign_corrected AS campaign,
+        t.order_created_time_cet,
+        t.transaction_date,
+        t.price * ps.parcel_share_of_order AS price,
+        t.currency
+    FROM psp_initial t
+    INNER JOIN parcel_share ps
+        ON t.order_id = ps.order_id
+    LEFT JOIN pharmacy_landing.order_parcel op
+        ON ps.order_parcel_id = op.id
+    LEFT JOIN pharmacy_landing.store st
+        ON st.id = op.store_id
 
     UNION ALL
-
-    SELECT * FROM psp_initial
-    UNION ALL
-    SELECT * FROM psp_refund
+    
+    SELECT
+        t.type,
+        t.order_id,
+        t.purchase_num,
+        t.device_id,
+        t.app_device_type,
+        t.platform_type,
+        ps.order_parcel_id,
+        st.name AS store_name,
+        t.payment_method,
+        t.user_email_hash,
+        t.source_corrected AS source,
+        t.campaign_corrected AS campaign,
+        t.order_created_time_cet,
+        t.transaction_date,
+        t.price * ps.parcel_share_of_order AS price,
+        t.currency
+    FROM psp_refund t
+    INNER JOIN parcel_share ps
+        ON t.order_id = ps.order_id
+    LEFT JOIN pharmacy_landing.order_parcel op
+        ON ps.order_parcel_id = op.id
+    LEFT JOIN pharmacy_landing.store st
+        ON st.id = op.store_id
 ),
 
 transactions_eur AS (
@@ -370,15 +406,15 @@ transactions_usd AS (
         transactions_eur.gross_profit_final * eur.rate / usd.rate AS gross_profit_final
     FROM
         transactions_eur
-        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} AS eur
-            ON eur.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
-            AND eur.currency_code = 'EUR'
-        LEFT JOIN {{ source('mart', 'dim_currency_rate') }} AS usd
-            ON usd.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
-            AND usd.currency_code = 'USD'
+    LEFT JOIN {{ source('mart', 'dim_currency_rate') }} eur
+        ON eur.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
+        AND eur.currency_code = 'EUR'
+    LEFT JOIN {{ source('mart', 'dim_currency_rate') }} usd
+        ON usd.effective_date = DATE_TRUNC('DAY', transactions_eur.transaction_date)
+        AND usd.currency_code = 'USD'
 )
 
-SELECT * FROM transactions_eur
-    UNION
-SELECT * FROM transactions_usd
+SELECT * FROM transactions_eur WHERE partition_date >= DATE('2023-01-01')
+UNION
+SELECT * FROM transactions_usd WHERE partition_date >= DATE('2023-01-01')
 DISTRIBUTE BY partition_date
