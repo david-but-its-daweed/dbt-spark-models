@@ -230,8 +230,10 @@ raw AS (
             a.mi.cp.c = cr.currency_code
             AND a.ci.t > cr.effective_date
             AND a.ci.t <= cr.next_effective_date
-    LEFT JOIN product_data AS pd ON
-        a.pi.p = pd.product_id
+    LEFT JOIN product_data AS pd
+        ON
+            a.pi.p = pd.product_id
+    WHERE DATE(a.ci.t) >= '2025-01-01'
 )
 
 SELECT *
