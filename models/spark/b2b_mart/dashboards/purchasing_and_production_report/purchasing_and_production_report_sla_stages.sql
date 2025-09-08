@@ -326,7 +326,9 @@ WITH big_batch_raw AS (
     SELECT
         *,
         ROW_NUMBER() OVER (
-            PARTITION BY procurement_order_id
+            PARTITION BY
+                procurement_order_id,
+                CASE WHEN sla_value IS NOT NULL THEN 1 ELSE 0 END
             ORDER BY GREATEST(
                 COALESCE(start_ts, to_timestamp('0001-01-01')),
                 COALESCE(end_ts, to_timestamp('0001-01-01'))
@@ -368,9 +370,9 @@ SELECT
             (unix_timestamp(m.end_ts) - unix_timestamp(m.start_ts)) / 60 / 60 - COALESCE(wh.weekend_hours, 0)
         ) / 24, 0)
     END AS fact_value_without_weekends,
-    CASE WHEN m.rn = 1 AND m.end_ts IS NULL THEN 1 ELSE 0 END AS is_current_stage,
+    CASE WHEN m.sla_value IS NOT NULL AND m.rn = 1 AND m.end_ts IS NULL THEN 1 ELSE 0 END AS is_current_stage,
     COALESCE(
-        MAX(CASE WHEN m.rn = 1 AND m.end_ts IS NULL THEN m.stage END) OVER (PARTITION BY m.procurement_order_id),
+        MAX(CASE WHEN m.sla_value IS NOT NULL AND m.rn = 1 AND m.end_ts IS NULL THEN m.stage END) OVER (PARTITION BY m.procurement_order_id),
         'No active stage'
     ) AS current_stage,
     CASE
