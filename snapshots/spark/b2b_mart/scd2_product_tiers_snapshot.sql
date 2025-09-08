@@ -22,9 +22,7 @@ WITH activity AS (
         COUNT_IF(e.event_type = 'addToCart' AND DATE(event_time) >= CURRENT_DATE - INTERVAL 2 DAYS) AS carts
     FROM {{ source('b2b_mart', 'ss_events_by_session' }},
         LATERAL VIEW explode(events_in_session) AS e
-    WHERE
-        STARTSWITH(FROM_JSON(e.element.event_params, 'product_id STRING').product_id, '6')
-        AND e.event_type IN ('productClick', 'addToCart')
+    WHERE STARTSWITH(FROM_JSON(e.element.event_params, 'product_id STRING').product_id, '6') AND e.event_type IN ('productClick', 'addToCart')
     GROUP BY 1, 2
 ),
 
