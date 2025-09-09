@@ -22,8 +22,14 @@ WITH activity AS (
         COUNT_IF(e.event_type = 'addToCart' AND DATE(event_time) >= CURRENT_DATE - INTERVAL 2 DAYS) AS carts
     FROM {{ source('b2b_mart', 'ss_events_by_session' }},
         LATERAL VIEW explode(events_in_session) AS e
+<<<<<<< HEAD
     WHERE 
         STARTSWITH(FROM_JSON(e.element.event_params, 'product_id STRING').product_id, '6') AND e.event_type IN ('productClick', 'addToCart')
+=======
+    WHERE
+        STARTSWITH(FROM_JSON(e.element.event_params, 'product_id STRING').product_id, '6')
+        AND e.event_type IN ('productClick', 'addToCart')
+>>>>>>> 1d5674f7e56010c14399c17e1029384fc0507a5e
     GROUP BY 1, 2
 ),
 
@@ -44,4 +50,8 @@ SELECT
     tier
 FROM final
 
+<<<<<<< HEAD
 {% endsnapshot %}
+=======
+{% endsnapshot %}
+>>>>>>> 1d5674f7e56010c14399c17e1029384fc0507a5e
